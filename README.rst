@@ -3,7 +3,7 @@ GraphTerm: A Graphical Terminal Interface
 .. sectnum::
 .. contents::
 
-.. figure:: graphterm/raw/master/doc-images/gt-screen-stars3d.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png
    :align: center
    :width: 90%
    :figwidth: 60%
@@ -12,7 +12,7 @@ GraphTerm: A Graphical Terminal Interface
    output using a 3D  perspective theme (captured on OS X Lion, using
    Google Chrome).
 
-   (More images can be found in SCREENSHOTS.rst or SCREENSHOTS.html
+   (More images can be found in `SCREENSHOTS <https://github.com/mitotic/graphterm/blob/master/SCREENSHOTS.rst>`_
    and in this `YouTube Video <http://youtu.be/JBMexdwXN8w>`_.)
 
 
