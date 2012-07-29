@@ -3,7 +3,7 @@ GraphTerm: A Graphical Terminal Interface
 .. sectnum::
 .. contents::
 
-.. figure:: raw/master/doc-images/gt-screen-stars3d.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-stars3d.png
    :align: center
    :width: 90%
    :figwidth: 60%

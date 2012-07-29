@@ -6,7 +6,7 @@ GraphTerm Screenshots
 ls vs. gls
 ==================================================
 
-.. figure:: raw/master/doc-images/gt-screen-ls-gls.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-ls-gls.png
    :align: center
 
    Comparing plain vanilla ``ls`` command and the graphterm-aware ``gls``.
@@ -23,7 +23,7 @@ ls vs. gls
 stars3d theme, with icons enabled
 ==================================================
 
-.. figure:: raw/master/doc-images/gt-screen-stars3d.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-stars3d.png
    :align: center
    :width: 90%
    :figwidth: 85%
@@ -46,7 +46,7 @@ stars3d theme, with icons enabled
 Graphical weather forecast (using Google Weather API)
 =========================================================
 
-.. figure:: raw/master/doc-images/gt-screen-gweather.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-gweather.png
    :align: center
 
    Showing the screen for the command ``gweather College Station`` to
@@ -63,7 +63,7 @@ Graphical weather forecast (using Google Weather API)
 Text editing (emacs)
 ==================================================
 
-.. figure:: raw/master/doc-images/gt-screen-emacs.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-emacs.png
    :align: center
 
    Showing the screen for the command ``emacs gtermserver.py`` to
@@ -79,7 +79,7 @@ Text editing (emacs)
 Graphical code editing using a "cloud" editor
 ==================================================
 
-.. figure:: raw/master/doc-images/gt-screen-gvi.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-gvi.png
    :align: center
 
    Showing the screen for the command ``gvi gtermserver.py`` to
@@ -95,7 +95,7 @@ Graphical code editing using a "cloud" editor
 Collapsed mode
 ==================================================
 
-.. figure:: raw/master/doc-images/gt-screen-collapsed.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-collapsed.png
    :align: center
 
    Showing the screen when all command output is collapsed. Clicking
@@ -114,7 +114,7 @@ Collapsed mode
 Split scrolling
 ==================================================
 
-.. figure:: raw/master/doc-images/gt-screen-split.png
+.. figure:: graphterm/raw/master/doc-images/gt-screen-split.png
    :align: center
 
    Showing the split-screen scrolling mode, where the command
