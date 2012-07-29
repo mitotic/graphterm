@@ -1,4 +1,6 @@
 .DS_Store
 *~
 *.pyc
+README.html
+SCREENSHOTS.html
 local/*
