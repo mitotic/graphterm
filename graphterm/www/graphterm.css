@@ -1,0 +1,377 @@
+/* graphterm.css: default style sheet for graphterm index.html */
+
+/* General styles */
+.noshow {
+    display: none;
+}
+
+/* Default styles */
+body {
+    background-color: #FFFFFF;
+}
+
+/* Need font styling for both body and pre; otherwise pre styling will be overridden by useragent default */
+body, pre {
+    font-family: elite, courier, monaco, monospace;
+    font-size: 16px;
+}
+
+/* Body screen styles (with button label font sizes) */
+body.smallscreen  {
+    font-size: 12px;
+}
+body.mediumscreen {
+    font-size: 14px;
+}
+body.largescreen  {
+    font-size: 16px;
+}
+body.extralargescreen  {
+    font-size: 18px;
+}
+
+body.ipadscreen  {
+    /* font-weight: bold; */
+}
+
+/* Generic element styles */
+div, pre, span {
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+ }
+
+pre {
+    line-height: 120%;
+}
+
+form {
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+ }
+
+hr {
+    margin: 5px;
+    padding-top: 0;
+    padding-bottom: 0;
+ }
+
+/* Content Editable styles */
+
+*[contenteditable="true"]:not(.cursorhighlight) {
+/*
+    padding: 10px;
+    outline: 3px dashed #CCC;
+*/
+ outline: none;
+}
+
+*[contenteditable="true"]:hover {
+/*
+    background: rgba(255, 255, 153, 1);
+    outline: 3px dashed #0090D2;
+*/
+}
+
+
+/* Screen styles */
+pre.row {
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    white-space: pre; }
+
+span.row {
+    display: block;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+span.row .bold {
+    font-weight: bold;
+}
+
+span.row .inverse {
+    background-color: lightgray;
+}
+
+span.row .cursorspan {
+    display: inline-block;
+    background-color: gray;
+}
+
+span.row .cursorspan .cursorloc {
+    display: inline-block;
+    background-color: red;
+}
+
+span.row .cursorspan.cursorhighlight .cursorloc {
+    /* outline: 1px dashed #ccc; */
+    background-color: lightblue;
+}
+
+span.row .cmd-completion, span.row .typeahead {
+    opacity: 0.6;
+}
+
+span.row.gterm-hideoutput.promptrow .gterm-cmd-prompt {
+    text-decoration: underline;
+}
+
+span.row.gterm-hideoutput:not(.promptrow),
+  .pagelet.gterm-hideoutput {
+    display: none;
+}
+
+#session-headermenu,
+  #session-footermenu {
+    background-color: lightgray;
+}
+
+#session-headermenu {
+    border-bottom-style: none;
+    border-bottom-color: gray;
+    border-bottom-width: 2px;
+}
+
+#session-footermenu {
+    margin-top: 4px;
+    border-top-style: none;
+    border-top-color: gray;
+    border-top-width: 2px;
+}
+
+#session-headermenu span.gterm-headfoot-active,
+#session-footermenu span.gterm-headfoot-active {
+    text-decoration: underline;
+}
+
+span.boldstyle {
+    font-weight: bold;
+}
+
+span.underlinestyle  {
+    text-decoration: underline;
+}
+
+span.blinkstyle {
+    font-weight: bold;
+}
+
+span.inversestyle {
+    font-weight: bold;
+}
+
+
+.pagelet td {
+    vertical-align: top;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.pagelet a, .row a {
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+ }
+
+#session-bufellipsis h3 {
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+ }
+
+/* Hyperlinks */
+span.menubar-label, a.menubar-label {
+    color: gray;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+span.headfoot {
+    color: blue;
+    cursor: pointer;
+    text-decoration: none;
+    /* font-weight: bold; */
+}
+
+span.gterm-link, a.gterm-link {
+    color: blue;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+span.gterm-not-implemented {
+    color: gray;
+}
+
+#terminal:not(.webcast) .webcast-alert {
+    display: none;
+}
+
+#terminal.webcast #menubar-webcast {
+    background-color: red;
+}
+
+#terminal.webcast #menubar-label-webcast {
+    color: red;
+}
+
+/* Screens */
+#session-term:not(.split-screen) .session-screen, .session-altscreen {
+    margin-bottom: 1.0em;
+}
+
+/* Split screen */
+#session-term.split-screen #session-bufscreen,
+ #session-term.split-screen #session-findercontainer {
+    margin-bottom: 3em;  /* Should be dynamic (=session-screencontainer height) */
+}
+
+#session-term.split-screen.display-footer #session-bufscreen,
+ #session-term.split-screen.display-footer #session-findercontainer {
+    margin-bottom: 4em;  /* Should be dynamic (=session-screencontainer height) */
+}
+
+#session-term:not(.display-footer) #gterm-pre0 .gterm-cmd-prompt {
+    text-decoration: underline;
+}
+
+#session-term:not(.display-footer) #session-footermenu {
+    display: none;
+}
+
+#session-findercontainer {
+    position: absolute;
+    z-index: 50;
+    top: 0;
+    left: 10em;
+    width: 100%;
+    padding-bottom: 1.0em;
+    margin-bottom: 0;
+    opacity: 0.5;
+}
+
+#session-finderbody {
+    opacity: 1.0;
+    background-color: white;
+}
+
+#session-term.split-screen #session-screencontainer {
+    position: fixed;
+    z-index: 100;
+    bottom: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#session-term.split-screen #session-screenfold {
+    height: 0.6em;
+    margin: 0;
+    padding: 0;
+    background: -webkit-gradient( linear, center bottom, center top, from(rgba(128,128,128,1.0)), to(rgba(255,255,255,0.0)) );
+    background: -moz-linear-gradient( 90deg, rgba(128,128,128,1.0), rgba(255,255,255,0.0) );
+    border-bottom-style: solid;
+    border-bottom-color: gray;
+    border-bottom-width: 0px;
+}
+
+#session-term:not(.split-screen) #session-screenfold {
+    display: none;
+}
+
+#session-term.split-screen #session-screenfix {
+    opacity: 1.0;
+    background-color: white;
+    margin: 0;
+    padding-top: 0.25em;
+    padding-bottom: 1.0em;
+}
+
+/* Popup styles */
+.gterm-popupmask {
+    position: absolute;
+    z-index: 9000;
+    top: 0;
+    left: 0;
+    background-color: #000000;
+}
+
+.gterm-popup {
+    position: absolute;
+    width: 90%;
+    z-index: 9900;
+    padding: 20px;
+    background-color: #ffffff;
+}
+
+.gterm-popupnarrow {
+    width: 70%;
+}
+
+/* Log style */
+#gtermsplash {
+    margin-top: 75;
+    background: url(themes/stars-images/starry-night-PublicDomain-VeraKratochvil.jpg);
+    background-repeat: repeat;
+    opacity: 0.9;
+    height: 100%;
+}
+
+#gtermsplashtext {
+    color: black;
+    background: -webkit-gradient( linear, center bottom, center top, color-stop(0.0, rgba(253,253,253,0.0)), color-stop(0.2, rgba(254,254,254,0.0)), color-stop(0.85, rgba(255,255,255,1.0)) );
+    background: -moz-linear-gradient( 90deg, rgba(253,253,253,0.0) 0%, rgba(254,254,254,0.0) 20%, rgba(255,255,255,1.0) 85% );
+    z-index: 200;
+    padding: 10px;
+}
+
+#gtermsplashtext .gtermsplashalt, #gtermsplashtext .gtermsplashalt a {
+    color: #eeeeee; /*#ffdd00;*/
+}
+
+/* Editor style */
+#acearea_content {
+    position: absolute;
+    top: 40;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Tilting 3D perspective style */
+.three-d .session-container { 
+    z-index: 1;
+    width: 100%;
+    height: 575px;
+}
+.three-d .session {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    margin-left: -300px;
+    top: 50px;
+    height: 500px;
+    overflow-y: scroll;
+    -webkit-transform: perspective(300) rotateX(20deg); /* target: perspective(300) rotateX(20deg) */
+    -webkit-transform-style: preserve-3d;
+    -moz-perspective: 800px;
+    -moz-transform: rotateX(45deg);
+    -moz-transform-style: preserve-3d;
+}
+
+/* Lateral rotation 3D style */
+.lateral {  
+    z-index: 1;
+    height: 30px;
+    overflow-y: scroll;
+    -webkit-transform: perspective(300) rotateY(60deg);
+    -webkit-transform-style: preserve-3d;
+    -moz-perspective: 800px;
+    -moz-transform: rotateX(45deg);
+    -moz-transform-style: preserve-3d;
+}
+

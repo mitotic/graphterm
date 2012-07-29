@@ -1,0 +1,27 @@
+/* Inspired by http://www.seanslinsky.com/star-wars-crawl-with-css3 */
+.perspective-container { 
+                background: url(images/starry-night-PublicDomain-VeraKratochvil.jpg);
+                z-index:1;
+		width:100%;
+		height:500px;
+                background-size: 100%;
+}
+.perspective {  position:absolute;
+		z-index:1;
+		top:0;
+		left:50%;
+		margin-left:-300px;
+		width:800px;
+		height:500px;
+		overflow: scroll;
+		-webkit-transform: perspective(300) rotateX(20deg);
+		-webkit-transform-style: preserve-3d;
+		-moz-perspective: 800px;
+		-moz-transform: rotateX(45deg);
+		-moz-transform-style: preserve-3d;
+	     }
+
+/* Input components */
+.perspective SPAN.prompt      { color: red }
+.perspective SPAN.command     { color: red }
+.perspective SPAN {color: yellow; }

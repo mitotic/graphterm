@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+#
+
+"""
+ec2list: Launch Amazon AWS EC2 instances
+"""
+
+import boto
+import json
+import os
+import sys
+import time
+from optparse import OptionParser
+
+import ec2common
+
+usage = "usage: %prog [-f] [<tag_prefix_or_id>]"
+parser = OptionParser(usage=usage)
+parser.add_option("-f", "--fullscreen", dest="fullscreen", default=False,
+                  help="Fullscreen display", action="store_true")
+
+parser.add_option("", "--kill", dest="kill", default=False,
+                  help="Kill single matching instance", action="store_true")
+
+parser.add_option("", "--killall", dest="killall", default=False,
+                  help="Kill all matching instances", action="store_true")
+
+
+(options, args) = parser.parse_args()
+
+prefix = args[0] if args else ""
+
+if not os.path.exists(os.path.expanduser("~/.boto")):
+    print >> sys.stderr, config_info
+    sys.exit(1)
+
+headers = {"content_type": "text/html"}
+headers["x_gterm_response"] = "pagelet_fullscreen"
+headers["x_gterm_parameters"] = {"scroll": "top", "current_directory": os.getcwd()}
+
+props_list = ec2common.get_instance_props(instance_id=prefix)
+
+Props_format = "Instance: id=%(id)s, domain=%(public_dns)s, key=%(key)s, tags=%(tags)s, state=%(state)s"
+for props in props_list:
+    print Props_format % props
+
+if options.kill or options.killall:
+    if not props_list:
+        print >> sys.stderr, "No instances to kill"
+        sys.exit(1)
+    id_list = [x["id"] for x in props_list]
+
+    if len(id_list) > 1 and not options.killall:
+        print >> sys.stderr, "Specify --killall to kill multiple instances"
+        sys.exit(1)
+    ec2common.kill(instance_ids=id_list)
+    print >> sys.stderr, "Killed", id_list

@@ -1,0 +1,19 @@
+#!/bin/bash
+# gopen: open a file
+# Usage: gopen <filename>
+
+if [ $# -eq 0 ]; then
+   echo "Usage: gopen <file>"
+   exit 1
+fi
+
+if which open > /dev/null; then
+    open "$1"
+elif which xdg-open > /dev/null; then
+    xdg-open "$1" &> /dev/null &
+elif which gnome-open > /dev/null; then
+    gnome-open "$1"
+else
+    echo "No open command found!"
+    exit 1
+fi

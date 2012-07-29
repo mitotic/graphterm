@@ -1,0 +1,13 @@
+/* stars.css: Stars theme (3d capable) */
+
+body.stars { 
+    background: url(stars-images/starry-night-PublicDomain-VeraKratochvil.jpg);
+    background-repeat: repeat;
+}
+
+/* Need font styling for both body and pre; otherwise pre styling will be overridden by useragent default */
+.stars, .stars pre {
+    font-family: lucida sans typweriter, lucida console, monospace;
+    color: yellow;
+}
+

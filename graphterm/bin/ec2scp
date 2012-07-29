@@ -1,0 +1,4 @@
+#!/bin/bash
+
+scp -i ~/.ssh/ec2key.pem $*
+

@@ -1,0 +1,153 @@
+#!/usr/bin/env python
+#
+
+"""
+ec2launch: Launch Amazon AWS EC2 instance
+"""
+
+import boto
+import json
+import os
+import random
+import sys
+import time
+from optparse import OptionParser
+
+import gtermapi
+import ec2common
+
+ssh_dir = os.path.expanduser("~/.ssh")
+
+arg_list = [
+("arg1", "", "Instance name"),
+("type", ("", "t1.micro", "m1.small", "m1.medium", "m1.large"), "Instance type"),
+("key_name", "ec2key", "Instance management SSH key name"),
+("ami", "ami-82fa58eb", "Instance OS (default: Ubuntu 12.04LTS)"),
+("security", "default", "Security group"),
+("domain", "", "Instance domain"),
+]
+
+usage = "usage: %prog [-f] <instance-tagname>"
+parser = OptionParser(usage=usage)
+parser.add_option("-f", "--fullscreen", dest="fullscreen", default=False,
+                  help="Fullscreen display", action="store_true")
+
+parser.add_option("-t", "--text", dest="text", default=False,
+                  help="Text only", action="store_true")
+
+parser.add_option("", "--dry_run", dest="dry_run", default=False,
+                  help="Dry run", action="store_true")
+
+form_html = gtermapi.add_options(parser, arg_list, title="Create Amazon EC2 instance")
+
+(options, args) = parser.parse_args()
+
+headers = {"content_type": "text/html"}
+headers["x_gterm_response"] = "pagelet_fullscreen"
+headers["x_gterm_parameters"] = {"scroll": "top", "current_directory": os.getcwd()}
+
+if args:
+    instance_tag = args[0]
+elif options.domain:
+    instance_tag = options.domain
+else:
+    if not gtermapi.Lterm_cookie or options.text:
+        print >> sys.stderr, usage
+        sys.exit(1)
+    headers["x_gterm_response"] = "pagelet_form"
+    sys.stdout.write(gtermapi.wrap(json.dumps(headers)+"\n\n"+form_html))
+    sys.exit(1)
+    
+if options.domain:
+    subdomain_name, sep, top_level_domain = options.domain.partition(".")
+else:
+    subdomain_name, top_level_domain = "", ""
+
+key_file = os.path.join(ssh_dir, options.key_name+".pem")
+
+if not os.path.exists(ssh_dir):
+    print >> sys.stderr, "ec2launch: %s directory not found!" % ssh_dir
+    sys.exit(1)
+
+headers = {"content_type": "text/html"}
+headers["x_gterm_response"] = "pagelet_fullscreen"
+headers["x_gterm_parameters"] = {"scroll": "top", "current_directory": os.getcwd()}
+
+startup_script = """#!/bin/bash
+set -e -x
+apt-get update && apt-get upgrade -y
+apt-get install -y python-setuptools
+easy_install tornado
+easy_install otrace
+easy_install graphterm
+sudo gterm_setup
+"""
+
+# Connect to EC2
+ec2 = boto.connect_ec2()
+
+# Create key pair, if needed
+if not os.path.exists(key_file):
+    key_pair = ec2.create_key_pair(options.key_name)
+    key_pair.save(ssh_dir)
+    os.chmod(key_file, 0600)
+
+if options.dry_run:
+    print >> sys.stderr, "run_instances:", dict(image_id=options.ami,
+                                                instance_type=options.type,
+                                                key_name=options.key_name,
+                                                security_groups=[options.security],
+                                                user_data=startup_script)
+    sys.exit(1)
+
+# Launch instance
+reservation = ec2.run_instances(image_id=options.ami,
+                                instance_type=options.type,
+                                key_name=options.key_name,
+                                security_groups=[options.security],
+                                user_data=startup_script)
+instance = reservation.instances[0]
+
+# Wait for instance to start running
+Status_template =  """<em>Creating instance <b>%s</b>:</em> status=<b>%s</b> (waiting %ds)"""
+
+status = instance.update()
+headers["x_gterm_response"] = "pagelet_fullscreen"
+start_time = time.time()
+while status == "pending":
+    timesec = int(time.time() - start_time)
+    sys.stdout.write(gtermapi.wrap(json.dumps(headers)+"\n\n"+(Status_template % (instance_tag, status, timesec))))
+    time.sleep(3)
+    status = instance.update()
+
+if status != "running":
+    print >> sys.stderr, "ec2launch: ERROR Failed to launch instance: %s" % status
+    sys.exit(1)
+
+# Tag instance
+if instance_tag:
+    instance.add_tag(instance_tag)
+
+instance_id = reservation.id
+instance_obj = None
+all_instances = ec2.get_all_instances()
+for r in all_instances:
+    if r.id == instance_id:
+        instance_obj = r.instances[0]
+        break
+
+if not instance_obj:
+    print >> sys.stderr, "ec2launch: ERROR Unable to find launched instance: %s" % status
+    sys.exit(1)
+
+instance_domain = instance_obj.public_dns_name
+
+if options.domain:
+    route53conn, zone = ec2common.get_zone(top_level_domain)
+    if not zone:
+        print >> sys.stderr, "No Route53 zone found for %s" % options.domain
+
+    # Create new CNAME entry pointing to instance public DNS
+    ec2common.cname(route53conn, zone, options.domain, instance_domain)
+
+print "Created EC2 instance: id=%s, domain=%s" % (instance_id, instance_domain)

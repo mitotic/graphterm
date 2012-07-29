@@ -1,0 +1,185 @@
+<!-- graphterm.html: graphterm page -->
+<html>
+  <head>
+    <title>GraphTerm page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link title="defaultstyle" rel="stylesheet" type="text/css" href="/static/graphterm.css">
+    <link title="defaultstyle" rel="stylesheet" type="text/css" href="/static/themes/stars.css">
+
+    <script type="text/javascript" src="/static/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/jquery/js-plugins/rangy-core.js"></script>
+    <script src="/static/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/mode-css.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/mode-html.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/mode-python.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/mode-xml.js" type="text/javascript" charset="utf-8"></script>
+    <script language="JavaScript" src="/static/graphterm.js"></script>
+  </head>
+
+<body>
+  <div id="authenticate">
+    <span id="authusercontainer">User: <input id="authuser" type="text"/><br></span>
+    <span id="authcodecontainer">Code: <input id="authcode" type="password"/><br></span>
+    <a href="#" onclick="Authenticate()">Authenticate</a>
+    <p>
+    <span id="authmessage"></span>
+  </div> <!-- authenticate -->
+
+  <div id="terminal" class="terminal">
+    <div id="gterm-header" class="gterm-header">
+      <span id="menubar-sessionlabel" class="menubar-label"></span>
+
+      &nbsp;
+      <select id="menubar-actions" class="menubar-select" size=1>
+        <option value="actions" selected>Actions</option>
+        <option value="reconnect">Reconnect</option>
+        <option value="steal">Steal</option>
+      </select>
+
+      &nbsp;
+      <span id="menubar-label-icons" class="menubar-label">Icons:</span>
+      <select id="menubar-icons" class="menubar-select" size=1>
+        <option value="off" selected>off</option>
+        <option value="on">on</option>
+      </select>
+
+      &nbsp;
+      <span id="menubar-label-webcast" class="menubar-label">Webcast:</span>
+      <select id="menubar-webcast" class="menubar-select" size=1>
+        <option value="off" selected>off</option>
+        <option class="webcast-alert" value="on">on</option>
+      </select>
+
+      &nbsp;
+      <span id="menubar-label-theme" class="menubar-label">Theme:</span>
+      <select id="menubar-theme" class="menubar-select" size=1>
+        <option value="default" selected>default</option>
+        <!-- <option value="stars">stars</option> -->
+        <option value="stars3d">stars3d</option>
+      </select>
+
+      <p>
+     <div id="session-headermenu"   class="session-headermenu">
+       <span id="headfoot-home"     class="headfoot">Home</span>
+       <span id="headfoot-bottom"   class="headfoot">Bottom</span>
+       <span id="headfoot-collapse" class="headfoot">Collapse</span>
+       <span id="headfoot-expand"   class="headfoot">Expand</span>
+       <span id="headfoot-detach"   class="headfoot">Detach</span>
+       <span id="headfoot-new"      class="headfoot">New</span>
+       <span id="headfoot-help"     class="headfoot gterm-not-implemented">Help</span>
+       <span id="headfoot-about"    class="headfoot gterm-not-implemented">About</span>
+     </div> <!-- session-headermenu -->
+
+    </div> <!-- gterm-header -->
+
+    <div id="gterm-mid" class="gterm-mid">
+
+      <div id="session-container" class="session-container">
+        <div id="session-term" class="session session-term">
+          <!--
+          <img src="/static/images/graphic.jpg" class="lateral"></img>
+          -->
+          <div id="session-bufellipsis" class="gterm-link" onclick="ExitFullscreen()"><h3>...</h3></div>
+          <pre id="session-bufscreen" class="session-bufscreen">
+          </pre>
+
+          <div id="session-findercontainer" class="session-findercontainer">
+            Close (FINDER NOT YET IMPLEMENTED!)
+            <div id="session-finderbody" class="session-finderbody">
+            </div> <!-- session-finderbody -->
+          </div> <!-- session-findercontainer -->
+
+          <div id="session-screencontainer"><div id="session-screenfold"></div><div id="session-screenfix">
+<!-- default size: 25x60 -->
+<pre class="session-screen" id="session-screen">0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+<span id="session-screen-testrow">01234567890123456789012345678901234567890123456789012345678901234567890123456789</span>
+</pre>
+              <div id="session-footermenu" class="session-footermenu">
+                <span id="headfoot-control" class="headfoot toggle">Control</span>
+                <span id="headfoot-top"     class="headfoot">Top</span>&nbsp;&nbsp;
+                <span id="headfoot-up"      class="headfoot">&#x25B2;</span>&nbsp;&nbsp;
+                <span id="headfoot-down"    class="headfoot">&#x25BC;</span>&nbsp;&nbsp;
+                <span id="headfoot-delete"  class="headfoot">&#x232B;</span>&nbsp;&nbsp;
+                <span id="headfoot-left"    class="headfoot">&lt;</span>&nbsp;&nbsp;
+                <span id="headfoot-right"   class="headfoot">&gt;</span>&nbsp;&nbsp;
+                <span id="headfoot-clear"   class="headfoot">Clear</span>
+                <span id="headfoot-command" class="headfoot toggle gterm-not-implemented">Cmd</span>
+                <span id="headfoot-options" class="headfoot toggle gterm-not-implemented">Opt</span>
+                <span id="headfoot-file"    class="headfoot toggle gterm-not-implemented">File</span>
+                <span id="headfoot-enter"   class="headfoot">Enter</span>
+                <!--
+                <input id="headfoot-input"  class="headfoot" size=3 placeholder="Insert">
+                -->
+              </div> <!-- session-footermenu -->
+            </div> <!-- session-screenfix -->
+          </div> <!-- session-screencontainer -->
+          <pre class="session-altscreen" id="session-altscreen">
+          </pre>
+        </div> <!-- session-term -->
+
+        <div id="session-roll" class="session session-roll">
+          <div id="session-log" class="session-log">
+          </div>
+        </div> <!-- session-roll -->
+      </div> <!-- session-container -->
+
+    </div> <!-- gterm-mid -->
+
+  </div> <!-- terminal -->
+
+<!-- gtermsplash -->
+<div id="gtermsplash" class="gtermsplash noshow">
+  <div id="gtermsplashtext" class="gtermsplashtext">
+   <h3>GraphTerm is a <em>graphical terminal interface</em> the blends
+the command line with the graphical user interface.</h3>
+<p>
+<h3>Type a Bash shell command or click <b>Home</b> on the menubar to get started...</h3>
+<p>
+<h3 class="gtermsplashalt">GraphTerm was developed as part of the Mindmeldr project.
+For more information, see <a target="_blank"
+href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphterm</a></h3>
+  </div> <!-- gtermsplashtext -->
+</div> <!-- gtermsplash -->
+
+<!-- ACE editor -->
+<div id="acearea" class="acearea">
+  Ajax.org Cloud9 Editor
+  <button id="acearea_button_apply" onclick="GTEndEdit(true);">Save</button>
+  <button id="acearea_button_quit" onclick="GTEndEdit(false);">Discard</button>
+</div> <!-- acearea -->
+
+<!-- popups -->
+<div id="pop_editarea" class="gterm-popup">
+  <button id="pop_editarea_button" onclick="GTEndEdit(true);">Save</button>
+  <button id="pop_editarea_button" onclick="GTEndEdit(false);">Discard</button>
+  <textarea name="pop_editarea_content" id="pop_editarea_content" rows="5" cols="60"></textarea>
+</div> <!-- pop_editarea -->
+<div id="pop_editarea_mask" class="gterm-popupmask jsonly"></div>
+
+</body>
+</html>

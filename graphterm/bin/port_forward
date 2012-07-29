@@ -1,0 +1,10 @@
+#!/bin/bash
+# Forward specified port to 8900
+# 
+
+if [ $# -ne 1 ]; then
+   echo "Usage: port_forward <80|443>"
+   exit 1
+fi
+
+iptables -t nat -A PREROUTING -p tcp --dport $1 -j REDIRECT --to 8900
