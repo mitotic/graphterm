@@ -3,19 +3,6 @@ GraphTerm: A Graphical Terminal Interface
 .. sectnum::
 .. contents::
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png
-   :align: center
-   :width: 90%
-   :figwidth: 60%
-
-   Screenshot of GraphTerm illustrating graphical ``gls`` and ``cat`` command
-   output using a 3D  perspective theme (captured on OS X Lion, using
-   Google Chrome).
-
-   (More images can be found in `SCREENSHOTS <https://github.com/mitotic/graphterm/blob/master/SCREENSHOTS.rst>`_
-   and in this `YouTube Video <http://youtu.be/JBMexdwXN8w>`_.)
-
-
 Introduction
 =============================
 
@@ -32,14 +19,26 @@ which is an AJAX/Python terminal implementation. (Another recent
 project along these lines is  `TermKit <http://acko.net/blog/on-termkit/>`_.)
 
 In addition to terminal features, GraphTerm implements file "finder"
-or "explorer" features. It also incorporates some detached terminal
-features of ``GNU screen``, as well as additional browser-based
-sharing  and collaboration capabilities. GraphTerm is designed to
+or "explorer" features, and also some of the detached terminal
+features of ``GNU screen``. GraphTerm is designed to
 be touch-friendly, by facilitating command re-use to minimize
 the use of the keyboard.
 
-For a demo of some of the GraphTerm features, see this
-`YouTube Video <http://youtu.be/JBMexdwXN8w>`_.
+GraphTerm is a *terminal server*, not just a terminal. Multiple users can connect to
+the terminal server simultaneously and share terminal sessions for collaboration.
+Also, multiple computers can connect to a single terminal server, allowing
+an user to manage them without having to log into each one
+separately.
+
+Images of GraphTerm in action can be found in `screenshots <https://github.com/mitotic/graphterm/blob/master/SCREENSHOTS.rst>`_ 
+and in this `YouTube Video <http://youtu.be/JBMexdwXN8w>`_.
+Here is a sample screenshot illustrating graphical ``gls`` and ``cat`` command
+output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome).
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png
+   :align: center
+   :width: 90%
+   :figwidth: 70%
 
 
 GraphTerm Design Goals:
