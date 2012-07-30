@@ -1,37 +1,17 @@
-#!/usr/bin/env python
-#
-# GraphTerm: A Graphical Terminal Interface
-#
-# GraphTerm was developed as part of the Mindmeldr project.
-# Documentation can be found at http://info.mindmeldr.com/code/graphterm
-#
-#  BSD License
-#
-#  Copyright (c) 2012, Ramalingam Saravanan <sarava@sarava.net>
-#  All rights reserved.
-#  
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions are met:
-#  
-#  1. Redistributions of source code must retain the above copyright notice, this
-#     list of conditions and the following disclaimer. 
-#  2. Redistributions in binary form must reproduce the above copyright notice,
-#     this list of conditions and the following disclaimer in the documentation
-#     and/or other materials provided with the distribution. 
-#  
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-#  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-#  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-#  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-#  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-#  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-#  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+GraphTerm Help (from README file)
+*********************************************************************************
+.. sectnum::
+.. contents::
 
-"""GraphTerm: A Graphical Terminal Interface
+
+Support
+=============================
+
+ - Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
+
+ - Additional documentation and updates will be made available on the project home page,
+   `info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_.
+
 
 Usage
 =================================
@@ -130,14 +110,6 @@ basic features of the standard ``ls`` and ``vi`` commands.
  - *Themes:* Themes are a work in progress, especially the 3-D
    perspective theme (which only works on Chrome/Safari).
 
-Support
-=============================
-
- - Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
-
- - Additional documentation and updates will be made available on the project home page,
-   `info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_.
-
 
 Cloud integration
 ===============================
@@ -183,6 +155,20 @@ debugging features, allowing access to the innards of the
 program running on the host.
 
 
+Caveats and limitations
+===============================
+
+ - *Reliability:*  This software has not been subject to extensive testing. Use at your own risk.
+
+ - *Platforms:*  The ``GraphTerm`` client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The ``GraphTerm`` server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.
+
+ - *Current limitations:*
+          * Support for ``xterm`` escape sequences is incomplete.
+          * Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.
+          * At the moment, you cannot customize the shell prompt. (You
+            should be able to in the future.)
+
+
 API for GraphTerm-aware programs
 ==========================================
 
@@ -191,13 +177,13 @@ writes to to the standard output in a format similar to a HTTP
 response, preceded and followed by
 ``xterm``-like *escape sequences*::
 
-  ESC[?1155;<cookie>h
+  \x1b[?1155;<cookie>h
   {"content_type": "text/html", ...}
 
   <table>
   ...
   </table>
-  ESC[?1155l
+  \x1b[?1155l
 
 where ``<cookie>`` denotes a numeric value stored in the environment
 variable ``GRAPHTERM_COOKIE``. (The random cookie is a security
@@ -211,34 +197,6 @@ can be written in any language, much like a CGI script.
 See the programs ``gls``, ``gvi``, ``gweather``, ``ec2launch`` and
 ``ec2list`` for examples of GraphTerm API usage.
 
-
-Implementation
-==========================================
-
-The GraphTerm server written in pure python, using the
-`Tornado  web  framework <http://tornadoweb.org>`_,
-with websocket support. The GraphTerm client uses standard
-HTML5+Javascript+CSS.
-
-GraphTerm extends the ``xterm`` terminal API by adding a
-new control sequence for programs to transmit a CGI-like HTTP response
-through standard output (via a websocket) to be displayed in the
-browser window. GraphTerm-aware programs can interact with the
-user using HTML forms etc.
-
-
-Caveats and limitations
-===============================
-
- - *Reliability:*  This software has not been subject to extensive testing. Use at your own risk.
-
- - *Platforms:*  The ``GraphTerm`` client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The ``GraphTerm`` server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.
-
- - *Current limitations:*
-          * Support for ``xterm`` escape sequences is incomplete.
-          * Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.
-          * At the moment, you cannot customize the shell prompt. (You
-            should be able to in the future.)
 
 Credits
 ===============================
@@ -259,4 +217,9 @@ Opening Crawl with CSS3 <http://www.seanslinsky.com/star-wars-crawl-with-css3>`_
 
 ``GraphTerm`` was developed as part of the `Mindmeldr <http://mindmeldr.com>`_ project, which is aimed at improving classroom interaction.
 
-"""
+
+License
+=====================
+
+``GraphTerm`` is distributed as open source under the `BSD-license <http://www.opensource.org/licenses/bsd-license.php>`_.
+

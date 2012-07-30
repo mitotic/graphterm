@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.9: http://docutils.sourceforge.net/" />
+<title>GraphTerm Help (from README file)</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7056 2011-06-17 10:50:48Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="graphterm-help-from-readme-file">
+<h1 class="title">GraphTerm Help (from README file)</h1>
+
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="auto-toc simple">
+<li><a class="reference internal" href="#support" id="id2">1&nbsp;&nbsp;&nbsp;Support</a></li>
+<li><a class="reference internal" href="#usage" id="id3">2&nbsp;&nbsp;&nbsp;Usage</a></li>
+<li><a class="reference internal" href="#cloud-integration" id="id4">3&nbsp;&nbsp;&nbsp;Cloud integration</a></li>
+<li><a class="reference internal" href="#otrace-integration" id="id5">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></li>
+<li><a class="reference internal" href="#caveats-and-limitations" id="id6">5&nbsp;&nbsp;&nbsp;Caveats and limitations</a></li>
+<li><a class="reference internal" href="#api-for-graphterm-aware-programs" id="id7">6&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></li>
+<li><a class="reference internal" href="#credits" id="id8">7&nbsp;&nbsp;&nbsp;Credits</a></li>
+<li><a class="reference internal" href="#license" id="id9">8&nbsp;&nbsp;&nbsp;License</a></li>
+</ul>
+</div>
+<div class="section" id="support">
+<h1><a class="toc-backref" href="#id2">1&nbsp;&nbsp;&nbsp;Support</a></h1>
+<blockquote>
+<ul class="simple">
+<li>Report bugs and other issues using the Github <a class="reference external" href="https://github.com/mitotic/graphterm/issues">Issue Tracker</a>.</li>
+<li>Additional documentation and updates will be made available on the project home page,
+<a class="reference external" href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphterm</a>.</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="usage">
+<h1><a class="toc-backref" href="#id3">2&nbsp;&nbsp;&nbsp;Usage</a></h1>
+<p>To start the <tt class="docutils literal">GraphTerm</tt> server, use the command:</p>
+<pre class="literal-block">
+gtermserver --auth_code=none
+</pre>
+<p>(You can use the <tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run it in the background.)
+Then, open up a browser that supports websockets, such as Google
+Chrome, Firefox, or Safari (Chrome works best), and enter the
+following URL:</p>
+<pre class="literal-block">
+http://localhost:8900
+</pre>
+<p>Alternatively, you can use the <tt class="docutils literal">gterm</tt> command to open up the
+browser window.</p>
+<p>Once within the <tt class="docutils literal">graphterm</tt> browser page, select the host you
+wish to connect to and create a new terminal session on the host.
+Then try out the following commands:</p>
+<pre class="literal-block">
+gls &lt;directory&gt;
+gvi  &lt;text-filename&gt;
+gweather
+</pre>
+<p>The first two are graphterm-aware scripts that imitate
+basic features of the standard <tt class="docutils literal">ls</tt> and <tt class="docutils literal">vi</tt> commands.</p>
+<p><em>Usage Tips:</em></p>
+<blockquote>
+<ul>
+<li><p class="first"><em>Terminal type:</em> The default terminal type is set to <tt class="docutils literal">linux</tt>,
+but it has a poor fullscreen mode and command history does
+not work properly. You can try out the terminal types <tt class="docutils literal">screen</tt>
+or <tt class="docutils literal">xterm</tt>, which may work better for some purposes.
+Use the <tt class="docutils literal"><span class="pre">--term_type</span></tt> option to set the default terminal type.
+(Fully supporting these terminal types is a work in progress.)</p>
+</li>
+<li><p class="first"><em>Sessions and sharing:</em> For each host, sessions are assigned default names like
+<tt class="docutils literal">tty1</tt> etc. You can also create unique session names simply by using
+it in an URL, e.g.:</p>
+<pre class="literal-block">
+  http://localhost:8900/local/mysession
+
+The first user to create a session &quot;owns&quot; it. Others connecting to the
+same session have read-only access (unless they &quot;steal&quot; the session).
+</pre>
+</li>
+<li><p class="first"><em>Multiple hosts:</em> More than one host can connect to the <tt class="docutils literal">graphterm</tt> server.
+The local host is connected by default. To connect an additional
+host, run the following command on the host you wish to connect:</p>
+<pre class="literal-block">
+ gtermhost &lt;serveraddr&gt; &lt;hostname&gt;
+
+where ``serveraddr`` is the address or name of the computer where
+the server is running. You can use the ``--daemon=start`` option to
+run the command in the background. (By default, the server listens for host
+connections on port 8899.)
+</pre>
+</li>
+<li><p class="first"><em>Security:</em> The <tt class="docutils literal"><span class="pre">--auth_code</span></tt> option can be used to specify
+an authentication code required for users connecting to the server.
+Although multiple hosts can connect to the terminal  server,
+initially,  it would be  best to use <tt class="docutils literal">graphterm</tt> to simply  connect
+to <tt class="docutils literal">localhost</tt>,  on a computer with only trusted users.
+(<em>Note:</em> Users can always use SSH port forwarding to securely connect
+to the <tt class="docutils literal">graphterm</tt> server listening as <tt class="docutils literal">localhost</tt> on a remote
+computer, e.g.. <tt class="docutils literal">ssh <span class="pre">-L</span> 8900:localhost:8900 user&#64;example.com</tt>)
+<em>Do not run the server as root</em>. As the code matures,
+security can be improved through the use of SSL certificates
+and server/client authentication.
+These features are implemented in the code, but have not been
+properly configured/tested.</p>
+</li>
+<li><p class="first"><em>Visual cues:</em> In the default theme, <em>blue</em> color denotes text that can
+be <em>clicked</em> or <em>tapped</em>. The action triggered by clicking depends on
+several factors, such as whether there is text in the current command
+line, and whether the Control modifier in the <em>Bottom menu</em> is active.
+Click on the last displayed prompt to toggle display of the <em>Bottom menu</em>.
+Clicking on other prompts toggles display of the command output
+(unless the Control modifier is used, in which case the command line
+is copied and pasted.)</p>
+</li>
+<li><p class="first"><em>Copy/paste:</em> Click on the cursor to paste text from the clipboard.</p>
+</li>
+<li><p class="first"><em>Drag and drop:</em> Sort of works within a window and across two
+windows. You can drag filenames (text-only) and drop them on
+folders, executables, or the command line. Visual feedback can
+be confusing.</p>
+</li>
+<li><p class="first"><em>Command recall:</em> Use <em>up/down arrows</em> after partially typing a
+command to search for matching commands, and use <em>right arrow</em>
+for completion.</p>
+</li>
+<li><p class="first"><em>Touch devices:</em> Click on the cursor to display virtual keyboard
+on the ipad etc.</p>
+</li>
+<li><p class="first"><em>Themes:</em> Themes are a work in progress, especially the 3-D
+perspective theme (which only works on Chrome/Safari).</p>
+</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="cloud-integration">
+<h1><a class="toc-backref" href="#id4">3&nbsp;&nbsp;&nbsp;Cloud integration</a></h1>
+<p>The GraphTerm distribution includes the scripts <tt class="docutils literal">ec2launch, ec2list, ec2scp,</tt>
+and <tt class="docutils literal">ec2ssh</tt> to launch and monitor Amazon Web Services EC2 instances
+to run GraphTerm in the &quot;cloud&quot;. You will need to have an Amazon AWS
+account to use these scripts, and also need to install the <tt class="docutils literal">boto</tt> python module.
+To create an instance, use the command:</p>
+<pre class="literal-block">
+ec2instance &lt;instance_tagname&gt;
+</pre>
+<p>To <em>temporarily</em> run a publicly accessible GraphTerm server for
+demonstration or teaching purposes, use the following command on the instance:</p>
+<pre class="literal-block">
+gtermserver --daemon=start --auth_code=none --host=&lt;primary_domain_or_address&gt;
+</pre>
+<p><em>Note: This is totally insecure and should not be used for handling any sensitive information.</em>
+Ensure that the security group associated with the cloud instance
+allows access to inbound TCP port 22 (for SSH access), 8900 (for GraphTerm users to connect), and
+port 8899 (for GraphTerm hosts to connect). Also, when using <tt class="docutils literal">ec2scp</tt> and <tt class="docutils literal">sc2ssh</tt>
+to access the instance, ensure that you specify the appropriate login name (e.g., <tt class="docutils literal">ubuntu</tt>
+for Ubuntu distribution).
+Secondary cloud instances should connect to the GraphTerm server on
+the primary instance using the command:</p>
+<pre class="literal-block">
+gtermhost --daemon=start &lt;primary_domain_or_address&gt; &lt;secondary_host_name&gt;
+</pre>
+<p>For increased security in a publicly-accessible server, you will need to use a cryptic authentication code,
+and also use <em>https</em> instead of <em>http</em>, with SSL cettificates . Since GraphTerm is currently in
+<em>alpha</em> status, security cannot be guaranteed even with these options enabled.
+(To avoid these problems, use SSH port forwarding to access GraphTerm
+on <tt class="docutils literal">localhost</tt> whenever possble.)</p>
+</div>
+<div class="section" id="otrace-integration">
+<h1><a class="toc-backref" href="#id5">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></h1>
+<p>GraphTerm was originally developed as a graphical front-end for
+<a class="reference external" href="http://info.mindmeldr.com/code/otrace">otrace</a>,
+an object-oriented python debugger. Use the <tt class="docutils literal"><span class="pre">--oshell</span></tt>
+option when connecting a host to the server enables <tt class="docutils literal">otrace</tt>
+debugging features, allowing access to the innards of the
+program running on the host.</p>
+</div>
+<div class="section" id="caveats-and-limitations">
+<h1><a class="toc-backref" href="#id6">5&nbsp;&nbsp;&nbsp;Caveats and limitations</a></h1>
+<blockquote>
+<ul>
+<li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
+</li>
+<li><p class="first"><em>Platforms:</em>  The <tt class="docutils literal">GraphTerm</tt> client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The <tt class="docutils literal">GraphTerm</tt> server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.</p>
+</li>
+<li><dl class="first docutils">
+<dt><em>Current limitations:</em></dt>
+<dd><ul class="first last simple">
+<li>Support for <tt class="docutils literal">xterm</tt> escape sequences is incomplete.</li>
+<li>Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.</li>
+<li>At the moment, you cannot customize the shell prompt. (You
+should be able to in the future.)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="api-for-graphterm-aware-programs">
+<h1><a class="toc-backref" href="#id7">6&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></h1>
+<p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
+writes to to the standard output in a format similar to a HTTP
+response, preceded and followed by
+<tt class="docutils literal">xterm</tt>-like <em>escape sequences</em>:</p>
+<pre class="literal-block">
+\x1b[?1155;&lt;cookie&gt;h
+{&quot;content_type&quot;: &quot;text/html&quot;, ...}
+
+&lt;table&gt;
+...
+&lt;/table&gt;
+\x1b[?1155l
+</pre>
+<p>where <tt class="docutils literal">&lt;cookie&gt;</tt> denotes a numeric value stored in the environment
+variable <tt class="docutils literal">GRAPHTERM_COOKIE</tt>. (The random cookie is a security
+measure that prevents malicious files from accessing GraphTerm.)
+The opening escape sequence is followed by a <em>dictionary</em> of header
+names and values, using JSON format. This is followed by a blank line,
+and then any data (such as the HTML fragment to be displayed).</p>
+<p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
+can be written in any language, much like a CGI script.
+See the programs <tt class="docutils literal">gls</tt>, <tt class="docutils literal">gvi</tt>, <tt class="docutils literal">gweather</tt>, <tt class="docutils literal">ec2launch</tt> and
+<tt class="docutils literal">ec2list</tt> for examples of GraphTerm API usage.</p>
+</div>
+<div class="section" id="credits">
+<h1><a class="toc-backref" href="#id8">7&nbsp;&nbsp;&nbsp;Credits</a></h1>
+<p><tt class="docutils literal">GraphTerm</tt> is inspired by two earlier projects that implement the
+terminal interface within the browser,
+<a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a> and
+<a class="reference external" href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm</a>.
+It borrows many of the ideas from <em>XMLTerm</em> and re-uses chunks of code from
+<em>AjaxTerm</em>.</p>
+<p>The <tt class="docutils literal">gls</tt> command uses icons from the <a class="reference external" href="http://tango.freedesktop.org">Tango Icon Library</a></p>
+<blockquote>
+Graphical editing uses the <a class="reference external" href="http://ace.ajax.org">Ajax.org Cloud9 Editor</a></blockquote>
+<p>The 3D perspective mode was inspired by Sean Slinsky's <a class="reference external" href="http://www.seanslinsky.com/star-wars-crawl-with-css3">Star Wars
+Opening Crawl with CSS3</a>.</p>
+<p><tt class="docutils literal">GraphTerm</tt> was developed as part of the <a class="reference external" href="http://mindmeldr.com">Mindmeldr</a> project, which is aimed at improving classroom interaction.</p>
+</div>
+<div class="section" id="license">
+<h1><a class="toc-backref" href="#id9">8&nbsp;&nbsp;&nbsp;License</a></h1>
+<p><tt class="docutils literal">GraphTerm</tt> is distributed as open source under the <a class="reference external" href="http://www.opensource.org/licenses/bsd-license.php">BSD-license</a>.</p>
+</div>
+</div>
+</body>
+</html>
