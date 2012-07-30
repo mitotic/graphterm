@@ -92,7 +92,7 @@ use the following commands::
    sudo gterm_setup
 
 For the normal install procedure, download the release tarball from the
-`Python Package Index <http://pypi.python.org/pypi/otrace>`_, untar,
+`Python Package Index <http://pypi.python.org/pypi/graphterm>`_, untar,
 and execute the following command in the ``graphterm-<version>`` directory::
 
    python setup.py install

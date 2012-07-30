@@ -3,4 +3,7 @@
 *.pyc
 README.html
 SCREENSHOTS.html
+build/*
+dist/*
+graphterm.egg-info/*
 local/*

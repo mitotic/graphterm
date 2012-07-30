@@ -68,8 +68,6 @@ PROTOCOL = "http"
 SUPER_USERS = set(["root"])
 LOCAL_HOST = "local"
 
-First_terminal = True
-
 def cgi_escape(s):
     return cgi.escape(s) if s else ""
 
@@ -335,9 +333,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             TerminalConnection.send_to_connection(host, "request", term_name, [["reconnect"]])
 
+            display_splash = self.controller and self._counter[0] <= 2
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
                                         "controller": self.controller,
-                                        "first_terminal": gtermhost.TerminalClient.first_terminal[0],
+                                        "display_splash": display_splash,
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
             logging.warning("GTSocket.open: ERROR %s", excp)
@@ -638,26 +637,30 @@ def run_server(options, args):
         raise Exception("TEST EXCEPTION")
 
     def stop_server():
+        global Http_server
         gtermhost.gterm_shutdown(Trace_shell)
-        Http_server.stop()
+        if Http_server:
+            Http_server.stop()
+            Http_server = None
         IO_loop.stop()
 
     def sigterm(signal, frame):
         logging.warning("SIGTERM signal received")
-        stop_server()
+        IO_loop.add_callback(stop_server)
     signal.signal(signal.SIGTERM, sigterm)
 
     try:
-        if not Trace_shell:
-            IO_loop.start()
-        else:
-            ioloop_thread = threading.Thread(target=IO_loop.start)
-            ioloop_thread.start()
-            time.sleep(1)   # Time to start thread
-            print >> sys.stderr, "Listening on %s:%s" % (http_host, http_port)
+        ioloop_thread = threading.Thread(target=IO_loop.start)
+        ioloop_thread.start()
+        time.sleep(1)   # Time to start thread
+        print >> sys.stderr, "Listening on %s:%s" % (http_host, http_port)
 
-            print >> sys.stderr, "\nType ^D^C to stop server"
+        print >> sys.stderr, "\nType ^C to stop server"
+        if Trace_shell:
             Trace_shell.loop()
+        else:
+            while Http_server:
+                time.sleep(1)
     except KeyboardInterrupt:
         print >> sys.stderr, "Interrupted"
 

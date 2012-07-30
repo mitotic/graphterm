@@ -497,7 +497,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    setCookie("GRAPHTERM_AUTH", gParams.state_id);
 		if (!gParams.oshell)
 		    openTerminal();
-		if (gParams.controller && gParams.first_terminal && gParams.term != "osh")
+		if (gParams.controller && gParams.display_splash && gParams.term != "osh")
 		    GTShowSplash();
 
             } else if (action == "host_list") {
@@ -1099,7 +1099,7 @@ function gtermMenuClickHandler(event) {
 	OpenNew();
 	break;
     case "about":
-	alert("See http://info.mindmeldr.com/code/graphterm for more info");
+	alert("GraphTerm: A Graphical Terminal Interface\n\nhttp://info.mindmeldr.com/code/graphterm");
 	break;
     case "control":
 	$("#headfoot-control").toggleClass("gterm-headfoot-active");

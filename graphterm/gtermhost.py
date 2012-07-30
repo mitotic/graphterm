@@ -45,7 +45,6 @@ class HtmlWrapper(object):
 
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
-    first_terminal = [True]
     def __init__(self, host, port, command=SHELL_CMD, lterm_cookie="", io_loop=None, ssl_options={},
                  term_type="", lterm_logfile=""):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
@@ -88,7 +87,6 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             self.lineterm.kill_term(term_name)
 
     def xterm(self, term_name="", height=25, width=80, command=SHELL_CMD):
-        self.first_terminal[0] = False
         if not self.lineterm:
             self.lineterm = lineterm.Multiplex(self.screen_callback, command=command,
                                                cookie=self.lterm_cookie, prompt=SHELL_PROMPT,
@@ -319,25 +317,28 @@ def run_host(options, args):
     Killterm = Gterm_host.remove_term
 
     def host_shutdown():
+        global Gterm_host
         gterm_shutdown(Trace_shell)
+        Gterm_host = None
         IO_loop.stop()
 
     def sigterm(signal, frame):
         logging.warning("SIGTERM signal received")
-        host_shutdown()
+        IO_loop.add_callback(host_shutdown)
     signal.signal(signal.SIGTERM, sigterm)
 
     IO_loop = tornado.ioloop.IOLoop.instance()
     try:
-        if not Trace_shell:
-            IO_loop.start()
-        else:
-            ioloop_thread = threading.Thread(target=IO_loop.start)
-            ioloop_thread.start()
-            time.sleep(1)   # Time to start thread
+        ioloop_thread = threading.Thread(target=IO_loop.start)
+        ioloop_thread.start()
+        time.sleep(1)   # Time to start thread
 
-            print >> sys.stderr, "\nType ^D^C to exit"
+        print >> sys.stderr, "\nType ^C to exit"
+        if Trace_shell:
             Trace_shell.loop()
+        else:
+            while Gterm_host:
+                time.sleep(1)
     except KeyboardInterrupt:
         print >> sys.stderr, "Interrupted"
 
@@ -347,10 +348,7 @@ def run_host(options, args):
         except Exception:
             pass
 
-    if Trace_shell:
-        IO_loop.add_callback(host_shutdown)
-    else:
-        host_shutdown()
+    IO_loop.add_callback(host_shutdown)
 
 def main():
     from optparse import OptionParser
