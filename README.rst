@@ -91,15 +91,23 @@ use the following commands::
    sudo easy_install graphterm
    sudo gterm_setup
 
-For the normal install procedure, download the release tarball from the
+(If ``setuptools`` is not installed, consider installing it using
+``apt-get install -y python-setuptools`` on Debian Linux systems
+or its equivalent on other systems.)
+
+For a manual install procedure, download the release tarball from the
 `Python Package Index <http://pypi.python.org/pypi/graphterm>`_, untar,
 and execute the following command in the ``graphterm-<version>`` directory::
 
    python setup.py install
 
+For the manual install, you will also need to install the ``tornado``
+web server, which can be downloaded from
+`https://github.com/downloads/facebook/tornado/tornado-2.3.tar.gz <https://github.com/downloads/facebook/tornado/tornado-2.3.tar.gz>`_
+
 You can also try out ``GraphTerm`` without installing it, by
 running the server ``gtermserver.py`` in the ``graphterm``
-subdirectory,  provided you have the ``tornado`` python module
+subdirectory,  provided you have the ``tornado`` module
 installed in your system (or in the ``graphterm`` subdirectory).
 
 You can browse/fork the ``GraphTerm`` source code, and download the latest
