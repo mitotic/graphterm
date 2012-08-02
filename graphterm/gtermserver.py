@@ -555,13 +555,23 @@ class ProxyFileHandler(tornado.web.RequestHandler):
         lterm_host = gtermhost.get_lterm_host(host)
         lterm_cookie = TerminalConnection.lterm_cookies.get(lterm_host)
 
-        check_cookie = self.get_cookie("GRAPHTERM_HOST_"+lterm_host) or self.get_argument("lc", "")
-
-        if not lterm_cookie or lterm_cookie != check_cookie:
+        if not lterm_cookie:
             raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
+        check_cookie = self.get_cookie("GRAPHTERM_HOST_"+lterm_host)
+
+        if check_cookie:
+            if lterm_cookie != check_cookie:
+                raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+        else:
+            check_cookie = self.get_argument("cookie", "")
+            check_host = gtermhost.get_lterm_host(self.get_argument("host", ""))
+            dest_cookie = TerminalConnection.lterm_cookies.get(check_host)
+            if not dest_cookie or dest_cookie != check_cookie:
+                raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+
         fpath_hmac = hmac.new(str(lterm_cookie), self.file_path, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
-        if fpath_hmac != self.get_argument("h", ""):
+        if fpath_hmac != self.get_argument("hmac", ""):
             raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
         self.async_id = self.get_async_id()

@@ -217,10 +217,10 @@ def shplit(line, delimiters=COMMAND_DELIMITERS, final_delim="&", index=None):
 
 FILE_URI_PREFIX = "file://"
 def split_file_uri(uri):
-	"""Return triplet [hostname, filename, fullpath, query] for file://host/path URIs
+	"""Return [hostname, filename, fullpath, query] for file://host/path URIs
 	If not file URI, returns []
 	"""
-	if not uri.startswith(FILE_URI_PREFIX):
+	if not uri or not uri.startswith(FILE_URI_PREFIX):
 		return []
 	host_path = uri[len(FILE_URI_PREFIX):]
 	j = host_path.find("?")
@@ -1211,8 +1211,9 @@ class Terminal(object):
 		command_prefix = ""
 		expect_filename = False
 		expect_uri = (command in REMOTE_FILE_COMMANDS)
+		file_uri_comps = split_file_uri(file_uri)
 		if not text and file_uri:
-			text = file_uri if expect_uri else split_file_uri(file_uri)[2]
+			text = file_uri if (not file_uri_comps or (expect_uri and file_uri_comps[0] != self.host)) else file_uri_comps[2]
 
 		if offset:
 			# At command line
@@ -1251,7 +1252,7 @@ class Terminal(object):
 
 		if cwd and normalize and expect_filename and file_uri:
 			# Check if file URI represents subdirectory of CWD
-			if expect_uri:
+			if expect_uri and file_uri_comps and file_uri_comps[0] != self.host:
 				text = file_uri
 			else:
 				normpath = relative_file_uri(file_uri, cwd)
@@ -1267,7 +1268,8 @@ class Terminal(object):
 			if dest_uri:
 				if paste_text and paste_text[-1] != " ":
 					paste_text += " "
-				paste_text += dest_uri if expect_uri else relative_file_uri(dest_uri, cwd)
+				dest_comps = split_file_uri(dest_uri)
+				paste_text += dest_uri if (expect_uri and dest_comps and dest_comps[0] != self.host) else relative_file_uri(dest_uri, cwd)
 			if enter and offset and not pre_line and command:
 				# Empty command line with pasted command
 				paste_text += "\n"

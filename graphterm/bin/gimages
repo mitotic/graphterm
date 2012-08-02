@@ -71,7 +71,7 @@ if not file_list:
     sys.exit(1)
     
 def display_file(filepath):
-    filehmac = "?h="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+    filehmac = "?hmac="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
     fileurl = "/file/" + Host + filepath + filehmac
 
     html = IMGFORMAT % fileurl

@@ -105,6 +105,15 @@ $.fn.bindclick = function(handler, context) {
 function makeFileURI(uri) {
     if (uri.substr(0,FILE_URI_PREFIX.length) == FILE_URI_PREFIX)
 	return uri;
+    if (uri.substr(0,5) == "http:" || uri.substr(0,6) == "https:") {
+	uri = uri.substr(uri.indexOf(":")+3);
+	var j = uri.indexOf("/");
+	if (j >= 0)
+	    uri = uri.substr(j);
+	else
+	    uri = "/";
+    }
+	
     var prefix = "/file/";
     if (uri.substr(0,prefix.length) != prefix)
 	return "";
@@ -115,10 +124,10 @@ function makeFileURI(uri) {
     return FILE_URI_PREFIX + comps.join("/");
 }
 
-// Returns triplet [hostname, filename, fullpath, query] for file://host/path URIs
+// Returns [hostname, filename, fullpath, query] for file://host/path URIs
 // If not file URI, returns []
 function splitFileURI(uri) {
-    if (uri.substr(0,FILE_URI_PREFIX.length) != FILE_URI_PREFIX)
+    if (!uri || uri.substr(0,FILE_URI_PREFIX.length) != FILE_URI_PREFIX)
 	return [];
     var hostPath = uri.substr(FILE_URI_PREFIX.length);
     var j = hostPath.indexOf("?");
@@ -713,13 +722,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    }
 
 		    if (alt_mode && (reset || !$("#session-altscreen span.row").length)) {
+			gCursorAtEOL = false;
 			var preList = ["<hr>"];
 			for (var k=0; k<term_height; k++)
 			    preList.push('<span id="'+"gterm-alt"+k+'" class="row">\n</span>');
 			$("#session-altscreen").html(preList.join(""));
 		    }
 
-		    if (update_rows.length || update_scroll.length)
+		    if (update_rows.length)
 			gCursorAtEOL = false;
 		    for (var j=0; j<update_rows.length; j++) {
 			var row_num = update_rows[j][JINDEX];
@@ -1398,7 +1408,7 @@ function keypressHandler(evt) {
 
 function HandleArrowKeys(keyCode) {
     //console.log("HandleArrowKeys", keyCode, gCursorAtEOL);
-    if (!gCursorAtEOL)
+    if (!gCursorAtEOL || gWebSocket.alt_mode)
 	return true;
     // Cursor at end of command line
     if (keyCode == 38 || keyCode == 40) {
@@ -1946,22 +1956,24 @@ function GTDropHandler(evt) {
 		var text = evt.originalEvent.dataTransfer.getData("text/plain") || "";
 		var file_uri = "";
 		if (text) {
-		    var comps = splitFileURI(text);
-		    if (comps.length) {
-			file_uri = text;
-			text = comps[1];
-		    }
-		    var options = {};
-		    if (gterm_mime == "x-graphterm/directory") {
-			options.command = "mv";
-			options.dest_uri = gterm_uri;
-			options.enter = true;
-			gtermClickPaste("", file_uri, options);
-		    } else if (gterm_mime == "x-graphterm/executable") {
-			options.command = splitFileURI(gterm_uri)[2];
-			gtermClickPaste("", file_uri, options);
-		    } else {
-			gtermClickPaste(text, file_uri, options);
+		    var srcText = makeFileURI(text);
+		    var srcComps = splitFileURI(srcText);
+		    if (srcComps.length) {
+			file_uri = srcText;
+			text = srcComps[1];
+			var options = {};
+			var dstComps = splitFileURI(gterm_uri);
+			if (gterm_mime == "x-graphterm/directory") {
+			    options.command = (srcComps[0] == dstComps[0]) ? "mv" : "gcp";
+			    options.dest_uri = gterm_uri;
+			    options.enter = true;
+			    gtermClickPaste("", file_uri, options);
+			} else if (gterm_mime == "x-graphterm/executable") {
+			    options.command = dstComps[2];
+			    gtermClickPaste("", file_uri, options);
+			} else {
+			    gtermClickPaste(text, file_uri, options);
+			}
 		    }
 		}
 	    }
