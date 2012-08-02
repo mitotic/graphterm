@@ -3,17 +3,30 @@
 """gtermhost: GraphTerm host connector
 """
 
+import base64
 import cgi
+import calendar
+import datetime
+import email.utils
 import functools
+import hashlib
 import logging
+import mimetypes
 import otrace
 import os
-import random
+import re
 import signal
+import stat
 import sys
 import threading
 import time
 import urllib
+
+import random
+try:
+    random = random.SystemRandom()
+except NotImplementedError:
+    import random
 
 import lineterm
 import packetserver
@@ -33,6 +46,10 @@ SHELL_PROMPT = [PROMPT_PREFIX, '\W', PROMPT_SUFFIX]
 
 HTML_ESCAPES = ["\x1b[?1155;", "h",
                 "\x1b[?1155l"]
+
+def get_lterm_host(host):
+    """Return identifier version of hostname"""
+    return re.sub(r"\W", "_", host.upper())
 
 class HtmlWrapper(object):
     """ Wrapper for HTML output
@@ -64,6 +81,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.lineterm = None
         super(TerminalClient, self).shutdown()
 
+    def handle_connect(self):
+        lterm_host = get_lterm_host(self.connection_id)
+        self.remote_response("", [["term_params", {"lterm_cookie": self.lterm_cookie,
+                                                  "lterm_host": lterm_host}]])
+        
     def add_oshell(self):
         self.add_term(OSHELL_NAME, 0, 0)
         
@@ -89,8 +111,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     def xterm(self, term_name="", height=25, width=80, command=SHELL_CMD):
         if not self.lineterm:
             self.lineterm = lineterm.Multiplex(self.screen_callback, command=command,
-                                               cookie=self.lterm_cookie, prompt=SHELL_PROMPT,
-                                               term_type=self.term_type, logfile=self.lterm_logfile)
+                                               cookie=self.lterm_cookie, host=self.connection_id,
+                                               prompt=SHELL_PROMPT, term_type=self.term_type,
+                                               logfile=self.lterm_logfile)
         term_name = self.lineterm.terminal(term_name, height=height, width=width)
         self.add_term(term_name, height, width)
         return term_name
@@ -226,6 +249,60 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                             entry_list.append('<span class="stderr">%s</span>' % cgi.escape(std_err))
                         entry_list.append('</pre>')
                         resp_list.append(["output", "\n".join(entry_list)])
+
+                elif action == "file_request":
+                    request_id, request_method, file_path, if_mod_since = cmd
+                    status = (404, "Not Found")
+                    modified = None
+                    etag = None
+                    content_type = None
+                    content_length = None
+                    content = None
+                    abspath = file_path
+                    if os.path.sep != "/":
+                        abspath = abspath.replace("/", os.path.sep)
+
+                    if os.path.isfile(abspath) and os.access(abspath, os.R_OK):
+                        stat_result = os.stat(abspath)
+                        mod_datetime = datetime.datetime.fromtimestamp(stat_result[stat.ST_MTIME])
+
+                        if if_mod_since:
+                            date_tuple = email.utils.parsedate(if_mod_since)
+                            copy_datetime = datetime.datetime.fromtimestamp(time.mktime(date_tuple))
+                        else:
+                            copy_datetime = None
+
+                        if copy_datetime and copy_datetime >= mod_datetime:
+                            status = (304, "Not Modified")
+                        else:
+                            # Read file contents
+                            try:
+                                tm = calendar.timegm(mod_datetime.utctimetuple())
+                                last_modified = email.utils.formatdate(tm, localtime=False, usegmt=True)
+
+                                mime_type, encoding = mimetypes.guess_type(abspath)
+                                if mime_type:
+                                    content_type = mime_type
+
+                                with open(abspath, "rb") as file:
+                                    data = file.read()
+                                    hasher = hashlib.sha1()
+                                    hasher.update(data)
+                                    digest = hasher.hexdigest()
+                                    etag = '"%s"' % digest
+                                    if request_method == "HEAD":
+                                        content_length = len(data)
+                                    else:
+                                        content = data
+                                    status = (200, "OK")
+                            except Exception:
+                                pass
+
+                    resp_list.append(["file_response", request_id,
+                                      dict(status=status, last_modified=last_modified,
+                                           etag=etag,
+                                           content_type=content_type, content_length=content_length,
+                                           content=base64.b64encode(content))])
 
                 elif action == "errmsg":
                     logging.warning("remote_request: ERROR %s", cmd[0])

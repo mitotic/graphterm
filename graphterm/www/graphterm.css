@@ -197,6 +197,35 @@ span.headfoot {
     /* font-weight: bold; */
 }
 
+img.gterm-img {
+    width: 32px;
+    height: 32px;
+}
+
+div.gterm-imgcontainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    opacity: 1.0;
+    z-index: 1000;
+    width: 100%;
+    height: 100%;
+}
+
+img.gterm-fullimg {
+    opacity: 1.0;
+    z-index: 1000;
+    width: 100%;
+    min-height: 100%;
+    height: auto;
+}
+
+img.gterm-blockimg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
 span.gterm-link, a.gterm-link {
     color: blue;
     cursor: pointer;

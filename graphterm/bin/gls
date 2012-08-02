@@ -5,6 +5,8 @@
 gls: graphterm-aware ls
 """
 
+import hashlib
+import hmac
 import json
 import mimetypes
 import os
@@ -13,6 +15,7 @@ import xml.dom.minidom
 from optparse import OptionParser
 
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
+Host = os.getenv("GRAPHTERM_HOST", "")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
 
@@ -32,11 +35,14 @@ FILE_TYPES = {"directory": ("/static/images/tango-folder.png", "cd %(path); "+gl
               "videofile": ("/static/images/tango-video-x-generic.png", gopencmd),
 }
 
-IMGFORMAT = "<td><a class='gterm-link gterm-imglink %(classes)s' href='file://%(filepath)s' data-gtermmime='x-graphterm/%(filetype)s' data-gtermcmd='%(filecmd)s'><img class='gterm-img' src='%(fileicon)s'></img></a>"
+IMGFORMAT = '<td><a class="gterm-link gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img" src="%(fileicon)s"></img></a>'
 
-TXTFORMAT = "<td><a class='gterm-link %(classes)s' href='file://%(filepath)s' data-gtermmime='x-graphterm/%(filetype)s' data-gtermcmd='%(filecmd)s'>%(filename)s</a>"
+TXTFORMAT = '<td><a class="gterm-link %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
+
+HEX_DIGITS = 16
 
 def file2html(filepath, filename, filemode=0):
+    mimetype = None
     if filename in SPECIAL_FILES:
         filetype = "directory"
     elif os.path.lexists(filepath):
@@ -62,8 +68,14 @@ def file2html(filepath, filename, filemode=0):
 
     classes = "droppable" if filetype in ("directory", "executable") else ""
     fileicon, filecmd = FILE_TYPES[filetype]
-    params = {"classes": classes, "filepath": filepath, "filename": filename,
-              "filetype": filetype, "fileicon": fileicon, "filecmd": filecmd}
+
+    filehmac = "?h="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+    fileurl = "/file/" + Host + filepath + filehmac
+    if options.images and mimetype and mimetype.startswith("image/"):
+        fileicon = fileurl
+
+    params = {"classes": classes, "fileurl": fileurl, "filename": filename, "filetype": filetype,
+              "fileicon": fileicon, "filecmd": filecmd}
     
     return IMGFORMAT % params, TXTFORMAT % params
 
@@ -107,16 +119,19 @@ def wrap(html):
 
 usage = "usage: %prog [-f] <location>"
 parser = OptionParser(usage=usage)
-parser.add_option("-f", "--fullscreen",
-                  action="store_true", dest="fullscreen", default=False,
-                  help="Fullscreen display")
+parser.add_option("-f", "--fullpage",
+                  action="store_true", dest="fullpage", default=False,
+                  help="Fullpage display")
 parser.add_option("-a", "--all",
                   action="store_true", dest="all", default=False,
                   help="Display all files, including hidden")
+parser.add_option("-i", "--images",
+                  action="store_true", dest="images", default=False,
+                  help="Display image files as thumbnails")
 parser.add_option("-s", "--size",
                   action="store_true", dest="size", default=False,
                   help="Sort by file size")
-parser.add_option("-t", "--timer",
+parser.add_option("-t", "--time",
                   action="store_true", dest="time", default=False,
                   help="Sort by time modified")
 
@@ -157,9 +172,12 @@ Table_list.append('</table>')
 
 html = "\n".join(Table_list) + "\n"
 
+params = {"scroll": "top", "current_directory": work_dir}
+params["display"] = "fullpage" if options.fullpage else "block"
+
 headers = {"content_type": "text/html"}
-headers["x_gterm_response"] = "pagelet_fullscreen" if options.fullscreen else "pagelet"
-headers["x_gterm_parameters"] = {"scroll": "top", "current_directory": work_dir}
+headers["x_gterm_response"] = "pagelet"
+headers["x_gterm_parameters"] = params
 
 sys.stdout.write(wrap(json.dumps(headers)+"\n\n"+html))
 

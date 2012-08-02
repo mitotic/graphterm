@@ -8,9 +8,9 @@ Introduction
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
-interfaces. The goal is to be fully backwards compatible with
-``xterm``.  You should be able to use it just like a regular terminal
-interface, accessing additional features only as needed. GraphTerm builds
+interfaces. The goal is to be a fully backwards-compatible terminal
+emulator for ``xterm``.  You should be able to use it just like a regular terminal
+interface, accessing additional graphical features only as needed. GraphTerm builds
 upon two earlier projects, 
 `XMLTerm <http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html>`_
 which implemented a terminal using the Mozilla framework and

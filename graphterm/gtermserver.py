@@ -3,8 +3,11 @@
 """gtermserver: WebSocket server for GraphTerm
 """
 
+import base64
 import cgi
 import collections
+import datetime
+import email.utils
 import functools
 import hashlib
 import hmac
@@ -12,7 +15,6 @@ import json
 import logging
 import os
 import Queue
-import random
 import shlex
 import ssl
 import stat
@@ -24,6 +26,12 @@ import traceback
 import urllib
 import urlparse
 import uuid
+
+import random
+try:
+    random = random.SystemRandom()
+except NotImplementedError:
+    import random
 
 try:
     import otrace
@@ -55,11 +63,15 @@ Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
 
 Gterm_secret = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leading zeros when stringified
 
+Check_state_cookie = False             # Controls checking of state cookie for file access
+
 MAX_COOKIE_STATES = 100
 MAX_WEBCASTS = 500
 
 COOKIE_NAME = "GRAPHTERM_AUTH"
 COOKIE_TIMEOUT = 10800
+
+REQUEST_TIMEOUT = 15
 
 HEX_DIGITS = 16
 
@@ -178,6 +190,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     def set_auth_code(cls, value):
         cls._auth_code = value
     
+    @classmethod
+    def get_auth_code(cls):
+        return cls._auth_code
+    
     def __init__(self, *args, **kwargs):
         self.request = args[1]
         try:
@@ -207,6 +223,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     def allow_draft76(self):
         return True
 
+    @classmethod
+    def get_state(cls, state_id):
+        if state_id not in cls._cookie_states:
+            return None
+        state_value = cls._cookie_states[state_id]
+        if (time.time() - state_value["time"]) <= COOKIE_TIMEOUT:
+            return state_value
+        del cls._cookie_states[state_id]
+        return None
+
     def open(self):
         need_code = bool(self._auth_code)
         need_user = need_code      ##bool(self._auth_users)
@@ -217,13 +243,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.authorized = {"user": "", "time": time.time(), "state_id": ""}
 
             elif COOKIE_NAME in self.request.cookies:
-                state_id = self.request.cookies[COOKIE_NAME].value
-                if state_id in self._cookie_states:
-                    state_value = self._cookie_states[state_id]
-                    if (time.time() - state_value["time"]) > COOKIE_TIMEOUT:
-                        del self._cookie_states[state_id]
-                    else:
-                        self.authorized = state_value
+                state_value = self.get_state(self.request.cookies[COOKIE_NAME].value)
+                if state_value:
+                    self.authorized = state_value
 
             webcast_auth = False
             if not self.authorized:
@@ -334,7 +356,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             TerminalConnection.send_to_connection(host, "request", term_name, [["reconnect"]])
 
             display_splash = self.controller and self._counter[0] <= 2
+            lterm_host = gtermhost.get_lterm_host(host)
+            lterm_cookie = TerminalConnection.lterm_cookies.get(lterm_host)
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
+                                        "lterm_cookie": lterm_cookie, "lterm_host": lterm_host,
                                         "controller": self.controller,
                                         "display_splash": display_splash,
                                         "state_id": self.authorized["state_id"]}]])
@@ -428,12 +453,13 @@ def kill_remote(path):
     host, term_name = path.split("/")
     if term_name == "*": term_name = ""
     try:
-        TerminalConnection.send_to_connection(host, "request", term_name, json.dumps([["kill_term"]]))
+        TerminalConnection.send_to_connection(host, "request", term_name, [["kill_term"]])
     except Exception, excp:
         pass
 
 class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     _all_connections = {}
+    lterm_cookies = {}
     def __init__(self, stream, address, server_address, ssl_options={}):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
                                                  ssl_options=ssl_options, max_packet_buf=2)
@@ -467,6 +493,15 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         return term_name
 
     def remote_response(self, term_name, msg_list):
+        fwd_list = []
+        for msg in msg_list:
+            if msg[0] == "term_params":
+                self.lterm_cookies[msg[1]["lterm_host"]] = msg[1]["lterm_cookie"]
+            elif msg[0] == "file_response":
+                ProxyFileHandler.complete_request(msg[1], **msg[2])
+            else:
+                fwd_list.append(msg)
+
         ws_list = GTSocket._watch_set.get(self.connection_id+"/"+term_name)
         if not ws_list:
             return
@@ -474,7 +509,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
             ws = GTSocket._all_websockets.get(ws_id)
             if ws:
                 try:
-                    ws.write_message(json.dumps(msg_list))
+                    ws.write_message(json.dumps(fwd_list))
                 except Exception, excp:
                     logging.error("remote_response: ERROR %s", excp)
                     try:
@@ -482,6 +517,101 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         ws.close()
                     except Exception:
                         pass
+
+class ProxyFileHandler(tornado.web.RequestHandler):
+    """Serves file requests
+    """
+    _async_counter = long(0)
+    _async_requests = OrderedDict()
+
+    @classmethod
+    def get_async_id(cls):
+        cls._async_counter += 1
+        return cls._async_counter
+
+    @classmethod
+    def complete_request(cls, async_id, **kwargs):
+        request = cls._async_requests.get(async_id)
+        if not request:
+            return
+        del cls._async_requests[async_id]
+        request.complete_get(**kwargs)
+        
+    def head(self, path):
+        self.get(path)
+
+    @tornado.web.asynchronous
+    def get(self, path):
+        if Check_state_cookie and GTSocket.get_auth_code():
+            state_cookie = self.get_cookie(COOKIE_NAME) or self.get_argument("sc", "")
+            if not GTSocket.get_state(state_cookie):
+                raise tornado.web.HTTPError(403, "Invalid cookie to access %s", path)
+
+        host, sep, self.file_path = path.partition("/")
+        if not host or not self.file_path:
+            raise tornado.web.HTTPError(403, "Null host/filename")
+        self.file_path = "/" + self.file_path
+
+        lterm_host = gtermhost.get_lterm_host(host)
+        lterm_cookie = TerminalConnection.lterm_cookies.get(lterm_host)
+
+        check_cookie = self.get_cookie("GRAPHTERM_HOST_"+lterm_host) or self.get_argument("lc", "")
+
+        if not lterm_cookie or lterm_cookie != check_cookie:
+            raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+
+        fpath_hmac = hmac.new(str(lterm_cookie), self.file_path, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+        if fpath_hmac != self.get_argument("h", ""):
+            raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+
+        self.async_id = self.get_async_id()
+        self._async_requests[self.async_id] = self
+
+        self.timeout_callback = IO_loop.add_timeout(time.time()+REQUEST_TIMEOUT, functools.partial(self.complete_request, self.async_id))
+
+        if_mod_since = self.request.headers.get("If-Modified-Since")
+
+        TerminalConnection.send_to_connection(host, "request", "", [["file_request", self.async_id, self.request.method, self.file_path, if_mod_since]])
+
+
+    def complete_get(self, status=(), last_modified=None, etag=None, content_type=None, content_length=None,
+                     content=None):
+        # Callback for get
+        if not status:
+            # Timed out
+            self.send_error(408)
+            return
+
+        IO_loop.remove_timeout(self.timeout_callback)
+
+        if status[0] != 200:
+            # Error status
+            self.send_error(status[0])
+            return
+
+        if content:
+            content = base64.b64decode(content)
+
+        if content_length is not None:
+            self.set_header("Content-Length", content_length)
+
+        if content_type:
+            self.set_header("Content-Type", content_type)
+
+        if last_modified:
+            self.set_header("Last-Modified", last_modified)
+
+        if last_modified and content_type:
+            self.set_header("Cache-Control", "public")
+
+        if etag:
+            self.set_header("Etag", etag)
+
+        if self.request.method == "HEAD":
+            self.set_header("Content-Length", len(content))
+        else:
+            self.write(content)
+        self.finish()
 
 
 def run_server(options, args):
@@ -572,6 +702,7 @@ def run_server(options, args):
 
     handlers += [(r"/_websocket/.*", GTSocket),
                  (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
+                 (r"/file/(.*)", ProxyFileHandler, {}),
                  (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
                  ]
 

@@ -207,7 +207,12 @@ class PacketConnector(object):
 
     def send_json(self, obj, finish=False, buffer=False, nobuffer=False):
         if not self.closed:
-            self.send_packet(json.dumps(obj), finish=finish, utf8=True, buffer=buffer, nobuffer=nobuffer)
+            try:
+                json_obj = json.dumps(obj)
+                self.send_packet(json_obj, finish=finish, utf8=True, buffer=buffer, nobuffer=nobuffer)
+            except Exception, excp:
+                logging.warning("PacketConnector.send_json: ERROR: %s", excp)
+                raise
 
     def make_packet(self, data, utf8=False):
         if utf8:

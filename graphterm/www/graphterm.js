@@ -101,29 +101,46 @@ $.fn.bindclick = function(handler, context) {
   };
  })( jQuery, "click");
 
-// Returns triplet [hostname, filename, fullpath] for file://host/path URIs
+function makeFileURI(uri) {
+    if (uri.substr(0,FILE_URI_PREFIX.length) == FILE_URI_PREFIX)
+	return uri;
+    var prefix = "/file/";
+    if (uri.substr(0,prefix.length) != prefix)
+	return "";
+    var path = uri.substr(prefix.length);
+    var comps = path.split("/");
+    if (comps[0] == "local")
+	comps[0] = "";
+    return FILE_URI_PREFIX + comps.join("/");
+}
+
+// Returns triplet [hostname, filename, fullpath, query] for file://host/path URIs
 // If not file URI, returns []
 function splitFileURI(uri) {
     if (uri.substr(0,FILE_URI_PREFIX.length) != FILE_URI_PREFIX)
 	return [];
     var hostPath = uri.substr(FILE_URI_PREFIX.length);
+    var j = hostPath.indexOf("?");
+    var query = "";
+    if (j >= 0) {
+	query = hostPath.substr(j)
+	hostPath = hostPath.substr(0,j);
+    }
     var comps = hostPath.split("/");
-    return [comps[0], comps[comps.length-1], "/"+comps.slice(1).join("/")]
+    return [comps[0], comps[comps.length-1], "/"+comps.slice(1).join("/"), query]
 }
 
 function getCookie(name) {
-    var regexp_match = document.cookie.match("\\b" + name + "=([^;]*)\\b");
-    return regexp_match ? unescape(regexp_match[1]) : "";
+    return unescape($.cookie(name, {raw: true}));
 }
 
 function setCookie(name, value, exp_days) {
     var cookie_value = escape(value);
-    if (exp_days) {
-	var exp_date = new Date();
-	exp_date.setDate(exp_date.getDate() + exp_days);
-	cookie_value += ";expires="+exp_date.toUTCString();
-    }
-    document.cookie = name + "=" + cookie_value;
+    console.log("setCookie", name, cookie_value);
+    var options = {raw: true, path: '/'};
+    if (exp_days)
+	options.expires = exp_days;
+    $.cookie(name, cookie_value, options);
 }
 
 function AuthPage(need_user, need_code, msg) {
@@ -155,7 +172,7 @@ function Connect(auth_user, auth_code) {
 }
 
 function SignOut() {
-    setCookie("GRAPHTERM_AUTH", "");
+    setCookie("GRAPHTERM_AUTH", null);
     $("body").html('Signed out.<p><a href="/">Sign in again</a>');
 }
 
@@ -468,7 +485,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
             if (action == "abort" || action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
-		    setCookie("GRAPHTERM_AUTH", "");
+		    setCookie("GRAPHTERM_AUTH", null);
 		if (window.location.pathname == "/"){
 		    if (action == "authenticate")
 			AuthPage(command[1], command[2], command[3]);
@@ -491,6 +508,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		gParams = command[1];
 		var label_text = "Session: "+gParams.host+"/"+gParams.term+"/"+(gParams.controller ? "control" : "watch");
 		$("#menubar-sessionlabel").text(label_text);
+		setCookie("GRAPHTERM_HOST_"+gParams.lterm_host, ""+gParams.lterm_cookie);
+
 		if (gParams.controller)
 		    handle_resize();
 		if (gParams.state_id)
@@ -581,12 +600,16 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    openTerminal();
 		var cmd_type = command[1];
 		var cmd_arg = command[2];
-		if (cmd_type == "save_status") {
+		if (cmd_type == "errmsg") {
+		    alert("ERROR: "+cmd_arg[0]);
+		} else if (cmd_type == "save_status") {
 		    alert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
 		} else if (cmd_type == "graphterm_output") {
 		    var entry_class = "entry"+gPromptIndex;
 		    var params = cmd_arg[0];
 		    var content = cmd_arg[1];
+		    if (content)
+			content = $.base64.decode(content);
 		    var content_type = params.headers.content_type;
 		    var response_type = params.headers.x_gterm_response;
 		    var response_params = params.headers.x_gterm_parameters;
@@ -600,17 +623,18 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			ShowFinder(response_params, content);
 
 		    } else if (response_type == "edit_file") {
-			EndFullscreen();
+			EndFullpage();
 			GTStartEdit(response_params, content);
 
-		    } else if (!response_type || response_type.substr(0,7) == "pagelet") {
-			if (response_type == "pagelet_form" || response_type == "pagelet_fullscreen") {
+		    } else if (!response_type || response_type == "pagelet") {
+			var pagelet_display = response_params.display || "block";
+			if (pagelet_display.substr(0,4) == "full") {
 			    // Hide previous entries, removing previous pagelets for this entry
-			    if (response_type == "pagelet_form") {
-				StartFullscreen(false);
+			    if (response_params.form_input) {
+				StartFullpage(pagelet_display, false);
 				GTStartForm(response_params, gPromptIndex);
 			    } else {
-				StartFullscreen(true);
+				StartFullpage(pagelet_display, true);
 			    }
 			    $("#session-bufscreen").children(".pagelet."+entry_class).remove();
 			    $("#session-bufscreen").children("."+entry_class).show();
@@ -618,13 +642,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				gScrollTop = true;
 			} else {
 			    // New pagelet entry; show previous entries
-			    EndFullscreen();
+			    EndFullpage();
 			}
 			var current_dir = ("current_directory" in params.headers) ? params.headers.current_directory : "";
 			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet '+entry_class+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
 			var new_elem = $(pagelet_html).hide().appendTo("#session-bufscreen");
-			if (response_type == "pagelet_form") {
+			if (response_params.form_input) {
 			    new_elem.find(".gterm-form-button").bindclick(GTFormCommand);
 			    new_elem.find(".gterm-form-label").bind("hover", GTFormHelp);
 			}
@@ -771,10 +795,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				    // Repeat entry; remove any previous versions of same entry
 				    $("."+"entry"+newPromptIndex).remove();
 				    // Hide older entries
-				    StartFullscreen(false);
+				    StartFullpage("", false);
 				} else {
 				    // New entry; show any older entries
-				    EndFullscreen();
+				    EndFullpage();
 				}
 			    }
 			    gPromptIndex = newPromptIndex;
@@ -1179,7 +1203,7 @@ function gtermLinkClickHandler(event) {
     } if ($(this).hasClass("gterm-cmd-text")) {
 	gtermClickPaste(text, file_uri, options);
     } if ($(this).hasClass("gterm-cmd-path")) {
-	file_uri = $(this).attr("href");
+	file_uri = makeFileURI($(this).attr("href"));
 	gtermClickPaste("", file_uri, options);
     }
     if (contextMenu) {
@@ -1196,7 +1220,7 @@ function gtermPageletClickHandler(event) {
     GTReceivedUserInput("click");
     var text = $(this).text();
     var pagelet = $(this).closest(".pagelet");
-    var file_uri = $(this).attr("href");
+    var file_uri = makeFileURI($(this).attr("href"));
 
     if (contextMenu) {
 	alert("Context menu not yet implemented");
@@ -1221,7 +1245,7 @@ function gtermFinderClickHandler(event) {
     var contextMenu = gControlActive;
     GTReceivedUserInput("click");
     var text = $(this).text();
-    var file_uri = $(this).attr("href");
+    var file_uri = makeFileURI($(this).attr("href"));
 
     if (contextMenu) {
 	alert("Context menu not yet implemented");
@@ -1239,7 +1263,7 @@ function gtermFinderClickHandler(event) {
 function otraceClickHandler(event) {
     var prev_command = $("#session-log .preventry").length ? GTStrip($("#session-log .preventry .input .command").text()) : "";
     var cur_command = GTStrip(GTGetCurCommandText());
-    var file_uri = $(this).attr("data-gtermuri") || $(this).attr("href");
+    var file_uri = makeFileURI($(this).attr("data-gtermuri") || $(this).attr("href"));
     var filepath = GTGetFilePath(file_uri, GTCurDirURI);
 
     console.log("otraceClickHandler", GTCurDirURI);
@@ -1727,25 +1751,64 @@ function GTFormCommand(evt) {
     GTEndForm(command);
 }
 
-function StartFullscreen(split) {
+// From http://www.sitepoint.com/html5-full-screen-api
+var pfx = ["webkit", "moz", "ms", "o", ""];
+function RunPrefixMethod(obj, method) {
+	var p = 0, m, t;
+	while (p < pfx.length && !obj[m]) {
+		m = method;
+		if (pfx[p] == "") {
+			m = m.substr(0,1).toLowerCase() + m.substr(1);
+		}
+		m = pfx[p] + m;
+		t = typeof obj[m];
+		if (t != "undefined") {
+			pfx = [pfx[p]];
+			return (t == "function" ? obj[m]() : obj[m]);
+		}
+		p++;
+	}
+}
+
+
+var gFullpageDisplay = null;
+function StartFullpage(display, split) {
+    gFullpageDisplay = display;
     $("#session-bufscreen").children().hide();
     if (split) {
 	$("#session-bufellipsis").show();
 	if (gAlwaysSplitScreen && !gSplitScreen)
-	    SplitScreen("fullscreen");
+	    SplitScreen("fullpage");
+    }
+
+    if (display == "fullscreen") {
+	try {
+	    if (RunPrefixMethod(document, "FullScreen") || RunPrefixMethod(document, "IsFullScreen")) {
+		// Already in fullscreen mode
+	    } else {
+		RunPrefixMethod(document, "RequestFullScreen");
+	    }
+	} catch(err) {console.log("graphterm: Fullscreen ERROR", err);}
     }
 }
 
-function EndFullscreen() {
+function EndFullpage() {
+    gFullpageDisplay = null;
+    try {
+	if (RunPrefixMethod(document, "FullScreen") || RunPrefixMethod(document, "IsFullScreen")) {
+	    RunPrefixMethod(document, "CancelFullScreen");
+	}
+    } catch(err) {}
+
     $("#session-bufscreen span.row:not(.gterm-hideoutput)").show();
     $("#session-bufscreen span.row.promptrow").show();
     $("#session-bufellipsis").hide();
     if (gSplitScreen)
-	MergeScreen("fullscreen");
+	MergeScreen("fullpage");
 }
 
-function ExitFullscreen() {
-    EndFullscreen();
+function ExitFullpage() {
+    EndFullpage();
     var offset = $(document).height() - $(window).height();
     if (offset > 0)
  	ScrollTop(offset);
@@ -1875,7 +1938,7 @@ function GTDropHandler(evt) {
     if (gtDragElement != this) {
 	try {
 	    var gterm_mime = $(this).attr("data-gtermmime") || "";
-	    var gterm_uri = $(this).attr("href") || "";
+	    var gterm_uri = makeFileURI($(this).attr("href") || "");
 	    if (evt.originalEvent.dataTransfer.files.length) {
 	    } else {
 		var text = evt.originalEvent.dataTransfer.getData("text/plain") || "";

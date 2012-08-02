@@ -11,6 +11,7 @@ from __future__ import with_statement
 
 import array,cgi,copy,fcntl,glob,logging,mimetypes,optparse,os,pty,random,re,signal,select,sys,threading,time,termios,tty,struct,pwd
 
+import base64
 import json
 import Queue
 import shlex
@@ -31,7 +32,8 @@ GRAPHTERM_SCREEN_CODES = (1150, 1155)
 FILE_EXTENSIONS = {"css": "css", "htm": "html", "html": "html", "js": "javascript", "py": "python",
                    "xml": "xml"}
 
-FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gls", "gopen", "gvi"])
+FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gcp", "gimages", "gls", "gopen", "gvi"])
+REMOTE_FILE_COMMANDS = set(["gcp"])
 COMMAND_DELIMITERS = "<>;"
 
 # Scroll lines array components
@@ -46,6 +48,8 @@ MAX_LOG_CHARS = 8
 
 BINDIR = "bin"
 Exec_path = os.path.join(os.path.dirname(__file__), BINDIR)
+Gls_path = os.path.join(Exec_path, "gls")
+Exec_errmsg = False
 
 def dump(data, trim=False):
 	"""Return string from array of int data, trimming NULs, if need be"""
@@ -213,25 +217,32 @@ def shplit(line, delimiters=COMMAND_DELIMITERS, final_delim="&", index=None):
 
 FILE_URI_PREFIX = "file://"
 def split_file_uri(uri):
-	"""Return triplet [hostname, filename, fullpath] for file://host/path URIs
+	"""Return triplet [hostname, filename, fullpath, query] for file://host/path URIs
 	If not file URI, returns []
 	"""
 	if not uri.startswith(FILE_URI_PREFIX):
 		return []
-	hostPath = uri[len(FILE_URI_PREFIX):]
-	comps = hostPath.split("/")
-	return [comps[0], comps[-1], "/"+"/".join(comps[1:])]
+	host_path = uri[len(FILE_URI_PREFIX):]
+	j = host_path.find("?")
+	if j >= 0:
+		query = host_path[j:]
+		host_path = host_path[:j]
+	else:
+		query = ""
+	comps = host_path.split("/")
+	return [comps[0], comps[-1], "/"+"/".join(comps[1:]), query]
 	
-def normalize_file_uri(file_uri, cwd):
+def relative_file_uri(file_uri, cwd):
 	filepath = split_file_uri(file_uri)[2]
 	if filepath == cwd:
 		return "."
 	else:
-		cwd_prefix = cwd+"/"
-		if filepath[:len(cwd_prefix)] == cwd_prefix:
-			return filepath[len(cwd_prefix):]
-		else:
+		relpath = os.path.relpath(filepath, cwd)
+		if relpath.startswith("../../../"):
+			# Too many .. would be confusing
 			return filepath
+		else:
+			return relpath
 
 def prompt_markup(text, entry_index, current_dir):
 	return '<span class="gterm-cmd-prompt gterm-link" id="prompt%s" data-gtermdir="%s">%s</span>' % (entry_index, current_dir, cgi.escape(text))
@@ -481,7 +492,7 @@ class Screen(object):
 		return Screen(self.width, self.height, data=copy.copy(self.data), meta=copy.copy(self.meta))
 
 class Terminal(object):
-	def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, cookie=0,
+	def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, cookie=0, host="",
 		     prompt=[], logfile=""):
 		self.term_name = term_name
 		self.fd = fd
@@ -490,6 +501,7 @@ class Terminal(object):
 		self.width = width
 		self.height = height
 		self.cookie = cookie
+		self.host = host
 		self.prompt = prompt
 		self.logfile = logfile
 		self.init()
@@ -1114,9 +1126,12 @@ class Terminal(object):
 					headers["content_type"] = "text/plain"
 				except Exception:
 					content = cgi.escape(content)
+			
 			if self.gterm_validated or response_type != "edit_file":
+				headers["content_length"] = len(content)
 				params = {"validated": self.gterm_validated, "headers": headers}
-				self.screen_callback(self.term_name, "graphterm_output", [params, content])
+				self.screen_callback(self.term_name, "graphterm_output", [params,
+                                     base64.b64encode(content) if content else ""])
 		self.gterm_code = None
 		self.gterm_buf = None
 		self.gterm_validated = False
@@ -1195,8 +1210,9 @@ class Terminal(object):
 		space_prefix = ""
 		command_prefix = ""
 		expect_filename = False
+		expect_uri = (command in REMOTE_FILE_COMMANDS)
 		if not text and file_uri:
-			text = split_file_uri(file_uri)[2]
+			text = file_uri if expect_uri else split_file_uri(file_uri)[2]
 
 		if offset:
 			# At command line
@@ -1235,9 +1251,12 @@ class Terminal(object):
 
 		if cwd and normalize and expect_filename and file_uri:
 			# Check if file URI represents subdirectory of CWD
-			normpath = normalize_file_uri(file_uri, cwd)
-			if not normpath.startswith("/"):
-				text = normpath
+			if expect_uri:
+				text = file_uri
+			else:
+				normpath = relative_file_uri(file_uri, cwd)
+				if not normpath.startswith("/"):
+					text = normpath
 
 		if text or command_prefix:
 			text = text.replace(" ", "\\ ")
@@ -1248,7 +1267,7 @@ class Terminal(object):
 			if dest_uri:
 				if paste_text and paste_text[-1] != " ":
 					paste_text += " "
-				paste_text += normalize_file_uri(dest_uri, cwd)
+				paste_text += dest_uri if expect_uri else relative_file_uri(dest_uri, cwd)
 			if enter and offset and not pre_line and command:
 				# Empty command line with pasted command
 				paste_text += "\n"
@@ -1284,7 +1303,7 @@ class Terminal(object):
 
 		
 class Multiplex(object):
-	def __init__(self, screen_callback, command=None, cookie=0, prompt=[], logfile="",
+	def __init__(self, screen_callback, command=None, cookie=0, host="", prompt=[], logfile="",
 		     term_type="linux", app_name="graphterm"):
 		""" prompt = [prefix, format, suffix]
 		"""
@@ -1292,6 +1311,7 @@ class Multiplex(object):
 		self.screen_callback = screen_callback
 		self.command = command
 		self.cookie = cookie
+		self.host = host
 		self.prompt = prompt
 		self.logfile = logfile
 		self.term_type = term_type
@@ -1358,6 +1378,7 @@ class Multiplex(object):
 				env["LINES"] = str(height)
 				env["TERM"] = self.term_type or TERM_TYPE
 				env["GRAPHTERM_COOKIE"] = str(self.cookie)
+				env["GRAPHTERM_HOST"] = str(self.host)
 				if self.prompt:
 					env["GRAPHTERM_PROMPT"] = "".join(self.prompt) + " "
 					##env["PROMPT_COMMAND"] = "export PS1=$GRAPHTERM_PROMPT; unset PROMPT_COMMAND"
@@ -1367,10 +1388,16 @@ class Multiplex(object):
  				os.chdir(os.path.expanduser("~"))
 				os.execvpe(cmd[0], cmd, env)
 			else:
+				global Exec_errmsg
 				fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
-				self.proc[term_name] = Terminal(term_name, fd, pid, self.screen_callback, height=height, width=width,
-								cookie=self.cookie, prompt=self.prompt, logfile=self.logfile)
+				self.proc[term_name] = Terminal(term_name, fd, pid, self.screen_callback,
+								height=height, width=width,
+								cookie=self.cookie, host=self.host,
+					                        prompt=self.prompt, logfile=self.logfile)
 				self.set_size(term_name, height, width)
+				if not is_executable(Gls_path) and not Exec_errmsg:
+					Exec_errmsg = True
+					self.screen_callback(term_name, "errmsg", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
 				return term_name
 
 	def set_size(self, term_name, height, width):

@@ -16,8 +16,8 @@ import ec2common
 
 usage = "usage: %prog [-f] [<tag_prefix_or_id>]"
 parser = OptionParser(usage=usage)
-parser.add_option("-f", "--fullscreen", dest="fullscreen", default=False,
-                  help="Fullscreen display", action="store_true")
+parser.add_option("-f", "--fullpage", dest="fullpage", default=False,
+                  help="Fullpage display", action="store_true")
 
 parser.add_option("", "--kill", dest="kill", default=False,
                   help="Kill single matching instance", action="store_true")
@@ -34,9 +34,13 @@ if not os.path.exists(os.path.expanduser("~/.boto")):
     print >> sys.stderr, config_info
     sys.exit(1)
 
+params = {"display": "block", "scroll": "top", "current_directory": os.getcwd()}
+if options.fullpage:
+    params["display"] = "fullpage"
+
 headers = {"content_type": "text/html"}
-headers["x_gterm_response"] = "pagelet_fullscreen"
-headers["x_gterm_parameters"] = {"scroll": "top", "current_directory": os.getcwd()}
+headers["x_gterm_response"] = "pagelet"
+headers["x_gterm_parameters"] = params
 
 props_list = ec2common.get_instance_props(instance_id=prefix)
 

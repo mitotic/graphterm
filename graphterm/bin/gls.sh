@@ -5,11 +5,11 @@
 # TEMPORARY: Ignores all arguments except -f and last directory
 
 options=""
-response_type="pagelet"
 dir=""
+display="block"
 for arg in $*; do
    if [ "$arg" == "-f" ]; then
-      response_type="pagelet_fullscreen"
+      display="fullpage"
    elif [[ "$arg" == -* ]]; then
       options="$options $arg"
    else
@@ -107,7 +107,7 @@ done
 output="$output <tr class='gterm-rowimg'>$rowimg"
 output="$output <tr class='gterm-rowtxt'>$rowtxt"
 
-headers='{"content_type": "text/html", "x_gterm_response": "'"${response_type}"'", "x_gterm_parameters": {"scroll": "top", "current_directory": "'"${PWD}"'"}}'
+headers='{"content_type": "text/html", "x_gterm_response": "pagelet", "x_gterm_parameters": {"display": "'"${display}"'", "scroll": "top", "current_directory": "'"${PWD}"'"}}'
 
 esc=`printf "\033"`
 nl=`printf "\012"`

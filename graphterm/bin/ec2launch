@@ -29,8 +29,8 @@ arg_list = [
 
 usage = "usage: %prog [-f] <instance-tagname>"
 parser = OptionParser(usage=usage)
-parser.add_option("-f", "--fullscreen", dest="fullscreen", default=False,
-                  help="Fullscreen display", action="store_true")
+parser.add_option("-f", "--fullpage", dest="fullpage", default=False,
+                  help="Fullpage display", action="store_true")
 
 parser.add_option("-t", "--text", dest="text", default=False,
                   help="Text only", action="store_true")
@@ -42,9 +42,11 @@ form_html = gtermapi.add_options(parser, arg_list, title="Create Amazon EC2 inst
 
 (options, args) = parser.parse_args()
 
+params = {"display": "block", "scroll": "top", "current_directory": os.getcwd()}
+
 headers = {"content_type": "text/html"}
-headers["x_gterm_response"] = "pagelet_fullscreen"
-headers["x_gterm_parameters"] = {"scroll": "top", "current_directory": os.getcwd()}
+headers["x_gterm_response"] = "pagelet"
+headers["x_gterm_parameters"] = params
 
 if args:
     instance_tag = args[0]
@@ -54,7 +56,8 @@ else:
     if not gtermapi.Lterm_cookie or options.text:
         print >> sys.stderr, usage
         sys.exit(1)
-    headers["x_gterm_response"] = "pagelet_form"
+    params["display"] = "fullpage"
+    params["form_input"] = True
     sys.stdout.write(gtermapi.wrap(json.dumps(headers)+"\n\n"+form_html))
     sys.exit(1)
     
@@ -68,10 +71,6 @@ key_file = os.path.join(ssh_dir, options.key_name+".pem")
 if not os.path.exists(ssh_dir):
     print >> sys.stderr, "ec2launch: %s directory not found!" % ssh_dir
     sys.exit(1)
-
-headers = {"content_type": "text/html"}
-headers["x_gterm_response"] = "pagelet_fullscreen"
-headers["x_gterm_parameters"] = {"scroll": "top", "current_directory": os.getcwd()}
 
 startup_script = """#!/bin/bash
 set -e -x
@@ -109,10 +108,10 @@ reservation = ec2.run_instances(image_id=options.ami,
 instance = reservation.instances[0]
 
 # Wait for instance to start running
-Status_template =  """<em>Creating instance <b>%s</b>:</em> status=<b>%s</b> (waiting %ds)"""
+Status_template =  """<em>Creating instance</em> <b>%s</b>: status=<b>%s</b> (waiting %ds)"""
 
 status = instance.update()
-headers["x_gterm_response"] = "pagelet_fullscreen"
+params["display"] = "fullpage"
 start_time = time.time()
 while status == "pending":
     timesec = int(time.time() - start_time)
