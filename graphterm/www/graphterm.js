@@ -40,6 +40,7 @@ var gFormIndex = null;
 
 var gDebug = true;
 var gDebugKeys = false;
+var gDebugMessages = false;
 
 var gTypeAhead = false;   // Does not work very well
 
@@ -136,7 +137,6 @@ function getCookie(name) {
 
 function setCookie(name, value, exp_days) {
     var cookie_value = escape(value);
-    console.log("setCookie", name, cookie_value);
     var options = {raw: true, path: '/'};
     if (exp_days)
 	options.expires = exp_days;
@@ -469,8 +469,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	return;
 
     var payload = evt.data;
-    //if (gDebug)
-	//console.log("GTWebSocket.onmessage: "+payload);
+    if (gDebugMessages)
+	console.log("GTWebSocket.onmessage: "+payload);
 
     if (!this.opened) {
 	// Validate
@@ -719,7 +719,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			$("#session-altscreen").html(preList.join(""));
 		    }
 
-		    gCursorAtEOL = false;
+		    if (update_rows.length || update_scroll.length)
+			gCursorAtEOL = false;
 		    for (var j=0; j<update_rows.length; j++) {
 			var row_num = update_rows[j][JINDEX];
 			var prompt_offset = update_rows[j][JOFFSET];
@@ -780,7 +781,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			$(".cursorspan").rebind('click', pasteReadyHandler);
 		    }
 
-		    if (update_scroll && update_scroll.length) {
+		    if (update_scroll.length) {
 			for (var j=0; j<update_scroll.length; j++) {
 			    if ($("#session-bufscreen span.row").length >= MAX_LINE_BUFFER)
 				$("#session-bufscreen span.row:first").remove();
@@ -1396,6 +1397,7 @@ function keypressHandler(evt) {
 }
 
 function HandleArrowKeys(keyCode) {
+    //console.log("HandleArrowKeys", keyCode, gCursorAtEOL);
     if (!gCursorAtEOL)
 	return true;
     // Cursor at end of command line
