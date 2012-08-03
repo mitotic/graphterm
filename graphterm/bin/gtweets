@@ -95,10 +95,11 @@ def twitter_request(consumer_token, path, access_token=None, get_args={}, post_a
     if query_args: url += "?" + urllib.urlencode(query_args)
     post_data = urllib.urlencode(post_args) if post_args is not None else None
     return tornado.httpclient.HTTPRequest(str(url), method,
+                                          headers={"Connection": "keep-alive"},
                                           body=post_data,
                                           connect_timeout=connect_timeout,
                                           request_timeout=timeout,
-        streaming_callback=streaming_callback)
+                                          streaming_callback=streaming_callback)
 
 def oauth_request_parameters(consumer_token, url, access_token, parameters={},
                              method="GET", oauth_version="1.0a",
