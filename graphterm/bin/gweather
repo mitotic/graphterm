@@ -29,22 +29,26 @@ Google_weather_url = "http://www.google.com/ig/api?"
 Google_img_url = "http://www.google.com/ig/images/weather"
 
 title_template = """
-<b>Current weather in %(city)s</b>
+<b>Current weather in %(city)s</b><br>
 """
 cur_template = """
-<img src="http://www.google.com%(icon)s" alt="%(condition)s"> <span class="weather-item">%(temp_f)s &deg;F,</span> <span class="weather-item">%(condition)s</span>
+<div>
+<img src="http://www.google.com%(icon)s" alt="%(condition)s"> <span class="weather-item">%(temp_f)s &deg;F,</span> <span class="weather-item">%(condition)s</span><p>
 <b>Forecast</b>
+</div>
 """
 
 fcst_template = """
+<div>
 <img src="http://www.google.com%(icon)s" alt="%(condition)s"> <span class="weather-item">%(day_of_week)s:</span> <span class="weather-item">%(condition)s,</span> <span class="weather-item">Low %(low)s &deg;F,</span> <span class="weather-item">High %(high)s &deg;F</span>
+</div>
 """
 
 form_template =  """<div class="gterm-form">Please specify location for weather info:
     <input id="gweather-input%s" name="arg1" type="text" autocomplete="off" autofocus="autofocus"></input>
 <input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformcmd="gweather -f" data-gtermformargs="arg1"></input>
 <input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>
-  </div>"""
+</div>"""
 
 usage = "usage: %prog [-f] <location>"
 parser = OptionParser(usage=usage)
@@ -57,6 +61,9 @@ parser.add_option("-t", "--text",
 
 (options, args) = parser.parse_args()
 location = " ".join(args)
+
+if not sys.stdout.isatty():
+    options.text = True
 
 params = {"scroll": "top", "current_directory": os.getcwd()}
 params["display"] = "fullpage" if options.fullpage else "block"
@@ -112,7 +119,7 @@ html += "<em>(Using the Google Weather API)</em>"
 
 if not Lterm_cookie or options.text:
     import lxml.html
-    sys.stdout.write(lxml.html.fromstring(html).text_content())
+    sys.stdout.write(lxml.html.fromstring(html).text_content().encode("ascii", "ignore"))
 else:
-    sys.stdout.write(wrap(json.dumps(headers)+"\r\n\r\n"+html))
+    sys.stdout.write(wrap(json.dumps(headers)+"\n\n"+html))
 

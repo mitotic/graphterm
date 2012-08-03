@@ -76,51 +76,50 @@ hr {
 
 
 /* Screen styles */
-pre.row {
-    margin: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    white-space: pre; }
 
-span.row {
+#session-bufscreen pre {
+    white-space: pre-wrap;
+}
+
+.row {
     display: block;
     margin: 0;
     padding-top: 0;
     padding-bottom: 0;
 }
 
-span.row .bold {
+.row .bold {
     font-weight: bold;
 }
 
-span.row .inverse {
+.row .inverse {
     background-color: lightgray;
 }
 
-span.row .cursorspan {
+.row .cursorspan {
     display: inline-block;
     background-color: gray;
 }
 
-span.row .cursorspan .cursorloc {
+.row .cursorspan .cursorloc {
     display: inline-block;
     background-color: red;
 }
 
-span.row .cursorspan.cursorhighlight .cursorloc {
+.row .cursorspan.cursorhighlight .cursorloc {
     /* outline: 1px dashed #ccc; */
     background-color: lightblue;
 }
 
-span.row .cmd-completion, span.row .typeahead {
+.row .cmd-completion, .row .typeahead {
     opacity: 0.6;
 }
 
-span.row.gterm-hideoutput.promptrow .gterm-cmd-prompt {
+.row.gterm-hideoutput.promptrow .gterm-cmd-prompt {
     text-decoration: underline;
 }
 
-span.row.gterm-hideoutput:not(.promptrow),
+.row.gterm-hideoutput:not(.promptrow),
   .pagelet.gterm-hideoutput {
     display: none;
 }
@@ -202,7 +201,7 @@ img.gterm-img {
     height: 32px;
 }
 
-div.gterm-imgcontainer {
+.gterm-imgcontainer {
     position: absolute;
     top: 0;
     left: 0;

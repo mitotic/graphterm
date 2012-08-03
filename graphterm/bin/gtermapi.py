@@ -16,11 +16,11 @@ Form_template =  """<div id="gterm-form-%s" class="gterm-form">%s %s
 <input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformcmd="%s" data-gtermformargs="%s"></input>  <input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>
 </div>"""
 
-Input_text_template = """<span class="gterm-form-label" data-gtermhelp="%s">%s</span><input id="gterm_%s_%s" name="%s" class="gterm-form-input" type="text" autocomplete="off" %s></input>"""
+Input_text_template = """<div><span class="gterm-form-label" data-gtermhelp="%s">%s</span><input id="gterm_%s_%s" name="%s" class="gterm-form-input" type="text" autocomplete="off" %s></input></div>"""
 
-Select_template = """<span class="gterm-form-label" data-gtermhelp="%s">%s</span><select id="gterm_%s_%s" name="%s" class="gterm-form-input" size=1>
+Select_template = """<div><span class="gterm-form-label" data-gtermhelp="%s">%s</span><select id="gterm_%s_%s" name="%s" class="gterm-form-input" size=1>
 %s
-</select>"""
+</select></div>"""
 Select_option_template = """<option value="%s" %s>%s</option>"""
 
 def create_input_html(id_suffix, arg_list):

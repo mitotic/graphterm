@@ -45,6 +45,7 @@ IMGFORMAT = '<div class="gterm-imgcontainer"><img class="gterm-fullimg" src="%s"
 def write_pagelet(headers, html):
     pagelet = Html_escapes[0] + json.dumps(headers) + "\n\n" + html + Html_escapes[1]
     sys.stdout.write(pagelet)
+    sys.stdout.flush()
     
 if not args:
     args = os.listdir(Work_dir)

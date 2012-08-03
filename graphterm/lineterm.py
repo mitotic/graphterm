@@ -24,7 +24,7 @@ IDLE_TIMEOUT = 300      # Idle timeout in seconds
 UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "linux"     # "screen" would be a better default terminal, but arrow keys do not always work
 
-COPY_ENV = ["HOME", "LOGNAME", "PATH", "SECURITYSESSIONID", "SHELL", "SSH_AUTH_SOCK", "USER", "USERNAME"]
+NO_COPY_ENV = set([])
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)
@@ -1369,9 +1369,9 @@ class Multiplex(object):
 					else:
 						os._exit(0)
 				env = {}
-				for var in COPY_ENV:
-					val = os.getenv(var)
-					if val is not None:
+				for var in os.environ.keys():
+					if var not in NO_COPY_ENV:
+						val = os.getenv(var)
 						env[var] = val
 						if var == "PATH":
 							# Prepend app bin directory to path

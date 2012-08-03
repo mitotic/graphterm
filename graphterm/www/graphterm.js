@@ -635,6 +635,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			EndFullpage();
 			GTStartEdit(response_params, content);
 
+		    } else if (response_type == "pagelet_json") {
+			try {
+			    var json_obj = JSON.parse(content);
+			    GTPageletJSON($(".pagelet."+entry_class), json_obj);
+			} catch (err) {
+			    console.log("ERROR in pagelet_json:", err, content);
+			}
+
 		    } else if (!response_type || response_type == "pagelet") {
 			var pagelet_display = response_params.display || "block";
 			if (pagelet_display.substr(0,4) == "full") {
@@ -656,20 +664,24 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			var current_dir = ("current_directory" in params.headers) ? params.headers.current_directory : "";
 			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet '+entry_class+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
-			var new_elem = $(pagelet_html).hide().appendTo("#session-bufscreen");
-			if (response_params.form_input) {
-			    new_elem.find(".gterm-form-button").bindclick(GTFormCommand);
-			    new_elem.find(".gterm-form-label").bind("hover", GTFormHelp);
+			try {
+			    var new_elem = $(pagelet_html).hide().appendTo("#session-bufscreen");
+			    if (response_params.form_input) {
+				new_elem.find(".gterm-form-button").bindclick(GTFormCommand);
+				new_elem.find(".gterm-form-label").bind("hover", GTFormHelp);
+			    }
+			    $("#session-bufscreen .pagelet .gterm-rowimg").addClass("icons");
+			    if (!gWebSocket.icons)
+				$("#session-bufscreen .pagelet .gterm-rowimg").hide();
+
+			    $('#session-bufscreen .pagelet."'+entry_class+'" td .gterm-link').bindclick(gtermPageletClickHandler);
+			    $('#session-bufscreen .pagelet."'+entry_class+'" td img').bind("dragstart", function(evt) {evt.preventDefault();});
+
+			    GTDropBindings($('#session-bufscreen .pagelet."'+entry_class+'" .droppable'));
+			    new_elem.show();
+			} catch(err) {
+			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
 			}
-			$("#session-bufscreen .pagelet .gterm-rowimg").addClass("icons");
-			if (!gWebSocket.icons)
-			    $("#session-bufscreen .pagelet .gterm-rowimg").hide();
-
-			$('#session-bufscreen .pagelet."'+entry_class+'" td .gterm-link').bindclick(gtermPageletClickHandler);
-			$('#session-bufscreen .pagelet."'+entry_class+'" td img').bind("dragstart", function(evt) {evt.preventDefault();});
-
-			GTDropBindings($('#session-bufscreen .pagelet."'+entry_class+'" .droppable'));
-			new_elem.show();
 		    }
 		} else if (cmd_type == "row_update") {
                     var alt_mode    = cmd_arg[0];
@@ -793,8 +805,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 		    if (update_scroll.length) {
 			for (var j=0; j<update_scroll.length; j++) {
-			    if ($("#session-bufscreen span.row").length >= MAX_LINE_BUFFER)
-				$("#session-bufscreen span.row:first").remove();
+			    if ($("#session-bufscreen pre.row").length >= MAX_LINE_BUFFER)
+				$("#session-bufscreen pre.row:first").remove();
 			    var newPromptIndex = update_scroll[j][JINDEX];
 			    var entry_id = "entry"+newPromptIndex;
 			    var prompt_id = "prompt"+newPromptIndex;
@@ -815,7 +827,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    gPromptIndex = newPromptIndex;
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
-			    var row_html = '<span id="'+entry_id+'" class="row '+entry_class+'">'+row_escaped+"\n</span>";
+			    var row_html = '<pre id="'+entry_id+'" class="row '+entry_class+'">'+row_escaped+"\n</pre>";
 			    $(row_html).appendTo("#session-bufscreen");
 			    $("#"+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
 			}
@@ -1370,7 +1382,7 @@ function keydownHandler(evt) {
 	}
     }
 
-    if (gSafariBrowser && evt.ctrlKey && evt.which >= 65) {
+    if (gWebkitBrowser && evt.ctrlKey && evt.which >= 65) {
 	// Control keys on Safari
 	if (gWebSocket && gWebSocket.terminal)
 	    return AjaxKeypress(evt);
@@ -1805,6 +1817,7 @@ function StartFullpage(display, split) {
 }
 
 function EndFullpage() {
+    //console.log("EndFullpage");
     gFullpageDisplay = null;
     try {
 	if (RunPrefixMethod(document, "FullScreen") || RunPrefixMethod(document, "IsFullScreen")) {
@@ -1812,8 +1825,8 @@ function EndFullpage() {
 	}
     } catch(err) {}
 
-    $("#session-bufscreen span.row:not(.gterm-hideoutput)").show();
-    $("#session-bufscreen span.row.promptrow").show();
+    $("#session-bufscreen pre.row:not(.gterm-hideoutput)").show();
+    $("#session-bufscreen pre.row.promptrow").show();
     $("#session-bufellipsis").hide();
     if (gSplitScreen)
 	MergeScreen("fullpage");
