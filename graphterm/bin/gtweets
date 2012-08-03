@@ -1,0 +1,300 @@
+#!/usr/bin/env python
+#
+
+"""
+gtweets: Display tweets
+
+Steps to acquire consumer and access tokens:
+  1. Register an application with twitter at dev.twitter.com
+  2. Visit https://dev.twitter.com/docs/auth/tokens-devtwittercom
+  3. Save authentication tokens in ~/.twitter_auth using the following format (JSON):
+      {"consumer_token":  {"consumer_key": "...",
+                           "consumer_secret": "..."},
+       "access_token": {"key": "12345678-...",
+                        "secret": "..."}
+      }
+
+"""
+
+import binascii
+import cgi
+import json
+import logging
+import os
+import random
+import sys
+import time
+import urllib
+import uuid
+
+from optparse import OptionParser
+
+import tornado.auth
+import tornado.httpclient
+
+try:
+    from urllib.request import urlopen
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlopen, urlencode
+
+Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
+Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
+                "\x1b[?1155l"]
+
+def wrap(html):
+    return Html_escapes[0] + html + Html_escapes[1]
+
+# Note: Having a finite timeout causes problems with tornado's simple httpclient
+TWITTER_STREAM_TIMEOUT_SEC = 0
+
+TWITTER_STREAM_MINDELAY = 30        # Min. delay time for reconnecting to twitter stream
+TWITTER_STREAM_MAXDELAY = 3600      # Max. delay time for reconnecting to twitter stream
+
+TWITTER_STREAM_URL = "https://stream.twitter.com/1/statuses"
+TWITTER_USER_STREAM_URL = "https://userstream.twitter.com/2"
+##TWITTER_USER_STREAM_URL = "http://localhost:4079"
+
+pagelet_html = """<script>
+var GTPageletMaxTweets = 20;
+function GTPageletJSON(pageletElem, tweet) {
+    // Display new tweet, sliding it into the top line
+    $('<li><img src="/static/images/twitter_bird_32.png"> '+tweet+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
+    if (pageletElem.find("ul li").length > GTPageletMaxTweets)
+        pageletElem.find("ul li:last-child").remove();
+}
+
+</script>
+<style>
+.gterm-pagelet-gtweets-container {
+   opacity: 0.9;
+}
+.gterm-pagelet-gtweets-container ul {
+   list-style: none;
+}
+</style>
+<div class="gterm-imgcontainer gterm-pagelet-gtweets-container">
+<ul>
+</ul>
+</div>
+"""
+
+def twitter_request(consumer_token, path, access_token=None, get_args={}, post_args=None,
+                    streaming_callback=None, connect_timeout=20.0, timeout=1200.0,
+                    path_prefix="http://api.twitter.com/1"):
+    url = path_prefix + path + ".json"
+    method = "POST" if post_args is not None else "GET"
+    query_args = get_args.copy()
+    if access_token:
+        all_args = get_args.copy()
+        all_args.update(post_args or {})
+        consumer_token = dict(key=consumer_token["consumer_key"], secret=consumer_token["consumer_secret"])
+        oauth = oauth_request_parameters(consumer_token, url, access_token, all_args, method=method)
+        query_args.update(oauth)
+
+    if query_args: url += "?" + urllib.urlencode(query_args)
+    post_data = urllib.urlencode(post_args) if post_args is not None else None
+    return tornado.httpclient.HTTPRequest(str(url), method,
+                                          body=post_data,
+                                          connect_timeout=connect_timeout,
+                                          request_timeout=timeout,
+        streaming_callback=streaming_callback)
+
+def oauth_request_parameters(consumer_token, url, access_token, parameters={},
+                             method="GET", oauth_version="1.0a",
+                             override_version=""):
+    base_args = dict(
+        oauth_consumer_key=consumer_token["key"],
+        oauth_token=access_token["key"],
+        oauth_signature_method="HMAC-SHA1",
+        oauth_timestamp=str(int(time.time())),
+        oauth_nonce=binascii.b2a_hex(uuid.uuid4().bytes),
+        oauth_version=override_version or oauth_version,
+    )
+    args = base_args.copy()
+    args.update(parameters)
+    if oauth_version == "1.0a":
+        signature = tornado.auth._oauth10a_signature(consumer_token, method, url, args, access_token)
+    else:
+        signature = tornado.auth._oauth_signature(consumer_token, method, url, args, access_token)
+    base_args["oauth_signature"] = signature
+    return base_args
+
+Twitter_stream_restart_time = time.time()
+Twitter_stream_delay = 0
+Twitter_user_stream = None
+
+class TwitterStreamReader(object):
+    def __init__(self, my_id, friend_set=set()):
+        self.user_id = my_id
+        self.friend_set = friend_set
+        self.buffer = ""
+        logging.debug("id=%s, friend_set=%s", my_id, friend_set)
+
+    def response_callback(self, response):
+        global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+        if isinstance(response, basestring):
+            logging.info("StreamReadResponse: %s", response)
+        else:
+            logging.error("StreamReadError: %s", response)
+
+        Twitter_user_stream = None
+        if not Twitter_stream_delay:
+            Twitter_stream_delay = TWITTER_STREAM_MINDELAY
+        else:
+            Twitter_stream_delay = min(2*Twitter_stream_delay, TWITTER_STREAM_MAXDELAY)
+        Twitter_stream_restart_time = time.time() + Twitter_stream_delay
+
+    def handle_stream(self, data):
+        global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+        self.buffer += data
+        if "\r\n" not in self.buffer:
+            # Wait for complete line
+            return
+        line, sep, self.buffer = self.buffer.partition("\r\n")
+        if not line:
+            return
+
+        try:
+            content = json.loads(line)
+        except Exception, excp:
+            print >> sys.stderr, "JSON decoding error '%s': %s" % (excp, line)
+            sys.exit(1)
+        self.buffer = ""
+
+        logging.debug(":twitter_stream: content=%s", str(content))
+
+        user_info = None
+
+        message_type = "tweet"
+        if "direct_message" in content:
+            msg = content["direct_message"]
+            user_info = msg["sender"]
+            message_text = msg.get("text", "").encode("ascii", "ignore")
+            message_id = msg.get("id", 0)
+            message_type = "direct"
+
+        elif "text" in content:
+            to_user_id = content.get("in_reply_to_user_id")
+            if to_user_id and to_user_id != self.user_id and to_user_id not in self.friend_set:
+                logging.info(":twitter_stream: dropped message to unknown dest", to_user_id, self.user_id)
+                return
+            user_info = content["user"]
+            message_text = content.get("text", "").encode("ascii", "ignore")
+            message_id = content.get("id", 0)
+
+        else:
+            # Unknown content
+            return
+
+        user_label = "%(screen_name)s(%(name)s)" % user_info
+        user_label = "%(screen_name)s" % user_info
+
+        logging.debug(":msg: %s[id=%s]: %s", user_label, message_id, message_text)
+
+        if options.fullpage and options.text:
+            if not sys.stderr.isatty():
+                  print >> sys.stderr, "%s: %s\n" % (user_label, message_text)
+        elif not options.fullpage:
+            print >> sys.stdout, "%s: %s\n" % (user_label, message_text)
+
+        if options.fullpage:
+            tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message_text))
+            sys.stdout.write(wrap(json.dumps(J_headers)+"\n\n"+json.dumps(tweet_html)))
+            sys.stdout.flush()
+
+def read_twitter_user_stream(Auth_tokens, keywords=[]):
+    global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+
+    my_id = long( Auth_tokens["access_token"]["key"].partition("-")[0] )
+    if Twitter_user_stream:
+        return my_id
+
+    logging.info("*********TWITTER USER STREAM*****my_id=%s", my_id)
+    Twitter_user_stream = TwitterStreamReader(my_id)
+
+    if keywords:
+        post_args = {"track": ",".join(keywords)}
+        path = "/filter"
+        stream_url = TWITTER_STREAM_URL
+    else:
+        post_args = None
+        path = "/user"
+        stream_url = TWITTER_USER_STREAM_URL
+
+    http_request = twitter_request(Auth_tokens["consumer_token"],
+                                   path, path_prefix=stream_url,
+                                   access_token=Auth_tokens["access_token"],
+                                   post_args=post_args,
+                                   streaming_callback=Twitter_user_stream.handle_stream,
+                                   connect_timeout=60.0,
+                                   timeout=TWITTER_STREAM_TIMEOUT_SEC)
+
+    http_client = tornado.httpclient.HTTPClient()
+    try:
+        response = http_client.fetch(http_request)
+    except tornado.httpclient.HTTPError, excp:
+        print >> sys.stderr, excp
+
+    return my_id
+        
+def twitter_stream_watcher():
+    """ Checks if Twitter stream feed is active, and restarts it if it is not.
+    """
+    global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+    if Twitter_stream_restart_time and (time.time() >= Twitter_stream_restart_time):
+        logging.info("************ TWITTER STREAM READER STARTING (%d) *************" % Twitter_stream_delay)
+        Twitter_stream_restart_time = 0
+        read_twitter_user_stream()
+
+
+usage = "usage: %prog [-h ...] [keyword1] ..."
+parser = OptionParser(usage=usage)
+parser.add_option("-f", "--fullpage",
+                  action="store_true", dest="fullpage", default=False,
+                  help="Fullpage display")
+parser.add_option("-t", "--text",
+                  action="store_true", dest="text", default=False,
+                  help="Plain text display (sent to STDERR, if combined with -f)")
+parser.add_option("", "--auth_file",
+                  dest="auth_file", default="~/.twitter_auth",
+                  help="File with authentication tokens in JSON format (default: ~/.twitter_auth)")
+
+(options, args) = parser.parse_args()
+
+if not sys.stdout.isatty():
+    options.text = True
+
+auth_file = os.path.expanduser(options.auth_file)
+if not os.path.isfile(auth_file):
+    print >> sys.stderr, "Authentication file %s not found!" % auth_file
+
+with open(auth_file) as f:
+    auth_json = f.read()
+try:
+    Auth_tokens = json.loads(auth_json)
+except Exception, excp:
+    print >> sys.stderr, "Syntax error in authentication file %s: %s" % (auth_file, excp)
+    sys.exit(1)
+
+params = {"scroll": "top", "current_directory": os.getcwd()}
+params["display"] = "fullscreen" if options.fullpage else "block"
+
+Headers = {"content_type": "text/html"}
+Headers["x_gterm_response"] = "pagelet"
+Headers["x_gterm_parameters"] = params
+
+J_headers = {"content_type": "text/json"}
+J_headers["x_gterm_response"] = "pagelet_json"
+J_headers["x_gterm_parameters"] = {}
+
+if options.fullpage:
+    sys.stdout.write(wrap(json.dumps(Headers)+"\n\n"+pagelet_html))
+
+try:
+    read_twitter_user_stream(Auth_tokens, args)
+except KeyboardInterrupt:
+    pass
+
+if options.fullpage:
+    sys.stdout.write(wrap(json.dumps(Headers)+"\n\n"+""))
