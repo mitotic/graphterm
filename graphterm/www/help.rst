@@ -1,16 +1,15 @@
-GraphTerm Help (from README file)
+GraphTerm Help (from the README file)
 *********************************************************************************
 .. sectnum::
 .. contents::
 
-
 Support
 =============================
 
- - Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
+Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
 
- - Additional documentation and updates will be made available on the project home page,
-   `info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_.
+Additional documentation and updates will be made available on the project home page,
+`info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_.
 
 
 Usage
@@ -35,80 +34,199 @@ wish to connect to and create a new terminal session on the host.
 Then try out the following commands::
 
   gls <directory>
-  gvi  <text-filename>
-  gweather
+  gvi <text-filename>
 
-The first two are graphterm-aware scripts that imitate
+These are graphterm-aware scripts that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
+Use the ``-h`` option to display help information for these commands.
+(To display images as thumbnails, use the ``gls -i ...`` command.)
+You can use the command ``which gls`` to determine the directory
+containing graphterm-aware commands, to browse
+for other commands, which include:
 
-*Usage Tips:*
+   ``gimages [-f] [filenames]``     To view images inline, or as a
+   fullpage slideshow (with ``-f`` option)
 
- - *Terminal type:* The default terminal type is set to ``linux``,
-   but it has a poor fullscreen mode and command history does
-   not work properly. You can try out the terminal types ``screen``
-   or ``xterm``, which may work better for some purposes.
-   Use the ``--term_type`` option to set the default terminal type.
-   (Fully supporting these terminal types is a work in progress.)
+   ``gweather [location]`` To view weather forecasts
 
- - *Sessions and sharing:* For each host, sessions are assigned default names like
-   ``tty1`` etc. You can also create unique session names simply by using
-   it in an URL, e.g.::
+   ``gtweets [-f] [search_keyword]`` To display a tweet stream
+
+Visual cues
+-----------------------------------------------------------
+
+In the default theme, *blue* color denotes text that can be *clicked*
+or *tapped*. The action triggered by clicking depends on multiple
+factors, such as whether there is text in the current command line,
+and whether the Control modifier in the *Bottom menu* is active.
+Click on the last displayed prompt to toggle display of the *Bottom
+menu*. Clicking on other prompts toggles display of the command
+output (unless the Control modifier is used, in which case the command
+line is copied and pasted.)
+
+
+Navigating folders/opening files
+----------------------------------------------------------------------
+
+You can navigate folders in GraphTerm just like you would do in a GUI,
+while retaining the ability to drop back to the CLI at any time.
+*If the current command line is empty,*
+clicking on a folder or filename displayed by the ``gls`` command will
+change the current directory to the folder, or cause the file to be
+opened.
+*If you have typed anything at all in the current command line,
+even if it is just a space*, the clicking action will cause text to be
+pasted into the command line, without any
+command being executed. You can edit the pasted text, then press the
+Enter key to execute it.
+
+Icon display
+------------------------------
+
+Select ``icons`` in the top menu to activate icon display for commands
+``gls``.
+
+
+Themes
+---------------------------------------------------------------------------------------
+
+Themes, selected using the top menu, are a work in progress, especially the 3-D perspective theme
+(which only works on Chrome/Safari).
+
+
+Copy/paste
+---------------------------------------------------------------------------------------
+
+*Click on the cursor* before pasting text from the clipboard using
+Control-V, Command-V, or the Paste command from the Edit menu.
+NOTE: Pasting text copied from a non-plain text source, such as a web page,
+may not always work properly. A workaround is to paste the text into a
+temporary location as plain text (such as in a plain text editor),
+and then copy/paste it from there to GraphTerm.
+
+Drag and drop
+-------------------------------------------------------------------------
+Sort of works! You can drag a filename (*grabbing the icon does not
+work*) and drop it on a folder, an executable, or the command line.
+For drag-and-drop bwteeen two GraphTerm windows running on the same
+host, the file will be moved to the destination folder. For windows
+on two different hosts, the file will be copied.
+(Graphical feedback for this operation is not properly implemented at
+this time. Look at the command line for the feedback.)
+
+Command recall
+---------------------------------------------------------------------------------------
+
+Use *up/down arrows* after partially typing a command to search for
+matching commands with the same prefix, and use *right arrow* to edit
+the completed command or use the *Enter* key to execute it. (To use the
+command recall feature of the underlaying bash shell, use Control-P
+and Control-N, instead of the up/down arrows.)
+
+iPad usage
+---------------------------------------------------------------------------------------
+
+Click on the cursor to display virtual keyboard on the iPad. The
+*Bottom menu*, exposed by clicking on the lowermost prompt, can be
+quite useful on the iPad.
+
+Choosing the terminal type
+---------------------------------------------------------------------------------------
+
+The default terminal type is set to ``linux``, but it has a poor
+fullscreen mode and command history does not work properly. You can
+try out the terminal types ``screen`` or ``xterm``, which may work
+better for some purposes.  You can use the ``--term_type`` option when
+running the server to set the default terminal type, or use the
+``export TERM=xterm`` command. (Fully supporting these terminal types
+is a work in progress.)
+
+Sessions and "screensharing"
+---------------------------------------------------------------------------------------
+
+For each host, sessions are assigned default names like ``tty1``
+etc. You can also create unique session names simply by using it in an
+URL, e.g.::
 
       http://localhost:8900/local/mysession
 
-    The first user to create a session "owns" it. Others connecting to the
-    same session have read-only access (unless they "steal" the session).
+Anyone with access to the GraphTerm server can use the session URL
+to connect to it. This is like "screensharing", but more efficient,
+because only the content is shared, not the graphical themes.
+The first user to create a session "owns" it, until they detach from
+it. Others connecting to the same session have read-only access,
+unless they "steal" the session (see the *Action* menu).
+For example, if you forgot to detach your session at work, you can
+``ssh`` to your desktop from home, use SSH port forwarding (see below)
+to securely access your work desktop, and then steal the
+session using your home browser.
 
- - *Multiple hosts:* More than one host can connect to the ``graphterm`` server.
-   The local host is connected by default. To connect an additional
-   host, run the following command on the host you wish to connect::
+NOTE: Although GraphTerm supports multiple users, it is currently
+designed for a cooperative environment, where everyone trusts everyone
+else. (This may change in the future.)
+
+
+Webcasting
+---------------------------------------------------------------------------------------
+
+If you enable the *Webcast* in the top menu, anyone can use the
+session URL to view the session, without the need for
+authentication, but will not be able to steal it. *Use this feature
+with caution to avoid exposing exposing sensitive data.*
+
+Multiple hosts
+---------------------------------------------------------------------------------------
+
+More than one host can connect to the GraphTerm server. The local
+host is connected by default (but this can be disabled using the
+``--nolocal`` option). To connect an additional host, run the
+following command on the computer you wish to connect::
 
      gtermhost <serveraddr> <hostname>
 
-    where ``serveraddr`` is the address or name of the computer where
-    the server is running. You can use the ``--daemon=start`` option to
-    run the command in the background. (By default, the server listens for host
-    connections on port 8899.) 
+where ``serveraddr`` is the address or name of the computer where the
+GraphTerm server is running. You can use the ``--daemon=start`` option to run the
+``gtermhost`` command in the background. By default, the Graphterm
+server listens for host connections on port 8899. *The multiple host
+feature should only be used within a secure network, not on the public internet.*
 
- - *Security:* The ``--auth_code`` option can be used to specify
-   an authentication code required for users connecting to the server.
-   Although multiple hosts can connect to the terminal  server,
-   initially,  it would be  best to use ``graphterm`` to simply  connect
-   to ``localhost``,  on a computer with only trusted users.
-   (*Note:* Users can always use SSH port forwarding to securely connect
-   to the ``graphterm`` server listening as ``localhost`` on a remote
-   computer, e.g.. ``ssh -L 8900:localhost:8900 user@example.com``)
-   *Do not run the server as root*. As the code matures,
-   security can be improved through the use of SSL certificates
-   and server/client authentication. 
-   These features are implemented in the code, but have not been
-   properly configured/tested.
+NOTE: Unlike the ``sshd`` server, the ``gtermhost`` command is designed to
+be run by a normal user, not a privileged user. So different users can
+connect to the GraphTerm server pretending to be different "hosts"
+on the same computer. (If you are running a Python server, it can
+connect directly to the GraphTerm server as a "host", allowing it to
+be dynamically introspected and debugged using `otrace <http://info.mindmeldr.com/code/otrace>`_.)
 
- - *Visual cues:* In the default theme, *blue* color denotes text that can
-   be *clicked* or *tapped*. The action triggered by clicking depends on
-   several factors, such as whether there is text in the current command
-   line, and whether the Control modifier in the *Bottom menu* is active.
-   Click on the last displayed prompt to toggle display of the *Bottom menu*.
-   Clicking on other prompts toggles display of the command output
-   (unless the Control modifier is used, in which case the command line
-   is copied and pasted.)
 
- - *Copy/paste:* Click on the cursor to paste text from the clipboard.
+Security
+---------------------------------------------------------------------------------------
 
- - *Drag and drop:* Sort of works within a window and across two
-   windows. You can drag filenames (text-only) and drop them on
-   folders, executables, or the command line. Visual feedback can
-   be confusing.
+*The GraphTerm is not yet ready to be executed with root privileges*.
+Run it logged in as a regular user. The ``--auth_code`` option can be
+used to specify an authentication code required for users connecting
+to the server. Although multiple hosts can connect to the terminal
+server, initially, it would be best to use ``graphterm`` to just connect to
+``localhost``, on a computer with only trusted users. You can always
+use SSH port forwarding (see below) to securely connect to the
+GraphTerm server for remote access.
+As the code matures, security will be improved through
+the use of SSL certificates and server/client authentication.
+(SSL/https support is already built-in. Feel free to experiment with
+it, although it is not yet ready for everyday use.)
 
- - *Command recall:* Use *up/down arrows* after partially typing a
-   command to search for matching commands, and use *right arrow*
-   for completion.
 
- - *Touch devices:* Click on the cursor to display virtual keyboard
-   on the ipad etc.
+Using it with SSH port forwarding
+---------------------------------------------------------------------------------
 
- - *Themes:* Themes are a work in progress, especially the 3-D
-   perspective theme (which only works on Chrome/Safari).
+Currently, the most secure way to remotely access the GraphTerm server
+is to use SSH port forwarding. For example, if you are connecting to
+your work computer from home, and wish to connect to the GraphTerm
+server running as ``localhost`` on your work computer, use the command::
+
+   ssh -L 8900:localhost:8900 user@work-computer
+
+This will allow you to connect to ``http://localhost:8900`` on the browser
+on your home computer to access GraphTerm running on your work computer.
+(You can also use port forwarding in reverse, if need be, using the ``-R`` option.)
 
 
 Cloud integration
@@ -139,7 +257,7 @@ the primary instance using the command::
    gtermhost --daemon=start <primary_domain_or_address> <secondary_host_name>
 
 For increased security in a publicly-accessible server, you will need to use a cryptic authentication code,
-and also use *https* instead of *http*, with SSL cettificates . Since GraphTerm is currently in
+and also use *https* instead of *http*, with SSL certificates. Since GraphTerm is currently in
 *alpha* status, security cannot be guaranteed even with these options enabled.
 (To avoid these problems, use SSH port forwarding to access GraphTerm
 on ``localhost`` whenever possble.)
@@ -151,22 +269,8 @@ GraphTerm was originally developed as a graphical front-end for
 `otrace <http://info.mindmeldr.com/code/otrace>`_,
 an object-oriented python debugger. Use the ``--oshell``
 option when connecting a host to the server enables ``otrace``
-debugging features, allowing access to the innards of the
+debugging features, allowing for dynamic introspection and debugging of the
 program running on the host.
-
-
-Caveats and limitations
-===============================
-
- - *Reliability:*  This software has not been subject to extensive testing. Use at your own risk.
-
- - *Platforms:*  The ``GraphTerm`` client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The ``GraphTerm`` server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.
-
- - *Current limitations:*
-          * Support for ``xterm`` escape sequences is incomplete.
-          * Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.
-          * At the moment, you cannot customize the shell prompt. (You
-            should be able to in the future.)
 
 
 API for GraphTerm-aware programs
@@ -194,9 +298,58 @@ and then any data (such as the HTML fragment to be displayed).
 
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 can be written in any language, much like a CGI script.
-See the programs ``gls``, ``gvi``, ``gweather``, ``ec2launch`` and
-``ec2list`` for examples of GraphTerm API usage.
+See the programs ``gls``, ``gimages``, ``gvi``, ``gweather``, ``ec2launch`` and
+``ec2list`` for examples of GraphTerm API usage. (You can use the ``which gls``
+command to figure out where these programs are located.)
 
+
+Implementation
+==========================================
+
+The GraphTerm server written in pure python, using the
+`Tornado  web  framework <http://tornadoweb.org>`_,
+with websocket support. The GraphTerm client uses standard
+HTML5+Javascript+CSS (with jQuery).
+
+The GraphTerm server may be run on your desktop or on a remote
+computer. Users create and access terminal sessions by the connecting to
+the Graphterm server on port 8900, either directly or through SSH
+port forwarding.
+By default, the localhost on the computer where the GraphTerm server
+is running is available for opening terminal sessions. Other computers
+can also connect to the GraphTerm server, on a different port (8899),
+to make them accessible as hosts for connection from the browser.
+
+A pseudo-tty (``pty``) is opened on the host for each terminal
+session. By setting the ``PROMP_HOST`` environment variable, GraphTerm
+determines when the ``stdout`` of the previous command ends, and the
+``prompt`` for the new command begins.
+
+The connection between the browser and the GraphTerm server is
+implemented using websockets (bi-directional HTTP). The GraphTerm
+server acts as a router sending input from different terminal session
+to the appropriate ``pty`` on the different hosts, and transmitting
+output from the ``pty`` to the appropriate browser window.
+
+GraphTerm extends the ``xterm`` terminal API by adding a
+new control sequence for programs to transmit a CGI-like HTTP response
+through standard output (via a websocket) to be displayed in the
+browser window. GraphTerm-aware programs can interact with the
+user using HTML forms etc.
+
+
+Caveats and limitations
+===============================
+
+ - *Reliability:*  This software has not been subject to extensive testing. Use at your own risk.
+
+ - *Platforms:*  The ``GraphTerm`` client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The ``GraphTerm`` server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.
+
+ - *Current limitations:*
+          * Support for ``xterm`` escape sequences is incomplete.
+          * Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.
+          * At the moment, you cannot customize the shell prompt. (You
+            should be able to so in the future.)
 
 Credits
 ===============================
@@ -206,11 +359,11 @@ terminal interface within the browser,
 `XMLTerm <http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html>`_ and
 `AjaxTerm <https://github.com/antonylesuisse/qweb/tree/master/ajaxterm>`_. 
 It borrows many of the ideas from *XMLTerm* and re-uses chunks of code from
-*AjaxTerm*.
+*AjaxTerm*. The server uses the asynchronous `Tornado web framework
+<http://tornadoweb.org>`_ and the client uses `jQuery <http://jquery.com>`_.
 
-The ``gls`` command uses icons from the `Tango Icon Library <http://tango.freedesktop.org>`_ 
-
- Graphical editing uses the `Ajax.org Cloud9 Editor <http://ace.ajax.org>`_
+The ``gls`` command uses icons from the `Tango Icon Library
+<http://tango.freedesktop.org>`_, and graphical editing uses the `Ajax.org Cloud9 Editor <http://ace.ajax.org>`_
 
 The 3D perspective mode was inspired by Sean Slinsky's `Star Wars
 Opening Crawl with CSS3 <http://www.seanslinsky.com/star-wars-crawl-with-css3>`_.

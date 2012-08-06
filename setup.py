@@ -4,6 +4,8 @@ import os, sys
 from setuptools import setup
 from setuptools.command.install import install as _install
 
+import graphterm.version
+
 class install(_install):
     def run(self):
         _install.run(self)
@@ -20,7 +22,7 @@ class install(_install):
         finally:
              if dirname:
                   sys.path.insert(0, dirname)
-        
+
 requires = ["tornado"]
 
 setup(name="graphterm",
@@ -32,7 +34,7 @@ setup(name="graphterm",
                                              "gterm_setup = graphterm.gterm_setup:main"]},
       install_requires=requires,
       include_package_data=True,
-      version="0.30.4",
+      version=graphterm.version,
       description="GraphTerm: A Graphical Terminal Interface",
       author="Ramalingam Saravanan",
       author_email="sarava@sarava.net",

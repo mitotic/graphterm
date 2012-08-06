@@ -41,6 +41,7 @@ except ImportError:
 import gtermhost
 import lineterm
 import packetserver
+import version
 
 import tornado.httpserver
 import tornado.ioloop
@@ -79,6 +80,8 @@ PROTOCOL = "http"
 
 SUPER_USERS = set(["root"])
 LOCAL_HOST = "local"
+
+RSS_FEED_URL = "http://info.mindmeldr.com/code/graphterm/graphterm-announce/posts.xml"
 
 def cgi_escape(s):
     return cgi.escape(s) if s else ""
@@ -136,6 +139,37 @@ def command_output(command_args, **kwargs):
             return exec_queue.get(block=True, timeout=timeout)
         except Queue.Empty:
             return "", "Timed out after %s seconds" % timeout
+
+class BlockingCall(object):
+    """ Class to execute a blocking function in a separate thread and callback with return value.
+    """
+    def __init__(self, callback, timeout, io_loop=None):
+        """ Setup callback and timeout for blocking call
+        """
+        self.callback = callback
+        self.timeout = timeout
+        self.io_loop = io_loop or IO_loop
+        
+    def call(self, func, *args, **kwargs):
+        """ Execute non-blocking call
+        """
+        def execute_in_thread():
+            try:
+                self.handle_callback(func(*args, **kwargs))
+            except Exception, excp:
+                self.handle_callback(excp)
+
+        if self.timeout:
+            IO_loop.add_timeout(time.time()+self.timeout, functools.partial(self.handle_callback, Exception("Timed out")))
+        thrd = threading.Thread(target=execute_in_thread)
+        thrd.start()
+
+    def handle_callback(self, ret_value):
+        if not self.callback:
+            return
+        callback = self.callback
+        self.callback = None
+        self.io_loop.add_callback(functools.partial(callback, ret_value))
 
 server_cert_gen_cmds = [
     'openssl genrsa -out %(hostname)s.key %(keysize)d',
@@ -360,7 +394,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             lterm_cookie = TerminalConnection.lterm_cookies.get(lterm_host)
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
                                         "lterm_cookie": lterm_cookie, "lterm_host": lterm_host,
-                                        "controller": self.controller,
+                                        "version": version.current, "controller": self.controller,
                                         "display_splash": display_splash,
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
@@ -423,6 +457,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     # Close host connection (should automatically reconnect)
                     conn.on_close()
 
+                elif msg[0] == "check_updates":
+                    # Check for announcements/updates
+                    try:
+                        import feedparser
+                    except ImportError:
+                        feedparser = None
+                    if feedparser:
+                        blocking_call = BlockingCall(self.updates_callback, 10)
+                        blocking_call.call(feedparser.parse, RSS_FEED_URL)
+        
                 elif msg[0] == "webcast":
                     if controller:
                         # Only controller can webcast
@@ -441,6 +485,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             logging.warning("GTSocket.on_message: ERROR %s", excp)
             self.write_json([["errmsg", str(excp)]])
             return
+
+    def updates_callback(self, feed_data):
+        if isinstance(feed_data, Exception):
+            self.write_json([["errmsg", "ERROR in checking for updates: %s" % excp]])
+        else:
+            # Need to filter feed to send only "unread" postings or applicable alerts
+            feed_list = [{"title": entry.title, "summary":entry.summary} for entry in feed_data.entries]
+            self.write_json([["updates_response", feed_list]])
+            logging.warning(feed_data["feed"]["title"])
 
 def xterm(command="", name=None, host="localhost", port=8900):
     """Create new terminal"""
@@ -751,7 +804,7 @@ def run_server(options, args):
     internal_client_ssl = {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": certfile} if options.internal_https else None
     TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop, ssl_options=internal_server_ssl)
 
-    if options.internal_https:
+    if options.internal_https or options.nolocal:
         # Internal https causes tornado to loop  (client fails to connect to server)
         # Connecting to internal https from another process seems to be OK.
         # Need to rewrite packetserver.PacketConnection to use tornado.netutil.TCPServer
@@ -835,6 +888,8 @@ def main():
     parser.add_option("", "--internal_port", dest="internal_port", default=0,
                       help="internal port (default: PORT-1)", type="int")
 
+    parser.add_option("", "--nolocal", dest="nolocal", action="store_true",
+                      help="Disable connection to localhost")
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
     parser.add_option("", "--https", dest="https", action="store_true",

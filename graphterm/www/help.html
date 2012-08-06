@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="Docutils 0.9: http://docutils.sourceforge.net/" />
-<title>GraphTerm Help (from README file)</title>
+<title>GraphTerm Help (from the README file)</title>
 <style type="text/css">
 
 /*
@@ -314,34 +314,47 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="graphterm-help-from-readme-file">
-<h1 class="title">GraphTerm Help (from README file)</h1>
+<div class="document" id="graphterm-help-from-the-readme-file">
+<h1 class="title">GraphTerm Help (from the README file)</h1>
 
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="auto-toc simple">
-<li><a class="reference internal" href="#support" id="id2">1&nbsp;&nbsp;&nbsp;Support</a></li>
-<li><a class="reference internal" href="#usage" id="id3">2&nbsp;&nbsp;&nbsp;Usage</a></li>
-<li><a class="reference internal" href="#cloud-integration" id="id4">3&nbsp;&nbsp;&nbsp;Cloud integration</a></li>
-<li><a class="reference internal" href="#otrace-integration" id="id5">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></li>
-<li><a class="reference internal" href="#caveats-and-limitations" id="id6">5&nbsp;&nbsp;&nbsp;Caveats and limitations</a></li>
-<li><a class="reference internal" href="#api-for-graphterm-aware-programs" id="id7">6&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></li>
-<li><a class="reference internal" href="#credits" id="id8">7&nbsp;&nbsp;&nbsp;Credits</a></li>
-<li><a class="reference internal" href="#license" id="id9">8&nbsp;&nbsp;&nbsp;License</a></li>
+<li><a class="reference internal" href="#support" id="id4">1&nbsp;&nbsp;&nbsp;Support</a></li>
+<li><a class="reference internal" href="#usage" id="id5">2&nbsp;&nbsp;&nbsp;Usage</a><ul class="auto-toc">
+<li><a class="reference internal" href="#visual-cues" id="id6">2.1&nbsp;&nbsp;&nbsp;Visual cues</a></li>
+<li><a class="reference internal" href="#navigating-folders-opening-files" id="id7">2.2&nbsp;&nbsp;&nbsp;Navigating folders/opening files</a></li>
+<li><a class="reference internal" href="#icon-display" id="id8">2.3&nbsp;&nbsp;&nbsp;Icon display</a></li>
+<li><a class="reference internal" href="#themes" id="id9">2.4&nbsp;&nbsp;&nbsp;Themes</a></li>
+<li><a class="reference internal" href="#copy-paste" id="id10">2.5&nbsp;&nbsp;&nbsp;Copy/paste</a></li>
+<li><a class="reference internal" href="#drag-and-drop" id="id11">2.6&nbsp;&nbsp;&nbsp;Drag and drop</a></li>
+<li><a class="reference internal" href="#command-recall" id="id12">2.7&nbsp;&nbsp;&nbsp;Command recall</a></li>
+<li><a class="reference internal" href="#ipad-usage" id="id13">2.8&nbsp;&nbsp;&nbsp;iPad usage</a></li>
+<li><a class="reference internal" href="#choosing-the-terminal-type" id="id14">2.9&nbsp;&nbsp;&nbsp;Choosing the terminal type</a></li>
+<li><a class="reference internal" href="#sessions-and-screensharing" id="id15">2.10&nbsp;&nbsp;&nbsp;Sessions and &quot;screensharing&quot;</a></li>
+<li><a class="reference internal" href="#webcasting" id="id16">2.11&nbsp;&nbsp;&nbsp;Webcasting</a></li>
+<li><a class="reference internal" href="#multiple-hosts" id="id17">2.12&nbsp;&nbsp;&nbsp;Multiple hosts</a></li>
+<li><a class="reference internal" href="#security" id="id18">2.13&nbsp;&nbsp;&nbsp;Security</a></li>
+<li><a class="reference internal" href="#using-it-with-ssh-port-forwarding" id="id19">2.14&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cloud-integration" id="id20">3&nbsp;&nbsp;&nbsp;Cloud integration</a></li>
+<li><a class="reference internal" href="#otrace-integration" id="id21">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></li>
+<li><a class="reference internal" href="#api-for-graphterm-aware-programs" id="id22">5&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></li>
+<li><a class="reference internal" href="#implementation" id="id23">6&nbsp;&nbsp;&nbsp;Implementation</a></li>
+<li><a class="reference internal" href="#caveats-and-limitations" id="id24">7&nbsp;&nbsp;&nbsp;Caveats and limitations</a></li>
+<li><a class="reference internal" href="#credits" id="id25">8&nbsp;&nbsp;&nbsp;Credits</a></li>
+<li><a class="reference internal" href="#license" id="id26">9&nbsp;&nbsp;&nbsp;License</a></li>
 </ul>
 </div>
 <div class="section" id="support">
-<h1><a class="toc-backref" href="#id2">1&nbsp;&nbsp;&nbsp;Support</a></h1>
-<blockquote>
-<ul class="simple">
-<li>Report bugs and other issues using the Github <a class="reference external" href="https://github.com/mitotic/graphterm/issues">Issue Tracker</a>.</li>
-<li>Additional documentation and updates will be made available on the project home page,
-<a class="reference external" href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphterm</a>.</li>
-</ul>
-</blockquote>
+<h1><a class="toc-backref" href="#id4">1&nbsp;&nbsp;&nbsp;Support</a></h1>
+<p>Report bugs and other issues using the Github <a class="reference external" href="https://github.com/mitotic/graphterm/issues">Issue Tracker</a>.</p>
+<p>Additional documentation and updates will be made available on the project home page,
+<a class="reference external" href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphterm</a>.</p>
 </div>
 <div class="section" id="usage">
-<h1><a class="toc-backref" href="#id3">2&nbsp;&nbsp;&nbsp;Usage</a></h1>
+<h1><a class="toc-backref" href="#id5">2&nbsp;&nbsp;&nbsp;Usage</a></h1>
 <p>To start the <tt class="docutils literal">GraphTerm</tt> server, use the command:</p>
 <pre class="literal-block">
 gtermserver --auth_code=none
@@ -360,88 +373,180 @@ wish to connect to and create a new terminal session on the host.
 Then try out the following commands:</p>
 <pre class="literal-block">
 gls &lt;directory&gt;
-gvi  &lt;text-filename&gt;
-gweather
+gvi &lt;text-filename&gt;
 </pre>
-<p>The first two are graphterm-aware scripts that imitate
-basic features of the standard <tt class="docutils literal">ls</tt> and <tt class="docutils literal">vi</tt> commands.</p>
-<p><em>Usage Tips:</em></p>
+<p>These are graphterm-aware scripts that imitate
+basic features of the standard <tt class="docutils literal">ls</tt> and <tt class="docutils literal">vi</tt> commands.
+Use the <tt class="docutils literal"><span class="pre">-h</span></tt> option to display help information for these commands.
+(To display images as thumbnails, use the <tt class="docutils literal">gls <span class="pre">-i</span> ...</tt> command.)
+You can use the command <tt class="docutils literal">which gls</tt> to determine the directory
+containing graphterm-aware commands, to browse
+for other commands, which include:</p>
 <blockquote>
-<ul>
-<li><p class="first"><em>Terminal type:</em> The default terminal type is set to <tt class="docutils literal">linux</tt>,
-but it has a poor fullscreen mode and command history does
-not work properly. You can try out the terminal types <tt class="docutils literal">screen</tt>
-or <tt class="docutils literal">xterm</tt>, which may work better for some purposes.
-Use the <tt class="docutils literal"><span class="pre">--term_type</span></tt> option to set the default terminal type.
-(Fully supporting these terminal types is a work in progress.)</p>
-</li>
-<li><p class="first"><em>Sessions and sharing:</em> For each host, sessions are assigned default names like
-<tt class="docutils literal">tty1</tt> etc. You can also create unique session names simply by using
-it in an URL, e.g.:</p>
-<pre class="literal-block">
-  http://localhost:8900/local/mysession
-
-The first user to create a session &quot;owns&quot; it. Others connecting to the
-same session have read-only access (unless they &quot;steal&quot; the session).
-</pre>
-</li>
-<li><p class="first"><em>Multiple hosts:</em> More than one host can connect to the <tt class="docutils literal">graphterm</tt> server.
-The local host is connected by default. To connect an additional
-host, run the following command on the host you wish to connect:</p>
-<pre class="literal-block">
- gtermhost &lt;serveraddr&gt; &lt;hostname&gt;
-
-where ``serveraddr`` is the address or name of the computer where
-the server is running. You can use the ``--daemon=start`` option to
-run the command in the background. (By default, the server listens for host
-connections on port 8899.)
-</pre>
-</li>
-<li><p class="first"><em>Security:</em> The <tt class="docutils literal"><span class="pre">--auth_code</span></tt> option can be used to specify
-an authentication code required for users connecting to the server.
-Although multiple hosts can connect to the terminal  server,
-initially,  it would be  best to use <tt class="docutils literal">graphterm</tt> to simply  connect
-to <tt class="docutils literal">localhost</tt>,  on a computer with only trusted users.
-(<em>Note:</em> Users can always use SSH port forwarding to securely connect
-to the <tt class="docutils literal">graphterm</tt> server listening as <tt class="docutils literal">localhost</tt> on a remote
-computer, e.g.. <tt class="docutils literal">ssh <span class="pre">-L</span> 8900:localhost:8900 user&#64;example.com</tt>)
-<em>Do not run the server as root</em>. As the code matures,
-security can be improved through the use of SSL certificates
-and server/client authentication.
-These features are implemented in the code, but have not been
-properly configured/tested.</p>
-</li>
-<li><p class="first"><em>Visual cues:</em> In the default theme, <em>blue</em> color denotes text that can
-be <em>clicked</em> or <em>tapped</em>. The action triggered by clicking depends on
-several factors, such as whether there is text in the current command
-line, and whether the Control modifier in the <em>Bottom menu</em> is active.
-Click on the last displayed prompt to toggle display of the <em>Bottom menu</em>.
-Clicking on other prompts toggles display of the command output
-(unless the Control modifier is used, in which case the command line
-is copied and pasted.)</p>
-</li>
-<li><p class="first"><em>Copy/paste:</em> Click on the cursor to paste text from the clipboard.</p>
-</li>
-<li><p class="first"><em>Drag and drop:</em> Sort of works within a window and across two
-windows. You can drag filenames (text-only) and drop them on
-folders, executables, or the command line. Visual feedback can
-be confusing.</p>
-</li>
-<li><p class="first"><em>Command recall:</em> Use <em>up/down arrows</em> after partially typing a
-command to search for matching commands, and use <em>right arrow</em>
-for completion.</p>
-</li>
-<li><p class="first"><em>Touch devices:</em> Click on the cursor to display virtual keyboard
-on the ipad etc.</p>
-</li>
-<li><p class="first"><em>Themes:</em> Themes are a work in progress, especially the 3-D
-perspective theme (which only works on Chrome/Safari).</p>
-</li>
-</ul>
+<p><tt class="docutils literal">gimages <span class="pre">[-f]</span> [filenames]</tt>     To view images inline, or as a
+fullpage slideshow (with <tt class="docutils literal"><span class="pre">-f</span></tt> option)</p>
+<p><tt class="docutils literal">gweather [location]</tt> To view weather forecasts</p>
+<p><tt class="docutils literal">gtweets <span class="pre">[-f]</span> [search_keyword]</tt> To display a tweet stream</p>
 </blockquote>
+<div class="section" id="visual-cues">
+<h2><a class="toc-backref" href="#id6">2.1&nbsp;&nbsp;&nbsp;Visual cues</a></h2>
+<p>In the default theme, <em>blue</em> color denotes text that can be <em>clicked</em>
+or <em>tapped</em>. The action triggered by clicking depends on multiple
+factors, such as whether there is text in the current command line,
+and whether the Control modifier in the <em>Bottom menu</em> is active.
+Click on the last displayed prompt to toggle display of the <em>Bottom
+menu</em>. Clicking on other prompts toggles display of the command
+output (unless the Control modifier is used, in which case the command
+line is copied and pasted.)</p>
+</div>
+<div class="section" id="navigating-folders-opening-files">
+<h2><a class="toc-backref" href="#id7">2.2&nbsp;&nbsp;&nbsp;Navigating folders/opening files</a></h2>
+<p>You can navigate folders in GraphTerm just like you would do in a GUI,
+while retaining the ability to drop back to the CLI at any time.
+<em>If the current command line is empty,</em>
+clicking on a folder or filename displayed by the <tt class="docutils literal">gls</tt> command will
+change the current directory to the folder, or cause the file to be
+opened.
+<em>If you have typed anything at all in the current command line,
+even if it is just a space</em>, the clicking action will cause text to be
+pasted into the command line, without any
+command being executed. You can edit the pasted text, then press the
+Enter key to execute it.</p>
+</div>
+<div class="section" id="icon-display">
+<h2><a class="toc-backref" href="#id8">2.3&nbsp;&nbsp;&nbsp;Icon display</a></h2>
+<p>Select <tt class="docutils literal">icons</tt> in the top menu to activate icon display for commands
+<tt class="docutils literal">gls</tt>.</p>
+</div>
+<div class="section" id="themes">
+<h2><a class="toc-backref" href="#id9">2.4&nbsp;&nbsp;&nbsp;Themes</a></h2>
+<p>Themes, selected using the top menu, are a work in progress, especially the 3-D perspective theme
+(which only works on Chrome/Safari).</p>
+</div>
+<div class="section" id="copy-paste">
+<h2><a class="toc-backref" href="#id10">2.5&nbsp;&nbsp;&nbsp;Copy/paste</a></h2>
+<p><em>Click on the cursor</em> before pasting text from the clipboard using
+Control-V, Command-V, or the Paste command from the Edit menu.
+NOTE: Pasting text copied from a non-plain text source, such as a web page,
+may not always work properly. A workaround is to paste the text into a
+temporary location as plain text (such as in a plain text editor),
+and then copy/paste it from there to GraphTerm.</p>
+</div>
+<div class="section" id="drag-and-drop">
+<h2><a class="toc-backref" href="#id11">2.6&nbsp;&nbsp;&nbsp;Drag and drop</a></h2>
+<p>Sort of works! You can drag a filename (<em>grabbing the icon does not
+work</em>) and drop it on a folder, an executable, or the command line.
+For drag-and-drop bwteeen two GraphTerm windows running on the same
+host, the file will be moved to the destination folder. For windows
+on two different hosts, the file will be copied.
+(Graphical feedback for this operation is not properly implemented at
+this time. Look at the command line for the feedback.)</p>
+</div>
+<div class="section" id="command-recall">
+<h2><a class="toc-backref" href="#id12">2.7&nbsp;&nbsp;&nbsp;Command recall</a></h2>
+<p>Use <em>up/down arrows</em> after partially typing a command to search for
+matching commands with the same prefix, and use <em>right arrow</em> to edit
+the completed command or use the <em>Enter</em> key to execute it. (To use the
+command recall feature of the underlaying bash shell, use Control-P
+and Control-N, instead of the up/down arrows.)</p>
+</div>
+<div class="section" id="ipad-usage">
+<h2><a class="toc-backref" href="#id13">2.8&nbsp;&nbsp;&nbsp;iPad usage</a></h2>
+<p>Click on the cursor to display virtual keyboard on the iPad. The
+<em>Bottom menu</em>, exposed by clicking on the lowermost prompt, can be
+quite useful on the iPad.</p>
+</div>
+<div class="section" id="choosing-the-terminal-type">
+<h2><a class="toc-backref" href="#id14">2.9&nbsp;&nbsp;&nbsp;Choosing the terminal type</a></h2>
+<p>The default terminal type is set to <tt class="docutils literal">linux</tt>, but it has a poor
+fullscreen mode and command history does not work properly. You can
+try out the terminal types <tt class="docutils literal">screen</tt> or <tt class="docutils literal">xterm</tt>, which may work
+better for some purposes.  You can use the <tt class="docutils literal"><span class="pre">--term_type</span></tt> option when
+running the server to set the default terminal type, or use the
+<tt class="docutils literal">export TERM=xterm</tt> command. (Fully supporting these terminal types
+is a work in progress.)</p>
+</div>
+<div class="section" id="sessions-and-screensharing">
+<h2><a class="toc-backref" href="#id15">2.10&nbsp;&nbsp;&nbsp;Sessions and &quot;screensharing&quot;</a></h2>
+<p>For each host, sessions are assigned default names like <tt class="docutils literal">tty1</tt>
+etc. You can also create unique session names simply by using it in an
+URL, e.g.:</p>
+<pre class="literal-block">
+http://localhost:8900/local/mysession
+</pre>
+<p>Anyone with access to the GraphTerm server can use the session URL
+to connect to it. This is like &quot;screensharing&quot;, but more efficient,
+because only the content is shared, not the graphical themes.
+The first user to create a session &quot;owns&quot; it, until they detach from
+it. Others connecting to the same session have read-only access,
+unless they &quot;steal&quot; the session (see the <em>Action</em> menu).
+For example, if you forgot to detach your session at work, you can
+<tt class="docutils literal">ssh</tt> to your desktop from home, use SSH port forwarding (see below)
+to securely access your work desktop, and then steal the
+session using your home browser.</p>
+<p>NOTE: Although GraphTerm supports multiple users, it is currently
+designed for a cooperative environment, where everyone trusts everyone
+else. (This may change in the future.)</p>
+</div>
+<div class="section" id="webcasting">
+<h2><a class="toc-backref" href="#id16">2.11&nbsp;&nbsp;&nbsp;Webcasting</a></h2>
+<p>If you enable the <em>Webcast</em> in the top menu, anyone can use the
+session URL to view the session, without the need for
+authentication, but will not be able to steal it. <em>Use this feature
+with caution to avoid exposing exposing sensitive data.</em></p>
+</div>
+<div class="section" id="multiple-hosts">
+<h2><a class="toc-backref" href="#id17">2.12&nbsp;&nbsp;&nbsp;Multiple hosts</a></h2>
+<p>More than one host can connect to the GraphTerm server. The local
+host is connected by default (but this can be disabled using the
+<tt class="docutils literal"><span class="pre">--nolocal</span></tt> option). To connect an additional host, run the
+following command on the computer you wish to connect:</p>
+<pre class="literal-block">
+gtermhost &lt;serveraddr&gt; &lt;hostname&gt;
+</pre>
+<p>where <tt class="docutils literal">serveraddr</tt> is the address or name of the computer where the
+GraphTerm server is running. You can use the <tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the
+<tt class="docutils literal">gtermhost</tt> command in the background. By default, the Graphterm
+server listens for host connections on port 8899. <em>The multiple host
+feature should only be used within a secure network, not on the public internet.</em></p>
+<p>NOTE: Unlike the <tt class="docutils literal">sshd</tt> server, the <tt class="docutils literal">gtermhost</tt> command is designed to
+be run by a normal user, not a privileged user. So different users can
+connect to the GraphTerm server pretending to be different &quot;hosts&quot;
+on the same computer. (If you are running a Python server, it can
+connect directly to the GraphTerm server as a &quot;host&quot;, allowing it to
+be dynamically introspected and debugged using <a class="reference external" href="http://info.mindmeldr.com/code/otrace">otrace</a>.)</p>
+</div>
+<div class="section" id="security">
+<h2><a class="toc-backref" href="#id18">2.13&nbsp;&nbsp;&nbsp;Security</a></h2>
+<p><em>The GraphTerm is not yet ready to be executed with root privileges</em>.
+Run it logged in as a regular user. The <tt class="docutils literal"><span class="pre">--auth_code</span></tt> option can be
+used to specify an authentication code required for users connecting
+to the server. Although multiple hosts can connect to the terminal
+server, initially, it would be best to use <tt class="docutils literal">graphterm</tt> to just connect to
+<tt class="docutils literal">localhost</tt>, on a computer with only trusted users. You can always
+use SSH port forwarding (see below) to securely connect to the
+GraphTerm server for remote access.
+As the code matures, security will be improved through
+the use of SSL certificates and server/client authentication.
+(SSL/https support is already built-in. Feel free to experiment with
+it, although it is not yet ready for everyday use.)</p>
+</div>
+<div class="section" id="using-it-with-ssh-port-forwarding">
+<h2><a class="toc-backref" href="#id19">2.14&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></h2>
+<p>Currently, the most secure way to remotely access the GraphTerm server
+is to use SSH port forwarding. For example, if you are connecting to
+your work computer from home, and wish to connect to the GraphTerm
+server running as <tt class="docutils literal">localhost</tt> on your work computer, use the command:</p>
+<pre class="literal-block">
+ssh -L 8900:localhost:8900 user&#64;work-computer
+</pre>
+<p>This will allow you to connect to <tt class="docutils literal"><span class="pre">http://localhost:8900</span></tt> on the browser
+on your home computer to access GraphTerm running on your work computer.
+(You can also use port forwarding in reverse, if need be, using the <tt class="docutils literal"><span class="pre">-R</span></tt> option.)</p>
+</div>
 </div>
 <div class="section" id="cloud-integration">
-<h1><a class="toc-backref" href="#id4">3&nbsp;&nbsp;&nbsp;Cloud integration</a></h1>
+<h1><a class="toc-backref" href="#id20">3&nbsp;&nbsp;&nbsp;Cloud integration</a></h1>
 <p>The GraphTerm distribution includes the scripts <tt class="docutils literal">ec2launch, ec2list, ec2scp,</tt>
 and <tt class="docutils literal">ec2ssh</tt> to launch and monitor Amazon Web Services EC2 instances
 to run GraphTerm in the &quot;cloud&quot;. You will need to have an Amazon AWS
@@ -467,44 +572,22 @@ the primary instance using the command:</p>
 gtermhost --daemon=start &lt;primary_domain_or_address&gt; &lt;secondary_host_name&gt;
 </pre>
 <p>For increased security in a publicly-accessible server, you will need to use a cryptic authentication code,
-and also use <em>https</em> instead of <em>http</em>, with SSL cettificates . Since GraphTerm is currently in
+and also use <em>https</em> instead of <em>http</em>, with SSL certificates. Since GraphTerm is currently in
 <em>alpha</em> status, security cannot be guaranteed even with these options enabled.
 (To avoid these problems, use SSH port forwarding to access GraphTerm
 on <tt class="docutils literal">localhost</tt> whenever possble.)</p>
 </div>
 <div class="section" id="otrace-integration">
-<h1><a class="toc-backref" href="#id5">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></h1>
+<h1><a class="toc-backref" href="#id21">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></h1>
 <p>GraphTerm was originally developed as a graphical front-end for
 <a class="reference external" href="http://info.mindmeldr.com/code/otrace">otrace</a>,
 an object-oriented python debugger. Use the <tt class="docutils literal"><span class="pre">--oshell</span></tt>
 option when connecting a host to the server enables <tt class="docutils literal">otrace</tt>
-debugging features, allowing access to the innards of the
+debugging features, allowing for dynamic introspection and debugging of the
 program running on the host.</p>
 </div>
-<div class="section" id="caveats-and-limitations">
-<h1><a class="toc-backref" href="#id6">5&nbsp;&nbsp;&nbsp;Caveats and limitations</a></h1>
-<blockquote>
-<ul>
-<li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
-</li>
-<li><p class="first"><em>Platforms:</em>  The <tt class="docutils literal">GraphTerm</tt> client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The <tt class="docutils literal">GraphTerm</tt> server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.</p>
-</li>
-<li><dl class="first docutils">
-<dt><em>Current limitations:</em></dt>
-<dd><ul class="first last simple">
-<li>Support for <tt class="docutils literal">xterm</tt> escape sequences is incomplete.</li>
-<li>Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.</li>
-<li>At the moment, you cannot customize the shell prompt. (You
-should be able to in the future.)</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</blockquote>
-</div>
 <div class="section" id="api-for-graphterm-aware-programs">
-<h1><a class="toc-backref" href="#id7">6&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></h1>
+<h1><a class="toc-backref" href="#id22">5&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></h1>
 <p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
 writes to to the standard output in a format similar to a HTTP
 response, preceded and followed by
@@ -526,26 +609,76 @@ names and values, using JSON format. This is followed by a blank line,
 and then any data (such as the HTML fragment to be displayed).</p>
 <p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
 can be written in any language, much like a CGI script.
-See the programs <tt class="docutils literal">gls</tt>, <tt class="docutils literal">gvi</tt>, <tt class="docutils literal">gweather</tt>, <tt class="docutils literal">ec2launch</tt> and
-<tt class="docutils literal">ec2list</tt> for examples of GraphTerm API usage.</p>
+See the programs <tt class="docutils literal">gls</tt>, <tt class="docutils literal">gimages</tt>, <tt class="docutils literal">gvi</tt>, <tt class="docutils literal">gweather</tt>, <tt class="docutils literal">ec2launch</tt> and
+<tt class="docutils literal">ec2list</tt> for examples of GraphTerm API usage. (You can use the <tt class="docutils literal">which gls</tt>
+command to figure out where these programs are located.)</p>
+</div>
+<div class="section" id="implementation">
+<h1><a class="toc-backref" href="#id23">6&nbsp;&nbsp;&nbsp;Implementation</a></h1>
+<p>The GraphTerm server written in pure python, using the
+<a class="reference external" href="http://tornadoweb.org">Tornado  web  framework</a>,
+with websocket support. The GraphTerm client uses standard
+HTML5+Javascript+CSS (with jQuery).</p>
+<p>The GraphTerm server may be run on your desktop or on a remote
+computer. Users create and access terminal sessions by the connecting to
+the Graphterm server on port 8900, either directly or through SSH
+port forwarding.
+By default, the localhost on the computer where the GraphTerm server
+is running is available for opening terminal sessions. Other computers
+can also connect to the GraphTerm server, on a different port (8899),
+to make them accessible as hosts for connection from the browser.</p>
+<p>A pseudo-tty (<tt class="docutils literal">pty</tt>) is opened on the host for each terminal
+session. By setting the <tt class="docutils literal">PROMP_HOST</tt> environment variable, GraphTerm
+determines when the <tt class="docutils literal">stdout</tt> of the previous command ends, and the
+<tt class="docutils literal">prompt</tt> for the new command begins.</p>
+<p>The connection between the browser and the GraphTerm server is
+implemented using websockets (bi-directional HTTP). The GraphTerm
+server acts as a router sending input from different terminal session
+to the appropriate <tt class="docutils literal">pty</tt> on the different hosts, and transmitting
+output from the <tt class="docutils literal">pty</tt> to the appropriate browser window.</p>
+<p>GraphTerm extends the <tt class="docutils literal">xterm</tt> terminal API by adding a
+new control sequence for programs to transmit a CGI-like HTTP response
+through standard output (via a websocket) to be displayed in the
+browser window. GraphTerm-aware programs can interact with the
+user using HTML forms etc.</p>
+</div>
+<div class="section" id="caveats-and-limitations">
+<h1><a class="toc-backref" href="#id24">7&nbsp;&nbsp;&nbsp;Caveats and limitations</a></h1>
+<blockquote>
+<ul>
+<li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
+</li>
+<li><p class="first"><em>Platforms:</em>  The <tt class="docutils literal">GraphTerm</tt> client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The <tt class="docutils literal">GraphTerm</tt> server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.</p>
+</li>
+<li><dl class="first docutils">
+<dt><em>Current limitations:</em></dt>
+<dd><ul class="first last simple">
+<li>Support for <tt class="docutils literal">xterm</tt> escape sequences is incomplete.</li>
+<li>Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.</li>
+<li>At the moment, you cannot customize the shell prompt. (You
+should be able to so in the future.)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</blockquote>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#id8">7&nbsp;&nbsp;&nbsp;Credits</a></h1>
+<h1><a class="toc-backref" href="#id25">8&nbsp;&nbsp;&nbsp;Credits</a></h1>
 <p><tt class="docutils literal">GraphTerm</tt> is inspired by two earlier projects that implement the
 terminal interface within the browser,
 <a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a> and
 <a class="reference external" href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm</a>.
 It borrows many of the ideas from <em>XMLTerm</em> and re-uses chunks of code from
-<em>AjaxTerm</em>.</p>
-<p>The <tt class="docutils literal">gls</tt> command uses icons from the <a class="reference external" href="http://tango.freedesktop.org">Tango Icon Library</a></p>
-<blockquote>
-Graphical editing uses the <a class="reference external" href="http://ace.ajax.org">Ajax.org Cloud9 Editor</a></blockquote>
+<em>AjaxTerm</em>. The server uses the asynchronous <a class="reference external" href="http://tornadoweb.org">Tornado web framework</a> and the client uses <a class="reference external" href="http://jquery.com">jQuery</a>.</p>
+<p>The <tt class="docutils literal">gls</tt> command uses icons from the <a class="reference external" href="http://tango.freedesktop.org">Tango Icon Library</a>, and graphical editing uses the <a class="reference external" href="http://ace.ajax.org">Ajax.org Cloud9 Editor</a></p>
 <p>The 3D perspective mode was inspired by Sean Slinsky's <a class="reference external" href="http://www.seanslinsky.com/star-wars-crawl-with-css3">Star Wars
 Opening Crawl with CSS3</a>.</p>
 <p><tt class="docutils literal">GraphTerm</tt> was developed as part of the <a class="reference external" href="http://mindmeldr.com">Mindmeldr</a> project, which is aimed at improving classroom interaction.</p>
 </div>
 <div class="section" id="license">
-<h1><a class="toc-backref" href="#id9">8&nbsp;&nbsp;&nbsp;License</a></h1>
+<h1><a class="toc-backref" href="#id26">9&nbsp;&nbsp;&nbsp;License</a></h1>
 <p><tt class="docutils literal">GraphTerm</tt> is distributed as open source under the <a class="reference external" href="http://www.opensource.org/licenses/bsd-license.php">BSD-license</a>.</p>
 </div>
 </div>

@@ -168,7 +168,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "keypress":
                     if self.lineterm:
-                        self.lineterm.term_write(term_name, str(cmd[0]))
+                        self.lineterm.term_write(term_name, cmd[0].encode("ascii", "ignore"))
 
                 elif action == "save_file":
                     if self.lineterm:
@@ -188,7 +188,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.get_finder(term_name, cmd[0], cmd[1])
 
                 elif action == "incomplete_input":
-                    cmd_incomplete = str(cmd[0])
+                    cmd_incomplete = cmd[0].encode("ascii", "ignore")
                     dummy, sep, text = cmd_incomplete.rpartition(" ")
                     options = otrace.OShell.instance.completer(text, 0, line=cmd_incomplete, all=True)
                     if text:
@@ -198,7 +198,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     resp_list.append(["completed_input", options])   # Not escaped; handle as text
 
                 elif action == "input":
-                    cmd_input = str(cmd[0]).lstrip()   # Unescaped text
+                    cmd_input = cmd[0].encode("ascii", "ignore").lstrip()   # Unescaped text
                     here_doc = cmd[1]
                     entry_list = []
 

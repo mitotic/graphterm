@@ -21,6 +21,9 @@ var FILE_URI_PREFIX = "file:/"+"/"; // Split double slash for minification
 
 var MAX_LINE_BUFFER = 500;
 
+var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
+var PYPI_JSON_URL = PYPI_URL + "/json?callback=?";
+
 var WRITE_LOG = function (str) {};
 var DEBUG_LOG = function (str) {};
 var DEBUG_LOG = function (str) {console.log(str)};
@@ -557,6 +560,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$('<pre class="gterm-log">'+prefix+command[3]+'</pre>').appendTo("#session-log .curentry");
 		$("#session-log .curentry .gterm-log .gterm-link").bindclick(otraceClickHandler);
 
+            } else if (action == "updates_response") {
+		feed_list = command[1];
+		//if (feed_list.length)
+		    //alert(feed_list[0].title+": "+feed_list[0].summary);
+
             } else if (action == "prompt") {
 		GTPrompt = command[1];
 		GTCurDirURI = command[2];
@@ -1068,9 +1076,14 @@ function gtermSelectHandler(event) {
     switch (idcomps[1]) {
     case "actions":
 	$(this).val(1);
-	if (selectedOption == "reconnect")
+    case "about":
+	if (selectedOption == "about")
+	    GTermAbout();
+	else if (selectedOption == "updates")
+	    CheckUpdates();
+	else if (selectedOption == "reconnect")
 	    ReconnectHost();
-	if (selectedOption == "steal")
+	else if (selectedOption == "steal")
 	    StealSession();
 	break;
 
@@ -1144,9 +1157,6 @@ function gtermMenuClickHandler(event) {
 	break;
     case "new":
 	OpenNew();
-	break;
-    case "about":
-	alert("GraphTerm: A Graphical Terminal Interface\n\nhttp://info.mindmeldr.com/code/graphterm");
 	break;
     case "control":
 	$("#headfoot-control").toggleClass("gterm-headfoot-active");
@@ -1573,6 +1583,21 @@ function OpenNew(term_name, options) {
     var new_url = window.location.protocol+"/"+"/"+window.location.host+"/"+gParams.host+"/"+tty; // Split the double slash to avoid confusing the JS minifier
     console.log("open", new_url);
     window.open(new_url, target="_blank");
+}
+
+function GTermAbout() {
+    alert("GraphTerm: A Graphical Terminal Interface\n\nVersion: "+gParams.version+"\n\nhttp://info.mindmeldr.com/code/graphterm");
+}
+
+function CheckUpdates() {
+    $.getJSON(PYPI_JSON_URL, function(data) {
+	if (gParams.version == data.info.version) {
+	    alert("GraphTerm is up to date (version: "+gParams.version+").");
+	} else {
+	    alert("New version "+data.info.version+" is available.\nUse 'easy_install --upgrade graphterm'\n or download from from "+PYPI_URL);
+	}
+    });
+    gWebSocket.write([["check_updates"]]);
 }
 
 function ReconnectHost() {
