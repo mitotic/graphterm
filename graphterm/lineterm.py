@@ -724,7 +724,10 @@ class Terminal(object):
 			q, r = divmod(self.cursor_y+1, self.scroll_bot+1)
 			if q:
 				if not self.alt_mode:
-					self.screen_buf.scroll_buf_up(self.screen_buf.dumplatin1(self.peek(self.scroll_top, 0, self.scroll_top, self.width), trim=True), self.screen.meta[self.scroll_top])
+					row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
+					self.screen_buf.scroll_buf_up(self.screen_buf.dumplatin1(row, trim=True),
+								      self.screen.meta[self.scroll_top],
+		                                        offset=prompt_offset(dump(row), self.prompt, self.screen.meta[self.scroll_top]))
 				self.scroll_up(self.scroll_top, self.scroll_bot)
 				self.cursor_y = self.scroll_bot
 			else:
