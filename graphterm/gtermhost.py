@@ -62,7 +62,7 @@ class HtmlWrapper(object):
 
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
-    def __init__(self, host, port, command=SHELL_CMD, lterm_cookie="", io_loop=None, ssl_options={},
+    def __init__(self, host, port, command=SHELL_CMD, lterm_cookie="", oshell=False, io_loop=None, ssl_options={},
                  term_type="", lterm_logfile=""):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
@@ -71,6 +71,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.lterm_cookie = lterm_cookie
         self.lterm_logfile = lterm_logfile
         self.command = command
+        self.oshell = oshell
         self.terms = {}
         self.lineterm = None
 
@@ -82,6 +83,8 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         super(TerminalClient, self).shutdown()
 
     def handle_connect(self):
+        if self.oshell:
+            self.add_oshell()
         lterm_host = get_lterm_host(self.connection_id)
         self.remote_response("", [["term_params", {"lterm_cookie": self.lterm_cookie,
                                                   "lterm_host": lterm_host}]])
@@ -361,11 +364,10 @@ def gterm_connect(host_name, server_addr, server_port=8899, shell_cmd=SHELL_CMD,
     lterm_cookie = "1%015d" % random.randrange(0, 10**15)   # 1 prefix to keep leading zeros when stringified
 
     host_connection = TerminalClient.get_client(host_name,
-                         connect=(server_addr, server_port, shell_cmd, lterm_cookie),
+                         connect=(server_addr, server_port, shell_cmd, lterm_cookie, bool(oshell_globals)),
                           connect_kw=connect_kw)
 
     if oshell_globals:
-        host_connection.add_oshell()
         gterm_callback = GTCallback()
         gterm_callback.set_client(host_connection)
         otrace.OTrace.setup(callback_handler=gterm_callback)
@@ -373,6 +375,7 @@ def gterm_connect(host_name, server_addr, server_port=8899, shell_cmd=SHELL_CMD,
         trace_shell = otrace.OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
                                     allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
                                     add_env={"GRAPHTERM_COOKIE": lterm_cookie}, init_file=oshell_init)
+
     else:
         trace_shell = None
 

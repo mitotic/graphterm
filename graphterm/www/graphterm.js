@@ -1076,7 +1076,7 @@ function gtermSelectHandler(event) {
     switch (idcomps[1]) {
     case "actions":
 	$(this).val(1);
-    case "about":
+
 	if (selectedOption == "about")
 	    GTermAbout();
 	else if (selectedOption == "updates")
@@ -1271,6 +1271,37 @@ function gtermPageletClickHandler(event) {
     return false;
 }
 
+function gtermBottomSelectHandler(event) {
+    var idcomps = $(this).attr("id").split("-");
+    var selectedOption = $(this).val();
+    console.log("gtermBottomSelectHandler: ", idcomps[1], selectedOption);
+
+    GTReceivedUserInput("botselect");
+    var text = "";
+    switch (idcomps[1]) {
+    case "key":
+	$(this).val(1);
+
+	if (selectedOption == "space")
+	    text = String.fromCharCode(32);
+	else if (selectedOption == "tab")
+	    text = String.fromCharCode(9);
+	else if (selectedOption == "escape")
+	    text = String.fromCharCode(27);
+	else if (selectedOption == "controlc")
+	    text = String.fromCharCode(3);
+	else if (selectedOption == "controld")
+	    text = String.fromCharCode(4);
+	else if (selectedOption == "controlz")
+	    text = String.fromCharCode(26);
+	break;
+    }
+    if (text.length && gWebSocket) {
+	gWebSocket.term_input(text);
+    }
+    return false;
+}
+
 function gtermFinderClickHandler(event) {
     // Paste selected Command/Option/File
     // TODO: If empty command line and File finder, display context menu,
@@ -1459,7 +1490,7 @@ function AjaxKeypress(evt) {
     if (evt.metaKey && !evt.ctrlKey)
 	return true;
 
-    if (evt.which >= 37 && evt.which <= 40) {
+    if (!evt.charCode && (evt.which >= 37 && evt.which <= 40)) {
 	if (!HandleArrowKeys(evt.which))
 	    return false
     }
@@ -1592,7 +1623,7 @@ function GTermAbout() {
 function CheckUpdates() {
     $.getJSON(PYPI_JSON_URL, function(data) {
 	if (gParams.version == data.info.version) {
-	    alert("GraphTerm is up to date (version: "+gParams.version+").");
+	    alert("GraphTerm is up-to-date (version: "+gParams.version+").");
 	} else {
 	    alert("New version "+data.info.version+" is available.\nUse 'easy_install --upgrade graphterm'\n or download from from "+PYPI_URL);
 	}
@@ -2110,6 +2141,7 @@ $(document).ready(function() {
     $("#session-bufellipsis").hide();
     $("#session-findercontainer").hide();
     $(".menubar-select").change(gtermSelectHandler);
+    $(".session-footermenu select").change(gtermBottomSelectHandler);
     $("#session-headermenu .headfoot").bindclick(gtermMenuClickHandler);
     $("#session-footermenu .headfoot").bindclick(gtermMenuClickHandler);
 
