@@ -51,10 +51,38 @@ Exec_path = os.path.join(os.path.dirname(__file__), BINDIR)
 Gls_path = os.path.join(Exec_path, "gls")
 Exec_errmsg = False
 
-def dump(data, trim=False):
-	"""Return string from array of int data, trimming NULs, if need be"""
-	line = "".join(chr(i & 255) for i in data)
-	return line.rstrip("\x00") if trim else line
+ENCODING = "utf-8"  # "utf-8" or "ascii"
+
+STYLE4 = 4
+UNI24 = 24
+UNIMASK = 0xffffff
+ASCIIMASK = 0x7f
+
+def create_array(fill_value, count):
+	"""Return array of 32-bit values"""
+	return array.array('L', [fill_value]*count)
+
+def dump(data, trim=False, encoded=False):
+	"""Return unicode string from array of long data, trimming NULs, and encoded to str, if need be"""
+	if ENCODING == "ascii":
+		ucodes = [(x & ASCIIMASK) for x in data]
+	else:
+		ucodes = [(x & UNIMASK) for x in data]
+
+	# Replace non-NUL, non-newline control character by space
+	ucodes = [(32 if (x < 32 and x and x != 10) else x) for x in ucodes]
+
+	return uclean( u"".join(map(unichr, ucodes)), trim=trim, encoded=encoded)
+
+def uclean(ustr, trim=False, encoded=False):
+	"""Return cleaned up unicode string, trimmed and encoded to str, if need be"""
+	if trim:
+		# Trim trailing NULs
+		ustr = ustr.rstrip(u"\x00")
+	# Replace NULs with spaces
+	ustr = ustr.replace(u"\x00", u" ")
+
+	return ustr.encode(ENCODING, "ignore") if encoded else ustr
 
 def prompt_offset(line, prompt, meta=None):
 	"""Return offset at end of prompt (not including trailing space), or zero"""
@@ -289,7 +317,7 @@ def command_markup(entry_index, current_dir, pre_offset, offset, line):
 			
 
 class ScreenBuf(object):
-	def __init__(self, prompt):
+	def __init__(self, prompt, fg_color=0, bg_color=7):
 		self.prompt = prompt
 		self.pre_offset = len(prompt[0]) if prompt else 0
 		self.width = None
@@ -306,25 +334,13 @@ class ScreenBuf(object):
 		self.cleared_last = False
 		self.full_update = True
 
-		# Init 0-256 to latin1 and html translation table
-		self.trl1=""
-		for i in range(256):
-			if i==10:
-				self.trl1+=chr(i)
-			elif i<32:
-				self.trl1+=" "
-			elif i<127 or i>160:
-				self.trl1+=chr(i)
-			else:
-				self.trl1+="?"
-		self.trhtml=""
-		for i in range(256):
-			if i==0x0a or (i>32 and i<127) or i>160:
-				self.trhtml+=chr(i)
-			elif i<=32:
-				self.trhtml+="\xa0"
-			else:
-				self.trhtml+="?"
+		self.fg_color = fg_color
+		self.bg_color = bg_color
+		self.default_style = (bg_color << STYLE4) | fg_color
+		self.inverse_style = (fg_color << STYLE4) | bg_color
+		self.bold_style = 0x08
+
+		self.default_nul = self.default_style << UNI24
 
 	def reconnect(self):
 		self.last_scroll_count = self.current_scroll_count - len(self.scroll_lines)
@@ -416,66 +432,40 @@ class ScreenBuf(object):
 		self.last_scroll_count = self.current_scroll_count
 		return full_update, update_rows, update_scroll
 
-	def dumplatin1(self, data, trim=False):
-		return dump(data, trim=trim).translate(self.trl1)
-
 	def dumprichtext(self, data, trim=False):
-		span = ""
+		"""Returns [(style_list, utf8str), ...] for line data"""
+		if all((x >> UNI24) == self.default_style for x in data):
+			# All default style (optimize)
+			return [([], dump(data, trim=trim, encoded=True))]
+
 		span_list = []
 		style_list = []
-		span_style, span_bg, span_fg = 0x0007, -1, -1
-		for i in data:
-			q, c = divmod(i, 256)
-			if span_style != q:
+		span_style, span_bg, span_fg = self.default_style, -1, -1
+		span = u""
+		for scode in data:
+			char_style = scode >> UNI24
+			ucode = scode & ASCIIMASK if ENCODING == "ascii" else scode & UNIMASK
+			if ucode < 32 and ucode and ucode != 10:
+				# Replace non-NUL, non-newline control character by space
+				ucode = 32
+			if span_style != char_style:
 				if span:
-					span_list.append((style_list, span.translate(self.trl1)))
-					span = ""
-				span_style = q
+					span_list.append( (style_list, uclean(span, encoded=True)) )
+					span = u""
+				span_style = char_style
 				style_list = []
-				if span_style & 0x0008:
+				if span_style & self.bold_style:
 					style_list.append("bold")
-				if span_style & 0x0700:
+				if (span_style & 0x77) == self.inverse_style:
 					style_list.append("inverse")
-			span += chr(c)
-		if span:
-			if trim:
-				span = span.rstrip("\x00")
-			if span:
-				span_list.append((style_list, span.translate(self.trl1)))
+			span += unichr(ucode)
+		cspan = uclean(span, trim=trim, encoded=True)
+		if cspan:
+			span_list.append( (style_list, cspan) )
 		return span_list
 
-	def dumphtml(self, data, trim=False, color=1):
-		h=self.height
-		w=self.width
-		r=""
-		span=""
-		span_bg,span_fg=-1,-1
-		for i in range(h*w):
-			q,c=divmod(data[i],256)
-			if color:
-				bg,fg=divmod(q,256)
-			else:
-				bg,fg=0,7
-			if i==self.cursor_y*w+self.cursor_x:
-				bg,fg=1,7
-			if (bg!=span_bg or fg!=span_fg or i==h*w-1):
-				if len(span):
-					r+='<span class="f%d b%d">%s</span>'%(span_fg,span_bg,cgi.escape(span.translate(self.trhtml)))
-				span=""
-				span_bg,span_fg=bg,fg
-			span+=chr(c)
-			if i%w==w-1:
-				span+='\n'
-		r='<?xml version="1.0" encoding="ISO-8859-1"?><pre class="term">%s</pre>'%r
-		if self.last_html==r:
-			return '<?xml version="1.0"?><idem></idem>'
-		else:
-			self.last_html=r
-#			print >> sys.stderr, "lineterm: dumphtml ", self
-			return r
-
 	def __repr__(self):
-		d = self.dumplatin1(self.main_screen.data)
+		d = dump(self.main_screen.data, trim=True)
 		r = ""
 		for i in range(self.height):
 			r += "|%s|\n"%d[self.width*i:self.width*(i+1)]
@@ -485,7 +475,7 @@ class Screen(object):
 	def __init__(self, width, height, data=None, meta=None):
 		self.width = width
 		self.height = height
-		self.data = data or array.array('i', [0x000000]*(width*height))
+		self.data = data or create_array(0, width*height)
 		self.meta = [None] * height
 
 	def make_copy(self):
@@ -504,10 +494,11 @@ class Terminal(object):
 		self.host = host
 		self.prompt = prompt
 		self.logfile = logfile
+		self.screen_buf = ScreenBuf(prompt)
+
 		self.init()
 		self.reset()
 		self.output_time = time.time()
-		self.screen_buf = ScreenBuf(prompt)
 		self.buf = ""
 		self.alt_mode = False
 		self.screen = self.main_screen
@@ -590,7 +581,7 @@ class Terminal(object):
 		self.cursor_x_bak = self.cursor_x = 0
 		self.cursor_y_bak = self.cursor_y = 0
 		self.cursor_eol = 0
-		self.style = 0x000700
+		self.current_nul = self.screen_buf.default_nul
 		self.outbuf = ""
 		self.last_html = ""
 		self.active_rows = 0
@@ -609,7 +600,7 @@ class Terminal(object):
 				# Check first active line for prompt
 				line = dump(self.main_screen.data[:min_width])
 				if prompt_offset(line, self.prompt, self.main_screen.meta[0]):
-					saved_line = [len(line.rstrip('\x00')), self.main_screen.meta[0], self.main_screen.data[:min_width]]
+					saved_line = [len(line.rstrip(u'\x00')), self.main_screen.meta[0], self.main_screen.data[:min_width]]
 			self.width = width
 			self.height = height
 			self.reset()
@@ -646,7 +637,7 @@ class Terminal(object):
 		# Move scrolled active rows to buffer
 		for cursor_y in range(scroll_rows):
 			row = self.main_screen.data[self.width*cursor_y:self.width*cursor_y+self.width]
-			self.screen_buf.scroll_buf_up(self.screen_buf.dumplatin1(row, trim=True),
+			self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
 						      self.main_screen.meta[cursor_y],
 				                      offset=prompt_offset(dump(row), self.prompt, self.main_screen.meta[cursor_y]))
 
@@ -685,7 +676,7 @@ class Terminal(object):
 	def zero(self, y1, x1, y2, x2, screen=None):
 		if screen is None: screen = self.screen
 		w = self.width*(y2-y1) + x2 - x1 + 1
-		z = array.array('i', [0x000000]*w)
+		z = create_array(0, w)
 		screen.data[self.width*y1+x1:self.width*y2+x2+1] = z
 
 	def zero_lines(self, y1, y2):
@@ -725,7 +716,7 @@ class Terminal(object):
 			if q:
 				if not self.alt_mode:
 					row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
-					self.screen_buf.scroll_buf_up(self.screen_buf.dumplatin1(row, trim=True),
+					self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
 								      self.screen.meta[self.scroll_top],
 		                                        offset=prompt_offset(dump(row), self.prompt, self.screen.meta[self.scroll_top]))
 				self.scroll_up(self.scroll_top, self.scroll_bot)
@@ -759,7 +750,7 @@ class Terminal(object):
 		if self.cursor_eol:
 			self.cursor_down()
 			self.cursor_x = 0
-		self.screen.data[(self.cursor_y*self.width)+self.cursor_x] = self.style|ord(c)
+		self.screen.data[(self.cursor_y*self.width)+self.cursor_x] = self.current_nul | ord(c)
 		self.cursor_right()
 		if not self.alt_mode:
 			self.active_rows = max(self.cursor_y+1, self.active_rows)
@@ -993,7 +984,7 @@ class Terminal(object):
 		elif l[0] in ALTERNATE_SCREEN_CODES:
 			self.alt_mode = True
 			self.screen = self.alt_screen
-			self.style = 0x000700
+			self.current_nul = self.screen_buf.default_nul
 			self.zero_screen()
 			if self.logfile:
 				with open(self.logfile, "a") as logf:
@@ -1010,7 +1001,7 @@ class Terminal(object):
 		elif l[0] in ALTERNATE_SCREEN_CODES:
 			self.alt_mode = False
 			self.screen = self.main_screen
-			self.style = 0x000700
+			self.current_nul = self.screen_buf.default_nul
 			self.cursor_y = max(0, self.active_rows-1)
 			self.cursor_x = 0
 			if self.logfile:
@@ -1025,24 +1016,24 @@ class Terminal(object):
 		for i in l:
 			if i==0 or i==39 or i==49 or i==27:
 				# Normal
-				self.style = 0x000700
+				self.current_nul = self.screen_buf.default_nul
 			elif i==1:
 				# Bold
-				self.style = (self.style|0x000800)
+				self.current_nul = self.current_nul | (self.screen_buf.bold_style << UNI24)
 			elif i==7:
 				# Inverse
-				self.style = 0x070000
+				self.current_nul = self.screen_buf.inverse_style << UNI24
 			elif i>=30 and i<=37:
 				# Foreground Black(30), Red, Green, Yellow, Blue, Magenta, Cyan, White
 				c = i-30
-				self.style = (self.style&0xff08ff)|(c<<8)
+				self.current_nul = (self.current_nul & 0xf8ffffff) | (c << UNI24)
 			elif i>=40 and i<=47:
-				# Background Black(30), Red, Green, Yellow, Blue, Magenta, Cyan, White
+				# Background Black(40), Red, Green, Yellow, Blue, Magenta, Cyan, White
 				c = i-40
-				self.style = (self.style&0x00ffff)|(c<<16)
+				self.current_nul = (self.current_nul & 0x8fffffff) | (c << (UNI24+STYLE4))
 #			else:
 #				print >> sys.stderr, "lineterm: CSI style ignore",l,i
-#		print >> sys.stderr, 'lineterm: style: %r %x'%(l, self.style)
+#		print >> sys.stderr, 'lineterm: style: %r %x'%(l, self.current_nul)
 
 	def csi_r(self, l):
 		"""Set scrolling region [top;bottom]"""
@@ -1230,7 +1221,7 @@ class Terminal(object):
 			else:
 				pre_line = line
 			pre_line = pre_line[offset:]
-			if pre_line and pre_line[0] == " ":
+			if pre_line and pre_line[0] == u" ":
 				# Strip space associated with prompt
 				pre_line = pre_line[1:]
 			if not pre_line.strip():
@@ -1250,7 +1241,7 @@ class Terminal(object):
 			else:
 				# Non-empty command line; expect filename
 				expect_filename = True
-				if pre_line[-1] != " ":
+				if pre_line[-1] != u" ":
 					space_prefix = " "
 
 		if cwd and normalize and expect_filename and file_uri:
@@ -1513,7 +1504,7 @@ class Multiplex(object):
 			if not term:
 				return ""
 			try:
-				return term.screen_buf.dumplatin1(data, trim=trim)
+				return dump(data, trim=trim, encoded=True)
 			except KeyError:
 				return "ERROR in dump"
 
