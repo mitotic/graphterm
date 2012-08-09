@@ -2,12 +2,21 @@
 gtermapi: Common code gterm-aware programs
 """
 
+import hashlib
+import hmac
 import os
 import random
 
+HEX_DIGITS = 16
+
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
+Host = os.getenv("GRAPHTERM_HOST", "")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
+
+def get_file_url(filepath):
+    filehmac = "?hmac="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+    return "/file/" + Host + filepath + filehmac
 
 def wrap(html):
     return Html_escapes[0] + html + Html_escapes[1]
