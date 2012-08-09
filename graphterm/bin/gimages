@@ -5,9 +5,6 @@
 gimages: graphterm-aware image display
 """
 
-import hashlib
-import hmac
-import json
 import mimetypes
 import os
 import sys
@@ -16,12 +13,7 @@ import termios
 
 from optparse import OptionParser
 
-Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
-Host = os.getenv("GRAPHTERM_HOST", "")
-Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
-                "\x1b[?1155l"]
-
-HEX_DIGITS = 16
+import gtermapi
 
 Work_dir = os.getcwd()
 
@@ -33,26 +25,7 @@ parser.add_option("-f", "--fullscreen",
 
 (options, args) = parser.parse_args()
 
-params = {"scroll": "top", "current_directory": Work_dir}
-params["display"] = "block"
-
-Headers = {"content_type": "text/html"}
-Headers["x_gterm_response"] = "pagelet"
-Headers["x_gterm_parameters"] = params
-
 IMGFORMAT = '<div class="gterm-imgcontainer"><img class="gterm-fullimg" src="%s"></img></div>' if options.fullscreen else '<img class="gterm-blockimg" src="%s"></img><br>' 
-
-def wrap(headers, html):
-    return Html_escapes[0] + json.dumps(headers) + "\n\n" + html + Html_escapes[1]
-
-def write_pagelet(wrapped_html):
-    sys.stdout.write(wrapped_html)
-    sys.stdout.flush()
-
-Blank_html = wrap(Headers, "")
-
-if options.fullscreen:
-    params["display"] = "fullpage"
 
 if not args:
     args = os.listdir(Work_dir)
@@ -79,11 +52,7 @@ if not file_list:
     sys.exit(1)
     
 def display_file(filepath):
-    filehmac = "?hmac="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
-    fileurl = "/file/" + Host + filepath + filehmac
-
-    html = IMGFORMAT % fileurl
-    write_pagelet(wrap(Headers, html))
+    gtermapi.write_html(IMGFORMAT % gtermapi.get_file_url(filepath), display=("fullpage" if options.fullscreen else "block"), dir=Work_dir)
 
 if not options.fullscreen:
     for filepath, filename in file_list:
@@ -96,14 +65,14 @@ Saved_settings = termios.tcgetattr(Stdin_fd)
 
 j = -1
 try:
-    print >> sys.stderr, "Slideshow: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n's' => suspend, 'r' => resume"
+    print >> sys.stderr, "Slideshow: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n'p' => pause, 'r' => resume"
 
     # Raw tty input without echo
     tty.setraw(Stdin_fd)
     while True:
         ch = sys.stdin.read(1)
         if ch == "\x03" or ch == "\x04" or ch == "\x1b" or ch == "q": # ^C/^D/ESC/q
-            write_pagelet(wrap(Headers, ""))
+            gtermapi.write_blank()
             sys.exit(0)
 
         if ch == "f" or ch == " ":
@@ -112,8 +81,8 @@ try:
             jnew = j - 1
         elif ch == "r":
             jnew = j
-        elif ch == "s":
-            write_pagelet(Blank_html)
+        elif ch == "p":
+            gtermapi.write_blank()
             continue
         else:
             continue

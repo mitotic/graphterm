@@ -33,7 +33,7 @@ FILE_EXTENSIONS = {"css": "css", "htm": "html", "html": "html", "js": "javascrip
                    "xml": "xml"}
 
 FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gcp", "gimages", "gls", "gopen", "gvi"])
-REMOTE_FILE_COMMANDS = set(["gcp"])
+REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
 # Scroll lines array components
@@ -79,8 +79,8 @@ def uclean(ustr, trim=False, encoded=False):
 	if trim:
 		# Trim trailing NULs
 		ustr = ustr.rstrip(u"\x00")
-	# Replace NULs with spaces
-	ustr = ustr.replace(u"\x00", u" ")
+	# Replace NULs with spaces and DELs with "?"
+	ustr = ustr.replace(u"\x00", u" ").replace(u"\x7f", u"?")
 
 	return ustr.encode(ENCODING, "ignore") if encoded else ustr
 

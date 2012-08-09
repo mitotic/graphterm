@@ -58,7 +58,7 @@ else:
         sys.exit(1)
     params["display"] = "fullpage"
     params["form_input"] = True
-    sys.stdout.write(gtermapi.wrap(json.dumps(headers)+"\n\n"+form_html))
+    gtermapi.wrap_write(form_html, headers=headers)
     sys.exit(1)
     
 if options.domain:
@@ -115,7 +115,7 @@ params["display"] = "fullpage"
 start_time = time.time()
 while status == "pending":
     timesec = int(time.time() - start_time)
-    sys.stdout.write(gtermapi.wrap(json.dumps(headers)+"\n\n"+(Status_template % (instance_tag, status, timesec))))
+    gtermapi.wrap_write(Status_template % (instance_tag, status, timesec), headers=headers)
     time.sleep(3)
     status = instance.update()
 

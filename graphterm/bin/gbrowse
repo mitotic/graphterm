@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+#
+
+"""
+gbrowse: Open files and file/http URLs in browser
+"""
+
+import mimetypes
+import os
+import sys
+import tty
+import termios
+
+from optparse import OptionParser
+
+import gtermapi
+
+Work_dir = os.getcwd()
+
+usage = "usage: %prog [-f] <URL/file> ..."
+parser = OptionParser(usage=usage)
+
+(options, args) = parser.parse_args()
+
+for arg in args:
+    if arg.startswith("http://") or arg.startswith("https://"):
+        url = arg
+    else:
+        if not arg.startswith("file://"):
+            # Assume it is a filename; create file URL
+            fullname = os.path.expanduser(arg)
+            filepath = os.path.normcase(os.path.abspath(fullname))
+            if not os.path.exists(filepath):
+                print >> sys.stderr, "File %s not found" % filepath
+                continue
+
+            if not os.path.isfile(filepath):
+                print >> sys.stderr, "%s not a plain file" % filepath
+                continue
+
+            arg = gtermapi.get_file_url(filepath)
+
+        host_path = arg[len("file://"):]
+        if host_path.startswith("/"):
+            host_path = "local" + host_path
+        url = "/file/" + host_path
+
+    gtermapi.open_url(url)
+

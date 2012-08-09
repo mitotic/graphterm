@@ -1,11 +1,13 @@
 """
-gtermapi: Common code gterm-aware programs
+gtermapi: Common code for gterm-aware programs
 """
 
 import hashlib
 import hmac
+import json
 import os
 import random
+import sys
 
 HEX_DIGITS = 16
 
@@ -14,12 +16,42 @@ Host = os.getenv("GRAPHTERM_HOST", "")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
 
+def wrap(html, headers={}):
+    """Wrap html, with headers, between escape sequences"""
+    return Html_escapes[0] + json.dumps(headers) + "\n\n" + html + Html_escapes[1]
+
+def write(data):
+    """Write data to stdout and flush"""
+    sys.stdout.write(data)
+    sys.stdout.flush()
+
+def wrap_write(html, headers={}):
+    """Wrap html, with headers, and write to stdout"""
+    write(wrap(html, headers=headers))
+
+def write_html(html, display="block", dir=""):
+    """Write html pagelet to stdout"""
+    html_headers = {"content_type": "text/html",
+                    "x_gterm_response": "pagelet",
+                    "x_gterm_parameters": {"scroll": "top", "display": display, "current_directory": dir}
+                    }
+    wrap_write(html, headers=html_headers)
+
+def write_blank(display="fullpage"):
+    """Write blank pagelet to stdout"""
+    write_html("", display=display)
+
+def open_url(url):
+    """Open url in new window"""
+    blank_headers = {"x_gterm_response": "open_url",
+                     "x_gterm_parameters": {"url": url}
+                     }
+    wrap_write("", headers=blank_headers)
+
 def get_file_url(filepath):
+    """Construct fie URL with hmac cookie suffix"""
     filehmac = "?hmac="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
     return "/file/" + Host + filepath + filehmac
-
-def wrap(html):
-    return Html_escapes[0] + html + Html_escapes[1]
 
 Form_template =  """<div id="gterm-form-%s" class="gterm-form">%s %s
 <input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformcmd="%s" data-gtermformargs="%s"></input>  <input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>

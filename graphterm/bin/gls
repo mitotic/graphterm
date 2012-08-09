@@ -5,41 +5,35 @@
 gls: graphterm-aware ls
 """
 
-import hashlib
-import hmac
-import json
 import mimetypes
 import os
 import sys
 import xml.dom.minidom
 from optparse import OptionParser
 
-Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
-Host = os.getenv("GRAPHTERM_HOST", "")
-Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
-                "\x1b[?1155l"]
+import gtermapi
 
 SPECIAL_FILES = set(["..", ".", "~"])
 
+gbrowsecmd = os.getenv("GRAPHTERM_BROWSE_CMD", "") or "gbrowse"
 glscmd = os.getenv("GRAPHTERM_LS_CMD", "") or "gls"
-gvicmd = os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
 gopencmd = os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
+gvicmd = os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
 
 FILE_TYPES = {"directory": ("/static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
               "executable": ("/static/images/tango-application-x-executable.png", ""),
-              "audiofile": ("/static/images/tango-audio-x-generic.png", gopencmd),
+              "audiofile": ("/static/images/tango-audio-x-generic.png", gbrowsecmd),
               "htmlfile": ("/static/images/tango-text-html.png", gvicmd),
-              "imagefile": ("/static/images/tango-image-x-generic.png", gopencmd),
+              "imagefile": ("/static/images/tango-image-x-generic.png", gbrowsecmd),
+              "pdffile": ("/static/images/tango-text-x-generic-template.png", gbrowsecmd),
               "plainfile": ("/static/images/tango-text-x-generic-template.png", gopencmd),
               "textfile": ("/static/images/tango-text-x-generic.png", gvicmd),
-              "videofile": ("/static/images/tango-video-x-generic.png", gopencmd),
+              "videofile": ("/static/images/tango-video-x-generic.png", gopencmd),  # Need to implement streaming...
 }
 
 IMGFORMAT = '<td><a class="gterm-link gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img" src="%(fileicon)s"></img></a>'
 
 TXTFORMAT = '<td><a class="gterm-link %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
-
-HEX_DIGITS = 16
 
 def file2html(filepath, filename, filemode=0):
     mimetype = None
@@ -59,6 +53,8 @@ def file2html(filepath, filename, filemode=0):
                 filetype = "htmlfile"
             elif mimetype.startswith("image/"):
                 filetype = "imagefile"
+            elif mimetype == "application/pdf":
+                filetype = "pdffile"
             elif mimetype.startswith("text/") or mimetype == "application/javascript":
                 filetype = "textfile"
             elif mimetype.startswith("video/"):
@@ -69,8 +65,7 @@ def file2html(filepath, filename, filemode=0):
     classes = "droppable" if filetype in ("directory", "executable") else ""
     fileicon, filecmd = FILE_TYPES[filetype]
 
-    filehmac = "?hmac="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
-    fileurl = "/file/" + Host + filepath + filehmac
+    fileurl = gtermapi.get_file_url(filepath)
     if options.images and mimetype and mimetype.startswith("image/"):
         fileicon = fileurl
 
@@ -112,9 +107,6 @@ def get_file_info(filename):
     else:
         return (filepath, filename, 0, 0, 0, 0, 0)
     return (filepath, filename, fstat.st_size, fstat.st_mtime, fstat.st_mode, fstat.st_uid, fstat.st_gid)
-
-def wrap(html):
-    return Html_escapes[0] + html + Html_escapes[1]
 
 
 usage = "usage: %prog [-f] <location>"
@@ -172,12 +164,5 @@ Table_list.append('</table>')
 
 html = "\n".join(Table_list) + "\n"
 
-params = {"scroll": "top", "current_directory": work_dir}
-params["display"] = "fullpage" if options.fullpage else "block"
-
-headers = {"content_type": "text/html"}
-headers["x_gterm_response"] = "pagelet"
-headers["x_gterm_parameters"] = params
-
-sys.stdout.write(wrap(json.dumps(headers)+"\n\n"+html))
+gtermapi.write_html(html, display=("fullpage" if options.fullpage else "block"), dir=work_dir)
 

@@ -636,6 +636,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    } else if (response_type == "open_terminal") {
 			gWebSocket.write([["open_terminal", [response_params.term_name,
 							     response_params.command]]]);
+		    } else if (response_type == "open_url") {
+			window.open(response_params.url, target="_blank");
 		    } else if (response_type == "display_finder") {
 			ShowFinder(response_params, content);
 

@@ -771,7 +771,7 @@ def run_server(options, args):
 
     application = tornado.web.Application(handlers)
 
-    logging.warning("DocRoot: "+Doc_rootdir);
+    ##logging.warning("DocRoot: "+Doc_rootdir);
 
     IO_loop = tornado.ioloop.IOLoop.instance()
 
@@ -824,7 +824,6 @@ def run_server(options, args):
 
     Http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_options)
     Http_server.listen(http_port, address=http_host)
-    logging.warning("Http_server listening on %s:%s" % (http_host, http_port))
     logging.warning("Auth code = %s %s" % (GTSocket.get_auth_code(), auth_file))
 
     def test_fun():
@@ -847,7 +846,7 @@ def run_server(options, args):
         ioloop_thread = threading.Thread(target=IO_loop.start)
         ioloop_thread.start()
         time.sleep(1)   # Time to start thread
-        print >> sys.stderr, "Listening on %s:%s" % (http_host, http_port)
+        print >> sys.stderr, "GraphTerm server (v%s) listening on %s:%s" % (version.current, http_host, http_port)
 
         print >> sys.stderr, "\nType ^C to stop server"
         if Trace_shell:
