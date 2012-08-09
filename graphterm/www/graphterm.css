@@ -115,12 +115,16 @@ hr {
     opacity: 0.6;
 }
 
-.row.gterm-hideoutput.promptrow .gterm-cmd-prompt {
+.row.oldentry.gterm-hideoutput.promptrow .gterm-cmd-prompt {
     text-decoration: underline;
 }
 
-.row.gterm-hideoutput:not(.promptrow),
-  .pagelet.gterm-hideoutput {
+.row.oldentry.gterm-hideoutput:not(.promptrow),
+  .oldentry.pagelet.gterm-hideoutput {
+    display: none;
+}
+
+#session-bufscreen.fullpage .oldentry {
     display: none;
 }
 

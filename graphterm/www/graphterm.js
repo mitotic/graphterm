@@ -65,6 +65,9 @@ var gCommandMatchPrev = null;
 var gCommandBuffer = null;
 var gCursorAtEOL = null;
 
+var gPromptIndex = 0;
+var gScrollTop = false;
+
 var gControlActive = false;
 
 var gParams = {};
@@ -334,9 +337,6 @@ function GTStrip(text) {
     // Strip leading/trailing non-breaking spaces
     return text.replace(/^[\xa0]/,"").replace(/[\xa0]$/,"").replace(/[\xa0]/g," "); 
 }
-
-var gPromptIndex = 0;
-var gScrollTop = false;
 
 function GTEscape(text, pre_offset, prompt_offset, prompt_id) {
     var prefix = "";
@@ -662,7 +662,6 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				StartFullpage(pagelet_display, true);
 			    }
 			    $("#session-bufscreen").children(".pagelet."+entry_class).remove();
-			    $("#session-bufscreen").children("."+entry_class).show();
 			    if ("scroll" in response_params && response_params.scroll != "down")
 				gScrollTop = true;
 			} else {
@@ -830,6 +829,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				} else {
 				    // New entry; show any older entries
 				    EndFullpage();
+				}
+			    }
+			    if (gPromptIndex > 0 && newPromptIndex > gPromptIndex) {
+				for (var k=gPromptIndex; k<newPromptIndex; k++) {
+				    // Add class to mark old entries
+				    $("#session-bufscreen").children(".entry"+k).addClass("oldentry");
 				}
 			    }
 			    gPromptIndex = newPromptIndex;
@@ -1145,12 +1150,10 @@ function gtermMenuClickHandler(event) {
 	alert("Help not yet implemented");
 	break;
     case "collapse":
-	$("#session-bufscreen .row").addClass("gterm-hideoutput");
-	$("#session-bufscreen .pagelet").addClass("gterm-hideoutput");
+	$("#session-bufscreen .oldentry").addClass("gterm-hideoutput");
 	break;
     case "expand":
-	$("#session-bufscreen .row").removeClass("gterm-hideoutput");
-	$("#session-bufscreen .pagelet").removeClass("gterm-hideoutput");
+	$("#session-bufscreen .oldentry").removeClass("gterm-hideoutput");
 	break;
     case "detach":
 	window.location = "/";
@@ -1854,7 +1857,7 @@ function RunPrefixMethod(obj, method) {
 var gFullpageDisplay = null;
 function StartFullpage(display, split) {
     gFullpageDisplay = display;
-    $("#session-bufscreen").children().hide();
+    $("#session-bufscreen").addClass("fullpage");
     if (split) {
 	$("#session-bufellipsis").show();
 	if (gAlwaysSplitScreen && !gSplitScreen)
@@ -1881,9 +1884,8 @@ function EndFullpage() {
 	}
     } catch(err) {}
 
-    $("#session-bufscreen pre.row:not(.gterm-hideoutput)").show();
-    $("#session-bufscreen pre.row.promptrow").show();
     $("#session-bufellipsis").hide();
+    $("#session-bufscreen").removeClass("fullpage");
     if (gSplitScreen)
 	MergeScreen("fullpage");
 }
