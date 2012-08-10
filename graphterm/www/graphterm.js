@@ -676,7 +676,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			try {
 			    var new_elem = $(pagelet_html).hide().appendTo("#session-bufscreen");
 			    if (response_params.form_input) {
-				new_elem.find(".gterm-form-button").bindclick(GTFormCommand);
+				new_elem.find(".gterm-form-button").bindclick(GTFormSubmit);
 				new_elem.find(".gterm-form-label").bind("hover", GTFormHelp);
 			    }
 			    $("#session-bufscreen .pagelet .gterm-rowimg").addClass("icons");
@@ -1788,52 +1788,75 @@ function GTStartForm(params, promptIndex) {
 function GTEndForm(text, cancel) {
     text = text || "";
     console.log("GTEndForm: ", text, cancel);
-    $("#session-screen").show();
     if (cancel) {
-	$("#session-bufscreen").children(".pagelet.entry"+gFormIndex).remove();
+	if (!gForm.form_command)
+	    gWebSocket.term_input("\n");
+	    
     } else {
-	gWebSocket.write([["clear_last_entry", gFormIndex+""]]);
+	if (gForm.form_command)
+	    gWebSocket.write([["clear_last_entry", gFormIndex+""]]);
 	gWebSocket.term_input(text+"\n");
     }
+    $("#session-bufscreen").children(".pagelet.entry"+gFormIndex).remove();
+    $("#session-screen").show();
     gForm = null;
     gFormIndex = null;
-}
-
-function GTFormSubmit(text, cancel) {
-    GTEndForm(text, cancel);
 }
 
 function GTFormHelp(evt) {
     var helpStr = $(this).attr("data-gtermhelp");
 }
 
-function GTFormCommand(evt) {
+function GTFormSubmit(evt) {
     if ($(this).hasClass("gterm-form-cancel"))
 	GTEndForm("", true);
 
     var formElem = $(this).closest(".gterm-form");
-    var argNames = $(this).attr("data-gtermformargs").split(",");
-    var command = $(this).attr("data-gtermformcmd");
+    var inputArgs = $(this).attr("data-gtermformnames");
+    var inputElems;
+    if (inputArgs) {
+	var names = inputArgs.split(",");
+	inputElems = [];
+	for (var j=0; j<names.length; j++)
+	    inputElems.push(formElem.find("[name="+names[j]+"]"));
+    } else {
+	inputElems = formElem.find("input, select");
+    }
+    var formCommand = gForm.form_command;
     var argStr = "";
-    for (var j=0; j<argNames.length; j++) {
-	var argName = argNames[j];
-	var inputElem = formElem.find("[name="+argName+"]");
-        var inputValue = inputElem.serializeArray()[0]["value"];
+    var formValues = {};
+    for (var j=0; j<inputElems.length; j++) {
+	var inputElem = $(inputElems[j]);
+	var inputName = inputElem.attr("name");
+	if (!inputName)
+	    continue;
+        var serialized = inputElem.serializeArray();
+        var inputValue = (serialized && serialized[0]) ? serialized[0]["value"] : "";
 	if (inputValue.indexOf(" ") > -1)
 	    inputValue = '"' + inputValue + '"';
-        if (inputValue) {
-	    if (argName.substr(0,3) == "arg") {
-		// Command line arguments
-		argStr += ' ' + inputValue; 
-	    } else {
-		// Command options
-		command += ' --' + argName + '=' + inputValue;
+	if (formCommand) {
+            if (inputValue) {
+		if (inputName.substr(0,3) == "arg") {
+		    // Command line arguments
+		    argStr += ' ' + inputValue; 
+		} else {
+		    // Command options
+		    if (inputElem.attr("type") == "checkbox")
+			formCommand += ' --' + inputName;
+		    else
+			formCommand += ' --' + inputName + '=' + inputValue;
+		}
 	    }
+	} else {
+	    formValues[inputName] = inputValue;
 	}
     }
-    command += argStr;
-    console.log("GTFormCommand", this, formElem, command, evt);
-    GTEndForm(command);
+    if (formCommand)
+	formCommand += argStr;
+    else
+	formCommand = JSON.stringify(formValues);
+    console.log("GTFormSubmit", this, formElem, formCommand, evt);
+    GTEndForm(formCommand);
 }
 
 // From http://www.sitepoint.com/html5-full-screen-api
@@ -2131,6 +2154,11 @@ function ScrollScreen(alt_mode) {
     else
  	ScrollTop(0);
 }
+
+$(window).unload(function() {
+    if (gForm)
+	GTEndForm("", true);
+});
 
 $(document).ready(function() {
     //LoadHandler();

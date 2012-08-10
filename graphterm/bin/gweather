@@ -45,8 +45,8 @@ fcst_template = """
 """
 
 form_template =  """<div class="gterm-form">Please specify location for weather info:
-    <input id="gweather-input%s" name="arg1" type="text" autocomplete="off" autofocus="autofocus"></input>
-<input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformcmd="gweather -f" data-gtermformargs="arg1"></input>
+    <input id="gweather-input%s" name="arg1" type="text" autocomplete="off" autofocus="autofocus"></input><p>
+<input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformnames="arg1"></input>
 <input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>
 </div>"""
 
@@ -80,6 +80,7 @@ if not location:
     form_html = form_template % (random_id, random_id)
     params["display"] = "fullpage"
     params["form_input"] = True
+    params["form_command"] = "gweather -f"
     print wrap(json.dumps(headers)+"\n\n"+form_html)
     sys.exit(1)
     

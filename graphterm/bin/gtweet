@@ -1,0 +1,363 @@
+#!/usr/bin/env python
+#
+
+"""
+gtweet: Send or receive tweets, and display them
+"""
+
+import binascii
+import cgi
+import json
+import logging
+import os
+import random
+import sys
+import time
+import urllib
+import uuid
+
+from optparse import OptionParser
+
+import tornado.auth
+import tornado.httpclient
+
+try:
+    from urllib.request import urlopen
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlopen, urlencode
+
+import gtermapi
+
+CONFIG_HELP = """Steps to acquire consumer and access tokens:
+  1. Register an application with twitter at dev.twitter.com
+  2. Find authentication info at https://dev.twitter.com/docs/auth/tokens-devtwittercom
+  3. Save authentication tokens in ~/.twitter_auth using the following format (JSON):
+"""
+
+AUTH_FORMAT = """
+      {"consumer_token":  {"consumer_key": "%(consumer_key)s",
+                           "consumer_secret": "%(consumer_secret)s"},
+       "access_token": {"key": "%(access_key)s",
+                        "secret": "%(access_secret)s"}
+      }
+"""
+
+AUTH_HELP = AUTH_FORMAT % {"consumer_key": "...",
+                           "consumer_secret": "...",
+                           "access_key": "12345678-...",
+                           "access_secret": "..."}
+
+# Note: Having a finite timeout causes problems with tornado's simple httpclient
+TWITTER_STREAM_TIMEOUT_SEC = 0
+
+TWITTER_STREAM_MINDELAY = 30        # Min. delay time for reconnecting to twitter stream
+TWITTER_STREAM_MAXDELAY = 3600      # Max. delay time for reconnecting to twitter stream
+
+TWITTER_URL_PREFIX = "https://api.twitter.com/1"
+TWITTER_STATUS_PATH = "/statuses/update"
+TWITTER_STREAM_URL = "https://stream.twitter.com/1/statuses"
+TWITTER_USER_STREAM_URL = "https://userstream.twitter.com/2"
+##TWITTER_USER_STREAM_URL = "http://localhost:4079"
+
+auth_parser = gtermapi.FormParser(title="Enter Twitter authentication info")
+auth_parser.add_option("consumer_key", label="Consumer key: ", help="Consumer key")
+auth_parser.add_option("consumer_secret", label="Consumer secret: ", help="Consumer secret")
+auth_parser.add_option("access_key", label="Access key: ", help="Access key")
+auth_parser.add_option("access_secret", label="Access secret: ", help="Access secret")
+
+pagelet_html = """<script>
+var GTPageletMaxTweets = 20;
+function GTPageletJSON(pageletElem, tweet) {
+    // Display new tweet, sliding it into the top line
+    $('<li><img src="/static/images/twitter_bird_32.png"> '+tweet+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
+    if (pageletElem.find("ul li").length > GTPageletMaxTweets)
+        pageletElem.find("ul li:last-child").remove();
+}
+
+</script>
+<style>
+.gterm-pagelet-gtweets-container {
+   opacity: 0.9;
+}
+.gterm-pagelet-gtweets-container ul {
+   list-style: none;
+}
+</style>
+<div class="gterm-imgcontainer gterm-pagelet-gtweets-container">
+<ul>
+</ul>
+</div>
+"""
+
+def twitter_request(consumer_token, path, path_prefix=TWITTER_URL_PREFIX, access_token=None,
+                    get_args={}, post_args=None, streaming_callback=None,
+                    connect_timeout=20.0, timeout=1200.0):
+    url = path_prefix + path + ".json"
+    method = "POST" if post_args is not None else "GET"
+    query_args = get_args.copy()
+    if access_token:
+        all_args = get_args.copy()
+        all_args.update(post_args or {})
+        consumer_token = dict(key=consumer_token["consumer_key"], secret=consumer_token["consumer_secret"])
+        oauth = oauth_request_parameters(consumer_token, url, access_token, all_args, method=method)
+        query_args.update(oauth)
+
+    if query_args: url += "?" + urllib.urlencode(query_args)
+    post_data = urllib.urlencode(post_args) if post_args is not None else None
+    return tornado.httpclient.HTTPRequest(str(url), method,
+                                          headers={"Connection": "keep-alive"},
+                                          body=post_data,
+                                          connect_timeout=connect_timeout,
+                                          request_timeout=timeout,
+                                          streaming_callback=streaming_callback)
+
+def oauth_request_parameters(consumer_token, url, access_token, parameters={},
+                             method="GET", oauth_version="1.0a",
+                             override_version=""):
+    base_args = dict(
+        oauth_consumer_key=consumer_token["key"],
+        oauth_token=access_token["key"],
+        oauth_signature_method="HMAC-SHA1",
+        oauth_timestamp=str(int(time.time())),
+        oauth_nonce=binascii.b2a_hex(uuid.uuid4().bytes),
+        oauth_version=override_version or oauth_version,
+    )
+    args = base_args.copy()
+    args.update(parameters)
+    if oauth_version == "1.0a":
+        signature = tornado.auth._oauth10a_signature(consumer_token, method, url, args, access_token)
+    else:
+        signature = tornado.auth._oauth_signature(consumer_token, method, url, args, access_token)
+    base_args["oauth_signature"] = signature
+    return base_args
+
+def send_request(path, path_prefix=TWITTER_URL_PREFIX, get_args={}, post_args=None, streaming_callback=None):
+    http_request = twitter_request(Auth_tokens["consumer_token"],
+                                   path, path_prefix=path_prefix,
+                                   access_token=Auth_tokens["access_token"],
+                                   get_args=get_args,
+                                   post_args=post_args,
+                                   streaming_callback=streaming_callback,
+                                   connect_timeout=60.0,
+                                   timeout=TWITTER_STREAM_TIMEOUT_SEC)
+
+    http_client = tornado.httpclient.HTTPClient()
+    try:
+        return http_client.fetch(http_request)
+    except tornado.httpclient.HTTPError, excp:
+        return excp
+
+        
+def update_status(text):
+    post_args = {"status": text}
+    resp = send_request(TWITTER_STATUS_PATH, post_args=post_args)
+    if isinstance(resp, Exception):
+        print >> sys.stderr, resp
+            
+Twitter_stream_restart_time = time.time()
+Twitter_stream_delay = 0
+Twitter_user_stream = None
+
+class TwitterStreamReader(object):
+    def __init__(self, my_id, friend_set=set()):
+        self.user_id = my_id
+        self.friend_set = friend_set
+        self.buffer = ""
+        logging.debug("id=%s, friend_set=%s", my_id, friend_set)
+
+    def response_callback(self, response):
+        global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+        if isinstance(response, basestring):
+            logging.info("StreamReadResponse: %s", response)
+        else:
+            logging.error("StreamReadError: %s", response)
+
+        Twitter_user_stream = None
+        if not Twitter_stream_delay:
+            Twitter_stream_delay = TWITTER_STREAM_MINDELAY
+        else:
+            Twitter_stream_delay = min(2*Twitter_stream_delay, TWITTER_STREAM_MAXDELAY)
+        Twitter_stream_restart_time = time.time() + Twitter_stream_delay
+
+    def handle_stream(self, data):
+        global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+        self.buffer += data
+        if "\r\n" not in self.buffer:
+            # Wait for complete line
+            return
+        line, sep, self.buffer = self.buffer.partition("\r\n")
+        if not line:
+            return
+
+        try:
+            content = json.loads(line)
+        except Exception, excp:
+            print >> sys.stderr, "JSON decoding error '%s': %s" % (excp, line)
+            sys.exit(1)
+        self.buffer = ""
+
+        logging.debug(":twitter_stream: content=%s", str(content))
+
+        user_info = None
+
+        message = {}
+        if "direct_message" in content:
+            message["type"] = "direct"
+            dmesg = content["direct_message"]
+            message["user"] = dmesg["sender"]
+            message["text"] = dmesg.get("text", "").encode("ascii", "ignore")
+            messag["id"] = dmesg.get("id", 0)
+
+        elif "text" in content:
+            to_user_id = content.get("in_reply_to_user_id")
+            if to_user_id and to_user_id != self.user_id and to_user_id not in self.friend_set:
+                logging.info(":twitter_stream: dropped message to unknown dest", to_user_id, self.user_id)
+                return
+            message["type"] = "tweet"
+            message["user"] = content["user"]
+            message["text"] = content.get("text", "").encode("ascii", "ignore")
+            message["id"] = content.get("id", 0)
+
+        else:
+            # Unknown content
+            return
+
+        user_label = "%(screen_name)s" % message["user"]
+
+        logging.debug(":msg: %s[id=%s]: %s", user_label, message["id"], message["text"])
+
+        if options.json or options.text:
+            msg_out = json.dumps(message) if options.json else "%s: %s\n" % (user_label, message["text"])
+            if options.fullpage:
+                if not sys.stderr.isatty():
+                    print >> sys.stderr, msg_out
+            else:
+                print >> sys.stdout, msg_out
+
+        if options.fullpage:
+            tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
+            gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers)
+            sys.stdout.flush()
+
+def read_twitter_user_stream(Auth_tokens, keywords=[], user=False):
+    global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+
+    my_id = long( Auth_tokens["access_token"]["key"].partition("-")[0] )
+    if Twitter_user_stream:
+        return my_id
+
+    logging.info("*********TWITTER STREAM*****my_id=%s", my_id)
+    Twitter_user_stream = TwitterStreamReader(my_id)
+
+    if user:
+        get_args = {"track": ",".join(keywords)} if keywords else {}
+        post_args = None
+        path = "/user"
+        stream_url = TWITTER_USER_STREAM_URL
+    else:
+        if not keywords:
+            raise Exception("No keywords to search for!")
+        get_args = {}
+        post_args = {"track": ",".join(keywords)}
+        path = "/filter"
+        stream_url = TWITTER_STREAM_URL
+
+    resp = send_request(path, path_prefix=stream_url, get_args=get_args, post_args=post_args,
+                        streaming_callback=Twitter_user_stream.handle_stream)
+    if isinstance(resp, Exception):
+        print >> sys.stderr, resp
+
+    return my_id
+
+def twitter_stream_watcher():
+    """ Checks if Twitter stream feed is active, and restarts it if it is not.
+    """
+    global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
+    if Twitter_stream_restart_time and (time.time() >= Twitter_stream_restart_time):
+        logging.info("************ TWITTER STREAM READER STARTING (%d) *************" % Twitter_stream_delay)
+        Twitter_stream_restart_time = 0
+        read_twitter_user_stream()
+
+
+def check_auth_file(auth_file):
+    auth_file = os.path.expanduser(auth_file)
+    if not os.path.isfile(auth_file):
+        if not sys.stdout.isatty():
+            print >> sys.stderr, "Authentication file %s not found!\n\n%s%s" % (auth_file, CONFIG_HELP, AUTH_HELP)
+            sys.exit(1)
+        try:
+            form_values = auth_parser.read_input()
+            if not form_values:
+                raise Exception("Form input cancelled")
+            if not all(form_values.values()):
+                raise Exception("Missing authentication data")
+                
+            with os.fdopen( os.open(auth_file, os.O_WRONLY|os.O_CREAT, 0600), "w") as f:
+                f.write(AUTH_FORMAT % form_values)
+        except Exception, excp:
+            print >> sys.stderr, "Error in creating authentication file: %s" % excp
+            sys.exit(1)
+
+    with open(auth_file) as f:
+        auth_json = f.read()
+    try:
+        global Auth_tokens
+        Auth_tokens = json.loads(auth_json)
+    except Exception, excp:
+        print >> sys.stderr, "Syntax error in authentication file %s: %s\n\nExpecting:\n%s" % (auth_file, excp, AUTH_HELP)
+        sys.exit(1)
+
+Default_auth_file = "~/.twitter_auth"
+
+if len(sys.argv) < 2:
+    check_auth_file(Default_auth_file)
+
+usage = "usage: %prog [-h ...] [keyword1] ..."
+form_parser = gtermapi.FormParser(usage=usage, title="Send/receive tweets", command="gtweet")
+
+form_parser.add_argument(label="gtweet ", help="Tweet text for sending, or keywords for receiving")
+form_parser.add_option("search", False, short="s", help="Search for alltweets containing specified keywords (to STDERR, if fullscreen)")
+form_parser.add_option("user", False, short="u", help="Receive tweets for user and/or keywords (to STDERR, if fullscreen)")
+
+form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
+form_parser.add_option("json", False, short="j", help="JSON output (to STDERR, if -f)", raw=True)
+form_parser.add_option("text", False, short="t", help="Text output (to STDERR, if -f)", raw=True)
+
+form_parser.add_option("auth_file", Default_auth_file, raw=True,
+                       help="File with authentication tokens in JSON format (default: %s) % Default_auth_file")
+
+(options, args) = form_parser.parse_args()
+
+if not options.fullpage and not options.json and not options.text:
+    if sys.stdout.isatty():
+        options.fullpage = True
+    else:
+        options.text = True
+
+check_auth_file(options.auth_file)
+
+params = {"scroll": "top", "current_directory": os.getcwd()}
+params["display"] = "fullscreen" if options.fullpage else "block"
+
+Headers = {"content_type": "text/html"}
+Headers["x_gterm_response"] = "pagelet"
+Headers["x_gterm_parameters"] = params
+
+Json_headers = {"content_type": "text/json"}
+Json_headers["x_gterm_response"] = "pagelet_json"
+Json_headers["x_gterm_parameters"] = {}
+
+if options.fullpage:
+    gtermapi.wrap_write(pagelet_html, headers=Headers)
+
+if options.search or options.user:
+    try:
+        read_twitter_user_stream(Auth_tokens, args, user=options.user)
+    except KeyboardInterrupt:
+        pass
+else:
+    update_status(" ".join(args))
+
+if options.fullpage:
+    gtermapi.write_blank()

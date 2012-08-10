@@ -18,35 +18,21 @@ import ec2common
 
 ssh_dir = os.path.expanduser("~/.ssh")
 
-arg_list = [
-("arg1", "", "Instance name"),
-("type", ("", "t1.micro", "m1.small", "m1.medium", "m1.large"), "Instance type"),
-("key_name", "ec2key", "Instance management SSH key name"),
-("ami", "ami-82fa58eb", "Instance OS (default: Ubuntu 12.04LTS)"),
-("security", "default", "Security group"),
-("domain", "", "Instance domain"),
-]
+usage = "usage: %prog [-h ... ] <instance-tagname>"
 
-usage = "usage: %prog [-f] <instance-tagname>"
-parser = OptionParser(usage=usage)
-parser.add_option("-f", "--fullpage", dest="fullpage", default=False,
-                  help="Fullpage display", action="store_true")
+form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance", command="ec2launch -f")
+form_parser.add_argument(label="ec2launch ", help="Instance name")
+form_parser.add_option("type", ("", "t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
+form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
+form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
+form_parser.add_option("security", "default", help="Security group")
+form_parser.add_option("domain", help="Instance domain")
+form_parser.add_option("dry_run", False, help="Dry run")
 
-parser.add_option("-t", "--text", dest="text", default=False,
-                  help="Text only", action="store_true")
+form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
+form_parser.add_option("text", False, short="t", help="Text only", raw=True)
 
-parser.add_option("", "--dry_run", dest="dry_run", default=False,
-                  help="Dry run", action="store_true")
-
-form_html = gtermapi.add_options(parser, arg_list, title="Create Amazon EC2 instance")
-
-(options, args) = parser.parse_args()
-
-params = {"display": "block", "scroll": "top", "current_directory": os.getcwd()}
-
-headers = {"content_type": "text/html"}
-headers["x_gterm_response"] = "pagelet"
-headers["x_gterm_parameters"] = params
+(options, args) = form_parser.parse_args()
 
 if args:
     instance_tag = args[0]
@@ -54,11 +40,9 @@ elif options.domain:
     instance_tag = options.domain
 else:
     if not gtermapi.Lterm_cookie or options.text:
-        print >> sys.stderr, usage
+        print >> sys.stderr, form_parser.get_usage()
         sys.exit(1)
-    params["display"] = "fullpage"
-    params["form_input"] = True
-    gtermapi.wrap_write(form_html, headers=headers)
+    gtermapi.write_form(form_html, command="ec2launch -f")
     sys.exit(1)
     
 if options.domain:
@@ -111,11 +95,10 @@ instance = reservation.instances[0]
 Status_template =  """<em>Creating instance</em> <b>%s</b>: status=<b>%s</b> (waiting %ds)"""
 
 status = instance.update()
-params["display"] = "fullpage"
 start_time = time.time()
 while status == "pending":
     timesec = int(time.time() - start_time)
-    gtermapi.wrap_write(Status_template % (instance_tag, status, timesec), headers=headers)
+    gtermapi.write_html(Status_template % (instance_tag, status, timesec), display="fullpage")
     time.sleep(3)
     status = instance.update()
 

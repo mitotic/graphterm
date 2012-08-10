@@ -161,7 +161,7 @@ for other commands, which include:
 
    ``gweather [location]`` To view weather forecasts
 
-   ``gtweets [-f] [search_keyword]`` To display a tweet stream
+   ``gtweet [-s] keywords/tweet``  To send or receive tweets
 
 Visual cues
 -----------------------------------------------------------

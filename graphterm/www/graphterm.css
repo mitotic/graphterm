@@ -239,6 +239,10 @@ span.gterm-not-implemented {
     color: gray;
 }
 
+span.gterm-form-title {
+    color: gray;
+}
+
 #terminal:not(.webcast) .webcast-alert {
     display: none;
 }
