@@ -7,10 +7,13 @@ gtweet: Send or receive tweets, and display them
 
 import binascii
 import cgi
+import cStringIO as StringIO
+import csv
 import json
 import logging
 import os
 import random
+import rfc822
 import sys
 import time
 import urllib
@@ -60,11 +63,12 @@ TWITTER_STREAM_URL = "https://stream.twitter.com/1/statuses"
 TWITTER_USER_STREAM_URL = "https://userstream.twitter.com/2"
 ##TWITTER_USER_STREAM_URL = "http://localhost:4079"
 
-auth_parser = gtermapi.FormParser(title="Enter Twitter authentication info")
-auth_parser.add_option("consumer_key", label="Consumer key: ", help="Consumer key")
-auth_parser.add_option("consumer_secret", label="Consumer secret: ", help="Consumer secret")
-auth_parser.add_option("access_key", label="Access key: ", help="Access key")
-auth_parser.add_option("access_secret", label="Access secret: ", help="Access secret")
+Auth_parser = gtermapi.FormParser(title='Enter OAuth credentials for your Twitter app<br>(Usually at <a href="https://dev.twitter.com/apps" target="_blank">https://dev.twitter.com/apps</a>)<p>')
+
+Auth_parser.add_option("consumer_key", label="Consumer key: ", help="Consumer key")
+Auth_parser.add_option("consumer_secret", label="Consumer secret: ", help="Consumer secret")
+Auth_parser.add_option("access_key", label="Access token: ", help="Access token")
+Auth_parser.add_option("access_secret", label="Access token secret: ", help="Access token secret")
 
 pagelet_html = """<script>
 var GTPageletMaxTweets = 20;
@@ -89,6 +93,16 @@ function GTPageletJSON(pageletElem, tweet) {
 </ul>
 </div>
 """
+
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
+def parsedate(rfc822_time):
+    """Return (epoch_time, YYYY-mm-ddThh:mm:ss (local))"""
+    time_list = list(rfc822.parsedate_tz(rfc822_time))
+    time_list[9] = 0 # Zero out time zone information (for UTC)
+    epoch_time = rfc822.mktime_tz(tuple(time_list))
+    time_str = time.strftime(DATE_FORMAT, time.localtime(epoch_time))
+    return (epoch_time, time_str)
+
 
 def twitter_request(consumer_token, path, path_prefix=TWITTER_URL_PREFIX, access_token=None,
                     get_args={}, post_args=None, streaming_callback=None,
@@ -203,32 +217,49 @@ class TwitterStreamReader(object):
 
         message = {}
         if "direct_message" in content:
-            message["type"] = "direct"
             dmesg = content["direct_message"]
+            message["type"] = "direct"
+            created_at = dmesg["created_at"]
+            text = dmesg.get("text", "")
             message["user"] = dmesg["sender"]
-            message["text"] = dmesg.get("text", "").encode("ascii", "ignore")
-            messag["id"] = dmesg.get("id", 0)
+            message["id"] = dmesg.get("id", 0)
 
         elif "text" in content:
             to_user_id = content.get("in_reply_to_user_id")
             if to_user_id and to_user_id != self.user_id and to_user_id not in self.friend_set:
                 logging.info(":twitter_stream: dropped message to unknown dest", to_user_id, self.user_id)
                 return
+            created_at = content["created_at"]
+            text = content.get("text", "")
             message["type"] = "tweet"
             message["user"] = content["user"]
-            message["text"] = content.get("text", "").encode("ascii", "ignore")
             message["id"] = content.get("id", 0)
 
         else:
             # Unknown content
             return
 
-        user_label = "%(screen_name)s" % message["user"]
+        message["time"] = parsedate(created_at)[1]
+        message["text"] = text.encode("ascii", "ignore")
+
+        user_info = message["user"]
+        user_info["name"] = user_info["name"].encode("ascii", "ignore")
+
+        user_label = "%(screen_name)s" % user_info
 
         logging.debug(":msg: %s[id=%s]: %s", user_label, message["id"], message["text"])
 
-        if options.json or options.text:
-            msg_out = json.dumps(message) if options.json else "%s: %s\n" % (user_label, message["text"])
+        if options.csv or options.json or options.text:
+            if options.csv:
+                fields = [message["time"], message["type"], user_info["screen_name"], user_info["id"], user_info["name"], message["text"]]
+                csvfile = StringIO.StringIO()
+                csvwriter = csv.writer(csvfile)
+                csvwriter.writerow(fields)
+                msg_out = csvfile.getvalue()
+            elif options.json:
+                msg_out = json.dumps(message)
+            else:
+                msg_out = "%s: %s\n" % (user_label, message["text"])
             if options.fullpage:
                 if not sys.stderr.isatty():
                     print >> sys.stderr, msg_out
@@ -240,7 +271,7 @@ class TwitterStreamReader(object):
             gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers)
             sys.stdout.flush()
 
-def read_twitter_user_stream(Auth_tokens, keywords=[], user=False):
+def read_twitter_user_stream(Auth_tokens, keywords=[], recv=False):
     global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
 
     my_id = long( Auth_tokens["access_token"]["key"].partition("-")[0] )
@@ -250,12 +281,13 @@ def read_twitter_user_stream(Auth_tokens, keywords=[], user=False):
     logging.info("*********TWITTER STREAM*****my_id=%s", my_id)
     Twitter_user_stream = TwitterStreamReader(my_id)
 
-    if user:
+    if recv:
         get_args = {"track": ",".join(keywords)} if keywords else {}
         post_args = None
         path = "/user"
         stream_url = TWITTER_USER_STREAM_URL
     else:
+        # Search
         if not keywords:
             raise Exception("No keywords to search for!")
         get_args = {}
@@ -287,9 +319,10 @@ def check_auth_file(auth_file):
             print >> sys.stderr, "Authentication file %s not found!\n\n%s%s" % (auth_file, CONFIG_HELP, AUTH_HELP)
             sys.exit(1)
         try:
-            form_values = auth_parser.read_input()
+            form_values = Auth_parser.read_input(trim=True)
             if not form_values:
                 raise Exception("Form input cancelled")
+
             if not all(form_values.values()):
                 raise Exception("Missing authentication data")
                 
@@ -314,13 +347,14 @@ if len(sys.argv) < 2:
     check_auth_file(Default_auth_file)
 
 usage = "usage: %prog [-h ...] [keyword1] ..."
-form_parser = gtermapi.FormParser(usage=usage, title="Send/receive tweets", command="gtweet")
+form_parser = gtermapi.FormParser(usage=usage, title="Text to tweet or keywords to search for: ", command="gtweet")
 
-form_parser.add_argument(label="gtweet ", help="Tweet text for sending, or keywords for receiving")
-form_parser.add_option("search", False, short="s", help="Search for alltweets containing specified keywords (to STDERR, if fullscreen)")
-form_parser.add_option("user", False, short="u", help="Receive tweets for user and/or keywords (to STDERR, if fullscreen)")
+form_parser.add_argument(help="Tweet text for sending, or keywords for receiving")
+form_parser.add_option("search", False, short="s", help="Search for all tweets containing specified keywords (to STDERR, if fullscreen)")
+form_parser.add_option("recv", False, short="r", help="Receive tweets mentioning this user or any keywords (to STDERR, if fullscreen)")
 
 form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
+form_parser.add_option("csv", False, short="c", help="CSV output (to STDERR, if -f)", raw=True)
 form_parser.add_option("json", False, short="j", help="JSON output (to STDERR, if -f)", raw=True)
 form_parser.add_option("text", False, short="t", help="Text output (to STDERR, if -f)", raw=True)
 
@@ -329,7 +363,7 @@ form_parser.add_option("auth_file", Default_auth_file, raw=True,
 
 (options, args) = form_parser.parse_args()
 
-if not options.fullpage and not options.json and not options.text:
+if not options.fullpage and not options.csv and not options.json and not options.text:
     if sys.stdout.isatty():
         options.fullpage = True
     else:
@@ -351,9 +385,9 @@ Json_headers["x_gterm_parameters"] = {}
 if options.fullpage:
     gtermapi.wrap_write(pagelet_html, headers=Headers)
 
-if options.search or options.user:
+if options.search or options.recv:
     try:
-        read_twitter_user_stream(Auth_tokens, args, user=options.user)
+        read_twitter_user_stream(Auth_tokens, args, recv=options.recv)
     except KeyboardInterrupt:
         pass
 else:

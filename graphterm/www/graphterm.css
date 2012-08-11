@@ -243,6 +243,10 @@ span.gterm-form-title {
     color: gray;
 }
 
+input.gterm-input-arg[type=text] {
+    width: 75%;
+}
+
 #terminal:not(.webcast) .webcast-alert {
     display: none;
 }

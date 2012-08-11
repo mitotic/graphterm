@@ -83,11 +83,11 @@ Form_template =  """<div id="gterm-form-%s" class="gterm-form"><span class="gter
 
 Label_template = """<span class="gterm-form-label" data-gtermhelp="%s">%s</span>"""
 
-Input_text_template = """<input id="gterm_%s_%s" name="%s" class="gterm-form-input" type="text" autocomplete="off" %s></input>"""
+Input_text_template = """<input id="gterm_%s_%s" name="%s" class="gterm-form-input%s" type="text" value="%s" autocomplete="off" %s></input>"""
 
-Input_checkbox_template = """<input id="gterm_%s_%s" name="%s" class="gterm-form-input" type="checkbox" %s></input>"""
+Input_checkbox_template = """<input id="gterm_%s_%s" name="%s" class="gterm-form-input%s" type="checkbox" %s></input>"""
 
-Select_template = """<select id="gterm_%s_%s" name="%s" class="gterm-form-input" size=1>
+Select_template = """<select id="gterm_%s_%s" name="%s" class="gterm-form-input%s" size=1>
 %s
 </select>"""
 Select_option_template = """<option value="%s" %s>%s</option>"""
@@ -144,21 +144,27 @@ class FormParser(object):
                 input_list.append("<table>\n")
 
             label_html = Label_template % (opt_help, label)
+            attrs = ""
+            classes = ""
+            if j < arg_count:
+                classes += ' gterm-input-arg'
             if isinstance(opt_default, basestring):
-                extras = ' autofocus="autofocus"' if first_arg else ""
+                if first_arg:
+                    attrs += ' autofocus="autofocus"'
+                input_html = Input_text_template % (id_suffix, opt_name, opt_name, classes, opt_default.replace('"', "&quot;"), attrs)
 
-                input_html = Input_text_template % (id_suffix, opt_name, opt_name, extras)
             elif isinstance(opt_default, bool):
-                extras = " checked" if opt_default else ""
+                if opt_default:
+                    attrs += " checked"
+                input_html = Input_checkbox_template % (id_suffix, opt_name, opt_name, classes, attrs)
 
-                input_html = Input_checkbox_template % (id_suffix, opt_name, opt_name, extras)
             elif isinstance(opt_default, (list, tuple)):
                 opt_list = []
                 opt_sel = "selected"
                 for opt_value in opt_default:
                     opt_list.append(Select_option_template % (opt_value, opt_sel, opt_value or "Select..."))
                     opt_sel = ""
-                input_html = Select_template % (id_suffix, opt_name, opt_name, "\n".join(opt_list))
+                input_html = Select_template % (id_suffix, opt_name, opt_name, classes, "\n".join(opt_list))
 
             if j >= arg_count:
                 input_list.append("<tr><td>%s<td>%s\n" % (label_html, input_html))
@@ -193,6 +199,9 @@ class FormParser(object):
         else:
             return None, None
 
-    def read_input(self):
+    def read_input(self, trim=False):
         assert not self.command and sys.stdout.isatty()
-        return read_form_input(self.create_form())
+        form_values = read_form_input(self.create_form())
+        if form_values and trim:
+            form_values = dict((k,v.strip()) for k, v in form_values.items())
+        return form_values

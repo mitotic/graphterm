@@ -5,7 +5,6 @@
 ec2launch: Launch Amazon AWS EC2 instance
 """
 
-import boto
 import json
 import os
 import random
@@ -13,15 +12,17 @@ import sys
 import time
 from optparse import OptionParser
 
-import gtermapi
+import boto
 import ec2common
+
+import gtermapi
 
 ssh_dir = os.path.expanduser("~/.ssh")
 
 usage = "usage: %prog [-h ... ] <instance-tagname>"
 
-form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance", command="ec2launch -f")
-form_parser.add_argument(label="ec2launch ", help="Instance name")
+form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance with the following tag: ", command="ec2launch -f")
+form_parser.add_argument(label="", help="Instance name")
 form_parser.add_option("type", ("", "t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
@@ -38,11 +39,11 @@ if args:
     instance_tag = args[0]
 elif options.domain:
     instance_tag = options.domain
-else:
+elif not options.dry_run:
     if not gtermapi.Lterm_cookie or options.text:
         print >> sys.stderr, form_parser.get_usage()
         sys.exit(1)
-    gtermapi.write_form(form_html, command="ec2launch -f")
+    gtermapi.write_form(form_parser.create_form(), command="ec2launch -f")
     sys.exit(1)
     
 if options.domain:

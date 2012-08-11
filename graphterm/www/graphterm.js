@@ -1836,6 +1836,14 @@ function GTFormSubmit(evt) {
 	    inputValue = '"' + inputValue + '"';
 	if (formCommand) {
             if (inputValue) {
+		if (inputValue.substr(0,1) == '"') {
+		    var nlen = inputValue.length;
+		    inputValue = '"'+inputValue.substr(1,nlen-2).replace(/"/g, '\\"')+inputValue.substr(nlen-1);
+		} else {
+		    inputValue = inputValue.replace(/"/g, '\\"');
+		    if (inputValue.indexOf(" ") >= 0)
+			inputValue = '"'+inputValue+'"';
+		}
 		if (inputName.substr(0,3) == "arg") {
 		    // Command line arguments
 		    argStr += ' ' + inputValue; 
@@ -1848,6 +1856,8 @@ function GTFormSubmit(evt) {
 		}
 	    }
 	} else {
+	    if (inputValue.indexOf(" ") >= 0 && inputValue.substr(0,1) == '"' && inputValue.substr(inputValue.length-1) == '"')
+		inputValue = inputValue.substr(1,inputValue.length-2);
 	    formValues[inputName] = inputValue;
 	}
     }

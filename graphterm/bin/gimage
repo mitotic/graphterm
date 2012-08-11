@@ -2,7 +2,7 @@
 #
 
 """
-gimages: graphterm-aware image display
+gimage: graphterm-aware image display
 """
 
 import mimetypes

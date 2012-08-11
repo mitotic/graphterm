@@ -9,15 +9,44 @@ import time
 
 from boto.route53.connection import Route53Connection
 
-boto_config = """Create the file ~/.boto containing:
-   [Credentials]
-   aws_access_key_id = ACCESS_KEY
-   aws_secret_access_key = SECRET_KEY
+import gtermapi
+
+AUTH_FORMAT = """[Credentials]
+access_key_id = %(access_key_id)s
+secret_access_key = %(secret_access_key)s
 """
 
-if not os.path.exists(os.path.expanduser("~/.boto")):
-    print >> sys.stderr, boto_config
-    sys.exit(1)
+Auth_parser = gtermapi.FormParser(title='Enter AWS Access Credentials<br>(Usually at <a href="https://portal.aws.amazon.com/gp/aws/securityCredentials" target="_blank">https://portal.aws.amazon.com/gp/aws/securityCredentials</a>)<p>')
+
+Auth_parser.add_option("access_key_id", label="AWS Access Key ID: ", help="AWS Access Key ID")
+Auth_parser.add_option("secret_access_key", label="AWS Secret Access Key: ", help="AWS Secret Access Key")
+
+def check_auth_file(auth_file):
+    auth_file = os.path.expanduser(auth_file)
+    if not os.path.isfile(auth_file):
+        if not sys.stdout.isatty():
+            print >> sys.stderr, "Authentication file %s not found!" % (auth_file,)
+            sys.exit(1)
+        try:
+            form_values = Auth_parser.read_input(trim=True)
+            if not form_values:
+                raise Exception("Form input cancelled")
+
+            if not all(form_values.values()):
+                raise Exception("Missing authentication data")
+                
+            with os.fdopen( os.open(auth_file, os.O_WRONLY|os.O_CREAT, 0600), "w") as f:
+                f.write(AUTH_FORMAT % form_values)
+            print >> sys.stderr, "Created authentication file %s; re-type command" % auth_file
+            sys.exit(1)
+        except Exception, excp:
+            print >> sys.stderr, "Error in creating authentication file: %s" % excp
+            sys.exit(1)
+
+Default_auth_file = "~/.boto"
+
+check_auth_file(Default_auth_file)
+
 
 def get_zone(zone_domain):
     route53conn = Route53Connection()

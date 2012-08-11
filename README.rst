@@ -156,24 +156,24 @@ You can use the command ``which gls`` to determine the directory
 containing graphterm-aware commands, to browse
 for other commands, which include:
 
-   ``gimages [-f] [filenames]``     To view images inline, or as a
+   ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
 
    ``gweather [location]`` To view weather forecasts
 
-   ``gtweet [-s] keywords/tweet``  To send or receive tweets
+   ``gtweet [-s] keywords/tweet``  To send, search, or receive tweets
 
 Visual cues
 -----------------------------------------------------------
 
 In the default theme, *blue* color denotes text that can be *clicked*
-or *tapped*. The action triggered by clicking depends on multiple
-factors, such as whether there is text in the current command line,
+or *tapped*. The action triggered by clicking depends upon two
+factors, whether there is text in the current command line,
 and whether the Control modifier in the *Bottom menu* is active.
 Click on the last displayed prompt to toggle display of the *Bottom
 menu*. Clicking on other prompts toggles display of the command
-output (unless the Control modifier is used, in which case the command
-line is copied and pasted.)
+output (unless the Control modifier is used, in which case the
+entire command line is copied and pasted.)
 
 
 Navigating folders/opening files
@@ -379,7 +379,7 @@ on ``localhost`` whenever possble.)
 
 GraphTerm was originally developed as a graphical front-end for
 `otrace <http://info.mindmeldr.com/code/otrace>`_,
-an object-oriented python debugger. Use the ``--oshell``
+an object-oriented python debugger. Using the ``--oshell``
 option when connecting a host to the server enables ``otrace``
 debugging features, allowing for dynamic introspection and debugging of the
 program running on the host.
@@ -410,7 +410,7 @@ and then any data (such as the HTML fragment to be displayed).
 
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 can be written in any language, much like a CGI script.
-See the programs ``gls``, ``gimages``, ``gvi``, ``gweather``, ``ec2launch`` and
+See the programs ``gls``, ``gimage``, ``gvi``, ``gweather``, ``ec2launch`` and
 ``ec2list`` for examples of GraphTerm API usage. (You can use the ``which gls``
 command to figure out where these programs are located.)
 
@@ -433,15 +433,15 @@ can also connect to the GraphTerm server, on a different port (8899),
 to make them accessible as hosts for connection from the browser.
 
 A pseudo-tty (``pty``) is opened on the host for each terminal
-session. By setting the ``PROMP_HOST`` environment variable, GraphTerm
+session. By setting the ``PROMP_COMMAND`` environment variable, GraphTerm
 determines when the ``stdout`` of the previous command ends, and the
 ``prompt`` for the new command begins.
 
 The connection between the browser and the GraphTerm server is
 implemented using websockets (bi-directional HTTP). The GraphTerm
-server acts as a router sending input from different terminal session
-to the appropriate ``pty`` on the different hosts, and transmitting
-output from the ``pty`` to the appropriate browser window.
+server acts as a router sending input from controlling browser terminal sessions
+to the appropriate ``pty`` on the host computer, and transmitting
+output from each ``pty`` to all connected browser terminal sessions.
 
 GraphTerm extends the ``xterm`` terminal API by adding a
 new control sequence for programs to transmit a CGI-like HTTP response
