@@ -28,6 +28,7 @@ try:
 except NotImplementedError:
     import random
 
+import tornado.netutil
 import lineterm
 import packetserver
 
@@ -47,7 +48,13 @@ SHELL_PROMPT = [PROMPT_PREFIX, '\W', PROMPT_SUFFIX]
 HTML_ESCAPES = ["\x1b[?1155;", "h",
                 "\x1b[?1155l"]
 
-def get_lterm_host(host):
+DEFAULT_HTTP_PORT = 8900
+DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
+
+HOST_RE = re.compile(r"^[\w\-\.]+$")             # Allowed host names
+SESSION_RE = re.compile(r"^[a-z]\w*$")           # Allowed session names
+
+def get_normalized_host(host):
     """Return identifier version of hostname"""
     return re.sub(r"\W", "_", host.upper())
 
@@ -62,18 +69,21 @@ class HtmlWrapper(object):
 
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
-    def __init__(self, host, port, command=SHELL_CMD, lterm_cookie="", oshell=False, io_loop=None, ssl_options={},
-                 term_type="", lterm_logfile=""):
+    all_cookies = {}
+    def __init__(self, host, port, command=SHELL_CMD, host_secret="", oshell=False, io_loop=None, ssl_options={},
+                 term_type="", widget_port=0, lterm_logfile=""):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
                                              reconnect_sec=RETRY_SEC, server_type="frame")
         self.term_type = term_type
-        self.lterm_cookie = lterm_cookie
+        self.host_secret = host_secret
+        self.widget_port = widget_port
         self.lterm_logfile = lterm_logfile
         self.command = command
         self.oshell = oshell
         self.terms = {}
         self.lineterm = None
+        self.osh_cookie = lineterm.make_lterm_cookie()
 
     def shutdown(self):
         print >> sys.stderr, "Shutting down client connection %s -> %s:%s" % (self.connection_id, self.host, self.port)
@@ -85,21 +95,29 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     def handle_connect(self):
         if self.oshell:
             self.add_oshell()
-        lterm_host = get_lterm_host(self.connection_id)
-        self.remote_response("", [["term_params", {"lterm_cookie": self.lterm_cookie,
-                                                  "lterm_host": lterm_host}]])
+        normalized_host = get_normalized_host(self.connection_id)
+        self.remote_response("", [["term_params", {"host_secret": self.host_secret,
+                                                  "normalized_host": normalized_host}]])
+        if self.widget_port:
+            Widget_server = WidgetServer()
+            Widget_server.listen(self.widget_port, address="localhost")
+            print >> sys.stderr, "GraphTerm widgets listening on %s:%s" % ("localhost", self.widget_port)
         
     def add_oshell(self):
-        self.add_term(OSHELL_NAME, 0, 0)
+        self.add_term(OSHELL_NAME, self.osh_cookie)
         
-    def add_term(self, term_name, height, width):
+    def add_term(self, term_name, lterm_cookie):
         if term_name not in self.terms:
             self.send_request_threadsafe("terminal_update", term_name, True)
-        self.terms[term_name] = (height, width)
+        self.terms[term_name] = lterm_cookie
+        self.all_cookies[lterm_cookie] = (self, term_name)
 
     def remove_term(self, term_name):
         try:
-            del self.terms[term_name]
+            lterm_cookie = self.terms.get(term_name)
+            if lterm_cookie:
+                del self.terms[term_name]
+                del self.all_cookies[lterm_cookie]
         except Exception:
             pass
         self.send_request_threadsafe("terminal_update", term_name, False)
@@ -114,11 +132,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     def xterm(self, term_name="", height=25, width=80, command=SHELL_CMD):
         if not self.lineterm:
             self.lineterm = lineterm.Multiplex(self.screen_callback, command=command,
-                                               cookie=self.lterm_cookie, host=self.connection_id,
+                                               shared_secret=self.host_secret, host=self.connection_id,
                                                prompt=SHELL_PROMPT, term_type=self.term_type,
-                                               logfile=self.lterm_logfile)
-        term_name = self.lineterm.terminal(term_name, height=height, width=width)
-        self.add_term(term_name, height, width)
+                                               widget_port=self.widget_port, logfile=self.lterm_logfile)
+        term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width)
+        self.add_term(term_name, lterm_cookie)
         return term_name
 
     def screen_callback(self, term_name, command, arg):
@@ -136,7 +154,6 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         Input commands:
           incomplete_input <line>
           input <line>
-          open_terminal <name> <command>
           click_paste <text> <file_uri> {command:, clear_last:, normalize:, enter:}
           get_finder <kind> <directory>
           save_file <filepath> <filedata>
@@ -149,6 +166,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           stderr <str>
         """
         try:
+            lterm_cookie = self.terms.get(term_name)
             resp_list = []
             for cmd in req_list:
                 action = cmd.pop(0)
@@ -156,11 +174,6 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 if action == "reconnect":
                     if self.lineterm:
                         self.lineterm.reconnect(term_name)
-
-                elif action == "open_terminal":
-                    if self.lineterm:
-                        name = self.lineterm.terminal(cmd[0][0], command=cmd[0][1])
-                        self.remote_response(term_name, [["open", name, ""]])
 
                 elif action == "set_size":
                     if term_name != OSHELL_NAME:
@@ -216,8 +229,8 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     resp_list.append(["prompt", cgi.escape(prompt), "file://"+urllib.quote(cur_dir_path)])
 
                     auth_html = False
-                    if self.lterm_cookie and std_out.startswith(HTML_ESCAPES[0]):
-                        auth_prefix = HTML_ESCAPES[0]+self.lterm_cookie+HTML_ESCAPES[1]
+                    if lterm_cookie and std_out.startswith(HTML_ESCAPES[0]):
+                        auth_prefix = HTML_ESCAPES[0]+lterm_cookie+HTML_ESCAPES[1]
                         auth_html = std_out.startswith(auth_prefix)
                         if auth_html:
                             offset = len(auth_prefix)
@@ -256,11 +269,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 elif action == "file_request":
                     request_id, request_method, file_path, if_mod_since = cmd
                     status = (404, "Not Found")
-                    modified = None
+                    last_modified = None
                     etag = None
                     content_type = None
                     content_length = None
-                    content = None
+                    content = ""
                     abspath = file_path
                     if os.path.sep != "/":
                         abspath = abspath.replace("/", os.path.sep)
@@ -351,48 +364,121 @@ else:
     class GTCallback(GTCallbackMixin):
         pass
 
-Lterm_cookie = None
+class WidgetStream(object):
+    _all_widgets = []
+
+    startseq = "\x1b[?1155;"
+    startdelim = "h"
+    endseq = "\x1b[?1155l"
+
+    def __init__(self, stream, address):
+        self.stream = stream
+        self.address = address
+        self.cookie = None
+        self._all_widgets.append(self)
+
+    @classmethod
+    def shutdown_all(cls):
+        for widget in cls._all_widgets[:]:
+            widget.shutdown()
+
+    def shutdown(self):
+        if not self.stream:
+            return
+        try:
+            self.stream.close()
+            self.stream = None
+            self._all_widgets.remove(self)
+        except Exception:
+            pass
+
+    def next_packet(self):
+        if self.stream:
+            self.stream.read_until(self.startseq, self.start_packet)
+
+    def start_packet(self, data):
+        if self.stream:
+            self.stream.read_until(self.startdelim, self.check_cookie)
+
+    def check_cookie(self, data):
+        data = data[:-len(self.startdelim)].strip()
+        if not data.isdigit() or data not in TerminalClient.all_cookies:
+            return self.shutdown()
+        self.cookie = data
+        if self.stream:
+            self.stream.read_until(self.endseq, self.receive_packet)
+
+    def receive_packet(self, data):
+        data = data[:-len(self.endseq)]
+
+        term_info = TerminalClient.all_cookies.get(self.cookie)
+        if not term_info:
+            return self.shutdown()
+
+        host_connection, term_name = term_info
+
+        headers, content = lineterm.parse_headers(data)
+        params = {"validated": True, "headers": headers}
+        host_connection.send_request_threadsafe("response", term_name, [["terminal", "graphterm_widget", [params,
+                                                 base64.b64encode(content) if content else ""]]])
+        self.cookie = None
+        self.next_packet()
+        
+
+class WidgetServer(tornado.netutil.TCPServer):
+    def handle_stream(self, stream, address):
+        widget_stream = WidgetStream(stream, address)
+        widget_stream.next_packet()
+
+Host_secret = None
 def gterm_shutdown(trace_shell=None):
     TerminalClient.shutdown_all()
+    WidgetStream.shutdown_all()
     if trace_shell:
         trace_shell.close()
 
-def gterm_connect(host_name, server_addr, server_port=8899, shell_cmd=SHELL_CMD, connect_kw={},
+Host_connections = {}
+def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_cmd=SHELL_CMD, connect_kw={},
                   oshell_globals=None, oshell_unsafe=False, oshell_workdir="", oshell_init=""):
-    """ Returns (host_connection, lterm_cookie, trace_shell)
+    """ Returns (host_connection, host_secret, trace_shell)
     """
-    lterm_cookie = "1%015d" % random.randrange(0, 10**15)   # 1 prefix to keep leading zeros when stringified
+    host_secret = "%016x" % random.randrange(0, 2**64)
 
     host_connection = TerminalClient.get_client(host_name,
-                         connect=(server_addr, server_port, shell_cmd, lterm_cookie, bool(oshell_globals)),
+                         connect=(server_addr, server_port, shell_cmd, host_secret, bool(oshell_globals)),
                           connect_kw=connect_kw)
+
+    Host_connections[host_secret] = host_connection
 
     if oshell_globals:
         gterm_callback = GTCallback()
         gterm_callback.set_client(host_connection)
         otrace.OTrace.setup(callback_handler=gterm_callback)
-        otrace.OTrace.html_wrapper = HtmlWrapper(lterm_cookie)
+        otrace.OTrace.html_wrapper = HtmlWrapper(host_connection.osh_cookie)
         trace_shell = otrace.OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
                                     allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
-                                    add_env={"GRAPHTERM_COOKIE": lterm_cookie}, init_file=oshell_init)
+                                    add_env={"GRAPHTERM_COOKIE": host_connection.osh_cookie,
+                                             "GRAPHTERM_SHARED_SECRET": host_secret}, init_file=oshell_init)
 
     else:
         trace_shell = None
 
-    return (host_connection, lterm_cookie, trace_shell)
+    return (host_connection, host_secret, trace_shell)
 
 def run_host(options, args):
-    global IO_loop, Gterm_host, Lterm_cookie, Trace_shell, Xterm, Killterm
+    global IO_loop, Gterm_host, Host_secret, Trace_shell, Xterm, Killterm
     import tornado.ioloop
     server_addr = args[0]
     host_name = args[1]
     protocol = "https" if options.https else "http"
 
     oshell_globals = globals() if options.oshell else None
-    Gterm_host, Lterm_cookie, Trace_shell = gterm_connect(host_name, server_addr,
-                                                          server_port=options.server_port,
-                                                          oshell_globals=oshell_globals,
-                                                          oshell_unsafe=True)
+    Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, server_addr,
+                                                         server_port=options.server_port,
+                                                         connect_kw={"widget_port":
+                                                                     (DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
+                                                         oshell_globals=oshell_globals,
+                                                         oshell_unsafe=True)
     Xterm = Gterm_host.xterm
     Killterm = Gterm_host.remove_term
 
@@ -435,8 +521,8 @@ def main():
     usage = "usage: gtermhost [-h ... options] <serveraddr> <hostname>"
     parser = OptionParser(usage=usage)
 
-    parser.add_option("", "--server_port", dest="server_port", default=8899,
-                      help="server port (default: 8899)", type="int")
+    parser.add_option("", "--server_port", dest="server_port", default=DEFAULT_HOST_PORT,
+                      help="server port (default: %d)" % DEFAULT_HOST_PORT, type="int")
 
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
@@ -444,6 +530,8 @@ def main():
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
 
+    parser.add_option("", "--widgets", dest="widgets", action="store_true",
+                      help="Activate widgets on port %d" % (DEFAULT_HTTP_PORT-2))
 
     parser.add_option("", "--daemon", dest="daemon", default="",
                       help="daemon=start/stop/restart/status")
@@ -451,6 +539,10 @@ def main():
     (options, args) = parser.parse_args()
     if len(args) != 2 and options.daemon != "stop":
         print >> sys.stderr, usage
+        sys.exit(1)
+
+    if not HOST_RE.match(args[1]):
+        print >> sys.stderr, "Invalid characters in host name"
         sys.exit(1)
 
     if not options.daemon:

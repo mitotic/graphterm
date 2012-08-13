@@ -9,7 +9,13 @@ The contents of this file remain in the public-domain.
 
 from __future__ import with_statement
 
-import array,cgi,copy,fcntl,glob,logging,mimetypes,optparse,os,pty,random,re,signal,select,sys,threading,time,termios,tty,struct,pwd
+import array,cgi,copy,fcntl,glob,logging,mimetypes,optparse,os,pty,re,signal,select,sys,threading,time,termios,tty,struct,pwd
+
+import random
+try:
+    random = random.SystemRandom()
+except NotImplementedError:
+    import random
 
 import base64
 import json
@@ -57,6 +63,9 @@ STYLE4 = 4
 UNI24 = 24
 UNIMASK = 0xffffff
 ASCIIMASK = 0x7f
+
+def make_lterm_cookie():
+	return "%016d" % random.randrange(10**15, 10**16)
 
 def create_array(fill_value, count):
 	"""Return array of 32-bit values"""
@@ -482,8 +491,8 @@ class Screen(object):
 		return Screen(self.width, self.height, data=copy.copy(self.data), meta=copy.copy(self.meta))
 
 class Terminal(object):
-	def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, cookie=0, host="",
-		     prompt=[], logfile=""):
+	def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, cookie=0,
+		     shared_secret="", host="", prompt=[], logfile=""):
 		self.term_name = term_name
 		self.fd = fd
 		self.pid = pid
@@ -491,6 +500,7 @@ class Terminal(object):
 		self.width = width
 		self.height = height
 		self.cookie = cookie
+		self.shared_secret = shared_secret
 		self.host = host
 		self.prompt = prompt
 		self.logfile = logfile
@@ -1299,18 +1309,20 @@ class Terminal(object):
 
 		
 class Multiplex(object):
-	def __init__(self, screen_callback, command=None, cookie=0, host="", prompt=[], logfile="",
-		     term_type="linux", app_name="graphterm"):
+	def __init__(self, screen_callback, command=None, shared_secret="",
+		     host="", prompt=[], term_type="linux", widget_port=0,
+		     logfile="", app_name="graphterm"):
 		""" prompt = [prefix, format, suffix]
 		"""
 		##signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 		self.screen_callback = screen_callback
 		self.command = command
-		self.cookie = cookie
+		self.shared_secret = shared_secret
 		self.host = host
 		self.prompt = prompt
-		self.logfile = logfile
 		self.term_type = term_type
+		self.widget_port = widget_port
+		self.logfile = logfile
 		self.app_name = app_name
 		self.proc = {}
 		self.lock = threading.RLock()
@@ -1321,16 +1333,25 @@ class Multiplex(object):
 		self.thread.start()
 
 	def terminal(self, term_name=None, command="", height=25, width=80):
-		"""Create new pty, return tty name, or just return name for existing pty"""
+		"""Return (tty_name, cookie) for existing or newly created pty"""
 		command = command or self.command
 		with self.lock:
-			if not term_name:
-				self.name_count += 1
-				term_name = "tty%s" % self.name_count
+			if term_name:
+				term = self.proc.get(term_name)
+				if term:
+					self.set_size(term_name, height, width)
+					return (term_name, term.cookie)
 
-			if term_name in self.proc:
-				self.set_size(term_name, height, width)
-				return term_name
+			else:
+                                # New default terminal name
+				while True:
+					self.name_count += 1
+					term_name = "tty%s" % self.name_count
+					if term_name not in self.proc:
+						break
+
+                        # Create new terminal
+			cookie = make_lterm_cookie()
 
 			pid, fd = pty.fork()
 			if pid==0:
@@ -1373,8 +1394,12 @@ class Multiplex(object):
 				env["COLUMNS"] = str(width)
 				env["LINES"] = str(height)
 				env["TERM"] = self.term_type or TERM_TYPE
-				env["GRAPHTERM_COOKIE"] = str(self.cookie)
-				env["GRAPHTERM_HOST"] = str(self.host)
+				env["GRAPHTERM_COOKIE"] = str(cookie)
+				env["GRAPHTERM_SHARED_SECRET"] = self.shared_secret
+				env["GRAPHTERM_PATH"] = "%s/%s" % (self.host, term_name)
+				if self.widget_port:
+					env["GRAPHTERM_SOCKET"] = "/dev/tcp/localhost/%d" % self.widget_port
+					
 				if self.prompt:
 					env["GRAPHTERM_PROMPT"] = "".join(self.prompt) + " "
 					##env["PROMPT_COMMAND"] = "export PS1=$GRAPHTERM_PROMPT; unset PROMPT_COMMAND"
@@ -1388,13 +1413,13 @@ class Multiplex(object):
 				fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
 				self.proc[term_name] = Terminal(term_name, fd, pid, self.screen_callback,
 								height=height, width=width,
-								cookie=self.cookie, host=self.host,
+								cookie=cookie, host=self.host,
 					                        prompt=self.prompt, logfile=self.logfile)
 				self.set_size(term_name, height, width)
 				if not is_executable(Gls_path) and not Exec_errmsg:
 					Exec_errmsg = True
 					self.screen_callback(term_name, "errmsg", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
-				return term_name
+				return term_name, cookie
 
 	def set_size(self, term_name, height, width):
 		# python bug http://python.org/sf/1112949 on amd64

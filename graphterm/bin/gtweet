@@ -81,14 +81,11 @@ function GTPageletJSON(pageletElem, tweet) {
 
 </script>
 <style>
-.gterm-pagelet-gtweets-container {
-   opacity: 0.9;
-}
 .gterm-pagelet-gtweets-container ul {
    list-style: none;
 }
 </style>
-<div class="gterm-imgcontainer gterm-pagelet-gtweets-container">
+<div class="gterm-pagelet-gtweets-container">
 <ul>
 </ul>
 </div>
@@ -260,13 +257,13 @@ class TwitterStreamReader(object):
                 msg_out = json.dumps(message)
             else:
                 msg_out = "%s: %s\n" % (user_label, message["text"])
-            if options.fullpage:
+            if options.fullscreen:
                 if not sys.stderr.isatty():
                     print >> sys.stderr, msg_out
             else:
                 print >> sys.stdout, msg_out
 
-        if options.fullpage:
+        if options.fullscreen:
             tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
             gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers)
             sys.stdout.flush()
@@ -353,7 +350,7 @@ form_parser.add_argument(help="Tweet text for sending, or keywords for receiving
 form_parser.add_option("search", False, short="s", help="Search for all tweets containing specified keywords (to STDERR, if fullscreen)")
 form_parser.add_option("recv", False, short="r", help="Receive tweets mentioning this user or any keywords (to STDERR, if fullscreen)")
 
-form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
+form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display", raw=True)
 form_parser.add_option("csv", False, short="c", help="CSV output (to STDERR, if -f)", raw=True)
 form_parser.add_option("json", False, short="j", help="JSON output (to STDERR, if -f)", raw=True)
 form_parser.add_option("text", False, short="t", help="Text output (to STDERR, if -f)", raw=True)
@@ -363,16 +360,16 @@ form_parser.add_option("auth_file", Default_auth_file, raw=True,
 
 (options, args) = form_parser.parse_args()
 
-if not options.fullpage and not options.csv and not options.json and not options.text:
+if not options.fullscreen and not options.csv and not options.json and not options.text:
     if sys.stdout.isatty():
-        options.fullpage = True
+        options.fullscreen = True
     else:
         options.text = True
 
 check_auth_file(options.auth_file)
 
 params = {"scroll": "top", "current_directory": os.getcwd()}
-params["display"] = "fullscreen" if options.fullpage else "block"
+params["display"] = "fullscreen" if options.fullscreen else "block"
 
 Headers = {"content_type": "text/html"}
 Headers["x_gterm_response"] = "pagelet"
@@ -382,7 +379,7 @@ Json_headers = {"content_type": "text/json"}
 Json_headers["x_gterm_response"] = "pagelet_json"
 Json_headers["x_gterm_parameters"] = {}
 
-if options.fullpage:
+if options.fullscreen:
     gtermapi.wrap_write(pagelet_html, headers=Headers)
 
 if options.search or options.recv:
@@ -393,5 +390,5 @@ if options.search or options.recv:
 else:
     update_status(" ".join(args))
 
-if options.fullpage:
+if options.fullscreen:
     gtermapi.write_blank()

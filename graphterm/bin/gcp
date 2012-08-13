@@ -14,7 +14,9 @@ import urllib
 from optparse import OptionParser
 
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
-Host = os.getenv("GRAPHTERM_HOST", "")
+Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
+Path = os.getenv("GRAPHTERM_PATH", "")
+Host, Session = Path.split("/") if Path else ("", "") 
 Gterm_url = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
@@ -37,6 +39,8 @@ def split_file_uri(uri):
 	else:
 		query = ""
 	comps = host_path.split("/")
+        if not comps[0]:
+            comps[0] = "local"
 	return [comps[0], comps[-1], "/"+"/".join(comps[1:]), query]
 
 usage = "usage: %prog gcp <source_file_url> <dest_file_url>"
@@ -82,7 +86,7 @@ if src_file:
     shutil.copyfile(src_file, dst_file)
 
 else:
-    req_url = Gterm_url + "/file/" + src_comps[0] + src_comps[2] + src_comps[3] + "&" + urllib.urlencode({"host": Host, "cookie": Lterm_cookie})
+    req_url = Gterm_url + "/file/" + src_comps[0] + src_comps[2] + src_comps[3] + "&" + urllib.urlencode({"host": Host, "shared_secret": Shared_secret})
     if options.verbose:
         print >> sys.stderr, "Copying %s -> %s" % (req_url, dst_file)
     fname, headers = urllib.urlretrieve(req_url, dst_file, transfer_hook)

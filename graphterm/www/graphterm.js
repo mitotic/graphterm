@@ -495,14 +495,15 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	    var command = payload_obj[j];
 	    var action = command[0];
 
-            if (action == "abort" || action == "authenticate") {
+            if (action == "abort") {
+		alert(command[1]);
+		window.location = "/";
+
+            } else if (action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
 		    setCookie("GRAPHTERM_AUTH", null);
 		if (window.location.pathname == "/"){
-		    if (action == "authenticate")
-			AuthPage(command[1], command[2], command[3]);
-		    else
-			alert(command[1]);
+		    AuthPage(command[1], command[2], command[3]);
 		} else {
 		    window.location = "/";
 		}
@@ -520,7 +521,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		gParams = command[1];
 		var label_text = "Session: "+gParams.host+"/"+gParams.term+"/"+(gParams.controller ? "control" : "watch");
 		$("#menubar-sessionlabel").text(label_text);
-		setCookie("GRAPHTERM_HOST_"+gParams.lterm_host, ""+gParams.lterm_cookie);
+		setCookie("GRAPHTERM_HOST_"+gParams.normalized_host, ""+gParams.host_secret);
 
 		if (gParams.controller)
 		    handle_resize();
@@ -621,8 +622,33 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    alert("ERROR: "+cmd_arg[0]);
 		} else if (cmd_type == "save_status") {
 		    alert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
+
+		} else if (cmd_type == "graphterm_widget") {
+		    var params = cmd_arg[0];
+		    var content = cmd_arg[1];
+		    if (content)
+			content = $.base64.decode(content);
+		    //console.log("graphterm_widget", params, content);
+		    var content_type = params.headers.content_type;
+		    var response_type = params.headers.x_gterm_response;
+		    var response_params = params.headers.x_gterm_parameters;
+ 		    if (response_type == "pagelet_json") {
+			try {
+			    var json_obj = JSON.parse(content);
+			    GTPageletJSON($("#session-widget"), json_obj);
+			} catch (err) {
+			    console.log("ERROR in pagelet_json:", err, content);
+			}
+		    } else if (!response_type || response_type == "pagelet") {
+			var widget_html = (content_type == "text/html") ? '<div id="session-widget" class="widget">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
+
+			var new_elem = $(widget_html).replaceAll("#session-widget");
+		    }
+
+
 		} else if (cmd_type == "graphterm_output") {
 		    var entry_class = "entry"+gPromptIndex;
+		    var classes = " " +entry_class;
 		    var params = cmd_arg[0];
 		    var content = cmd_arg[1];
 		    if (content)
@@ -645,7 +671,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			EndFullpage();
 			GTStartEdit(response_params, content);
 
-		    } else if (response_type == "pagelet_json") {
+ 		    } else if (response_type == "pagelet_json") {
 			try {
 			    var json_obj = JSON.parse(content);
 			    GTPageletJSON($(".pagelet."+entry_class), json_obj);
@@ -657,6 +683,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			var pagelet_display = response_params.display || "block";
 			if (pagelet_display.substr(0,4) == "full") {
 			    // Hide previous entries, removing previous pagelets for this entry
+			    if (pagelet_display == "fullwindow" || pagelet_display == "fullscreen")
+				classes += " gterm-fullwindow";
 			    if (response_params.form_input) {
 				StartFullpage(pagelet_display, false);
 				GTStartForm(response_params, gPromptIndex);
@@ -667,11 +695,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    if ("scroll" in response_params && response_params.scroll != "down")
 				gScrollTop = true;
 			} else {
-			    // New pagelet entry; show previous entries
+			    // Non-full pagelet entry; show previous entries
 			    EndFullpage();
 			}
 			var current_dir = ("current_directory" in params.headers) ? params.headers.current_directory : "";
-			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet '+entry_class+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
+			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet '+classes+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
 			try {
 			    var new_elem = $(pagelet_html).hide().appendTo("#session-bufscreen");

@@ -329,7 +329,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            host = comps[0]
+            host = comps[0].lower()
+            if not gtermhost.HOST_RE.match(host):
+                self.write_json([["abort", "Invalid characters in host name"]])
+                self.close()
+                return
+
             if host == LOCAL_HOST and self._auth_users and self.authorized["user"] not in SUPER_USERS: 
                 self.write_json([["abort", "Local host access not allowed for user %s" % self.authorized["user"]]])
                 self.close()
@@ -348,11 +353,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            term_name = comps[1]
+            term_name = comps[1].lower()
             if term_name == "new":
                 term_name = conn.remote_terminal_update()
                 self.write_json([["redirect", "/"+host+"/"+term_name]])
                 self.close()
+
+            if not gtermhost.SESSION_RE.match(term_name):
+                self.write_json([["abort", "Invalid characters in terminal name"]])
+                self.close()
+                return
 
             path = host + "/" + term_name
 
@@ -390,10 +400,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             TerminalConnection.send_to_connection(host, "request", term_name, [["reconnect"]])
 
             display_splash = self.controller and self._counter[0] <= 2
-            lterm_host = gtermhost.get_lterm_host(host)
-            lterm_cookie = TerminalConnection.lterm_cookies.get(lterm_host)
+            normalized_host = gtermhost.get_normalized_host(host)
+            host_secret = TerminalConnection.host_secrets.get(normalized_host)
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
-                                        "lterm_cookie": lterm_cookie, "lterm_host": lterm_host,
+                                        "host_secret": host_secret, "normalized_host": normalized_host,
                                         "version": version.current, "controller": self.controller,
                                         "display_splash": display_splash,
                                         "state_id": self.authorized["state_id"]}]])
@@ -495,7 +505,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.write_json([["updates_response", feed_list]])
             logging.warning(feed_data["feed"]["title"])
 
-def xterm(command="", name=None, host="localhost", port=8900):
+def xterm(command="", name=None, host="localhost", port=gtermhost.DEFAULT_HTTP_PORT):
     """Create new terminal"""
     pass
 
@@ -512,7 +522,7 @@ def kill_remote(path):
 
 class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     _all_connections = {}
-    lterm_cookies = {}
+    host_secrets = {}
     def __init__(self, stream, address, server_address, ssl_options={}):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
                                                  ssl_options=ssl_options, max_packet_buf=2)
@@ -549,7 +559,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         fwd_list = []
         for msg in msg_list:
             if msg[0] == "term_params":
-                self.lterm_cookies[msg[1]["lterm_host"]] = msg[1]["lterm_cookie"]
+                self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
             elif msg[0] == "file_response":
                 ProxyFileHandler.complete_request(msg[1], **msg[2])
             else:
@@ -596,7 +606,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, path):
         if Check_state_cookie and GTSocket.get_auth_code():
-            state_cookie = self.get_cookie(COOKIE_NAME) or self.get_argument("sc", "")
+            state_cookie = self.get_cookie(COOKIE_NAME) or self.get_argument("state_cookie", "")
             if not GTSocket.get_state(state_cookie):
                 raise tornado.web.HTTPError(403, "Invalid cookie to access %s", path)
 
@@ -605,25 +615,25 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             raise tornado.web.HTTPError(403, "Null host/filename")
         self.file_path = "/" + self.file_path
 
-        lterm_host = gtermhost.get_lterm_host(host)
-        lterm_cookie = TerminalConnection.lterm_cookies.get(lterm_host)
+        normalized_host = gtermhost.get_normalized_host(host)
+        host_secret = TerminalConnection.host_secrets.get(normalized_host)
 
-        if not lterm_cookie:
+        if not host_secret:
             raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
-        check_cookie = self.get_cookie("GRAPHTERM_HOST_"+lterm_host)
+        shared_secret = self.get_cookie("GRAPHTERM_HOST_"+normalized_host)
 
-        if check_cookie:
-            if lterm_cookie != check_cookie:
+        if shared_secret:
+            if host_secret != shared_secret:
                 raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
         else:
-            check_cookie = self.get_argument("cookie", "")
-            check_host = gtermhost.get_lterm_host(self.get_argument("host", ""))
-            dest_cookie = TerminalConnection.lterm_cookies.get(check_host)
-            if not dest_cookie or dest_cookie != check_cookie:
+            shared_secret = self.get_argument("shared_secret", "")
+            check_host = gtermhost.get_normalized_host(self.get_argument("host", ""))
+            expect_secret = TerminalConnection.host_secrets.get(check_host)
+            if not expect_secret or expect_secret != shared_secret:
                 raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
-        fpath_hmac = hmac.new(str(lterm_cookie), self.file_path, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+        fpath_hmac = hmac.new(str(host_secret), self.file_path, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
         if fpath_hmac != self.get_argument("hmac", ""):
             raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
@@ -638,7 +648,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
 
     def complete_get(self, status=(), last_modified=None, etag=None, content_type=None, content_length=None,
-                     content=None):
+                     content=""):
         # Callback for get
         if not status:
             # Timed out
@@ -678,7 +688,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
 
 def run_server(options, args):
-    global IO_loop, Http_server, Local_client, Lterm_cookie, Trace_shell
+    global IO_loop, Http_server, Local_client, Host_secret, Trace_shell
     import signal
 
     def auth_token(secret, connection_id, client_nonce, server_nonce):
@@ -808,17 +818,18 @@ def run_server(options, args):
         # Internal https causes tornado to loop  (client fails to connect to server)
         # Connecting to internal https from another process seems to be OK.
         # Need to rewrite packetserver.PacketConnection to use tornado.netutil.TCPServer
-        Local_client, Lterm_cookie, Trace_shell = None, None, None
+        Local_client, Host_secret, Trace_shell = None, None, None
     else:
         oshell_globals = globals() if otrace and options.oshell else None
-        Local_client, Lterm_cookie, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST,
-                                                                          internal_host,
-                                                                server_port=internal_port,
-                                                                connect_kw={"ssl_options": internal_client_ssl,
+        Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST, internal_host,
+                                                         server_port=internal_port,
+                                                         connect_kw={"ssl_options": internal_client_ssl,
                                                                             "term_type": options.term_type,
-                                                                       "lterm_logfile": options.lterm_logfile},
-                                                                oshell_globals=oshell_globals,
-                                                                oshell_unsafe=True)
+                                                                       "lterm_logfile": options.lterm_logfile,
+                                                                       "widget_port":
+                                                                       (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
+                                                         oshell_globals=oshell_globals,
+                                                         oshell_unsafe=True)
         xterm = Local_client.xterm
         killterm = Local_client.remove_term
 
@@ -879,8 +890,8 @@ def main():
 
     parser.add_option("", "--host", dest="host", default="localhost",
                       help="Hostname (or IP address) (default: localhost)")
-    parser.add_option("", "--port", dest="port", default=8900,
-                      help="IP port (default: 8900)", type="int")
+    parser.add_option("", "--port", dest="port", default=gtermhost.DEFAULT_HTTP_PORT,
+                      help="IP port (default: %d)" % gtermhost.DEFAULT_HTTP_PORT, type="int")
 
     parser.add_option("", "--internal_host", dest="internal_host", default="",
                       help="internal host name (or IP address) (default: external host name)")
@@ -903,6 +914,9 @@ def main():
                       help="Terminal type (linux/screen/xterm)")
     parser.add_option("", "--lterm_logfile", dest="lterm_logfile", default="",
                       help="Lineterm logfile")
+    parser.add_option("", "--widgets", dest="widgets", action="store_true",
+                      help="Activate widgets on port %d" % (gtermhost.DEFAULT_HTTP_PORT-2))
+
 
     parser.add_option("", "--daemon", dest="daemon", default="",
                       help="daemon=start/stop/restart/status")
