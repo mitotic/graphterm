@@ -61,10 +61,13 @@ def open_url(url):
                      }
     wrap_write("", headers=blank_headers)
 
-def get_file_url(filepath):
-    """Construct fie URL with hmac cookie suffix"""
+def get_file_url(filepath, relative=False):
+    """Construct file URL with hmac cookie suffix. If relative, return '/file/host/path'"""
     filehmac = "?hmac="+hmac.new(str(Lterm_cookie), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
-    return "/file/" + Host + filepath + filehmac
+    if relative:
+        return "/file/" + Host + filepath + filehmac
+    else:
+        return "file://" + ("" if Host == "local" else Host) + filepath + filehmac
 
 def read_form_input(form_html):
     write_form(form_html)

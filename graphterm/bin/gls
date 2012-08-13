@@ -65,7 +65,7 @@ def file2html(filepath, filename, filemode=0):
     classes = "droppable" if filetype in ("directory", "executable") else ""
     fileicon, filecmd = FILE_TYPES[filetype]
 
-    fileurl = gtermapi.get_file_url(filepath)
+    fileurl = gtermapi.get_file_url(filepath, relative=True)
     if options.images and mimetype and mimetype.startswith("image/"):
         fileicon = fileurl
 

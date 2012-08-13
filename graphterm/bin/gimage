@@ -52,7 +52,7 @@ if not file_list:
     sys.exit(1)
     
 def display_file(filepath):
-    gtermapi.write_html(IMGFORMAT % gtermapi.get_file_url(filepath), display=("fullpage" if options.fullscreen else "block"), dir=Work_dir)
+    gtermapi.write_html(IMGFORMAT % gtermapi.get_file_url(filepath, relative=True), display=("fullpage" if options.fullscreen else "block"), dir=Work_dir)
 
 if not options.fullscreen:
     for filepath, filename in file_list:
