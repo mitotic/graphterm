@@ -638,7 +638,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
 
     def complete_get(self, status=(), last_modified=None, etag=None, content_type=None, content_length=None,
-                     content=None):
+                     content=""):
         # Callback for get
         if not status:
             # Timed out

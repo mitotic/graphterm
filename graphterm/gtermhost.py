@@ -256,11 +256,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 elif action == "file_request":
                     request_id, request_method, file_path, if_mod_since = cmd
                     status = (404, "Not Found")
-                    modified = None
+                    last_modified = None
                     etag = None
                     content_type = None
                     content_length = None
-                    content = None
+                    content = ""
                     abspath = file_path
                     if os.path.sep != "/":
                         abspath = abspath.replace("/", os.path.sep)
