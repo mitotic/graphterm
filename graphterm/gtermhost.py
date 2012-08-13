@@ -63,11 +63,12 @@ class HtmlWrapper(object):
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
     def __init__(self, host, port, command=SHELL_CMD, lterm_cookie="", oshell=False, io_loop=None, ssl_options={},
-                 term_type="", lterm_logfile=""):
+                 term_type="", term_encoding="utf-8", lterm_logfile=""):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
                                              reconnect_sec=RETRY_SEC, server_type="frame")
         self.term_type = term_type
+        self.term_encoding = term_encoding
         self.lterm_cookie = lterm_cookie
         self.lterm_logfile = lterm_logfile
         self.command = command
@@ -121,6 +122,20 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.add_term(term_name, height, width)
         return term_name
 
+    def paste_command(self, term_name, command_line):
+        if not self.lineterm:
+            return
+        if command_line.endswith("\n"):
+            # Send delayed newline to allow multiline command to be parsed
+            command_line = command_line[:-1]
+            IO_loop.add_timeout(time.time()+0.1, functools.partial(self.lineterm.term_write, term_name, "\n"))
+
+        if command_line:
+            try:
+                self.lineterm.term_write(term_name, command_line)
+            except Exception, excp:
+                logging.warning("gtermhost: Error in paste_command: %s", excp)
+
     def screen_callback(self, term_name, command, arg):
         # Invoked in lineterm thread; schedule callback in ioloop
         self.send_request_threadsafe("response", term_name, [["terminal", command, arg]])
@@ -138,6 +153,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           input <line>
           open_terminal <name> <command>
           click_paste <text> <file_uri> {command:, clear_last:, normalize:, enter:}
+          paste_command <text>
           get_finder <kind> <directory>
           save_file <filepath> <filedata>
 
@@ -171,7 +187,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "keypress":
                     if self.lineterm:
-                        self.lineterm.term_write(term_name, cmd[0].encode("ascii", "ignore"))
+                        self.lineterm.term_write(term_name, cmd[0].encode(self.term_encoding, "ignore"))
 
                 elif action == "save_file":
                     if self.lineterm:
@@ -180,7 +196,12 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 elif action == "click_paste":
                     # click_paste: text, file_uri, {command:, clear_last:, normalize:, enter:}
                     if self.lineterm:
-                        self.lineterm.click_paste(term_name, cmd[0], cmd[1], cmd[2])
+                        paste_text = self.lineterm.click_paste(term_name, cmd[0], cmd[1], cmd[2])
+                        self.paste_command(term_name, paste_text)
+
+                elif action == "paste_command":
+                    # paste_command: command_line
+                    self.paste_command(term_name, cmd[0])
 
                 elif action == "clear_last_entry":
                     if self.lineterm:
@@ -361,6 +382,9 @@ def gterm_connect(host_name, server_addr, server_port=8899, shell_cmd=SHELL_CMD,
                   oshell_globals=None, oshell_unsafe=False, oshell_workdir="", oshell_init=""):
     """ Returns (host_connection, lterm_cookie, trace_shell)
     """
+    global IO_loop
+    import tornado.ioloop
+    IO_loop = tornado.ioloop.IOLoop.instance()
     lterm_cookie = "1%015d" % random.randrange(0, 10**15)   # 1 prefix to keep leading zeros when stringified
 
     host_connection = TerminalClient.get_client(host_name,
@@ -383,7 +407,6 @@ def gterm_connect(host_name, server_addr, server_port=8899, shell_cmd=SHELL_CMD,
 
 def run_host(options, args):
     global IO_loop, Gterm_host, Lterm_cookie, Trace_shell, Xterm, Killterm
-    import tornado.ioloop
     server_addr = args[0]
     host_name = args[1]
     protocol = "https" if options.https else "http"
@@ -391,6 +414,8 @@ def run_host(options, args):
     oshell_globals = globals() if options.oshell else None
     Gterm_host, Lterm_cookie, Trace_shell = gterm_connect(host_name, server_addr,
                                                           server_port=options.server_port,
+                                                          connect_kw={"term_type": options.term_type,
+                                                                      "term_encoding": options.term_encoding},
                                                           oshell_globals=oshell_globals,
                                                           oshell_unsafe=True)
     Xterm = Gterm_host.xterm
@@ -407,7 +432,6 @@ def run_host(options, args):
         IO_loop.add_callback(host_shutdown)
     signal.signal(signal.SIGTERM, sigterm)
 
-    IO_loop = tornado.ioloop.IOLoop.instance()
     try:
         ioloop_thread = threading.Thread(target=IO_loop.start)
         ioloop_thread.start()
@@ -440,10 +464,12 @@ def main():
 
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
-
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
-
+    parser.add_option("", "--term_type", dest="term_type", default="",
+                      help="Terminal type (linux/screen/xterm)")
+    parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",
+                      help="Terminal character encoding (utf-8/latin-1/...)")
 
     parser.add_option("", "--daemon", dest="daemon", default="",
                       help="daemon=start/stop/restart/status")

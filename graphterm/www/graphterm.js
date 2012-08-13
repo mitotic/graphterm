@@ -433,7 +433,7 @@ function GTWebSocket(auth_user, auth_code) {
     console.log("GTWebSocket.__init__: ");
 }
 
-GTWebSocket.prototype.term_input = function(text, type_ahead) {
+GTWebSocket.prototype.term_input = function(text, type_ahead, command_line) {
     // Send text to terminal (clears current directory info)
     if (type_ahead && gTypeAhead && $(".gterm-cmd-line .typeahead").length == 1 && !$(".gterm-cmd-line .typeahead").attr("frozen")) {
 	// Type ahead only works on the command line
@@ -456,7 +456,10 @@ GTWebSocket.prototype.term_input = function(text, type_ahead) {
 	$(".typeahead").text(aheadText);
     }
     GTReceivedUserInput("key");
-    this.write([["keypress", text]]);
+    if (command_line)
+	this.write([["paste_command", text]]);
+    else
+	this.write([["keypress", text]]);
     GTCurDirURI = "";
 }
 
@@ -1475,16 +1478,25 @@ function HandleArrowKeys(keyCode) {
 
     } else if (keyCode == 39) {
 	// Right arrow; command history completion
-	if ($("#gterm-pre0 .cmd-completion").length) {
-	    var comptext = $("#gterm-pre0 .cmd-completion").text();
-	    $("#gterm-pre0 .cmd-completion").text("");
-	    if (comptext) {
-		gWebSocket.term_input(String.fromCharCode(5)+comptext);
-		return false;
-	    }
-	}
+	return CompleteCommand()
     }
     // Default handling
+    return true;
+}
+
+function CompleteCommand(enter) {
+    // Returns false if completed command was sent, and true otherwise (for event propagation)
+    // If enter, newline is appended to command (after a delay)
+    if ($("#gterm-pre0 .cmd-completion").length) {
+	var comptext = $("#gterm-pre0 .cmd-completion").text();
+	$("#gterm-pre0 .cmd-completion").text("");
+	if (comptext) {
+	    if (enter)
+		comptext += "\n";
+	    gWebSocket.term_input(String.fromCharCode(5)+comptext, false, true);
+	    return false;
+	}
+    }
     return true;
 }
 
@@ -1605,10 +1617,14 @@ function AjaxKeypress(evt) {
 	    // Enter key
 	    if (gShowingFinder)
 		HideFinder();
-	    if (gCommandMatchPrev)
-		HandleArrowKeys(39); // Simulate right arrow for command completion
+	    if (gCommandMatchPrev) {
+		// Simulate right arrow for command completion
+		if (!CompleteCommand(true))
+		    k = "";
+	    }
 	}
-	gWebSocket.term_input(k, true);
+	if (k)
+	    gWebSocket.term_input(k, true);
     }
     evt.cancelBubble = true;
     return GTPreventHandler(evt);
@@ -1795,7 +1811,7 @@ function GTEndForm(text, cancel) {
     } else {
 	if (gForm.form_command)
 	    gWebSocket.write([["clear_last_entry", gFormIndex+""]]);
-	gWebSocket.term_input(text+"\n");
+	gWebSocket.term_input(text+"\n", false, gForm.form_command);
     }
     $("#session-bufscreen").children(".pagelet.entry"+gFormIndex).remove();
     $("#session-screen").show();

@@ -816,6 +816,7 @@ def run_server(options, args):
                                                                 server_port=internal_port,
                                                                 connect_kw={"ssl_options": internal_client_ssl,
                                                                             "term_type": options.term_type,
+                                                                            "term_encoding": options.term_encoding,
                                                                        "lterm_logfile": options.lterm_logfile},
                                                                 oshell_globals=oshell_globals,
                                                                 oshell_unsafe=True)
@@ -901,6 +902,8 @@ def main():
                       help="Path to client CA cert (or '.')")
     parser.add_option("", "--term_type", dest="term_type", default="",
                       help="Terminal type (linux/screen/xterm)")
+    parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",
+                      help="Terminal character encoding (utf-8/latin-1/...)")
     parser.add_option("", "--lterm_logfile", dest="lterm_logfile", default="",
                       help="Lineterm logfile")
 
