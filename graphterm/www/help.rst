@@ -3,14 +3,16 @@ GraphTerm Help (from the README file)
 .. sectnum::
 .. contents::
 
-Support
-=============================
+Documentation and Support
+=========================================================
+
+Documentation and updates can be found on the project home page,
+`info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_,
+which also has `tutorials and examples <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials>`_
+for using GraphTerm.
 
 Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
-
-Additional documentation and updates will be made available on the project home page,
-`info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_.
-
+ 
 
 Usage
 =================================

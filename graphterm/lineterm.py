@@ -67,6 +67,10 @@ ASCIIMASK = 0x7f
 def make_lterm_cookie():
 	return "%016d" % random.randrange(10**15, 10**16)
 
+# Meta info indices
+JCURDIR = 0
+JCONTINUATION = 1
+
 def create_array(fill_value, count):
 	"""Return array of 32-bit values"""
 	return array.array('L', [fill_value]*count)
@@ -381,7 +385,7 @@ class ScreenBuf(object):
 		if offset:
 			# Prompt line (i.e., command line)
 			self.entry_index += 1
-			current_dir = meta or ""
+			current_dir = meta[JCURDIR] if meta else ""
 			current_markup = command_markup(self.entry_index, current_dir, self.pre_offset, offset, line)
 			if not self.cleared_last:
 				self.cleared_current_dir = None
@@ -595,6 +599,7 @@ class Terminal(object):
 		self.outbuf = ""
 		self.last_html = ""
 		self.active_rows = 0
+		self.current_meta = None
 		self.gterm_code = None
 		self.gterm_buf = None
 		self.gterm_entry_index = None
@@ -645,11 +650,18 @@ class Terminal(object):
 			return
 
 		# Move scrolled active rows to buffer
-		for cursor_y in range(scroll_rows):
+		cursor_y = 0
+		while cursor_y < scroll_rows:
 			row = self.main_screen.data[self.width*cursor_y:self.width*cursor_y+self.width]
-			self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
-						      self.main_screen.meta[cursor_y],
-				                      offset=prompt_offset(dump(row), self.prompt, self.main_screen.meta[cursor_y]))
+			meta = self.main_screen.meta[cursor_y]
+			offset = prompt_offset(dump(row), self.prompt, meta)
+			if meta:
+				# Concatenate rows for multiline command
+				while cursor_y < scroll_rows-1 and self.main_screen.meta[cursor_y+1] and self.main_screen.meta[cursor_y+1][JCONTINUATION]:
+					cursor_y += 1
+					row += self.main_screen.data[self.width*cursor_y:self.width*cursor_y+self.width]
+			self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta, offset=offset)
+			cursor_y += 1
 
 		# Scroll and zero rest of screen
 		if scroll_rows < self.active_rows:
@@ -736,6 +748,9 @@ class Terminal(object):
 
 			if not self.alt_mode:
 				self.active_rows = max(self.cursor_y+1, self.active_rows)
+				if self.current_meta and not self.screen.meta[self.active_rows-1]:
+					self.current_meta = (self.current_meta[JCURDIR], self.current_meta[JCONTINUATION]+1)
+					self.screen.meta[self.active_rows-1] = self.current_meta
 
 	def cursor_right(self):
 		q, r = divmod(self.cursor_x+1, self.width)
@@ -746,8 +761,13 @@ class Terminal(object):
 
 	def expect_prompt(self, current_directory):
 		if not self.active_rows or self.cursor_y+1 == self.active_rows:
-			self.screen.meta[self.cursor_y] = current_directory
+			self.current_meta = (current_directory, 0)
+			self.screen.meta[self.cursor_y] = self.current_meta
 	
+	def enter(self):
+		"""Called when CR or LF is received from the user to indicate possible end of command"""
+		self.current_meta = None   # Command entry is completed
+		
 	def echo(self, c):
 		if self.logfile and self.logchars < MAX_LOG_CHARS:
 			with open(self.logfile, "a") as logf:
@@ -1167,7 +1187,9 @@ class Terminal(object):
 		if not self.active_rows:
 			# Not at command line
 			return
-		directory = directory or self.screen.meta[self.active_rows-1] or getcwd(self.pid)
+		if not directory:
+			meta = self.screen.meta[self.active_rows-1]
+			directory = meta[JCURDIR] if meta else getcwd(self.pid)
 		row_content = test_finder_row % {"fullpath": directory,
 						 "filetype": "directory",
 						 "clickcmd": "cd %(path); gls -f",
@@ -1181,17 +1203,18 @@ class Terminal(object):
 		self.screen_callback(self.term_name, "graphterm_output", [params, content])
 
 	def click_paste(self, text, file_uri="", options={}):
-		"""Paste text or filename (and command) into command line.
+		"""Return text or filename (and command) for pasting into command line.
+		(Text may or may not be terminated by a newline, and maybe a null string.)
 		Different behavior depending upon whether command line is empty or not.
 		If not text, create text from filepath, normalizing if need be.
 		options = {command: "", clear_last: 0/n, normalize: null/true/false, enter: false/true
 		If clear_last and command line is empty, clear last entry (can also be numeric string).
 		Normalize may be None (for default behavior), False or True.
-		if enter, append newline to text.
+		if enter, append newline to text, when applicable.
 		"""
 		if not self.active_rows:
 			# Not at command line
-			return
+			return ""
 		command = options.get("command", "")
 		dest_uri = options.get("dest_uri", "")
 		clear_last = options.get("clear_last", 0)
@@ -1199,7 +1222,8 @@ class Terminal(object):
 		enter = options.get("enter", False)
 
 		line = dump(self.peek(self.active_rows-1, 0, self.active_rows-1, self.width), trim=True)
-		cwd = self.screen.meta[self.active_rows-1] or getcwd(self.pid)
+		meta = self.screen.meta[self.active_rows-1]
+		cwd = meta[JCURDIR] if meta else getcwd(self.pid)
 		offset = prompt_offset(line, self.prompt, cwd)
 
 		try:
@@ -1277,10 +1301,10 @@ class Terminal(object):
 			if enter and offset and not pre_line and command:
 				# Empty command line with pasted command
 				paste_text += "\n"
-			try:
-				os.write(self.fd, paste_text)
-			except Exception, excp:
-				print >> sys.stderr, "lineterm: Error in click_paste: %s" % excp
+
+			return paste_text
+
+		return ""
 
 	def write(self, s):
 		self.output_time = time.time()
@@ -1306,6 +1330,12 @@ class Terminal(object):
 		b = self.outbuf
 		self.outbuf = ""
 		return b
+
+	def pty_write(self, data):
+		if "\x0d" in data or "\x0a" in data:
+			# Data contains CR/LF
+			self.enter()
+		os.write(self.fd, data)
 
 		
 class Multiplex(object):
@@ -1512,7 +1542,7 @@ class Multiplex(object):
 			if not term:
 				return
 			try:
-				os.write(term.fd, data)
+				term.pty_write(data)
 			except (IOError, OSError):
 				print >> sys.stderr, "lineterm: Error in writing to %s; closing it" % term_name
 				self.kill_term(term_name)
@@ -1551,8 +1581,8 @@ class Multiplex(object):
 		with self.lock:
 			term = self.proc.get(term_name)
 			if not term:
-				return
-			term.click_paste(text, file_uri=file_uri, options=options)
+				return ""
+			return term.click_paste(text, file_uri=file_uri, options=options)
 
 	def reconnect(self, term_name):
 		with self.lock:
