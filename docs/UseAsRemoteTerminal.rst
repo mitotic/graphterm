@@ -27,7 +27,8 @@ connect via a private network, not the the public internet.* The state of the te
 stored on the host machine, not on ``gtermserver``. You can restart ``gtermserver``
 and the hosts will automatically reconnect.
 
-
+See the `README <http://info.mindmeldr.com/code/graphterm/graphterm-readme>`_
+file for basic instructions on installing and starting up GraphTerm.
 
 Accessing graphTerm from a remote computer using SSH
 ======================================================================================
