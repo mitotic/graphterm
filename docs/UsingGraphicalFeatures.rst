@@ -53,7 +53,9 @@ files, ``gopen`` invokes the ``gimage`` command to display the image.
 running. The ``gbrowse`` command can be used instead of ``gopen``
 to open the files using the browser itself. This will work for
 images and PDF documents. The advantage of ``gbrowse`` is
-that it will work even remotely, i.e., across SSH tunnels.
+that it will work even remotely, i.e., across SSH tunnels. (*NOTE:
+You will need to allow popups from "localhost" for this to
+work.*)
  
 If you click on a doument file displayed in ``gls`` output, the
 ``gopen/gbrowse/gvi`` command will be executed by default,
