@@ -551,7 +551,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
             if msg[0] == "term_params":
                 self.lterm_cookies[msg[1]["lterm_host"]] = msg[1]["lterm_cookie"]
             elif msg[0] == "file_response":
-                ProxyFileHandler.complete_request(msg[1], **msg[2])
+                ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
             else:
                 fwd_list.append(msg)
 

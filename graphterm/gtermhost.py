@@ -51,6 +51,13 @@ def get_lterm_host(host):
     """Return identifier version of hostname"""
     return re.sub(r"\W", "_", host.upper())
 
+def dict2kwargs(dct, unicode2str=False):
+    """Converts unicode keys in a dict to ascii, to allow it to be used for keyword args.
+    If unicode2str, all unicode values to converted to str as well.
+    (This is needed when the dict is created from JSON)
+    """
+    return dict([(str(k), str(v) if unicode2str and isinstance(v, unicode) else v) for k, v in dct.iteritems()])
+
 class HtmlWrapper(object):
     """ Wrapper for HTML output
     """
