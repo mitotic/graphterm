@@ -62,7 +62,6 @@ set -e -x
 apt-get update && apt-get upgrade -y
 apt-get install -y python-setuptools
 easy_install tornado
-easy_install otrace
 easy_install graphterm
 sudo gterm_setup
 """
