@@ -8,7 +8,7 @@ Introduction
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
-interfaces. The goal is to be a fully backwards-compatible terminal
+interfaces. The goal is to provide a fully backwards-compatible terminal
 emulator for ``xterm``.  You should be able to use it just like a regular terminal
 interface, accessing additional graphical features only as needed. GraphTerm builds
 upon two earlier projects, 
@@ -18,17 +18,43 @@ which implemented a terminal using the Mozilla framework and
 which is an AJAX/Python terminal implementation. (Another recent
 project along these lines is  `TermKit <http://acko.net/blog/on-termkit/>`_.)
 
-In addition to terminal features, GraphTerm implements file "finder"
-or "explorer" features, and also some of the detached terminal
-features of ``GNU screen``. GraphTerm is designed to
-be touch-friendly, by facilitating command re-use to minimize
-the use of the keyboard.
+A GraphTerm terminal window is just a web page served from the
+GraphTerm web server program. Multiple users can connect
+simultaneously to the web server to share terminal sessions.
+Multiple hosts can also connect to the server (on a different port),
+allowing a single user to access all of them via the browser.
+The GraphTerm server acts as a *router*, sending input from browser
+windows for different users to the appropriate terminal ("pseudo-tty")
+sessions running on different hosts, and transmitting the
+terminal output back to the browser windows.
 
-GraphTerm is a *terminal server*, not just a terminal. Multiple users can connect to
-the terminal server simultaneously and share terminal sessions for collaboration.
-Also, multiple computers can connect to a single terminal server, allowing
-an user to manage several computers without having to log into each one
-separately.
+This flexible, networked implementation allows for several possible
+applications for GraphTerm, such as:
+
+ - an *enhanced terminal* that combines the command line with basic
+   GUI operations like navigating folders, file drag-and-drop,
+   displaying images etc.
+
+ - a web-based *remote desktop* that supports a simple GUI
+   without the need for installing VNC or X-windows on the remote host
+
+ - a *detachable terminal multiplexer*, sort of like GNU ``screen`` or
+   ``tmux`` (but with only basic features)
+
+ - a *collaborative terminal* that can be remotely accessed
+   by multiple users simultaneously, to run programs, edit files etc.
+
+ - a *simple presentation tool* for webcasting images as slideshows
+   (and receiving live feedback)
+
+ - a *management console* for a cluster of real or virtual hosts,
+   (e.g., to create a virtual computer lab using cloud instances)
+
+The interface is designed to be touch-friendly for use with
+tablets, relying upon command re-use to minimize the need for
+a keyboard. It preserves history for all commands,
+whether entered by typing, clicking, or tapping.
+It is also themable using CSS.
 
 Images of GraphTerm in action can be found in `screenshots <https://github.com/mitotic/graphterm/blob/master/SCREENSHOTS.rst>`_ 
 and in this `YouTube Video <http://youtu.be/JBMexdwXN8w>`_.
@@ -39,45 +65,6 @@ output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome
    :align: center
    :width: 90%
    :figwidth: 70%
-
-
-GraphTerm Design Goals:
----------------------------------------------
-
- - Full backwards compatibility with xterm
-
- - Incremental feature set
-
- - Minimalist no-frills graphical UI
-
- - Minimize use of keyboard (tab/menu completion)
-
- - Touch-friendly
-
- - Cloud friendly
-
- - Platform-independent browser client
-
- - Easy sharing/collaboration
-
-      
-GraphTerm Features:
---------------------------------------------
-
- - Clickable text: text displayed on terminal becomes clickable or "tappable"
-
- - Seamlessly blend text and (optional) graphics
-
- - History of all commands, entered by typing, clicking, or tapping
-
- - Multiple users can collaborate on a single terminal window ("screensharing")
-
- - Multiple computers can be accessed from a single browser window
-
- - Drag and drop
-
- - Themable using CSS (including 3D perspectives)
-
 
 
 Installation
