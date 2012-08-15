@@ -134,13 +134,12 @@ quite useful on the iPad.
 Choosing the terminal type
 ---------------------------------------------------------------------------------------
 
-The default terminal type is set to ``linux``, but it has a poor
-fullscreen mode and command history does not work properly. You can
-try out the terminal types ``screen`` or ``xterm``, which may work
-better for some purposes.  You can use the ``--term_type`` option when
-running the server to set the default terminal type, or use the
-``export TERM=xterm`` command. (Fully supporting these terminal types
-is a work in progress.)
+The default terminal type is set to ``xterm``, but it may not always
+work properly. You can also try out the terminal types ``screen`` or
+``linux``,  which may work better for some purposes.
+You can use the ``--term_type`` option when running the server to set
+the default terminal type, or use the ``export TERM=screen`` command.
+(Fully supporting these terminal types is a work in progress.)
 
 Sessions and "screensharing"
 ---------------------------------------------------------------------------------------

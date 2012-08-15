@@ -401,7 +401,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             display_splash = self.controller and self._counter[0] <= 2
             normalized_host = gtermhost.get_normalized_host(host)
-            host_secret = TerminalConnection.host_secrets.get(normalized_host)
+            host_secret = TerminalConnection.host_secrets.get(normalized_host) if self.controller else ""
+
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
                                         "version": version.current, "controller": self.controller,
@@ -487,6 +488,25 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if msg[1]:
                             self._webcast_paths[self.remote_path] = time.time()
                             
+                elif msg[0] == "edit_broadcast":
+                    ws_list = GTSocket._watch_set.get(self.remote_path)
+                    if not ws_list:
+                        return
+                    for ws_id in ws_list:
+                        if ws_id != self.websocket_id:
+                            # Broadcast to all watchers (excluding self)
+                            ws = GTSocket._all_websockets.get(ws_id)
+                            if ws:
+                                try:
+                                    ws.write_message(json.dumps([msg]))
+                                except Exception, excp:
+                                    logging.error("remote_response: ERROR %s", excp)
+                                    try:
+                                        # Close websocket on write error
+                                        ws.close()
+                                    except Exception:
+                                        pass
+
                 else:
                     req_list.append(msg)
 

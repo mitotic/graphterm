@@ -30,7 +30,7 @@ MAX_SCROLL_LINES = 500
 
 IDLE_TIMEOUT = 300      # Idle timeout in seconds
 UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
-TERM_TYPE = "linux"     # "screen" would be a better default terminal, but arrow keys do not always work
+TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
 NO_COPY_ENV = set(["TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
 
@@ -341,7 +341,7 @@ def plain_markup(text, command=False):
 
 def path_markup(text, current_dir, command=False):
         cmd_class = " gterm-command" if command else ""
-        fullpath = os.path.join(current_dir, text)
+        fullpath = os.path.normpath(os.path.join(current_dir, text))
         return '<a class="gterm-cmd-path gterm-link%s" href="file://%s" data-gtermmime="x-graphterm/%s" data-gtermcmd="%s">%s</a>' % (cmd_class, fullpath, "path", "xpaste", cgi.escape(text))
 
 def command_markup(entry_index, current_dir, pre_offset, offset, line):
@@ -356,8 +356,8 @@ def command_markup(entry_index, current_dir, pre_offset, offset, line):
         if not comps:
                 return marked_up
         cmd = comps.pop(0)
-        if cmd.startswith("./") and current_dir:
-                marked_up += path_markup(cmd[2:], current_dir, command=True)
+        if current_dir and (cmd.startswith("./") or cmd.startswith("../")):
+                marked_up += path_markup(cmd, current_dir, command=True)
         else:
                 marked_up += plain_markup(cmd, command=True)
         file_command = cmd in FILE_COMMANDS

@@ -562,7 +562,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		gParams = command[1];
 		var label_text = "Session: "+gParams.host+"/"+gParams.term+"/"+(gParams.controller ? "control" : "watch");
 		$("#menubar-sessionlabel").text(label_text);
-		setCookie("GRAPHTERM_HOST_"+gParams.normalized_host, ""+gParams.host_secret);
+		if (gParams.host_secret)
+		    setCookie("GRAPHTERM_HOST_"+gParams.normalized_host, ""+gParams.host_secret);
 
 		if (gParams.controller)
 		    handle_resize();
@@ -601,6 +602,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		console.log(prefix+command[3]);
 		$('<pre class="gterm-log">'+prefix+command[3]+'</pre>').appendTo("#session-log .curentry");
 		$("#session-log .curentry .gterm-log .gterm-link").bindclick(otraceClickHandler);
+
+            } else if (action == "edit_broadcast") {
+		if (!gParams.controller && gEditing && gEditing.ace) {
+		    if (command[1] == "deltas")
+			gEditing.ace.getSession().doc.applyDeltas(command[2]);
+		    else
+			GTEndEdit();
+		}
 
             } else if (action == "updates_response") {
 		feed_list = command[1];
@@ -1454,7 +1463,7 @@ function keydownHandler(evt) {
     var activeType = "";
     var activeElem = $(document.activeElement);
 
-    if (gEditing || gForm)
+    if (GTCaptureInput())
 	return true;
 
     if (gDebugKeys)
@@ -1522,7 +1531,7 @@ function keypressHandler(evt) {
     if (evt.which == 27)
 	return false;
 
-    if (gEditing || gForm)
+    if (GTCaptureInput())
 	return true;
 
     if (evt.which == 13) {
@@ -1599,12 +1608,12 @@ function AjaxKeypress(evt) {
 	console.log("graphterm.AjaxKeypress1", gControlActive, kc, evt.ctrlKey, evt);
 
     var formSubmitter = ".pagelet.entry"+gPromptIndex+" .gterm-form-command";
-    if (kc == 13 && gForm && $(formSubmitter).length == 1) {
+    if (kc == 13 && gForm && gParams.controller && $(formSubmitter).length == 1) {
 	$(formSubmitter).click();
 	return false;
     }
 
-    if (!evt.ctrlKey && !gControlActive && (gEditing || gForm)) {
+    if (!evt.ctrlKey && !gControlActive && GTCaptureInput()) {
 	// Not Ctrl character; editing/processing form
 	return true;
     }
@@ -1675,7 +1684,7 @@ function AjaxKeypress(evt) {
     if (gForm && k == String.fromCharCode(3)) {
 	// Ctrl-C exit from form
 	GTEndForm("", true);
-    } else if (gEditing || gForm) {
+    } else if (GTCaptureInput()) {
 	// Editing or processing form
 	return true;
     }
@@ -1811,6 +1820,10 @@ function popupShow(elementId, popupType, popupParams, popupConfirmClose) {
   $(elementId).find("input:text").focus();
 }
 
+function GTCaptureInput() {
+    return gForm || (gEditing && gParams.controller);
+}
+
 function GTStartEdit(params, content) {
     $("#terminal").hide();
     gEditing = {params: params, content: content};
@@ -1823,6 +1836,27 @@ function GTStartEdit(params, content) {
 	$('<div name="acearea_content" id="acearea_content">/div>').appendTo("#acearea");
 	$("#acearea").show();
 	gEditing.ace = ace.edit("acearea_content");
+
+	try {
+	    // Overrride undo manager to broadcast edit deltas
+	    function GTUndoManager() {
+	    }
+
+	    var AceUndoManager = ace.require("ace/undomanager").UndoManager;
+	    GTUndoManager.prototype = new AceUndoManager();
+
+	    GTUndoManager.prototype.execute = function(options) {
+		var deltas = options.args[0][0].deltas;
+		//console.log("GTUndoManager.execute: ", deltas);
+		if (gParams && gParams.controller) {
+		    gWebSocket.write([["edit_broadcast", "deltas", deltas]]);
+		}
+		return AceUndoManager.prototype.execute.call(this, options);
+	    };
+
+	    gEditing.ace.getSession().setUndoManager(new GTUndoManager());
+	} catch (err) {}
+
 	try {
 	    if (params.filetype)
 		gEditing.ace.getSession().setMode("ace/mode/"+params.filetype);
@@ -1840,7 +1874,7 @@ function GTEndEdit(save) {
     } else {
 	newContent = gEditing.ace.getSession().getValue();
     }
-    if (gEditing.params.modify && newContent != gEditing.content) {
+    if (gParams.controller && gEditing.params.modify && newContent != gEditing.content) {
 	if (save) {
 	    if (gEditing.params.command) {
 		gWebSocket.write([["input", gEditing.params.command, newContent]]);
@@ -1860,6 +1894,9 @@ function GTEndEdit(save) {
     gEditing = null;
     $("#terminal").show();
     ScrollScreen();
+    if (gParams && gParams.controller) {
+	gWebSocket.write([["edit_broadcast", "end", ""]]);
+    }
     return false;
 }
 
