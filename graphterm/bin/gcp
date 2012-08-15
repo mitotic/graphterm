@@ -10,38 +10,13 @@ import os
 import shutil
 import sys
 import urllib
+import urllib2
 
 from optparse import OptionParser
 
-Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
-Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
-Path = os.getenv("GRAPHTERM_PATH", "")
-Host, Session = Path.split("/") if Path else ("", "") 
-Gterm_url = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
-Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
-                "\x1b[?1155l"]
+import gtermapi
 
-def wrap(html):
-    return Html_escapes[0] + html + Html_escapes[1]
-
-FILE_URI_PREFIX = "file://"
-def split_file_uri(uri):
-	"""Return triplet [hostname, filename, fullpath, query] for file://host/path URIs
-	If not file URI, returns []
-	"""
-	if not uri.startswith(FILE_URI_PREFIX):
-		return []
-	host_path = uri[len(FILE_URI_PREFIX):]
-	j = host_path.find("?")
-	if j >= 0:
-		query = host_path[j:]
-		host_path = host_path[:j]
-	else:
-		query = ""
-	comps = host_path.split("/")
-        if not comps[0]:
-            comps[0] = "local"
-	return [comps[0], comps[-1], "/"+"/".join(comps[1:]), query]
+BLOCK_SIZE = 8192
 
 usage = "usage: %prog gcp <source_file_url> <dest_file_url>"
 parser = OptionParser(usage=usage)
@@ -58,23 +33,27 @@ if len(args) != 2:
 
 src_uri, dst_uri = args
 
-src_comps = split_file_uri(src_uri)
-dst_comps = split_file_uri(dst_uri)
+src_comps = gtermapi.split_file_url(src_uri, check_host_secret=gtermapi.Shared_secret)
+dst_comps = gtermapi.split_file_url(dst_uri, check_host_secret=gtermapi.Shared_secret)
 
-dst_file = dst_comps[2] if dst_comps and dst_comps[0] == Host else dst_uri
+if dst_comps:
+    if dst_comps[gtermapi.JHOST]:
+        print >> sys.stderr, "Remote copy destination not implemented"
+        sys.exit(1)
+    dst_file = dst_comps[gtermapi.JFILEPATH]
+else:
+    dst_file = dst_uri
+    
 
 src_file = None
-if not src_comps or src_comps[0] == Host:
-    src_file = src_comps[2] if src_comps else src_uri
-
-def transfer_hook(blocks_received, block_size, total_size):
-    pass
+if not src_comps or not src_comps[gtermapi.JHOST]:
+    src_file = src_comps[gtermapi.JFILEPATH] if src_comps else src_uri
 
 if os.path.exists(dst_file):
     if not os.path.isdir(dst_file) or not os.access(dst_file, os.W_OK):
         print >> sys.stderr, "Unable to write to %s" % dst_file
         sys.exit(1)
-    dst_file = os.path.join(dst_file, src_comps[1] if src_comps else os.path.basename(src_file))
+    dst_file = os.path.join(dst_file, src_comps[gtermapi.JFILENAME] if src_comps else os.path.basename(src_file))
 
 if src_file:
     if not os.path.isfile(src_file) or not os.access(src_file, os.R_OK):
@@ -86,7 +65,26 @@ if src_file:
     shutil.copyfile(src_file, dst_file)
 
 else:
-    req_url = Gterm_url + "/file/" + src_comps[0] + src_comps[2] + src_comps[3] + "&" + urllib.urlencode({"host": Host, "shared_secret": Shared_secret})
+    req_url = gtermapi.URL+gtermapi.FILE_PREFIX+src_comps[gtermapi.JHOST]+src_comps[gtermapi.JFILEPATH]+src_comps[gtermapi.JQUERY]+"&"+urllib.urlencode({"host": gtermapi.Host, "shared_secret": gtermapi.Shared_secret})
     if options.verbose:
         print >> sys.stderr, "Copying %s -> %s" % (req_url, dst_file)
-    fname, headers = urllib.urlretrieve(req_url, dst_file, transfer_hook)
+    try:
+        resp = urllib2.urlopen(req_url)
+    except Exception, excp:
+        print >> sys.stderr, "Failed to retrieve file: %s" % excp
+        sys.exit(1)
+
+    if resp.code != 200:
+        print >> sys.stderr, "Failed to retrieve file: %d\n%s" % (resp.code, resp.read())
+        sys.exit(1)
+
+    with open(dst_file, "wb") as fp:
+        content_length = int(resp.headers["content-length"])
+        count = 0
+        while True:
+            chunk = resp.read(BLOCK_SIZE)
+            if not chunk:
+                break
+            fp.write(chunk)
+            # Display progress information
+            count += len(chunk)

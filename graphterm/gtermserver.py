@@ -599,6 +599,10 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             return
         del cls._async_requests[async_id]
         request.complete_get(**kwargs)
+
+    ##def write_error(self, status_code, **kwargs):
+        ### No error message text
+        ##self.finish()
         
     def head(self, path):
         self.get(path)

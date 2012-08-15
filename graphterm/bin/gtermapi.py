@@ -18,6 +18,7 @@ HEX_DIGITS = 16
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
 Path = os.getenv("GRAPHTERM_PATH", "")
+URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
 Host, Session = Path.split("/") if Path else ("", "") 
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
@@ -70,6 +71,60 @@ def get_file_url(filepath, relative=False):
         return "/file/" + Host + filepath + filehmac
     else:
         return "file://" + ("" if Host == "local" else Host) + filepath + filehmac
+
+FILE_URI_PREFIX = "file://"
+FILE_PREFIX = "/file/"
+
+JSERVER = 0
+JHOST = 1
+JFILENAME = 2
+JFILEPATH = 3
+JQUERY = 4
+
+def split_file_url(url, check_host_secret=None):
+	"""Return [protocol://server[:port], hostname, filename, fullpath, query] for file://host/path
+        or http://server:port/file/host/path, or /file/host/path URLs.
+	If not file URL, returns []
+        If check_host_secret is specified, and file hmac matches, then hostname is set to the null string.
+	"""
+        if not url:
+		return []
+        server_port = ""
+	if url.startswith(FILE_URI_PREFIX):
+            host_path = url[len(FILE_URI_PREFIX):]
+        elif url.startswith(FILE_PREFIX):
+            host_path = url[len(FILE_PREFIX):]
+        else:
+            if url.startswith("http://"):
+                protocol = "http"
+            elif url.startswith("https://"):
+                protocol = "https"
+            else:
+                return []
+            j = url.find("/", len(protocol)+3)
+            if j < 0:
+                return []
+            server_port = url[:j]
+            url_path = url[j:]
+            if not url_path.startswith(FILE_PREFIX):
+                return []
+            host_path = url_path[len(FILE_PREFIX):]
+
+	j = host_path.find("?")
+	if j >= 0:
+		query = host_path[j:]
+		host_path = host_path[:j]
+	else:
+		query = ""
+	comps = host_path.split("/")
+        hostname = comps[0]
+        filepath = "/"+"/".join(comps[1:])
+        filename = comps[-1]
+        if check_host_secret:
+            filehmac = "?hmac="+hmac.new(str(check_host_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+            if query.lower() == filehmac.lower():
+                hostname = ""
+	return [server_port, hostname, filename, filepath, query]
 
 def read_form_input(form_html):
     write_form(form_html)

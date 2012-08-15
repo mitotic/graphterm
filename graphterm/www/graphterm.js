@@ -17,8 +17,6 @@ var gSafariBrowser = !gChromeBrowser && navigator.userAgent.toLowerCase().indexO
 
 var gSafariIPad = gSafariBrowser && navigator.userAgent.toLowerCase().indexOf('ipad') > -1;
 
-var FILE_URI_PREFIX = "file:/"+"/"; // Split double slash for minification
-
 var MAX_LINE_BUFFER = 500;
 
 var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
@@ -108,7 +106,15 @@ $.fn.bindclick = function(handler, context) {
   };
  })( jQuery, "click");
 
-function makeFileURI(uri) {
+var FILE_URI_PREFIX = "file:/"+"/"; // Split double slash for minification
+var FILE_PREFIX = "/file/";
+var JSERVER = 0;
+var JHOST = 1;
+var JFILENAME = 2;
+var JFILEPATH = 3;
+var JQUERY = 4;
+
+function createFileURI(uri) {
     if (uri.substr(0,FILE_URI_PREFIX.length) == FILE_URI_PREFIX)
 	return uri;
     if (uri.substr(0,5) == "http:" || uri.substr(0,6) == "https:") {
@@ -120,22 +126,55 @@ function makeFileURI(uri) {
 	    uri = "/";
     }
 	
-    var prefix = "/file/";
-    if (uri.substr(0,prefix.length) != prefix)
+    if (uri.substr(0,FILE_PREFIX.length) != FILE_PREFIX)
 	return "";
-    var path = uri.substr(prefix.length);
+    var path = uri.substr(FILE_PREFIX.length);
     var comps = path.split("/");
     if (comps[0] == "local")
 	comps[0] = "";
     return FILE_URI_PREFIX + comps.join("/");
 }
 
-// Returns [hostname, filename, fullpath, query] for file://host/path URIs
-// If not file URI, returns []
-function splitFileURI(uri) {
-    if (!uri || uri.substr(0,FILE_URI_PREFIX.length) != FILE_URI_PREFIX)
-	return [];
-    var hostPath = uri.substr(FILE_URI_PREFIX.length);
+function makeFileURL(url) {
+    if (url.substr(0,FILE_URI_PREFIX.length) == FILE_URI_PREFIX)
+	return url;
+    if (url.substr(0,5) == "http:" || url.substr(0,6) == "https:")
+	return url;
+    if (url.substr(0,FILE_PREFIX.length) == FILE_PREFIX)
+	return window.location.protocol+"/"+"/"+window.location.host+url;
+    return "";
+}
+
+// Returns [protocol://server[:port], hostname, filename, fullpath, query] for for file://host/path
+//        or http://server:port/file/host/path, or /file/host/path URLs.
+// If not file URL, returns null
+function splitFileURL(url) {
+    var hostPath;
+    var serverPort = window.location.protocol+"/"+"/"+window.location.host;
+    if (url.substr(0,FILE_URI_PREFIX.length) == FILE_URI_PREFIX) {
+	hostPath = url.substr(FILE_URI_PREFIX.length);
+    } else if (url.substr(0,FILE_PREFIX.length) == FILE_PREFIX) {
+	hostPath = url.substr(FILE_PREFIX.length);
+    } else {
+	var protocol;
+	if (url.indexOf("http:/"+"/") == 0)
+	    protocol = "http";
+        else if (url.indexOf("https:/"+"/") == 0)
+            protocol = "https";
+        else
+            return null;
+
+	var s = url.substr(protocol.length+3);
+        var k = s.indexOf("/");
+        if (k < 0)
+            return null;
+        serverPort = s.substr(0,k);
+        var urlPath = s.substr(k);
+	if (urlPath.substr(0,FILE_PREFIX.length) != FILE_PREFIX)
+	    return null;
+	hostPath = urlPath.substr(FILE_PREFIX.length);
+    }
+
     var j = hostPath.indexOf("?");
     var query = "";
     if (j >= 0) {
@@ -143,7 +182,7 @@ function splitFileURI(uri) {
 	hostPath = hostPath.substr(0,j);
     }
     var comps = hostPath.split("/");
-    return [comps[0], comps[comps.length-1], "/"+comps.slice(1).join("/"), query]
+    return [serverPort, comps[0], comps[comps.length-1], "/"+comps.slice(1).join("/"), query]
 }
 
 function getCookie(name) {
@@ -390,7 +429,7 @@ function GTGetFilePath(fileURI, parentURI) {
 	    if (relPath.length < fileURI.length)
 		return relPath;
 	}
-	newPath = (splitFileURI(fileURI))[2];
+	newPath = (splitFileURL(fileURI))[JFILEPATH];
     }
 
     return decodeURIComponent(newPath);
@@ -460,7 +499,6 @@ GTWebSocket.prototype.term_input = function(text, type_ahead, command_line) {
 	this.write([["paste_command", text]]);
     else
 	this.write([["keypress", text]]);
-    GTCurDirURI = "";
 }
 
 GTWebSocket.prototype.write = function(msg) {
@@ -1244,8 +1282,8 @@ function gtermMenuClickHandler(event) {
     return false;
 }
 
-function gtermClickPaste(text, file_uri, options) {
-    gWebSocket.write([["click_paste", text, file_uri, options]]);
+function gtermClickPaste(text, file_url, options) {
+    gWebSocket.write([["click_paste", text, file_url, options]]);
     if (!gSplitScreen)
 	SplitScreen("paste");
 }
@@ -1254,7 +1292,7 @@ function gtermLinkClickHandler(event) {
     var contextMenu = gControlActive;
     GTReceivedUserInput("click");
     var text = $(this).text();
-    var file_uri = "";
+    var file_url = "";
     var options = {}
 
     if ($(this).hasClass("gterm-cmd-prompt")) {
@@ -1270,17 +1308,17 @@ function gtermLinkClickHandler(event) {
 	cmd_output.toggleClass("gterm-hideoutput");
 	$(this).parent().toggleClass("gterm-hideoutput");
     } if ($(this).hasClass("gterm-cmd-text")) {
-	gtermClickPaste(text, file_uri, options);
+	gtermClickPaste(text, file_url, options);
     } if ($(this).hasClass("gterm-cmd-path")) {
-	file_uri = makeFileURI($(this).attr("href"));
-	gtermClickPaste("", file_uri, options);
+	file_url = makeFileURL($(this).attr("href"));
+	gtermClickPaste("", file_url, options);
     }
     if (contextMenu) {
 	alert("Context menu not yet implemented");
 	return false;
     }
 
-    console.log("gtermLinkClickHandler", file_uri, options);
+    console.log("gtermLinkClickHandler", file_url, options);
     return false;
 }
 
@@ -1289,7 +1327,7 @@ function gtermPageletClickHandler(event) {
     GTReceivedUserInput("click");
     var text = $(this).text();
     var pagelet = $(this).closest(".pagelet");
-    var file_uri = makeFileURI($(this).attr("href"));
+    var file_url = makeFileURL($(this).attr("href"));
 
     if (contextMenu) {
 	alert("Context menu not yet implemented");
@@ -1300,10 +1338,8 @@ function gtermPageletClickHandler(event) {
     options.command = $(this).attr("data-gtermcmd");
     var cd_command = (options.command.indexOf("cd ") == 0);
     options.clear_last = (pagelet.length && cd_command) ? pagelet.attr("data-gtermpromptindex") : "0";
-    gtermClickPaste("", file_uri, options);
-    if (cd_command)
-	GTCurDirURI = file_uri;
-    //console.log("gtermPageletClickHandler", file_uri, options);
+    gtermClickPaste("", file_url, options);
+    //console.log("gtermPageletClickHandler", file_url, options);
     return false;
 }
 
@@ -1345,7 +1381,7 @@ function gtermFinderClickHandler(event) {
     var contextMenu = gControlActive;
     GTReceivedUserInput("click");
     var text = $(this).text();
-    var file_uri = makeFileURI($(this).attr("href"));
+    var file_url = makeFileURL($(this).attr("href"));
 
     if (contextMenu) {
 	alert("Context menu not yet implemented");
@@ -1354,8 +1390,8 @@ function gtermFinderClickHandler(event) {
 
     var options = {clear_last: 0};
     options.command = $(this).attr("data-gtermcmd");
-    console.log("gtermFinderClickHandler", text, file_uri, options);
-    gtermClickPaste("", file_uri, options);
+    console.log("gtermFinderClickHandler", text, file_url, options);
+    gtermClickPaste("", file_url, options);
     HideFinder();
     return false;
 }
@@ -1363,8 +1399,8 @@ function gtermFinderClickHandler(event) {
 function otraceClickHandler(event) {
     var prev_command = $("#session-log .preventry").length ? GTStrip($("#session-log .preventry .input .command").text()) : "";
     var cur_command = GTStrip(GTGetCurCommandText());
-    var file_uri = makeFileURI($(this).attr("data-gtermuri") || $(this).attr("href"));
-    var filepath = GTGetFilePath(file_uri, GTCurDirURI);
+    var fileURI = createFileURI($(this).attr("data-gtermuri") || $(this).attr("href"));
+    var filepath = GTGetFilePath(fileURI, GTCurDirURI);
 
     console.log("otraceClickHandler", GTCurDirURI);
     if (cur_command.length) {
@@ -1374,19 +1410,23 @@ function otraceClickHandler(event) {
 	GTExpandCurEntry(false);
     } else {
 	var new_command = $(this).attr("data-gtermcmd");
-	var command_line = (new_command == "cdls") ? new_command+" "+filepath : new_command.replace("%(path)", filepath);
+	var command_line;
+	if (new_command.indexOf("%(path)") >= 0)
+	    command_line = new_command.replace(/%\(path\)/g, filepath);
+	else
+	    command_line = new_command+" "+filepath;
 
 	if ((new_command == "cdls" || new_command.indexOf("cdls ") == 0) &&
 	    (prev_command == "cdls" || prev_command.indexOf("cdls ") == 0)) {
 	    // Successive open commands; consolidate by preparing to overwrite previous entry
-	    var saved_uri = $("#session-log .preventry .prompt").attr("data-gtermsaveduri");
-	    if (!saved_uri) {
-		saved_uri = $("#session-log .preventry .prompt").attr("data-gtermuri");
-	        $("#session-log .preventry .prompt").attr("data-gtermsaveduri", saved_uri);
+	    var savedURI = $("#session-log .preventry .prompt").attr("data-gtermsaveduri");
+	    if (!savedURI) {
+		savedURI = $("#session-log .preventry .prompt").attr("data-gtermuri");
+	        $("#session-log .preventry .prompt").attr("data-gtermsaveduri", savedURI);
 	    }
-	    var alt_filepath = GTGetFilePath(file_uri, saved_uri);
+	    var alt_filepath = GTGetFilePath(fileURI, savedURI);
 	    var alt_command_line = new_command+" "+alt_filepath;
-	    $("#session-log .curentry .prompt").attr("data-gtermsaveduri", saved_uri);
+	    $("#session-log .curentry .prompt").attr("data-gtermsaveduri", savedURI);
 	    $("#session-log .curentry .prompt").attr("data-gtermaltcmd", alt_command_line);
 	    GTExpandCurEntry(true);
 	} else {
@@ -2100,29 +2140,29 @@ function GTDropHandler(evt) {
     if (gtDragElement != this) {
 	try {
 	    var gterm_mime = $(this).attr("data-gtermmime") || "";
-	    var gterm_uri = makeFileURI($(this).attr("href") || "");
+	    var gterm_url = makeFileURL($(this).attr("href") || "");
 	    if (evt.originalEvent.dataTransfer.files.length) {
 	    } else {
 		var text = evt.originalEvent.dataTransfer.getData("text/plain") || "";
-		var file_uri = "";
+		var file_url = "";
 		if (text) {
-		    var srcText = makeFileURI(text);
-		    var srcComps = splitFileURI(srcText);
-		    if (srcComps.length) {
-			file_uri = srcText;
-			text = srcComps[1];
+		    var srcText = makeFileURL(text);
+		    var srcComps = splitFileURL(srcText);
+		    if (srcComps) {
+			file_url = srcText;
+			text = srcComps[JFILENAME];
 			var options = {};
-			var dstComps = splitFileURI(gterm_uri);
+			var dstComps = splitFileURL(gterm_url);
 			if (gterm_mime == "x-graphterm/directory") {
-			    options.command = (srcComps[0] == dstComps[0]) ? "mv" : "gcp";
-			    options.dest_uri = gterm_uri;
+			    options.command = "gcp";
+			    options.dest_url = gterm_url;
 			    options.enter = true;
-			    gtermClickPaste("", file_uri, options);
+			    gtermClickPaste("", file_url, options);
 			} else if (gterm_mime == "x-graphterm/executable") {
-			    options.command = dstComps[2];
-			    gtermClickPaste("", file_uri, options);
+			    options.command = dstComps[JFILEPATH];
+			    gtermClickPaste("", file_url, options);
 			} else {
-			    gtermClickPaste(text, file_uri, options);
+			    gtermClickPaste(text, file_url, options);
 			}
 		    }
 		}

@@ -91,6 +91,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.oshell = oshell
         self.terms = {}
         self.lineterm = None
+        self.server_url = ("https" if ssl_options else "http") + "://" + host + ":" + str(port+1)
         self.osh_cookie = lineterm.make_lterm_cookie()
 
     def shutdown(self):
@@ -141,7 +142,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         if not self.lineterm:
             self.lineterm = lineterm.Multiplex(self.screen_callback, command=command,
                                                shared_secret=self.host_secret, host=self.connection_id,
-                                               prompt=SHELL_PROMPT, term_type=self.term_type,
+                                               server_url=self.server_url, prompt=SHELL_PROMPT, term_type=self.term_type,
                                                widget_port=self.widget_port, logfile=self.lterm_logfile)
         term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width)
         self.add_term(term_name, lterm_cookie)
@@ -176,7 +177,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         Input commands:
           incomplete_input <line>
           input <line>
-          click_paste <text> <file_uri> {command:, clear_last:, normalize:, enter:}
+          click_paste <text> <file_url> {command:, clear_last:, normalize:, enter:}
           paste_command <text>
           get_finder <kind> <directory>
           save_file <filepath> <filedata>
@@ -214,7 +215,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.save_file(term_name, cmd[0], cmd[1])
 
                 elif action == "click_paste":
-                    # click_paste: text, file_uri, {command:, clear_last:, normalize:, enter:}
+                    # click_paste: text, file_url, {command:, clear_last:, normalize:, enter:}
                     if self.lineterm:
                         paste_text = self.lineterm.click_paste(term_name, cmd[0], cmd[1], cmd[2])
                         self.paste_command(term_name, paste_text)
