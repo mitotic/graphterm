@@ -31,23 +31,23 @@ terminal output back to the browser windows.
 This flexible, networked implementation allows for several possible
 applications for GraphTerm, such as:
 
- - an *enhanced terminal* that combines the command line with basic
+ - an **enhanced terminal** that combines the command line with basic
    GUI operations like navigating folders, file drag-and-drop,
    displaying images etc.
 
- - a web-based *remote desktop* that supports a simple GUI
+ - a web-based **remote desktop** that supports a simple GUI
    without the need for installing VNC or X-windows on the remote host
 
- - a *detachable terminal multiplexer*, sort of like GNU ``screen`` or
+ - a **detachable terminal multiplexer**, sort of like GNU ``screen`` or
    ``tmux`` (but with only basic features)
 
- - a *collaborative terminal* that can be remotely accessed
+ - a **collaborative terminal** that can be remotely accessed
    by multiple users simultaneously, to run programs, edit files etc.
 
- - a *simple presentation tool* for webcasting images as slideshows
+ - a **simple presentation tool** for webcasting images as slideshows
    (and receiving live feedback)
 
- - a *management console* for a cluster of real or virtual hosts,
+ - a **management console** for a cluster of real or virtual hosts,
    (e.g., to create a virtual computer lab using cloud instances)
 
 The interface is designed to be touch-friendly for use with
