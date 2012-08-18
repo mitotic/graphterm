@@ -18,6 +18,7 @@ var gSafariBrowser = !gChromeBrowser && navigator.userAgent.toLowerCase().indexO
 var gSafariIPad = gSafariBrowser && navigator.userAgent.toLowerCase().indexOf('ipad') > -1;
 
 var MAX_LINE_BUFFER = 500;
+var MAX_COMMAND_BUFFER = 100;
 
 var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
 var PYPI_JSON_URL = PYPI_URL + "/json?callback=?";
@@ -892,8 +893,36 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 		    if (update_scroll.length) {
 			for (var j=0; j<update_scroll.length; j++) {
-			    if ($("#session-bufscreen pre.row").length >= MAX_LINE_BUFFER)
-				$("#session-bufscreen pre.row:first").remove();
+			    var delCommands = $("#session-bufscreen .promptrow").length - MAX_COMMAND_BUFFER;
+			    var delOutput = $("#session-bufscreen :not(promptrow)").length - MAX_LINE_BUFFER;
+			    if (delCommands > 0 || delOutput > 0) {
+				var bufRows = $("#session-bufscreen").children();
+				var deletingCommand = delCommands > 0;
+				var outputCount = 0;
+				for (var k=0; k<bufRows.length; k++) {
+				    var rowElem = $(bufRows[k]);
+				    if (rowElem.hasClass("promptrow")) {
+					outputCount = 0;
+					if (delCommands > 0) {
+					    delCommands -= 1;
+					    rowElem.remove();
+					    deletingCommand = true;
+					} else {
+					    deletingCommand = false;
+					}
+				    } else if (deletingCommand || delOutput > 0){
+					outputCount += 1;
+					if (deletingCommand || outputCount > 1) {
+					    rowElem.remove();
+					    delOutput -= 1;
+					} else if (outputCount == 1) {
+					    rowElem.html("...");
+					}
+				    } else {
+					break;
+				    }
+				}
+			    }
 			    var newPromptIndex = update_scroll[j][JINDEX];
 			    var entry_id = "entry"+newPromptIndex;
 			    var prompt_id = "prompt"+newPromptIndex;

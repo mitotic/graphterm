@@ -468,7 +468,8 @@ def gterm_shutdown(trace_shell=None):
 
 Host_connections = {}
 def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_cmd=SHELL_CMD, connect_kw={},
-                  oshell_globals=None, oshell_unsafe=False, oshell_workdir="", oshell_init=""):
+                  oshell_globals=None, oshell_unsafe=False, oshell_workdir="", oshell_init="",
+                  oshell_db_interface=None, oshell_hold_wrapper=None):
     """ Returns (host_connection, host_secret, trace_shell)
     """
     global IO_loop
@@ -490,7 +491,10 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_c
         trace_shell = otrace.OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
                                     allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
                                     add_env={"GRAPHTERM_COOKIE": host_connection.osh_cookie,
-                                             "GRAPHTERM_SHARED_SECRET": host_secret}, init_file=oshell_init)
+                                             "GRAPHTERM_SHARED_SECRET": host_secret},
+                                    init_file=oshell_init, db_interface=oshell_db_interface,
+                                    hold_wrapper=oshell_hold_wrapper,
+                                    eventloop_callback=IO_loop.add_callback)
 
     else:
         trace_shell = None
