@@ -468,8 +468,9 @@ def gterm_shutdown(trace_shell=None):
 
 Host_connections = {}
 def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_cmd=SHELL_CMD, connect_kw={},
-                  oshell_globals=None, oshell_unsafe=False, oshell_workdir="", oshell_init="",
-                  oshell_db_interface=None, oshell_hold_wrapper=None):
+                  oshell_globals=None, oshell_thread=False, oshell_unsafe=False, oshell_workdir="",
+                  oshell_init="", oshell_db_interface=None, oshell_hold_wrapper=None,
+                  gterm_callback=None):
     """ Returns (host_connection, host_secret, trace_shell)
     """
     global IO_loop
@@ -484,11 +485,13 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_c
     Host_connections[host_secret] = host_connection
 
     if oshell_globals:
-        gterm_callback = GTCallback()
+        if not gterm_callback:
+            gterm_callback = GTCallback()
         gterm_callback.set_client(host_connection)
         otrace.OTrace.setup(callback_handler=gterm_callback)
         otrace.OTrace.html_wrapper = HtmlWrapper(host_connection.osh_cookie)
         trace_shell = otrace.OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
+                                    new_thread=oshell_thread,
                                     allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
                                     add_env={"GRAPHTERM_COOKIE": host_connection.osh_cookie,
                                              "GRAPHTERM_SHARED_SECRET": host_secret},
@@ -546,12 +549,8 @@ def run_host(options, args):
         print >> sys.stderr, "Interrupted"
 
     finally:
-        try:
-            pass
-        except Exception:
-            pass
+        IO_loop.add_callback(host_shutdown)
 
-    IO_loop.add_callback(host_shutdown)
 
 def main():
     from optparse import OptionParser
