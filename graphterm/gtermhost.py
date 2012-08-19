@@ -464,7 +464,7 @@ def gterm_shutdown(trace_shell=None):
     TerminalClient.shutdown_all()
     WidgetStream.shutdown_all()
     if trace_shell:
-        trace_shell.close()
+        trace_shell.shutdown()
 
 Host_connections = {}
 def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_cmd=SHELL_CMD, connect_kw={},
