@@ -447,6 +447,17 @@ function GTReceivedUserInput(source) {
     }
 }
 
+function GTUpdateController() {
+    var label_text = "Session: "+gParams.host+"/"+gParams.term+"/"+(gParams.controller ? "control" : "watch");
+    $("#menubar-sessionlabel").text(label_text);
+    if (gParams.controller)
+	window.name = gParams.host+"/"+gParams.term;
+    else
+	window.name = "";
+    if (gParams.controller)
+	handle_resize();
+}
+
 function GTWebSocket(auth_user, auth_code) {
     this.failed = false;
     this.opened = false;
@@ -556,18 +567,22 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "redirect") {
 		window.location = command[1];
 
+            } else if (action == "update") {
+		if (command[1] == "controller") {
+		    gParams.controller = command[2];
+		    GTUpdateController();
+		}
+
             } else if (action == "setup") {
 		$("#authenticate").hide();
 		$("#terminal").show();
 		$("#session-container").show();
 		gParams = command[1];
-		var label_text = "Session: "+gParams.host+"/"+gParams.term+"/"+(gParams.controller ? "control" : "watch");
-		$("#menubar-sessionlabel").text(label_text);
+		GTUpdateController();
+
 		if (gParams.host_secret)
 		    setCookie("GRAPHTERM_HOST_"+gParams.normalized_host, ""+gParams.host_secret);
 
-		if (gParams.controller)
-		    handle_resize();
 		if (gParams.state_id)
 		    setCookie("GRAPHTERM_AUTH", gParams.state_id);
 		if (!gParams.oshell)
@@ -1753,11 +1768,14 @@ function AjaxKeypress(evt) {
     return GTPreventHandler(evt);
 }
 
-function OpenNew(term_name, options) {
-    var tty = term_name || "";
-    var new_url = window.location.protocol+"/"+"/"+window.location.host+"/"+gParams.host+"/"+tty; // Split the double slash to avoid confusing the JS minifier
+function OpenNew(host, term_name, options) {
+    host = host || gParams.host;
+    term_name = term_name || "new";
+    var path = host + "/" + term_name;
+    var new_url = window.location.protocol+"/"+"/"+window.location.host+"/"+path; // Split the double slash to avoid confusing the JS minifier
     console.log("open", new_url);
-    window.open(new_url, target="_blank");
+    var target = (term_name == "new") ? "_blank" : path;
+    window.open(new_url, target=target);
 }
 
 function GTermAbout() {

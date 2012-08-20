@@ -369,7 +369,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 term_name = comps[1].lower()
                 if term_name == "new":
                     term_name = conn.remote_terminal_update()
-                    self.write_json([["redirect", "/"+host+"/"+term_name]])
+                    self.write_json([["open", host, term_name]])
                     self.close()
 
                 if not gtermhost.SESSION_RE.match(term_name):
@@ -403,6 +403,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.controller = True
                 self._control_set[path].add(self.websocket_id)
             elif option == "steal":
+                msg = ["update", "controller", False]
+                for ws_id in self._control_set[path]:
+                    ws = GTSocket._all_websockets.get(ws_id)
+                    if ws and ws_id != self.websocket_id:
+                        ws.write_json([msg])
                 self.controller = True
                 self._control_set[path] = set([self.websocket_id])
             elif option == "watch" or (path in self._control_set and self._control_set[path]):
