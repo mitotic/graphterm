@@ -629,30 +629,34 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		GTSetCommandText(command_line);  // Unescaped text
 
             } else if (action == "output" || action == "html_output") {
+		var appendSelector = gParams.wildcard ? "#session-log .preventry" : "#session-log .curentry";
 		if (action == "html_output") {
 		    var pagelet_html = '<div class="pagelet">'+command[1]+'</div>\n';
-		    var new_elem = $(pagelet_html).hide().appendTo("#session-log .curentry");
-		    $("#session-log .curentry .pagelet .gterm-rowimg").addClass("icons");
+		    var new_elem = $(pagelet_html).hide().appendTo(appendSelector);
+		    $(appendSelector+" .pagelet .gterm-rowimg").addClass("icons");
 		    if (!gWebSocket.icons)
-			$("#session-log .curentry .pagelet .gterm-rowimg").hide();
-		    $("#session-log .curentry .pagelet .gterm-link").bindclick(otraceClickHandler);
+			$(appendSelector+" .pagelet .gterm-rowimg").hide();
+		    $(appendSelector+" .pagelet .gterm-link").bindclick(otraceClickHandler);
 		    new_elem.show();
 		} else {
-		    $(command[1]).appendTo("#session-log .curentry");
+		    $(command[1]).appendTo(appendSelector);
 		}
-		$("#session-log .curentry .input .command").removeAttr("contentEditable");
 
-		if ($("#session-log .preventry .prompt").attr("data-gtermsaveduri") &&
-		    $("#session-log .curentry .prompt").attr("data-gtermsaveduri")) {
-		    // Remove previous entry for "cdls" consolidation
-		    $("#session-log .preventry").remove();
-		} else {
-		    $("#session-log .preventry").removeClass("preventry");
+		if (!gParams.wildcard) {
+		    $("#session-log .curentry .input .command").removeAttr("contentEditable");
+
+		    if ($("#session-log .preventry .prompt").attr("data-gtermsaveduri") &&
+			$("#session-log .curentry .prompt").attr("data-gtermsaveduri")) {
+			// Remove previous entry for "cdls" consolidation
+			$("#session-log .preventry").remove();
+		    } else {
+			$("#session-log .preventry").removeClass("preventry");
+		    }
+		    $("#session-log .curentry").addClass("preventry");
+		    $("#session-log .curentry").removeClass("curentry");
+
+		    $(GTNextEntry()).appendTo("#session-log");
 		}
-		$("#session-log .curentry").addClass("preventry");
-		$("#session-log .curentry").removeClass("curentry");
-
-		$(GTNextEntry()).appendTo("#session-log");
 
 		var scroll_msec = 0;
 		if (scroll_msec && $("#session-log .preventry").length) {
@@ -662,6 +666,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		} else {
 		    // Last prompt will appear at bottom of window
 		    $("#session-log .curentry .input .command").focus();
+		    ScrollTop(null);
 		}
 
             } else if (action == "terminal") {
@@ -1522,7 +1527,7 @@ function keydownHandler(evt) {
 	var text = GTStrip(GTGetCurCommandText());
 	if (gWebSocket && gWebSocket.terminal)
 	    gWebSocket.term_input(String.fromCharCode(9));
-	else if (gWebSocket)
+	else if (gWebSocket && !gParams.wildcard)
 	    gWebSocket.write([["incomplete_input", text]]);
 	return false;
     } else if (evt.which == 27) {
@@ -1567,6 +1572,18 @@ function keypressHandler(evt) {
 	// Enter key
 	var text = GTStrip(GTGetCurCommandText());  // Unescaped text
 	gWebSocket.write([["input", text, null]]);
+
+	if (gParams.wildcard) {
+	    GTSetCommandText(text);  // Unescaped text
+	    $("#session-log .curentry .input .command").removeAttr("contentEditable");
+	    $("#session-log .preventry").removeClass("preventry");
+	    $("#session-log .curentry").addClass("preventry");
+	    $("#session-log .curentry").removeClass("curentry");
+	    
+	    $(GTNextEntry()).appendTo("#session-log");
+	    $("#session-log .curentry .input .command").focus();
+	}
+
 	return false;
     }
 
@@ -2077,9 +2094,7 @@ function EndFullpage() {
 
 function ExitFullpage() {
     EndFullpage();
-    var offset = $(document).height() - $(window).height();
-    if (offset > 0)
- 	ScrollTop(offset);
+    ScrollTop(null);
 }
 
 function SplitScreen(code) {
@@ -2278,7 +2293,10 @@ function ScrollEventHandler(event) {
 
 function ScrollTop(offset) {
     gProgrammaticScroll = true;
-    $(window).scrollTop(offset);
+    if (offset == null)
+	offset = $(document).height() - $(window).height(); // Scroll to bottom
+    if (offset >= 0)
+	$(window).scrollTop(offset);
 }
 
 function GTShowSplash(animate) {

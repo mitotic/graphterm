@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import Queue
+import re
 import shlex
 import ssl
 import stat
@@ -215,6 +216,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _cookie_states = OrderedDict()
     _auth_users = OrderedDict()
     _auth_code = uuid.uuid4().hex[:HEX_DIGITS]
+    _wildcards = {}
 
     @classmethod
     def get_auth_code(cls):
@@ -253,6 +255,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         self.authorized = None
         self.remote_path = None
         self.controller = False
+        self.wildcard = None
+        self.last_output = None
 
     def allow_draft76(self):
         return True
@@ -330,7 +334,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 return
 
             host = comps[0].lower()
-            if not gtermhost.HOST_RE.match(host):
+            if not host or not gtermhost.HOST_RE.match(host):
                 self.write_json([["abort", "Invalid characters in host name"]])
                 self.close()
                 return
@@ -340,35 +344,44 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            conn = TerminalConnection.get_connection(host)
-            if not conn:
-                self.write_json([["abort", "Invalid host"]])
-                self.close()
-                return
+            wildhost = "?" in host or "*" in host or "[" in host
 
-            if len(comps) < 2 or not comps[1]:
-                term_list = list(conn.term_set)
-                term_list.sort()
-                self.write_json([["term_list", self.authorized["state_id"], host, term_list]])
-                self.close()
-                return
+            if wildhost:
+                if len(comps) < 2 or not comps[1] or comps[1].lower() == "new":
+                    self.write_json([["abort", "Must specify terminal name for wildcard host"]])
+                    self.close()
+                    return
+                term_name = comps[1].lower()
+            else:
+                conn = TerminalConnection.get_connection(host)
+                if not conn:
+                    self.write_json([["abort", "Invalid host"]])
+                    self.close()
+                    return
 
-            term_name = comps[1].lower()
-            if term_name == "new":
-                term_name = conn.remote_terminal_update()
-                self.write_json([["redirect", "/"+host+"/"+term_name]])
-                self.close()
+                if len(comps) < 2 or not comps[1]:
+                    term_list = list(conn.term_set)
+                    term_list.sort()
+                    self.write_json([["term_list", self.authorized["state_id"], host, term_list]])
+                    self.close()
+                    return
 
-            if not gtermhost.SESSION_RE.match(term_name):
-                self.write_json([["abort", "Invalid characters in terminal name"]])
-                self.close()
-                return
+                term_name = comps[1].lower()
+                if term_name == "new":
+                    term_name = conn.remote_terminal_update()
+                    self.write_json([["redirect", "/"+host+"/"+term_name]])
+                    self.close()
+
+                if not gtermhost.SESSION_RE.match(term_name):
+                    self.write_json([["abort", "Invalid characters in terminal name"]])
+                    self.close()
+                    return
 
             path = host + "/" + term_name
 
             option = comps[2] if len(comps) > 2 else ""
 
-            if option == "kill":
+            if option == "kill" and not webcast_auth and not wildhost:
                 kill_remote(path)
                 return
 
@@ -377,9 +390,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self._counter[0] += 1
             self.websocket_id = self._counter[0]
 
+            if "?" in path or "*" in path or "[" in path:
+                self.wildcard = re.compile("^"+path.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")+"$")
+                self._wildcards[path] = (self.wildcard, self.websocket_id)
+
             self._watch_set[path].add(self.websocket_id)
             if webcast_auth:
                 self.controller = False
+            elif self.wildcard:
+                self.controller = True
             elif option == "share":
                 self.controller = True
                 self._control_set[path].add(self.websocket_id)
@@ -397,16 +416,21 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if user:
                 self._all_users[user][self.websocket_id] = self
 
-            TerminalConnection.send_to_connection(host, "request", term_name, [["reconnect"]])
-
             display_splash = self.controller and self._counter[0] <= 2
-            normalized_host = gtermhost.get_normalized_host(host)
-            host_secret = TerminalConnection.host_secrets.get(normalized_host) if self.controller else ""
+            matchpaths = TerminalConnection.get_matching_paths(self.wildcard) if self.wildcard else [path]
+            for matchpath in matchpaths:
+                matchhost, matchterm = matchpath.split("/")
+                TerminalConnection.send_to_connection(matchhost, "request", matchterm, [["reconnect"]])
 
+            if self.wildcard:
+                normalized_host, host_secret = "", ""
+            else:
+                normalized_host = gtermhost.get_normalized_host(host)
+                host_secret = TerminalConnection.host_secrets.get(normalized_host) if self.controller else ""
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
                                         "version": version.current, "controller": self.controller,
-                                        "display_splash": display_splash,
+                                        "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
             logging.warning("GTSocket.open: ERROR %s", excp)
@@ -427,6 +451,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
              self._control_set[self.remote_path].discard(self.websocket_id)
         if self.remote_path in self._watch_set:
              self._watch_set[self.remote_path].discard(self.websocket_id)
+
+        if self.wildcard and self.remote_path:
+            try:
+                del self._wildcards[self.remote_path]
+            except Exception:
+                pass
         try:
             del self._all_websockets[self.websocket_id]
         except Exception:
@@ -448,25 +478,19 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if not self.remote_path:
             return
 
-        controller = (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
+        controller = self.wildcard or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
 
         if not controller:
             self.write_json([["errmsg", "ERROR: Remote path %s not under control" % self.remote_path]])
             return
 
-        remote_host, term_name = self.remote_path.split("/")
-        conn = TerminalConnection.get_connection(remote_host)
-        if not conn:
-            self.write_json([["errmsg", "ERROR: Remote host %s not connected" % remote_host]])
-            return
-
+        reconnect = False
         req_list = []
         try:
             msg_list = json.loads(message)
             for msg in msg_list:
                 if msg[0] == "reconnect_host":
-                    # Close host connection (should automatically reconnect)
-                    conn.on_close()
+                    reconnect = True
 
                 elif msg[0] == "check_updates":
                     # Check for announcements/updates
@@ -474,12 +498,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         import feedparser
                     except ImportError:
                         feedparser = None
-                    if feedparser:
+                    if feedparser and not self.wildcard:
                         blocking_call = BlockingCall(self.updates_callback, 10)
                         blocking_call.call(feedparser.parse, RSS_FEED_URL)
         
                 elif msg[0] == "webcast":
-                    if controller:
+                    if controller and not self.wildcard:
                         # Only controller can webcast
                         if self.remote_path in self._webcast_paths:
                             del self._webcast_paths[self.remote_path]
@@ -489,9 +513,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             self._webcast_paths[self.remote_path] = time.time()
                             
                 elif msg[0] == "edit_broadcast":
+                    if self.wildcard:
+                        continue
                     ws_list = GTSocket._watch_set.get(self.remote_path)
                     if not ws_list:
-                        return
+                        continue
                     for ws_id in ws_list:
                         if ws_id != self.websocket_id:
                             # Broadcast to all watchers (excluding self)
@@ -500,7 +526,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 try:
                                     ws.write_message(json.dumps([msg]))
                                 except Exception, excp:
-                                    logging.error("remote_response: ERROR %s", excp)
+                                    logging.error("edit_broadcast: ERROR %s", excp)
                                     try:
                                         # Close websocket on write error
                                         ws.close()
@@ -510,7 +536,25 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 else:
                     req_list.append(msg)
 
-            TerminalConnection.send_to_connection(remote_host, "request", term_name, req_list)
+            remote_host, term_name = self.remote_path.split("/")
+            if not self.wildcard:
+                conn = TerminalConnection.get_connection(remote_host)
+                if not conn:
+                    self.write_json([["errmsg", "ERROR: Remote host %s not connected" % remote_host]])
+                    return
+
+                if reconnect:
+                    # Close host connection (should automatically reconnect)
+                    conn.on_close()
+                    return
+
+            matchpaths = TerminalConnection.get_matching_paths(self.wildcard) if self.wildcard else [self.remote_path]
+            if self.wildcard:
+                self.last_output = None
+            for matchpath in matchpaths:
+                matchhost, matchterm = matchpath.split("/")
+                TerminalConnection.send_to_connection(matchhost, "request", matchterm, req_list)
+
         except Exception, excp:
             logging.warning("GTSocket.on_message: ERROR %s", excp)
             self.write_json([["errmsg", str(excp)]])
@@ -543,6 +587,16 @@ def kill_remote(path):
 class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     _all_connections = {}
     host_secrets = {}
+    @classmethod
+    def get_matching_paths(cls, regexp):
+        matchpaths = []
+        for host, conn in cls._all_connections.iteritems():
+            for term_name in conn.term_set:
+                path = host + "/" + term_name
+                if regexp.match(path):
+                    matchpaths.append(path)
+        return matchpaths
+        
     def __init__(self, stream, address, server_address, ssl_options={}):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
                                                  ssl_options=ssl_options, max_packet_buf=2)
@@ -580,19 +634,41 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         for msg in msg_list:
             if msg[0] == "term_params":
                 self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
+                self.term_set = set(msg[1]["term_names"])
             elif msg[0] == "file_response":
                 ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
             else:
                 fwd_list.append(msg)
 
-        ws_list = GTSocket._watch_set.get(self.connection_id+"/"+term_name)
+        ws_list = GTSocket._watch_set.get(self.connection_id+"/"+term_name) or set()
+
+        path = self.connection_id + "/" + term_name
+        for regexp, ws_id in GTSocket._wildcards.itervalues():
+            if regexp.match(path):
+                ws_list.add(ws_id)
+            
         if not ws_list:
             return
         for ws_id in ws_list:
             ws = GTSocket._all_websockets.get(ws_id)
             if ws:
                 try:
-                    ws.write_message(json.dumps(fwd_list))
+                    if ws.wildcard:
+                        prefix = '<pre class="output wildpath"><a href="/%s" target="%s">%s</a>' % (path, path, path)
+                        multi_fwd_list = []
+                        for fwd in fwd_list:
+                            if fwd[0] in ("output", "html_output"):
+                                output = fwd[0] + ": " + fwd[1]
+                                if ws.last_output == output:
+                                    multi_fwd_list.append(["output", prefix + ' ditto</pre>'])
+                                else:
+                                    ws.last_output = output
+                                    multi_fwd_list.append([fwd[0], prefix+'</pre>\n'+fwd[1]])
+                        
+                        if multi_fwd_list:
+                            ws.write_message(json.dumps(multi_fwd_list))
+                    else:
+                        ws.write_message(json.dumps(fwd_list))
                 except Exception, excp:
                     logging.error("remote_response: ERROR %s", excp)
                     try:

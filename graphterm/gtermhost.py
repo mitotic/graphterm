@@ -51,8 +51,8 @@ HTML_ESCAPES = ["\x1b[?1155;", "h",
 DEFAULT_HTTP_PORT = 8900
 DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
 
-HOST_RE = re.compile(r"^[\w\-\.]+$")             # Allowed host names
-SESSION_RE = re.compile(r"^[a-z]\w*$")           # Allowed session names
+HOST_RE = re.compile(r"^[\w\-\.\*\?\[\]]+$")             # Allowed host names
+SESSION_RE = re.compile(r"^[a-z\*\?\[\]][\w\*\?\[\]]*$")           # Allowed session names
 
 def get_normalized_host(host):
     """Return identifier version of hostname"""
@@ -102,11 +102,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         super(TerminalClient, self).shutdown()
 
     def handle_connect(self):
-        if self.oshell:
-            self.add_oshell()
         normalized_host = get_normalized_host(self.connection_id)
         self.remote_response("", [["term_params", {"host_secret": self.host_secret,
-                                                  "normalized_host": normalized_host}]])
+                                                  "normalized_host": normalized_host,
+                                                  "term_names": self.terms.keys()}]])
         if self.widget_port:
             Widget_server = WidgetServer()
             Widget_server.listen(self.widget_port, address="localhost")
@@ -498,6 +497,7 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_c
                                     init_file=oshell_init, db_interface=oshell_db_interface,
                                     hold_wrapper=oshell_hold_wrapper,
                                     eventloop_callback=IO_loop.add_callback)
+        host_connection.add_oshell()
 
     else:
         trace_shell = None
