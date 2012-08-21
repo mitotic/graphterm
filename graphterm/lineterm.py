@@ -28,6 +28,8 @@ import traceback
 
 MAX_SCROLL_LINES = 500
 
+MAX_PAGELET_BYTES = 1000000  # Max size for pagelet buffer
+
 IDLE_TIMEOUT = 300      # Idle timeout in seconds
 UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
@@ -649,6 +651,7 @@ class Terminal(object):
                 self.current_meta = None
                 self.gterm_code = None
                 self.gterm_buf = None
+                self.gterm_buf_size = 0
                 self.gterm_entry_index = None
                 self.gterm_validated = False
 
@@ -1051,6 +1054,7 @@ class Terminal(object):
                                 self.gterm_code = l[0]
                                 self.gterm_validated = (len(l) >= 2 and str(l[1]) == self.cookie)
                                 self.gterm_buf = []
+                                self.gterm_buf_size = 0
                                 self.gterm_entry_index = self.screen_buf.entry_index+1
                                 if self.gterm_code != GRAPHTERM_SCREEN_CODES[0]:
                                         self.scroll_screen(self.active_rows)
@@ -1152,13 +1156,26 @@ class Terminal(object):
 #               if self.buf=='': print >> sys.stderr, "lineterm: ESC %r\n"%e
 
         def gterm_append(self, s):
-                prefix, sep, suffix = s.partition('\x1b')
-                self.gterm_buf.append(prefix)
+                if '\x1b' in s:
+                        prefix, sep, suffix = s.partition('\x1b')
+                else:
+                        prefix, sep, suffix = s, "", ""
+                self.gterm_buf_size += len(prefix)
+                if self.gterm_buf_size <= MAX_PAGELET_BYTES:
+                    # Only append data if within buffer size limit
+                    self.gterm_buf.append(prefix)
                 if not sep:
                         return ""
                 retval = sep + suffix
                 # ESCAPE sequence encountered; terminate
-                if self.gterm_code == GRAPHTERM_SCREEN_CODES[0]:
+                if self.gterm_buf_size > MAX_PAGELET_BYTES:
+                        # Buffer overflow
+                        content = "ERROR pagelet size (%d bytes) exceeds limit (%d bytes)" % (self.gterm_buf_size,  MAX_PAGELET_BYTES)
+                        headers["x_gterm_response"] = "error_message"
+                        headers["x_gterm_parameters"] = {}
+                        headers["content_type"] = "text/plain"
+                    
+                elif self.gterm_code == GRAPHTERM_SCREEN_CODES[0]:
                         # Handle prompt command output
                         current_dir = "".join(self.gterm_buf)
                         if current_dir:
@@ -1180,6 +1197,9 @@ class Terminal(object):
                                                                 response_params["filetype"] = FILE_EXTENSIONS.get(extension[1:].lower(), "")
                                                         else:
                                                                 response_params["filetype"] = ""
+                                                filestats = os.stat(filepath)
+                                                if filestats.st_size > MAX_PAGELET_BYTES:
+                                                    raise Exception("File size (%d bytes) exceeds pagelet limit (%d bytes)" % (filestats.st_size,  MAX_PAGELET_BYTES))
                                                 with open(filepath) as f:
                                                         content = f.read()
                                         except Exception, excp:
@@ -1205,6 +1225,7 @@ class Terminal(object):
                                      base64.b64encode(content) if content else ""])
                 self.gterm_code = None
                 self.gterm_buf = None
+                self.gterm_buf_size = 0
                 self.gterm_validated = False
                 self.gterm_entry_index = None
                 return retval
@@ -1373,6 +1394,7 @@ class Terminal(object):
                         s = self.gterm_append(s)
                 if not s:
                         return
+                assert self.gterm_buf is None
                 self.needs_updating = True
 
                 for k, i in enumerate(s):
