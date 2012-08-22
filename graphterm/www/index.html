@@ -86,6 +86,9 @@
           <img src="/static/images/graphic.jpg" class="lateral"></img>
           -->
           <div id="session-bufellipsis" class="gterm-link" onclick="ExitFullscreen()"><h3>...</h3></div>
+          <div id="session-feedback" class="session-feedback">
+            <input id="session-feedback-button" type="button" value="feedback"/>
+          </div>
           <div id="session-widgetcontainer" class="session-widgetcontainer">
             <div id="session-widget" class="session-widget"></div>
           </div>
@@ -190,12 +193,13 @@ href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphter
 </div> <!-- acearea -->
 
 <!-- popups -->
-<div id="pop_editarea" class="gterm-popup">
-  <button id="pop_editarea_button" onclick="GTEndEdit(true);">Save</button>
-  <button id="pop_editarea_button" onclick="GTEndEdit(false);">Discard</button>
-  <textarea name="pop_editarea_content" id="pop_editarea_content" rows="5" cols="60"></textarea>
-</div> <!-- pop_editarea -->
-<div id="pop_editarea_mask" class="gterm-popupmask jsonly"></div>
+<div id="gterm-feedbackarea" class="gterm-popup">
+  <button class="gterm-popupbutton" name="send">Send</button>
+  <button class="gterm-popupbutton" name="cancel">Cancel</button>
+  <br>
+  <textarea name="gterm-feedbackarea-content" id="gterm-feedbackarea-content" rows="5" cols="60"></textarea>
+</div> <!-- gterm-feedbackarea -->
+<div id="gterm-feedbackarea-mask" class="gterm-popupmask"></div>
 
 </body>
 </html>

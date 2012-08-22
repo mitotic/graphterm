@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+#
+
+"""
+gfeed: Display input lines as a "feed"
+"""
+
+import csv
+import json
+import logging
+import os
+import sys
+
+from optparse import OptionParser
+
+import gtermapi
+
+pagelet_html = """<script>
+var GTPageletMaxFeeds = 20;
+function GTPageletJSON(pageletElem, feed) {
+    // Display new feed, sliding it into the top line
+    $('<li>'+feed+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
+    if (pageletElem.find("ul li").length > GTPageletMaxFeeds)
+        pageletElem.find("ul li:last-child").remove();
+}
+
+</script>
+<style>
+.gterm-pagelet-gfeeds-container ul {
+   list-style: none;
+}
+</style>
+<div class="gterm-pagelet-gfeeds-container">
+<ul>
+</ul>
+</div>
+"""
+
+usage = "usage: %prog [-h ...]"
+parser = OptionParser(usage=usage)
+
+parser.add_option("-c", "--csv", dest="csv", action="store_true", help="CSV input")
+parser.add_option("-j", "--json", dest="json", action="store_true",  help="JSON input")
+
+(options, args) = parser.parse_args()
+
+params = {"scroll": "top", "current_directory": os.getcwd()}
+params["display"] = "fullscreen"
+
+Headers = {"content_type": "text/html"}
+Headers["x_gterm_response"] = "pagelet"
+Headers["x_gterm_parameters"] = params
+
+Json_headers = {"content_type": "text/json"}
+Json_headers["x_gterm_response"] = "pagelet_json"
+Json_headers["x_gterm_parameters"] = {}
+
+gtermapi.wrap_write(pagelet_html, headers=Headers)
+while True:
+    try:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        line = line.rstrip()
+    except (EOFError, KeyboardInterrupt):
+        break
+    jcolon = line.find(":")
+    jspace = line.find(" ")
+    if jcolon > 0 and jcolon < jspace:
+        prefix, sep, suffix = line.partition(":")
+        feed_html = '<b>%s</b>:%s' % (prefix, suffix)
+    else:
+        feed_html = line
+    gtermapi.wrap_write(json.dumps(feed_html), headers=Json_headers)

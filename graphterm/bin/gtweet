@@ -19,8 +19,6 @@ import time
 import urllib
 import uuid
 
-from optparse import OptionParser
-
 import tornado.auth
 import tornado.httpclient
 
@@ -260,13 +258,14 @@ class TwitterStreamReader(object):
             if options.fullscreen:
                 if not sys.stderr.isatty():
                     print >> sys.stderr, msg_out
+                    sys.stderr.flush()
             else:
                 print >> sys.stdout, msg_out
+                sys.stdout.flush()
 
         if options.fullscreen:
             tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
             gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers)
-            sys.stdout.flush()
 
 def read_twitter_user_stream(Auth_tokens, keywords=[], recv=False):
     global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream

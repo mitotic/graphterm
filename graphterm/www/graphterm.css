@@ -225,7 +225,22 @@ img.gterm-img {
     right: 1em;
     width: 35%;
     height: 35%;
+    overflow-y: scroll;
+}
+
+.session-term .session-feedback {
+    opacity: 0.6;
+    z-index: 2000;
+    position: fixed;
+    bottom: 1em;
+    right: 1em;
+    width: 5em;
+    height: 1em;
     overflow: hidden;
+}
+
+.session-term:not(.gterm-feedback) .session-feedback {
+    display: none;
 }
 
 img.gterm-fullimg {

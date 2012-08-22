@@ -37,6 +37,8 @@ var gWebSocket = null;
 
 var gEditing = null;
 
+var gFeedback = false;
+
 var gForm = null;
 var gFormIndex = null;
 
@@ -694,6 +696,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		} else if (cmd_type == "save_status") {
 		    alert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
 
+		} else if (cmd_type == "graphterm_feedback") {
+		    gFeedback = cmd_arg;
+		    $("#session-term").toggleClass("gterm-feedback", gFeedback);
+
 		} else if (cmd_type == "graphterm_widget") {
 		    var params = cmd_arg[0];
 		    var content = cmd_arg[1];
@@ -715,7 +721,6 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 			var new_elem = $(widget_html).replaceAll("#session-widget");
 		    }
-
 
 		} else if (cmd_type == "graphterm_output") {
 		    var entry_class = "entry"+gPromptIndex;
@@ -1340,6 +1345,30 @@ function gtermMenuClickHandler(event) {
     return false;
 }
 
+function gtermFeedbackHandler(event) {
+    gFeedbackText = "";
+    $("#gterm-feedbackarea-content").val("");
+    popupShow("#gterm-feedbackarea", gtermFeedbackAction, gtermFeedbackConfirmClose, "feedback");
+}
+
+gFeedbackText = null;
+function gtermFeedbackConfirmClose() {
+  if (gFeedbackText == $("#gterm-feedbackarea-content").val()) {
+    // No changes
+    return true
+  }
+  return false;
+}
+
+function gtermFeedbackAction(buttonElem) {
+    var action = $(buttonElem).attr("name");
+    var text = $("#gterm-feedbackarea-content").val();
+    //console.log("popupButton", action, text);
+    if (action == "send")
+	gWebSocket.write([["feedback", text+"\n"]]);
+    popupClose();
+}
+
 function gtermClickPaste(text, file_url, options) {
     gWebSocket.write([["click_paste", text, file_url, options]]);
     if (!gSplitScreen)
@@ -1829,7 +1858,8 @@ function popupSetup() {
   // Initialize bindings for popup handling
   $(".gterm-popup").hide();
   $(".gterm-popupmask").hide();
-  $(".gterm-popupmask, .gterm-popupclose").click(popupClose);
+  $(".gterm-popupbutton").bindclick(popupButton);
+  $(".gterm-popupmask, .gterm-popupclose").bindclick(popupClose);
 }
 
 function popupClose(confirm) {
@@ -1842,18 +1872,25 @@ function popupClose(confirm) {
   }
   $(".gterm-popup").hide();
   $(".gterm-popupmask").hide();
+  gPopupCallback = null;
+  gPopupConfirmClose = null;
   gPopupType = "";
   gPopupParams = null;
-  gPopupConfirmClose = null;
 }
 
-function popupShow(elementId, popupType, popupParams, popupConfirmClose) {
-  // Display elementId as modal popup window
-  var maskId = elementId + "_mask";
+function popupButton(event) {
+    if (gPopupCallback)
+	gPopupCallback(this);
+}
 
+function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType, popupParams) {
+  // Display element as modal popup window
+  var maskSelector = elementSelector + "-mask";
+
+  gPopupCallback = popupCallback || null;
+  gPopupConfirmClose = popupConfirmClose || null;
   gPopupType = popupType || "";
   gPopupParams = popupParams || null;
-  gPopupConfirmClose = popupConfirmClose || null;
 
   var animateMs = 0;
 
@@ -1867,25 +1904,25 @@ function popupShow(elementId, popupType, popupParams, popupConfirmClose) {
 
   // Fade in mask
   ScrollTop(0);
-  $(maskId).css({width: winWidth, height: docHeight});
+  $(maskSelector).css({width: winWidth, height: docHeight});
 
-  //$(maskId).fadeIn(1000);
-  $(maskId).fadeTo(0.6*animateMs, 0.7);
+  //$(maskSelector).fadeIn(1000);
+  $(maskSelector).fadeTo(0.6*animateMs, 0.7);
 
   // Position popup window
-  //$(elementId).css("top", winHeight/2 - $(elementId).outerHeight()/2);
-  $(elementId).css("top", 0);
-  $(elementId).css("left", (winWidth/2) - ($(elementId).outerWidth()/2));
+  //$(elementSelector).css("top", winHeight/2 - $(elementSelector).outerHeight()/2);
+  $(elementSelector).css("top", 0);
+  $(elementSelector).css("left", (winWidth/2) - ($(elementSelector).outerWidth()/2));
 
   // Fade in popup
-  $(elementId).fadeIn(1.0*animateMs);
+  $(elementSelector).fadeIn(1.0*animateMs);
 
-  $(elementId).find("textarea").focus();
-  $(elementId).find("input:text").focus();
+  $(elementSelector).find("textarea").focus();
+  $(elementSelector).find("input:text").focus();
 }
 
 function GTCaptureInput() {
-    return gForm || (gEditing && gParams.controller);
+    return gForm || (gEditing && gParams.controller) || gPopupType == "feedback";
 }
 
 function GTStartEdit(params, content) {
@@ -2365,6 +2402,7 @@ $(document).ready(function() {
 	$("body").addClass("ipadscreen");
 
     setupTerminal();
+    popupSetup();
     $("#acearea").hide();
     $("#session-bufellipsis").hide();
     $("#session-findercontainer").hide();
@@ -2372,6 +2410,7 @@ $(document).ready(function() {
     $(".session-footermenu select").change(gtermBottomSelectHandler);
     $("#session-headermenu .headfoot").bindclick(gtermMenuClickHandler);
     $("#session-footermenu .headfoot").bindclick(gtermMenuClickHandler);
+    $("#session-feedback-button").bindclick(gtermFeedbackHandler);
 
     //window.addEventListener("dragover", GTDragOver);
     window.addEventListener("drop", GTDropHandler);

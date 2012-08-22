@@ -54,6 +54,10 @@ DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
 HOST_RE = re.compile(r"^[\w\-\.\*\?\[\]]+$")             # Allowed host names
 SESSION_RE = re.compile(r"^[a-z\*\?\[\]][\w\*\?\[\]]*$")           # Allowed session names
 
+Host_secret = None
+IO_loop = None
+IO_loop_control = False
+
 def get_normalized_host(host):
     """Return identifier version of hostname"""
     return re.sub(r"\W", "_", host.upper())
@@ -208,6 +212,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 elif action == "keypress":
                     if self.lineterm:
                         self.lineterm.term_write(term_name, cmd[0].encode(self.term_encoding, "ignore"))
+
+                elif action == "feedback":
+                    widget_stream = WidgetStream.get_feedback_connection(lterm_cookie)
+                    if widget_stream:
+                        widget_stream.send_packet(cmd[0].encode(self.term_encoding, "ignore"))
 
                 elif action == "save_file":
                     if self.lineterm:
@@ -394,6 +403,7 @@ else:
 
 class WidgetStream(object):
     _all_widgets = []
+    _feedbacks = {}
 
     startseq = "\x1b[?1155;"
     startdelim = "h"
@@ -403,22 +413,57 @@ class WidgetStream(object):
         self.stream = stream
         self.address = address
         self.cookie = None
+        self.feedback = None
         self._all_widgets.append(self)
+        self.stream.set_close_callback(self.on_close)
+
+    @classmethod
+    def get_feedback_connection(cls, lterm_cookie):
+        """Return WidgetStream instance"""
+        return cls._feedbacks.get(lterm_cookie)
 
     @classmethod
     def shutdown_all(cls):
         for widget in cls._all_widgets[:]:
             widget.shutdown()
 
+    def on_close(self):
+        try:
+            self.set_feedback_status(None)
+            self._all_widgets.remove(self)
+            self.stream = None
+        except Exception:
+            pass
+        
     def shutdown(self):
         if not self.stream:
             return
         try:
             self.stream.close()
-            self.stream = None
-            self._all_widgets.remove(self)
         except Exception:
             pass
+        self.on_close()
+
+    def set_feedback_status(self, cookie=None):
+        active = bool(cookie)
+        if active:
+            if self.feedback:
+                # Cancel previous feedback setting
+                self.set_feedback_status(None)
+            self.feedback = cookie
+            self._feedbacks[cookie] = self
+        else:
+            cookie = self.feedback
+            if cookie and cookie in self._feedbacks:
+                del self._feedbacks[cookie]
+            self.feedback = None
+        if not cookie:
+            return
+        term_info = TerminalClient.all_cookies.get(cookie)
+        if not term_info:
+            return
+        host_connection, term_name = term_info
+        host_connection.send_request_threadsafe("response", term_name, [["terminal", "graphterm_feedback", active]])
 
     def next_packet(self):
         if self.stream:
@@ -446,11 +491,23 @@ class WidgetStream(object):
         host_connection, term_name = term_info
 
         headers, content = lineterm.parse_headers(data)
-        params = {"validated": True, "headers": headers}
-        host_connection.send_request_threadsafe("response", term_name, [["terminal", "graphterm_widget", [params,
+
+        if headers["x_gterm_response"] == "capture_feedback":
+            feedback = headers["x_gterm_parameters"].get("cookie")
+            if feedback and feedback.isdigit() and feedback in TerminalClient.all_cookies:
+                self.set_feedback_status(feedback)
+            else:
+                logging.warning("gtermhost: Invalid feedback cookie %s", feedback)
+        else:
+            params = {"validated": True, "headers": headers}
+            host_connection.send_request_threadsafe("response", term_name, [["terminal", "graphterm_widget", [params,
                                                  base64.b64encode(content) if content else ""]]])
         self.cookie = None
         self.next_packet()
+
+    def send_packet(self, data):
+        if self.stream:
+            self.stream.write(data)
         
 
 class WidgetServer(tornado.netutil.TCPServer):
@@ -458,23 +515,47 @@ class WidgetServer(tornado.netutil.TCPServer):
         widget_stream = WidgetStream(stream, address)
         widget_stream.next_packet()
 
-Host_secret = None
 def gterm_shutdown(trace_shell=None):
-    TerminalClient.shutdown_all()
-    WidgetStream.shutdown_all()
     if trace_shell:
         trace_shell.shutdown()
+
+    def gterm_shutdown_aux():
+        global IO_loop, IO_loop_control
+        TerminalClient.shutdown_all()
+        WidgetStream.shutdown_all()
+        if IO_loop and IO_loop_control:
+            IO_loop.stop()
+            IO_loop = None
+
+    if IO_loop:
+        try:
+            IO_loop.add_callback(gterm_shutdown_aux)
+        except Exception:
+            pass
 
 Host_connections = {}
 def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_cmd=SHELL_CMD, connect_kw={},
                   oshell_globals=None, oshell_thread=False, oshell_unsafe=False, oshell_workdir="",
                   oshell_init="", oshell_db_interface=None, oshell_hold_wrapper=None,
-                  gterm_callback=None):
+                  oshell_no_input=True, gterm_callback=None, io_loop=None):
     """ Returns (host_connection, host_secret, trace_shell)
+    If io_loop is provided, it is assumed that the caller controls io_loop. Otherwise, gterm_connect
+    starts io_loop on a separate thread.
+    If oshell_thread, then oshell loop is automatically started.
     """
-    global IO_loop
-    import tornado.ioloop
-    IO_loop = tornado.ioloop.IOLoop.instance()
+    global IO_loop, IO_loop_control
+
+    io_loop_thread = None
+    if io_loop:
+        IO_loop = io_loop
+    else:
+        IO_loop_control = True
+        if not IO_loop:
+            import tornado.ioloop
+            IO_loop = tornado.ioloop.IOLoop.instance()
+            io_loop_thread = threading.Thread(target=IO_loop.start)
+        io_loop = IO_loop
+
     host_secret = "%016x" % random.randrange(0, 2**64)
 
     host_connection = TerminalClient.get_client(host_name,
@@ -496,16 +577,22 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_c
                                              "GRAPHTERM_SHARED_SECRET": host_secret},
                                     init_file=oshell_init, db_interface=oshell_db_interface,
                                     hold_wrapper=oshell_hold_wrapper,
-                                    eventloop_callback=IO_loop.add_callback)
+                                    no_input=oshell_no_input,
+                                    eventloop_callback=io_loop.add_callback)
         host_connection.add_oshell()
+        if oshell_thread:
+            trace_shell.loop()
 
     else:
         trace_shell = None
 
+    if io_loop_thread:
+        io_loop_thread.start()
+
     return (host_connection, host_secret, trace_shell)
 
 def run_host(options, args):
-    global IO_loop, Gterm_host, Host_secret, Trace_shell, Xterm, Killterm
+    global Gterm_host, Host_secret, Trace_shell, Xterm, Killterm
     server_addr = args[0]
     host_name = args[1]
     protocol = "https" if options.https else "http"
@@ -519,7 +606,8 @@ def run_host(options, args):
                                                                      "widget_port":
                                                                      (DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
-                                                         oshell_unsafe=True)
+                                                         oshell_unsafe=True,
+                                                         oshell_no_input=(not options.oshell_input))
     Xterm = Gterm_host.xterm
     Killterm = Gterm_host.remove_term
 
@@ -527,7 +615,6 @@ def run_host(options, args):
         global Gterm_host
         gterm_shutdown(Trace_shell)
         Gterm_host = None
-        IO_loop.stop()
 
     def sigterm(signal, frame):
         logging.warning("SIGTERM signal received")
@@ -535,9 +622,7 @@ def run_host(options, args):
     signal.signal(signal.SIGTERM, sigterm)
 
     try:
-        ioloop_thread = threading.Thread(target=IO_loop.start)
-        ioloop_thread.start()
-        time.sleep(1)   # Time to start thread
+        time.sleep(1)   # Wait for IO_loop thread to start
 
         print >> sys.stderr, "\nType ^C to exit"
         if Trace_shell:
@@ -562,6 +647,8 @@ def main():
 
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
+    parser.add_option("", "--oshell_input", dest="oshell_input", action="store_true",
+                      help="Allow stdin input otrace/oshell")
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
     parser.add_option("", "--widgets", dest="widgets", action="store_true",

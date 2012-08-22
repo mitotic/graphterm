@@ -78,24 +78,17 @@ def main(args=None):
                                                          oshell_unsafe=True,
                                                          oshell_init=modname+".trc")
     def host_shutdown():
-        global Gterm_host
         print >> sys.stderr, "Shutting down"
         gtermhost.gterm_shutdown(Trace_shell)
-        Gterm_host = None
-        gtermhost.IO_loop.stop()
 
     def sigterm(signal, frame):
         logging.warning("SIGTERM signal received")
-        gtermhost.IO_loop.add_callback(host_shutdown)
+        host_shutdown()
 
     signal.signal(signal.SIGTERM, sigterm)
 
     try:
-        ioloop_thread = threading.Thread(target=gtermhost.IO_loop.start)
-        ioloop_thread.start()
-
-        Trace_shell.stuff_lines(["trace %s\n" % funcname])
-        Trace_shell.loop()
+        Trace_shell.execute("trace %s\n" % funcname)
 
         # Delay to ensure tracing has started
         time.sleep(1)
@@ -109,13 +102,13 @@ def main(args=None):
 
     except Exception, excp:
         traceback.print_exc()
-        print >> sys.stderr, "\nPress Enter to trace; ^C to abort: ",
+        print >> sys.stderr, "\nType ^C to abort"
         Trace_shell.execute("cd ~~")
-        while True:
+        while not Trace_shell.shutting_down:
             time.sleep(1)
 
     finally:
-        gtermhost.IO_loop.add_callback(host_shutdown)
+        host_shutdown()
     
 if __name__ == "__main__":
      main(args=sys.argv[1:])

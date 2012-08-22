@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Capture feedback and send it to stdout
+
+# Usage: gfeedback 2> $GRAPHTERM_SOCKET 0<&2
+# The stderr is piped to the graphterm socket and stdin is also read from the socket.
+# stdout displays the captured feedback, and can be piped to gfeed.
+
+echoerr() { echo -n "$@" 1>&2; }
+echoerrlf() { echo "$@" 1>&2; }
+
+headers='{"x_gterm_response": "capture_feedback", "x_gterm_parameters": {"cookie": "'"${GRAPHTERM_COOKIE}"'"}}'
+
+esc=`printf "\033"`
+graphterm_code="1155"
+echoerr "${esc}[?${graphterm_code};${GRAPHTERM_COOKIE}h"
+
+echoerr "$headers"
+echoerrlf ""
+echoerrlf ""
+echoerr "${esc}[?${graphterm_code}l"
+
+while true; do
+    read INPUT
+    echo $INPUT
+done
+

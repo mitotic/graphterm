@@ -935,7 +935,8 @@ def run_server(options, args):
                                                                      "widget_port":
                                                                        (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
-                                                         oshell_unsafe=True)
+                                                         oshell_unsafe=True, oshell_no_input=(not options.oshell_input),
+                                                         io_loop=IO_loop)
         xterm = Local_client.xterm
         killterm = Local_client.remove_term
 
@@ -966,7 +967,7 @@ def run_server(options, args):
         print >> sys.stderr, "GraphTerm server (v%s) listening on %s:%s" % (version.current, http_host, http_port)
 
         print >> sys.stderr, "\nType ^C to stop server"
-        if Trace_shell:
+        if Trace_shell and options.oshell_input:
             Trace_shell.loop()
         else:
             while Http_server:
@@ -1008,6 +1009,8 @@ def main():
                       help="Disable connection to localhost")
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
+    parser.add_option("", "--oshell_input", dest="oshell_input", action="store_true",
+                      help="Allow stdin input otrace/oshell")
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
     parser.add_option("", "--internal_https", dest="internal_https", action="store_true",
