@@ -28,6 +28,11 @@ try:
 except NotImplementedError:
     import random
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+
 import tornado.netutil
 import lineterm
 import packetserver
@@ -62,6 +67,12 @@ def get_normalized_host(host):
     """Return identifier version of hostname"""
     return re.sub(r"\W", "_", host.upper())
 
+def datetime2str(datetime_obj):
+    """Return datetime object as string, formatted for last-modified"""
+    tm = calendar.timegm(datetime_obj.utctimetuple())
+    return email.utils.formatdate(tm, localtime=False, usegmt=True)
+
+    
 def dict2kwargs(dct, unicode2str=False):
     """Converts unicode keys in a dict to ascii, to allow it to be used for keyword args.
     If unicode2str, all unicode values to converted to str as well.
@@ -77,6 +88,31 @@ class HtmlWrapper(object):
 
     def wrap(self, html, msg_type=""):
         return HTML_ESCAPES[0] + self.lterm_cookie + HTML_ESCAPES[1]  + html + HTML_ESCAPES[-1]
+
+class BlobCache(object):
+    def __init__(self, max_bytes=10000000, max_time=5400):
+        self.max_bytes = max_bytes
+        self.max_time = max_time
+        self.cache = OrderedDict()
+        self.cache_size = 0
+
+    def get_blob(self, blob_id):
+        """Return (mod_time, headers, content)"""
+        return self.cache.get(blob_id) or (None, None, None)
+
+    def add_blob(self, blob_id, headers, content):
+        if blob_id in self.cache:
+            btime, bheaders, bcontent = self.cache.pop(blob_id)
+            self.cache_size -= len(bcontent)
+
+        self.cache_size += len(content)
+        cur_time = time.time()
+        for bid in self.cache.keys():
+            btime, bheaders, bcontent = self.cache[bid]
+            if (cur_time - btime) > self.max_time or self.cache_size > self.max_bytes:
+                self.cache.pop(bid)
+                self.cache_size -= len(bcontent)
+        self.cache[blob_id] = (cur_time, headers, content)
 
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
@@ -97,6 +133,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.lineterm = None
         self.server_url = ("https" if ssl_options else "http") + "://" + host + ":" + str(port+1)
         self.osh_cookie = lineterm.make_lterm_cookie()
+        self.blob_cache = BlobCache()
 
     def shutdown(self):
         print >> sys.stderr, "Shutting down client connection %s -> %s:%s" % (self.connection_id, self.host, self.port)
@@ -167,7 +204,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
     def screen_callback(self, term_name, command, arg):
         # Invoked in lineterm thread; schedule callback in ioloop
-        self.send_request_threadsafe("response", term_name, [["terminal", command, arg]])
+        if command == "create_blob":
+            self.blob_cache.add_blob(*arg)
+        else:
+            self.send_request_threadsafe("response", term_name, [["terminal", command, arg]])
 
     def remote_response(self, term_name, message_list):
         self.send_request_threadsafe("response", term_name, message_list)
@@ -306,56 +346,70 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 elif action == "file_request":
                     request_id, request_method, file_path, if_mod_since = cmd
                     status = (404, "Not Found")
-                    last_modified = None
                     etag = None
+                    last_modified = None
                     content_type = None
                     content_length = None
-                    content = ""
-                    abspath = file_path
-                    if os.path.sep != "/":
-                        abspath = abspath.replace("/", os.path.sep)
+                    content_b64 = ""
+                    remote_modtime = None
+                    if if_mod_since:
+                        date_tuple = email.utils.parsedate(if_mod_since)
+                        remote_modtime = datetime.datetime.fromtimestamp(time.mktime(date_tuple))
 
-                    if os.path.isfile(abspath) and os.access(abspath, os.R_OK):
-                        stat_result = os.stat(abspath)
-                        mod_datetime = datetime.datetime.fromtimestamp(stat_result[stat.ST_MTIME])
+                    if not file_path.startswith("/"):
+                        # Blob request
+                        btime, bheaders, bcontent = self.blob_cache.get_blob(file_path)
+                        if bheaders:
+                            mod_datetime = datetime.datetime.fromtimestamp(btime)
+                            if remote_modtime and remote_modtime >= mod_datetime:
+                                # Somewhat redundant check, since blobs are never modified!
+                                status = (304, "Not Modified")
+                            else:
+                                last_modified = datetime2str(mod_datetime)
+                                etag = file_path
+                                content_type = bheaders.get("content_type") or "text/html"
+                                content_length = bheaders["content_length"]
+                                if request_method != "HEAD":
+                                    content_b64 = bcontent # B64 encoded
+                                status = (200, "OK")
+                    else:
+                        abspath = file_path
+                        if os.path.sep != "/":
+                            abspath = abspath.replace("/", os.path.sep)
 
-                        if if_mod_since:
-                            date_tuple = email.utils.parsedate(if_mod_since)
-                            copy_datetime = datetime.datetime.fromtimestamp(time.mktime(date_tuple))
-                        else:
-                            copy_datetime = None
+                        if os.path.isfile(abspath) and os.access(abspath, os.R_OK):
+                            mod_datetime = datetime.datetime.fromtimestamp(os.path.getmtime(abspath))
 
-                        if copy_datetime and copy_datetime >= mod_datetime:
-                            status = (304, "Not Modified")
-                        else:
-                            # Read file contents
-                            try:
-                                tm = calendar.timegm(mod_datetime.utctimetuple())
-                                last_modified = email.utils.formatdate(tm, localtime=False, usegmt=True)
+                            if remote_modtime and remote_modtime >= mod_datetime:
+                                status = (304, "Not Modified")
+                            else:
+                                # Read file contents
+                                try:
+                                    last_modified = datetime2str(mod_datetime)
 
-                                mime_type, encoding = mimetypes.guess_type(abspath)
-                                if mime_type:
-                                    content_type = mime_type
+                                    mime_type, encoding = mimetypes.guess_type(abspath)
+                                    if mime_type:
+                                        content_type = mime_type
 
-                                with open(abspath, "rb") as file:
-                                    data = file.read()
-                                    hasher = hashlib.sha1()
-                                    hasher.update(data)
-                                    digest = hasher.hexdigest()
-                                    etag = '"%s"' % digest
-                                    if request_method == "HEAD":
-                                        content_length = len(data)
-                                    else:
-                                        content = data
-                                    status = (200, "OK")
-                            except Exception:
-                                pass
+                                    with open(abspath, "rb") as file:
+                                        data = file.read()
+                                        hasher = hashlib.sha1()
+                                        hasher.update(data)
+                                        digest = hasher.hexdigest()
+                                        etag = '"%s"' % digest
+                                        if request_method == "HEAD":
+                                            content_length = len(data)
+                                        else:
+                                            content_b64 = base64.b64encode(data)
+                                        status = (200, "OK")
+                                except Exception:
+                                    pass
 
                     resp_list.append(["file_response", request_id,
                                       dict(status=status, last_modified=last_modified,
                                            etag=etag,
                                            content_type=content_type, content_length=content_length,
-                                           content=base64.b64encode(content))])
+                                           content_b64=content_b64)])
 
                 elif action == "errmsg":
                     logging.warning("remote_request: ERROR %s", cmd[0])
@@ -380,7 +434,7 @@ class GTCallbackMixin(object):
     def logmessage(self, log_level, msg, exc_info=None, logtype="", plaintext=""):
         # If log_level is None, always display message
         if self.oshell_client and (log_level is None or log_level >= self.log_level):
-            self.oshell_client.remote_response(OSHELL_NAME, [["log", logtype, log_level, msg]])
+            self.oshell_client.remote_response(OSHELL_NAME, [["log", "", [logtype, log_level, msg]]])
 
         if logtype or log_level is None:
             sys.stderr.write((plaintext or msg)+"\n")

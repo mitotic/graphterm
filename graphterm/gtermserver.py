@@ -70,6 +70,8 @@ Check_state_cookie = False             # Controls checking of state cookie for f
 MAX_COOKIE_STATES = 100
 MAX_WEBCASTS = 500
 
+MAX_CACHE_TIME = 86400
+
 COOKIE_NAME = "GRAPHTERM_AUTH"
 COOKIE_TIMEOUT = 10800
 
@@ -662,13 +664,13 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         prefix = '<pre class="output wildpath"><a href="/%s" target="%s">%s</a>' % (path, path, path)
                         multi_fwd_list = []
                         for fwd in fwd_list:
-                            if fwd[0] in ("output", "html_output"):
-                                output = fwd[0] + ": " + fwd[1]
+                            if fwd[0] in ("output", "html_output", "log"):
+                                output = fwd[0] + ": " + " ".join(map(str,fwd[1:]))
                                 if ws.last_output == output:
                                     multi_fwd_list.append(["output", prefix + ' ditto</pre>'])
                                 else:
                                     ws.last_output = output
-                                    multi_fwd_list.append([fwd[0], prefix+'</pre>\n'+fwd[1]])
+                                    multi_fwd_list.append([fwd[0], prefix+'</pre>\n'+fwd[1]]+fwd[2:])
                         
                         if multi_fwd_list:
                             ws.write_message(json.dumps(multi_fwd_list))
@@ -681,6 +683,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         ws.close()
                     except Exception:
                         pass
+
+Blob_cache = gtermhost.BlobCache()
 
 class ProxyFileHandler(tornado.web.RequestHandler):
     """Serves file requests
@@ -718,29 +722,39 @@ class ProxyFileHandler(tornado.web.RequestHandler):
         host, sep, self.file_path = path.partition("/")
         if not host or not self.file_path:
             raise tornado.web.HTTPError(403, "Null host/filename")
-        self.file_path = "/" + self.file_path
 
-        normalized_host = gtermhost.get_normalized_host(host)
-        host_secret = TerminalConnection.host_secrets.get(normalized_host)
+        if self.request.path.startswith("/blob/"):
+            btime, headers, content = Blob_cache.get_blob(self.request.path)
+            if headers:
+                # Return cached blob
+                self.finish_write(headers, content)
+                return
 
-        if not host_secret:
-            raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+        if self.request.path.startswith("/file/"):
+            # Check if access to file is permitted
+            self.file_path = "/" + self.file_path
 
-        shared_secret = self.get_cookie("GRAPHTERM_HOST_"+normalized_host)
+            normalized_host = gtermhost.get_normalized_host(host)
+            host_secret = TerminalConnection.host_secrets.get(normalized_host)
 
-        if shared_secret:
-            if host_secret != shared_secret:
-                raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
-        else:
-            shared_secret = self.get_argument("shared_secret", "")
-            check_host = gtermhost.get_normalized_host(self.get_argument("host", ""))
-            expect_secret = TerminalConnection.host_secrets.get(check_host)
-            if not expect_secret or expect_secret != shared_secret:
+            if not host_secret:
                 raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
-        fpath_hmac = hmac.new(str(host_secret), self.file_path, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
-        if fpath_hmac != self.get_argument("hmac", ""):
-            raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+            shared_secret = self.get_cookie("GRAPHTERM_HOST_"+normalized_host)
+
+            if shared_secret:
+                if host_secret != shared_secret:
+                    raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+            else:
+                shared_secret = self.get_argument("shared_secret", "")
+                check_host = gtermhost.get_normalized_host(self.get_argument("host", ""))
+                expect_secret = TerminalConnection.host_secrets.get(check_host)
+                if not expect_secret or expect_secret != shared_secret:
+                    raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+
+            fpath_hmac = hmac.new(str(host_secret), self.file_path, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+            if fpath_hmac != self.get_argument("hmac", ""):
+                raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
         self.async_id = self.get_async_id()
         self._async_requests[self.async_id] = self
@@ -751,9 +765,20 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
         TerminalConnection.send_to_connection(host, "request", "", [["file_request", self.async_id, self.request.method, self.file_path, if_mod_since]])
 
+    def finish_write(self, headers, content, cache=False):
+        for name, value in headers:
+            self.set_header(name, value)
+
+        if self.request.method != "HEAD":
+            self.write(content)
+        self.finish()
+
+        if cache:
+            # Cache blob
+            Blob_cache.add_blob(self.request.path, headers, content)
 
     def complete_get(self, status=(), last_modified=None, etag=None, content_type=None, content_length=None,
-                     content=""):
+                     content_b64=""):
         # Callback for get
         if not status:
             # Timed out
@@ -767,29 +792,37 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             self.send_error(status[0])
             return
 
-        if content:
-            content = base64.b64decode(content)
+        headers = []
+        content = ""
 
-        if content_length is not None:
-            self.set_header("Content-Length", content_length)
+        if self.request.method != "HEAD":
+            # For HEAD request, content-length shold already have been set
+            if content_b64:
+                try:
+                    content = base64.b64decode(content_b64)
+                except Exception:
+                    logging.warning("gtermserver: Error in base64 decoding for %s", self.request.path)
+                    content = "Error in b64 decoding"
+                    content_type = "text/plain"
+            headers.append(("Content-Length", len(content)))
 
         if content_type:
-            self.set_header("Content-Type", content_type)
+            headers.append(("Content-Type", content_type))
 
         if last_modified:
-            self.set_header("Last-Modified", last_modified)
-
-        if last_modified and content_type:
-            self.set_header("Cache-Control", "public")
+            headers.append(("Last-Modified", last_modified))
 
         if etag:
-            self.set_header("Etag", etag)
+            headers.append(("Etag", etag))
 
-        if self.request.method == "HEAD":
-            self.set_header("Content-Length", len(content))
-        else:
-            self.write(content)
-        self.finish()
+        if self.request.path.startswith("/blob/"):
+            headers.append(("Expires", datetime.datetime.utcnow() +
+                                      datetime.timedelta(seconds=MAX_CACHE_TIME)))
+            headers.append(("Cache-Control", "max-age="+str(MAX_CACHE_TIME)))
+        elif last_modified and content_type:
+            headers.append(("Cache-Control", "public"))
+
+        self.finish_write(headers, content, cache=self.request.path.startswith("/blob/"))
 
 
 def run_server(options, args):
@@ -880,6 +913,7 @@ def run_server(options, args):
 
     handlers += [(r"/_websocket/.*", GTSocket),
                  (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
+                 (r"/blob/(.*)", ProxyFileHandler, {}),
                  (r"/file/(.*)", ProxyFileHandler, {}),
                  (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
                  ]
@@ -949,11 +983,16 @@ def run_server(options, args):
 
     def stop_server():
         global Http_server
+        print >> sys.stderr, "\nStopping server"
         gtermhost.gterm_shutdown(Trace_shell)
         if Http_server:
             Http_server.stop()
             Http_server = None
-        IO_loop.stop()
+        def stop_server_aux():
+            IO_loop.stop()
+
+        # Need to stop IO_loop only after all other scheduled shutdowns have completed
+        IO_loop.add_callback(stop_server_aux)
 
     def sigterm(signal, frame):
         logging.warning("SIGTERM signal received")

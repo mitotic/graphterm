@@ -460,6 +460,18 @@ function GTUpdateController() {
 	handle_resize();
 }
 
+function GTPreloadImages(urls) {
+    if (!urls.length)
+	return;
+    var img = new Image();
+    img.src = urls.shift();
+    var remainingUrls = urls;
+    //console.log("GTPreloadImages: Loading "+img.src);
+    img.onload = function() {
+	GTPreloadImages(remainingUrls);
+    }
+}
+
 function GTWebSocket(auth_user, auth_code) {
     this.failed = false;
     this.opened = false;
@@ -615,10 +627,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$("body").html(term_html);
 
             } else if (action == "log") {
-		var logtype = command[1] || "log";
+		var logPrefix = command[1];
+		var logArgs = command[2];
+		var logtype = logArgs[0] || "log";
 		var prefix = logtype.toUpperCase()+": ";
-		console.log(prefix+command[3]);
-		$('<pre class="gterm-log">'+prefix+command[3]+'</pre>').appendTo("#session-log .curentry");
+		console.log(prefix+logArgs[2]);
+		$(logPrefix+'<pre class="gterm-log">'+prefix+logArgs[2]+'</pre>').appendTo("#session-log .curentry");
 		$("#session-log .curentry .gterm-log .gterm-link").bindclick(otraceClickHandler);
 
             } else if (action == "edit_broadcast") {
@@ -738,8 +752,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    } else if (response_type == "open_terminal") {
 			gWebSocket.write([["open_terminal", [response_params.term_name,
 							     response_params.command]]]);
+
 		    } else if (response_type == "open_url") {
 			window.open(response_params.url, target="_blank");
+
+		    } else if (response_type == "preload_images") {
+			GTPreloadImages(response_params.urls);
+
 		    } else if (response_type == "display_finder") {
 			ShowFinder(response_params, content);
 

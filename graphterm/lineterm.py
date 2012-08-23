@@ -9,7 +9,8 @@ The contents of this file remain in the public-domain.
 
 from __future__ import with_statement
 
-import array,cgi,copy,fcntl,glob,logging,mimetypes,optparse,os,pty,re,signal,select,sys,threading,time,termios,tty,struct,pwd
+import array, cgi, copy, fcntl, glob, logging, mimetypes, optparse, os, pty
+import re, signal, select, sys, threading, time, termios, tty, struct, pwd
 
 import random
 try:
@@ -1187,6 +1188,7 @@ class Terminal(object):
                         headers, content = parse_headers(gterm_output)
                         response_type = headers["x_gterm_response"]
                         response_params = headers["x_gterm_parameters"]
+                        plain_text = False
                         if self.gterm_validated:
                                 if response_type == "edit_file":
                                         filepath = response_params.get("filepath", "")
@@ -1207,8 +1209,9 @@ class Terminal(object):
                                                 headers["x_gterm_response"] = "error_message"
                                                 headers["x_gterm_parameters"] = {}
                                                 headers["content_type"] = "text/plain"
-                        elif response_type != "edit_file":
-                                # Display non-validated input as plain text
+                        elif response_type == "pagelet":
+                                # Display non-validated pagelet as plain text
+                                plain_text = True
                                 headers["x_gterm_response"] = "pagelet"
                                 headers["x_gterm_parameters"] = {}
                                 try:
@@ -1217,8 +1220,20 @@ class Terminal(object):
                                         headers["content_type"] = "text/plain"
                                 except Exception:
                                         content = cgi.escape(content)
-                        
-                        if self.gterm_validated or response_type != "edit_file":
+
+                        if self.gterm_validated and response_type == "create_blob":
+                                del headers["x_gterm_response"]
+                                del headers["x_gterm_parameters"]
+                                blob_id = response_params.get("blob_id")
+                                if not blob_id:
+                                    logging.warning("No blob_id for create_blob")
+                                elif "content_length" not in headers:
+                                    logging.warning("No content_length specified for create_blob")
+                                else:
+                                    # Note: blob content should be Base64 encoded
+                                    self.screen_callback(self.term_name, "create_blob",
+                                                         [blob_id, headers, content])
+                        elif self.gterm_validated or plain_text:
                                 headers["content_length"] = len(content)
                                 params = {"validated": self.gterm_validated, "headers": headers}
                                 self.screen_callback(self.term_name, "graphterm_output", [params,

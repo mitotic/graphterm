@@ -46,18 +46,24 @@ for filename in args:
     
     mimetype, encoding = mimetypes.guess_type(filepath)
     if mimetype and mimetype.startswith("image/"):
-        file_list.append((filepath, filename))
+        with open(filepath) as fp:
+            content = fp.read()
+        blob_url = gtermapi.create_blob(content, content_type=mimetype)
+        file_list.append((blob_url, filepath, filename))
+
+if file_list:
+    gtermapi.preload_images([x[0] for x in file_list])
 
 if not file_list:
     sys.exit(1)
     
-def display_file(filepath):
-    gtermapi.write_html(IMGFORMAT % gtermapi.get_file_url(filepath, relative=True), display=("fullscreen" if options.fullscreen else "block"), dir=Work_dir)
+def display_file(blob_url, filepath):
+    gtermapi.write_html(IMGFORMAT % blob_url, display=("fullscreen" if options.fullscreen else "block"), dir=Work_dir)
 
 if not options.fullscreen:
-    for filepath, filename in file_list:
+    for blob_url, filepath, filename in file_list:
         print filename
-        display_file(filepath)
+        display_file(blob_url, filepath)
     sys.exit(0)
 
 Stdin_fd = sys.stdin.fileno()
@@ -92,7 +98,7 @@ try:
             continue
 
         j = jnew
-        display_file(file_list[j][0])
+        display_file(*file_list[j][0:2])
 
 except KeyboardInterrupt:
     sys.exit(1)

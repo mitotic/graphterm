@@ -2,6 +2,8 @@
 gtermapi: Common code for gterm-aware programs
 """
 
+import base64
+import StringIO
 import hashlib
 import hmac
 import json
@@ -10,6 +12,7 @@ import random
 import sys
 import termios
 import tty
+import uuid
 
 from optparse import OptionParser
 
@@ -32,9 +35,9 @@ def write(data):
     sys.stdout.write(data)
     sys.stdout.flush()
 
-def wrap_write(html, headers={}):
-    """Wrap html, with headers, and write to stdout"""
-    write(wrap(html, headers=headers))
+def wrap_write(content, headers={}):
+    """Wrap content, with headers, and write to stdout"""
+    write(wrap(content, headers=headers))
 
 def write_html(html, display="block", dir=""):
     """Write html pagelet to stdout"""
@@ -71,6 +74,62 @@ def get_file_url(filepath, relative=False):
         return "/file/" + Host + filepath + filehmac
     else:
         return "file://" + ("" if Host == "local" else Host) + filepath + filehmac
+
+def make_blob_url(blob_id=""):
+    blob_id = blob_id or str(uuid.uuid4())
+    return (blob_id, "/blob/"+Host+"/"+blob_id)
+
+def create_blob(content, content_type="text/html", blob_id=""):
+    """Create blob and returns URL to blob"""
+    params = {}
+    blob_id, blob_url = make_blob_url(blob_id)
+    params["blob_id"] = blob_id
+    headers = {"x_gterm_response": "create_blob",
+               "x_gterm_parameters": params,
+               "content_type": content_type,
+               "content_length": len(content)
+               }
+
+    wrap_write(base64.b64encode(content), headers=headers)
+    return blob_url
+    
+class BlobStringIO(StringIO.StringIO):
+    def __init__(self, content_type="text/html"):
+        self.content_type = "application/pdf" if content_type=="pdf" else "image/"+content_type
+        self.blob_id, self.blob_url = make_blob_url()
+        StringIO.StringIO.__init__(self)
+
+    def close(self):
+        blob_url = create_blob(self.getvalue(), content_type=self.content_type, blob_id=self.blob_id)
+        StringIO.StringIO.close(self)
+        assert blob_url == self.blob_url
+        return blob_url
+        
+def preload_images(urls):
+    params = {"urls": urls}
+    headers = {"x_gterm_response": "preload_images",
+               "x_gterm_parameters": params
+               }
+
+    wrap_write("", headers=headers)
+
+def show_image(url):
+    IMGFORMAT = '<img class="gterm-blockimg" src="%s"></img><br>' 
+    write_html(IMGFORMAT % url)
+
+def gmatplotlib_setup():
+    import matplotlib
+    matplotlib.use("Agg")
+
+def gsavefig(format="png"):
+    import matplotlib.pyplot as plt
+
+    content_type = "application/pdf" if format=="pdf" else "image/"+format
+    outbuf = BlobStringIO(content_type)
+    plt.savefig(outbuf, format=format)
+    blob_url = outbuf.close()
+    show_image(blob_url)
+    
 
 FILE_URI_PREFIX = "file://"
 FILE_PREFIX = "/file/"
