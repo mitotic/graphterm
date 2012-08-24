@@ -20,7 +20,7 @@ def main(args=None):
     if args is None:
          args = sys.argv[1:]
 
-    funcname = "main"
+    funcname = ""
     server = "localhost"
     hostname = ""
     j = 0
@@ -36,7 +36,7 @@ def main(args=None):
         j += 2
 
     if j >= len(args):
-        print >> sys.stderr, "Usage: gotrace [-f function_name (default: main(args=[]))] [-n hostname] [-s server_addr[:port] (default: localhost:%d)] program_file [arg1 arg2 ...]" % gtermhost.DEFAULT_HOST_PORT
+        print >> sys.stderr, "Usage: gotrace [-f function_name] [-n hostname] [-s server_addr[:port] (default: localhost:%d)] program_file [arg1 arg2 ...]" % gtermhost.DEFAULT_HOST_PORT
         sys.exit(1)
 
     filepath = args[j]
@@ -63,7 +63,8 @@ def main(args=None):
     modfile, modpath, moddesc = imp.find_module(modname, [filedir])
     modobj = imp.load_module(modname, modfile, modpath, moddesc)
 
-    if not hasattr(modobj, funcname) or not callable(getattr(modobj, funcname)):
+    orig_funcobj = getattr(modobj, funcname, None) if funcname else None
+    if funcname and not callable(orig_funcobj):
         print >> sys.stderr, "gotrace: Program %s does not have function named '%s'" % (filepath, funcname)
         sys.exit(1)
         
@@ -85,20 +86,27 @@ def main(args=None):
         logging.warning("SIGTERM signal received")
         host_shutdown()
 
+    def sighup(signal, frame):
+        logging.warning("SIGHUP signal received")
+
     signal.signal(signal.SIGTERM, sigterm)
+    signal.signal(signal.SIGHUP, sighup)
+
 
     try:
-        Trace_shell.execute("trace %s\n" % funcname)
+        if funcname:
+            # Delay to ensure tracing has started
+            time.sleep(1)
 
-        # Delay to ensure tracing has started
-        time.sleep(1)
-
-        # Call function in module
-        func = getattr(modobj, funcname)
-        if args:
-            func(args)
+            # Call function in module (may be wrapped, if being traced)
+            funcobj = getattr(modobj, funcname)
+            if args:
+                funcobj(args)
+            else:
+                funcobj()
         else:
-            func()
+            # Blocks until run command is issued
+            Trace_shell.run_loop()
 
     except Exception, excp:
         traceback.print_exc()

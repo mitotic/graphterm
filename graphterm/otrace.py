@@ -869,9 +869,11 @@ class TraceConsole(object):
             self.lazy_dirs[DATABASE_DIR] = db_interface
         self.web_interface = web_interface
         self.no_input = no_input
-        self.thread = threading.Thread(target=self.run) if new_thread else None
+        self.thread = threading.Thread(target=self.run) if new_thread and not no_input else None
         if self.thread:
             self.thread.setDaemon(True)
+        self.queue = None
+        self.expect_run = False
 
         self._stdin = _stdin
         self._stdout = _stdout
@@ -886,7 +888,7 @@ class TraceConsole(object):
         self.set_repeat(None)
         self.repeat_alt_screen = 0
 
-        self.started = False
+        self.reading_stdin = False
         self.suspend_input = False
         self.shutting_down = False
 
@@ -918,19 +920,45 @@ class TraceConsole(object):
         self.locals_dict[TRACE_INFO][trace_attr] = value
 
     def loop(self):
-        """Start run loop."""
+        """Start trace input loop"""
         if self.thread:
             self.thread.start()
         else:
             self.run()
 
+    def run_loop(self):
+        """Start trace run loop, blocking to wait for run commands"""
+        self.queue = Queue.Queue()
+        while not self.shutting_down:
+            self.expect_run = True
+            try:
+                run_args = self.queue.get(block=True, timeout=1)
+            except Queue.Empty:
+                run_args = None
+
+            if run_args:
+                self.expect_run = False
+                try:
+                    retval = run_args[0](run_args[1])
+                    run_msg = "Run completed" 
+                except Exception, excp:
+                    run_msg = "Error in completed run\n"+format_traceback()
+                finally:
+                    self.expect_run = True
+
+                OTrace.callback_handler.logmessage(None, run_msg)
+
     def run(self):
-        self.started = True
+        self.reading_stdin = (not self.no_input)
+        self.display_banner()
+        self.interact()
+
+    def display_banner(self):
         banner = self.banner
         for msg in Banner_messages:
              banner += "\n" + msg
         banner += "\n  ^C to terminate program"
-        self.interact(banner)
+        self.std_output("%s\n" % str(banner))
 
     def resetbuffer(self):
         self.buffer = []
@@ -954,10 +982,7 @@ class TraceConsole(object):
         if cls.instance:
             cls.instance.suspend_input = False
 
-    def interact(self, banner=""):
-        if banner:
-            self.std_output("%s\n" % str(banner))
-
+    def interact(self):
         more = False
         noprompt = False
         while not self.shutting_down:
@@ -970,20 +995,8 @@ class TraceConsole(object):
                     prompt = self.prompt1
 
                 try:
-                    if self.feed_lines:
-                        # Read from feed buffer
-                        line = self.feed_lines.pop(0)
-                        if line and line[-1] == "\n":
-                            line = line[:-1]
-                        if line and line[-1] == "\r":
-                            line = line[:-1]
-
-                        if line.startswith("noecho "):
-                            line = line[len("noecho "):]
-                        else:
-                            # Echo line
-                            self.std_output(prompt+line+"\n")
-                    else:
+                    line = self.get_feed_line(prompt, echo=True)
+                    if line is None:
                         if self.no_input:
                             return
                         if self.suspend_input:
@@ -1000,41 +1013,14 @@ class TraceConsole(object):
                                 self.repeat_count -= 1
                                 if self.repeat_count <= 0:
                                     self.set_repeat(None)
-                    if line is None:
-                        continue
+                        if line is None:
+                            continue
                 except EOFError:
                     self.std_output("\n")
                     break
                 
                 try:
-                    noprompt = False
-                    out_str, err_str = self.parse(line, batch=bool(self.repeat_interval))
-                    if out_str == "_NoPrompt_":
-                        noprompt = True
-                        out_str = None
-                    else:
-                        if self.repeat_interval:
-                            if err_str:
-                                self.set_repeat(None)
-                            elif out_str:
-                                out_str = CLEAR_SCREEN_SEQUENCE + out_str
-                                if self.repeat_alt_screen == 1:
-                                    self.repeat_alt_screen = 2
-                                    out_str = ALT_SCREEN_ONSEQ + out_str
-                        else:
-                            if self.repeat_alt_screen == 2:
-                                self.repeat_alt_screen = 0
-                                out_str = ALT_SCREEN_OFFSEQ + out_str
-
-                        more = (err_str is None)
-                        if not more and out_str:
-                            if out_str[-1] == "\n":
-                                self.std_output(out_str)
-                            else:
-                                self.std_output(out_str+"\n")
-
-                    if err_str:
-                        self.err_output(err_str+"\n")
+                    noprompt, more, out_str, err_str = self.parse_out(line, more, echo=True)
                 except Exception:
                     self.err_output(format_traceback())
 
@@ -1046,13 +1032,66 @@ class TraceConsole(object):
                 self.std_output("\nKeyboardInterrupt: Type Control-D to quit\n")
         self.shutdown()
 
+    def get_feed_line(self, prompt="", echo=False):
+        """Return next feed line, or None, echoing it if need be"""
+        if not self.feed_lines:
+            return None
+        # Read from feed buffer
+        line = self.feed_lines.pop(0)
+        if line and line[-1] == "\n":
+            line = line[:-1]
+        if line and line[-1] == "\r":
+            line = line[:-1]
+
+        if line.startswith("noecho "):
+            line = line[len("noecho "):]
+        elif echo:
+            # Echo line
+            self.std_output(prompt+line+"\n")
+        return line
+
+    def parse_out(self, line, more=False, echo=False):
+        """Parse line and optionally echo execution result,
+        returning (noprompt, more, out_str, err_str)
+        """
+        out_str, err_str = self.parse(line, batch=bool(self.repeat_interval))
+        if out_str == "_NoPrompt_":
+            noprompt = True
+            out_str = None
+        else:
+            noprompt = False
+            if self.repeat_interval:
+                if err_str:
+                    self.set_repeat(None)
+                elif out_str:
+                    out_str = CLEAR_SCREEN_SEQUENCE + out_str
+                    if self.repeat_alt_screen == 1:
+                        self.repeat_alt_screen = 2
+                        out_str = ALT_SCREEN_ONSEQ + out_str
+            else:
+                if self.repeat_alt_screen == 2:
+                    self.repeat_alt_screen = 0
+                    out_str = ALT_SCREEN_OFFSEQ + out_str
+
+            more = (err_str is None)
+            if echo and out_str and not more:
+                if out_str[-1] == "\n":
+                    self.std_output(out_str)
+                else:
+                    self.std_output(out_str+"\n")
+
+        if echo and err_str:
+            self.err_output(err_str+"\n")
+
+        return noprompt, more, out_str, err_str
+
     def stuff_lines(self, lines):
         """Accept list of lines for processing as input (skipping lines starting with '#')"""
         self.feed_lines += [line for line in lines if line.strip() and line.strip()[0] != "#"]
 
     def close(self):
         """Closes console input (thread-safe)."""
-        if not self.started:
+        if not self.reading_stdin:
             return
 
         try:
@@ -1286,6 +1325,10 @@ The command prefix "pr" may be omitted, and is assumed by default.
 -r   recursive remove all child entities
 """,
 
+"run":
+"""run function [arg1 ...]   # Run function in main thread
+""",
+
 "save":
 """save [trace_id1..]        # Save current or specified trace context
 
@@ -1367,13 +1410,13 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
                  new_thread=False, echo_callback=None,
                  db_interface=None, web_interface=None, hold_wrapper=None,
                  eventloop_callback=None, _stdin=sys.stdin, _stdout=sys.stdout, _stderr=sys.stderr):
-        """Create OShell instance, but do not start the run loop (use OShell.loop for that).
+        """Create OShell instance, but do not start the input loop (use OShell.loop for that).
 
         Args:
             globals_dict: dictionary of global variables (usually globals())
             locals_dict: dictionary of local variables (usually locals())
             init_func: function to be invoked after initialazation but before
-                       the run loop starts; init_func is provided a single
+                       the trace input loop starts; init_func is provided a single
                        argument, the initialized OShell instance
             init_file: name of file with initial commands to be executed
             allow_unsafe: allow "unsafe" operations such as assignments,
@@ -1422,6 +1465,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
             "dn":   ["cd", DOWN_STACK],
             "dv":   ["cd", DOWN_STACK, ";", "view", "-i"],
             "doc":  ["view", "-d", "-i"],
+            "hup":  ["exec", "import", "os", ";", "import", "signal", ";", "os.kill(os.getpid(),signal.SIGHUP)"],
             "ls":   ["ls", "-C"],
             "show": ["view", "-i"],
             "up":   ["cd", UP_STACK],
@@ -1442,7 +1486,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
             readline.parse_and_bind('tab: complete')
 
     def loop(self):
-        """Start run loop for OShell."""
+        """Start input loop for OShell."""
         super(OShell, self).loop()
 
     def run(self):
@@ -1911,7 +1955,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
             if not matched and ("?" in first_dir or "*" in first_dir or "[" in first_dir):
                 try:
                     # Try regexp match
-                    pattern = first_dir.replace("+", "\\+").replace("?", ".?").replace("*", ".*")   # Convert shell wildcard pattern to python regexp
+                    pattern = first_dir.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")   # Convert shell wildcard pattern to python regexp
                     matchobj = re.match(pattern, key)
                     if matchobj and matchobj.group() == key:
                         matched = True
@@ -1985,10 +2029,26 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
         """ Execute single oshell command and return (out_str, err_str)
             here_doc contains optional input string.
         """
+        out_str, err_str = "", ""
         try:
-            return self.parse(line, batch=True, here_doc=here_doc)
+            out_str, err_str = self.parse(line, batch=True, here_doc=here_doc)
+            return self.exec_feedlines(out_str, err_str)
         except Exception:
-            return ("", format_traceback())
+            return (out_str, err_str+format_traceback())
+
+    def exec_feedlines(self, out_str="", err_str=""):
+        try:
+            while True:
+                line = self.get_feed_line()
+                if line is None:
+                    break
+                noprompt, more, out_str2, err_str2 = self.parse_out(line)
+                out_str += out_str2
+                err_str += err_str2
+        except Exception:
+            self.feed_lines = []
+            err_str += format_traceback()
+        return (out_str, err_str)
 
     def parse(self, line, batch=False, here_doc=None):
         """Parse command line and execute command, returning (out_str, err_str) like self.push
@@ -2316,6 +2376,10 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
         elif cmd in ("ls", "rm"):
             # List "directory" or 'remove' entries
             return self.cmd_lsrm(cmd, comps, line, rem_line)
+
+        elif cmd == "run":
+            # Run function in separate thread
+            return self.cmd_run(cmd, comps, line, rem_line)
 
         elif cmd == "set":
             # Set (or display) parameters
@@ -3121,8 +3185,27 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
         out_str = "".join(out_list)
         return (out_str, err_str)
 
+    def cmd_run(self, cmd, comps, line, rem_line):
+        """Run function in main thread"""
+        out_str, err_str = "", ""
+        if not self.expect_run:
+             return (out_str, "Already running task; wait for it to complete")
+        if not self.queue:
+             return (out_str, "Cannot run function unless otrace is in separate thread")
+        if not comps:
+             return (out_str, "Must specify function to run")
+        func_name = comps.pop(0)
+
+        path_list = func_name.replace(PATH_SEP, ".").split(".")
+        run_func = self.get_subdir(self.locals_dict, path_list, value=True)
+        if not callable(run_func):
+             return (out_str, "%s of type %s is not callable" % (func_name, type(run_func)))
+        
+        self.queue.put((run_func, comps))
+        return (out_str, "Running %s" % func_name)
+
     def cmd_set(self, cmd, comps, line, rem_line):
-        """set or display parameters, returning (out_str, err_str)"""
+        """Set or display parameters, returning (out_str, err_str)"""
         out_str, err_str = "", ""
         if len(comps) > 1:
             # Set parameter
@@ -3687,6 +3770,8 @@ class TraceCallback(object):
                 plaintext = trace_id + " " + msg
                 prefix = OShell.html_fmt % tuple(markup + [cgi.escape(trace_id)])
                 msg = cgi.escape(msg)
+            else:
+                prefix = trace_id.replace("%", PATH_SEP)
             msg = prefix + " " + msg
             log_level += 10
             if trace_id.startswith("breaks") or trace_id.startswith("holds"):
@@ -5523,7 +5608,7 @@ untag = OTrace.untag
 get_tag = OTrace.get_tag
 set_tag = OTrace.set_tag
     
-if __name__ == "__main__":
+def test():
     # Test OTrace
     class TestClass(object):
         def method(self, arg1, kwarg1=None):
@@ -5581,8 +5666,6 @@ if __name__ == "__main__":
     testobj.cmethod(True)
     testobj.smethod("ss", 33)
 
-    OTrace.disable_trace()
-    
     OTrace.add_trace(".method", argmatch={"arg1":33})
     OTrace.add_trace(".method2", argmatch={"return":44})
 
@@ -5600,4 +5683,84 @@ if __name__ == "__main__":
     print testobj.method2("55patch", kwarg1="KWRD")
     OTrace.monkey_unpatch(TestClass.method2)
     print testobj.method2("55unpatch", kwarg1="KWRD")
+
+
+def main(args=None):
+    import imp
+    import signal
+    if args is None:
+         args = sys.argv[1:]
+
+    if len(args) < 1 or (args[0] == "-f" and len(args) < 3):
+        print >> sys.stderr, "Usage: otrace [-f function_name] program_file [arg1 arg2 ...]"
+        sys.exit(1)
+
+    if args[0] == "-f":
+        funcname, filepath = args[1], args[2]
+        args = args[3:]
+    else:
+        funcname, filepath = "", args[0]
+        args = args[1:]
+
+    if not os.path.isfile(filepath) or not os.access(filepath, os.R_OK):
+        print >> sys.stderr, "otrace: Unable to read file %s" % filepath
+        sys.exit(1)
+
+    abspath = os.path.abspath(filepath)
+    filedir, basename = os.path.split(abspath)
+    modname, extension = os.path.splitext(basename)
+
+    # Load program as module
+    modfile, modpath, moddesc = imp.find_module(modname, [filedir])
+    modobj = imp.load_module(modname, modfile, modpath, moddesc)
+
+    orig_funcobj = getattr(modobj, funcname, None) if funcname else None
+    if funcname and not callable(orig_funcobj):
+        print >> sys.stderr, "otrace: Program %s does not have function named '%s'" % (filepath, funcname)
+        sys.exit(1)
+        
+    # Initialize OShell instance
+    oshell_globals = modobj.__dict__
+    Trace_shell = OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
+                         allow_unsafe=True, init_file=modname+".trc", new_thread=True)
+
+    def sigterm(signal, frame):
+        logging.warning("SIGTERM signal received")
+        Trace_shell.shutdown()
+
+    def sighup(signal, frame):
+        logging.warning("SIGHUP signal received")
+
+    signal.signal(signal.SIGTERM, sigterm)
+    signal.signal(signal.SIGHUP, sighup)
+
+    try:
+        # Start oshell loop in new thread
+        Trace_shell.loop()
+
+        if funcname:
+            # Delay to ensure any tracing has started
+            time.sleep(1)
+
+            # Call function in module (may be wrapped, if being traced)
+            funcobj = getattr(modobj, funcname)
+            if args:
+                funcobj(args)
+            else:
+                funcobj()
+        else:
+            # Block, waiting for run commands
+            Trace_shell.run_loop()
+
+    except Exception, excp:
+        traceback.print_exc()
+        print >> sys.stderr, "\nPress Enter to trace; ^C to abort: ",
+        Trace_shell.execute("cd ~~")
+        while True:
+            time.sleep(1)
+
+    finally:
+        Trace_shell.shutdown()
     
+if __name__ == "__main__":
+     main(args=sys.argv[1:])

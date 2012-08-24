@@ -618,30 +618,27 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_c
 
     Host_connections[host_secret] = host_connection
 
-    if oshell_globals:
-        if not gterm_callback:
-            gterm_callback = GTCallback()
-        gterm_callback.set_client(host_connection)
-        otrace.OTrace.setup(callback_handler=gterm_callback)
-        otrace.OTrace.html_wrapper = HtmlWrapper(host_connection.osh_cookie)
-        trace_shell = otrace.OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
-                                    new_thread=oshell_thread,
-                                    allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
-                                    add_env={"GRAPHTERM_COOKIE": host_connection.osh_cookie,
-                                             "GRAPHTERM_SHARED_SECRET": host_secret},
-                                    init_file=oshell_init, db_interface=oshell_db_interface,
-                                    hold_wrapper=oshell_hold_wrapper,
-                                    no_input=oshell_no_input,
-                                    eventloop_callback=io_loop.add_callback)
-        host_connection.add_oshell()
-        if oshell_thread:
-            trace_shell.loop()
-
-    else:
-        trace_shell = None
-
     if io_loop_thread:
         io_loop_thread.start()
+
+    if not oshell_globals:
+        return (host_connection, host_secret, None)
+
+    if not gterm_callback:
+        gterm_callback = GTCallback()
+    gterm_callback.set_client(host_connection)
+    otrace.OTrace.setup(callback_handler=gterm_callback)
+    otrace.OTrace.html_wrapper = HtmlWrapper(host_connection.osh_cookie)
+    trace_shell = otrace.OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
+                                new_thread=oshell_thread,
+                                allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
+                                add_env={"GRAPHTERM_COOKIE": host_connection.osh_cookie,
+                                         "GRAPHTERM_SHARED_SECRET": host_secret},
+                                init_file=oshell_init, db_interface=oshell_db_interface,
+                                hold_wrapper=oshell_hold_wrapper,
+                                no_input=oshell_no_input,
+                                eventloop_callback=io_loop.add_callback)
+    host_connection.add_oshell()
 
     return (host_connection, host_secret, trace_shell)
 
@@ -679,7 +676,7 @@ def run_host(options, args):
         time.sleep(1)   # Wait for IO_loop thread to start
 
         print >> sys.stderr, "\nType ^C to exit"
-        if Trace_shell:
+        if Trace_shell and options.oshell_input:
             Trace_shell.loop()
         else:
             while Gterm_host:
