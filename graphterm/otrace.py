@@ -5600,13 +5600,19 @@ class PickleInterface(object):
         except Exception, excp:
             logging.error("Error in retrieving record(s) from pickle_db: %s", kwargs, excp)
 
-
 # Convenient aliases
 traceassert = OTrace.traceassert
 tag = OTrace.tag
 untag = OTrace.untag
 get_tag = OTrace.get_tag
 set_tag = OTrace.set_tag
+
+def set_trace(globals_dict, locals_dict=None):
+    """Invoke otrace within code interactively, like pdb. Use quit command to continue execution"""
+    trace_shell = OShell(locals_dict=locals_dict or globals_dict, globals_dict=globals_dict,
+                         allow_unsafe=True)
+    trace_shell.loop()
+
     
 def test():
     # Test OTrace
