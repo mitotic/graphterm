@@ -371,7 +371,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 term_name = comps[1].lower()
                 if term_name == "new":
                     term_name = conn.remote_terminal_update()
-                    self.write_json([["open", host, term_name]])
+                    self.write_json([["redirect", "/"+host+"/"+term_name]])
                     self.close()
 
                 if not gtermhost.SESSION_RE.match(term_name):

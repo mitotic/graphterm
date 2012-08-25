@@ -64,6 +64,7 @@ var gCommandPrefix = "command";
 var gCommandMatchIndex = null;
 var gCommandMatchPrev = null;
 var gCommandBuffer = null;
+var gShellRecall = null;
 var gCursorAtEOL = null;
 
 var gPromptIndex = 0;
@@ -297,9 +298,9 @@ function GTGetCommandText(n) {
 	var cmdText = $(cmd_id).text().substr($(cmd_id+" .gterm-cmd-prompt").text().length+1);
 	if (cmdText && cmdText.charCodeAt(cmdText.length-1) == 10)
 	    cmdText = cmdText.substr(0,cmdText.length-1); // Chop off the newline
-	return cmdText;
+	return cmdText.replace(/^\s+/, "");
     } else {
-	return $(cmd_id).text() || "";
+	return $(cmd_id).text().replace(/^\s+/, "");
     }
 }
 
@@ -316,7 +317,7 @@ function GTGetCurCommandText() {
 function GTSetCommandText(text, noClear) {
     // Set (unescaped) text for current command line
     if (gWebSocket && gWebSocket.terminal) {
-	var curtext = GTGetCurCommandText();
+	var curtext = GTGetCurCommandText().replace(/^\s+/, "");
 	if (curtext == text.substr(0, curtext.length)) {
 	    var tailtext = text.substr(curtext.length);
 	    $("#gterm-pre0 .cmd-completion").text(tailtext);
@@ -444,7 +445,10 @@ function GTReceivedUserInput(source) {
 	GTHideSplash(true);
     $("#headfoot-control").removeClass("gterm-headfoot-active");
     if (source != "select") {
+	// Cancel command completion
 	gCommandBuffer = null;
+	if (source != "updownarrow")
+	    gShellRecall = null;
 	$("#gterm-pre0 .cmd-completion").text("");
     }
 }
@@ -520,7 +524,11 @@ GTWebSocket.prototype.term_input = function(text, type_ahead, command_line) {
 	}
 	$(".typeahead").text(aheadText);
     }
-    GTReceivedUserInput("key");
+    if (text == "\x1b[A" || text == "\x1b[B") 
+	GTReceivedUserInput("updownarrow");
+    else
+	GTReceivedUserInput("key");
+
     if (command_line)
 	this.write([["paste_command", text]]);
     else
@@ -731,6 +739,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			var widget_html = (content_type == "text/html") ? '<div id="session-widget" class="widget">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
 			var newElem = $(widget_html).replaceAll("#session-widget");
+			if (content)
+			    $("#session-widgetcontainer").show();
+			else
+			    $("#session-widgetcontainer").hide();
 		    }
 
 		} else if (cmd_type == "graphterm_output") {
@@ -1142,6 +1154,12 @@ function GTHandleHistory(up_arrow) {
     // Terminal version
     // Returns true/false for event handling
     var commandText = GTGetCurCommandText();
+    if (!commandText) {
+	// Default shell handling of arrow key, if empty command line
+	gShellRecall = true;
+	return true;
+    }
+    commandText = commandText.replace(/^\s+/, ""); // Trim any leading spaces
     if (gCommandBuffer == null) {
 	gCommandBuffer = commandText;  // First recall; save current command text
 	gCommandMatchIndex = gPromptIndex+1;
@@ -1667,8 +1685,8 @@ function keypressHandler(evt) {
 }
 
 function HandleArrowKeys(keyCode) {
-    //console.log("HandleArrowKeys", keyCode, gCursorAtEOL);
-    if (!gCursorAtEOL || gWebSocket.alt_mode)
+    //console.log("HandleArrowKeys", keyCode, gCursorAtEOL, gShellRecall);
+    if (!gCursorAtEOL || gWebSocket.alt_mode || gShellRecall)
 	return true;
     // Cursor at end of command line
     if (keyCode == 38 || keyCode == 40) {
@@ -2435,6 +2453,7 @@ $(document).ready(function() {
     $("#acearea").hide();
     $("#session-bufellipsis").hide();
     $("#session-findercontainer").hide();
+    $("#session-widgetcontainer").hide();  // IMPORTANT (else top menu will be invisibly blocked)
     $(".menubar-select").change(gtermSelectHandler);
     $(".session-footermenu select").change(gtermBottomSelectHandler);
     $("#session-headermenu .headfoot").bindclick(gtermMenuClickHandler);
