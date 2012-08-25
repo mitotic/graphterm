@@ -601,6 +601,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$("#session-container").show();
 		gParams = command[1];
 		GTUpdateController();
+		gtermFeedbackStatus(gParams.feedback);
 
 		if (gParams.host_secret)
 		    setCookie("GRAPHTERM_HOST_"+gParams.normalized_host, ""+gParams.host_secret);
@@ -716,8 +717,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    alert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
 
 		} else if (cmd_type == "graphterm_feedback") {
-		    gFeedback = cmd_arg;
-		    $("#session-term").toggleClass("gterm-feedback", gFeedback);
+		    gtermFeedbackStatus(cmd_arg);
 
 		} else if (cmd_type == "graphterm_widget") {
 		    var params = cmd_arg[0];
@@ -1388,6 +1388,11 @@ function gtermMenuClickHandler(event) {
 	gWebSocket.term_input(text);
     }
     return false;
+}
+
+function gtermFeedbackStatus(status) {
+    gFeedback = status;
+    $("#session-term").toggleClass("gterm-feedback", gFeedback);
 }
 
 function gtermFeedbackHandler(event) {

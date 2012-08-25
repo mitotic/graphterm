@@ -72,3 +72,5 @@ while True:
     else:
         feed_html = line
     gtermapi.wrap_write(json.dumps(feed_html), headers=Json_headers)
+
+gtermapi.write_blank()

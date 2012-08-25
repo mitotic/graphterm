@@ -257,7 +257,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         user = ""
         try:
             if not self._auth_code:
-                self.authorized = {"user": "", "time": time.time(), "state_id": ""}
+                self.authorized = {"user": "", "auth_type": "null_auth", "time": time.time(), "state_id": ""}
 
             elif COOKIE_NAME in self.request.cookies:
                 state_value = self.get_state(self.request.cookies[COOKIE_NAME].value)
@@ -287,13 +287,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 if code == self._auth_code or code == expect_code:
                     state_id = uuid.uuid4().hex[:HEX_DIGITS]
-                    self.authorized = {"user": user, "time": time.time(), "state_id": state_id}
+                    self.authorized = {"user": user, "auth_type": "code_auth", "time": time.time(), "state_id": state_id}
                     if len(self._cookie_states) >= MAX_COOKIE_STATES:
                         self._cookie_states.pop(last=False)
                     self._cookie_states[state_id] = self.authorized
 
                 elif self.req_path in self._webcast_paths:
-                    self.authorized = {"user": user, "time": time.time(), "state_id": ""}
+                    self.authorized = {"user": user, "auth_type": "webcast_auth", "time": time.time(), "state_id": ""}
                     webcast_auth = True
 
             if not self.authorized:
@@ -324,7 +324,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 return
 
             wildhost = "?" in host or "*" in host or "[" in host
-
+            term_feedback = False
+            
             if wildhost:
                 if len(comps) < 2 or not comps[1] or comps[1].lower() == "new":
                     self.write_json([["abort", "Must specify terminal name for wildcard host"]])
@@ -355,6 +356,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.write_json([["abort", "Invalid characters in terminal name"]])
                     self.close()
                     return
+
+                term_feedback = term_name in conn.allow_feedback
 
             path = host + "/" + term_name
 
@@ -406,15 +409,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 matchhost, matchterm = matchpath.split("/")
                 TerminalConnection.send_to_connection(matchhost, "request", matchterm, [["reconnect"]])
 
-            if self.wildcard:
-                normalized_host, host_secret = "", ""
-            else:
+            normalized_host, host_secret = "", ""
+            if not self.wildcard:
                 normalized_host = gtermhost.get_normalized_host(host)
-                host_secret = TerminalConnection.host_secrets.get(normalized_host) if self.controller else ""
+                if self.authorized["auth_type"] in ("null_auth", "code_auth"):
+                    host_secret = TerminalConnection.host_secrets.get(normalized_host)
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
                                         "version": version.current, "controller": self.controller,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
+                                        "feedback": term_feedback,
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
             logging.warning("GTSocket.open: ERROR %s", excp)
@@ -462,19 +466,42 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if not self.remote_path:
             return
 
+        remote_host, term_name = self.remote_path.split("/")
+
         controller = self.wildcard or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
 
-        if not controller:
+        conn = None
+        allow_feedback_only = False
+        if not self.wildcard:
+            conn = TerminalConnection.get_connection(remote_host)
+            if not conn:
+                self.write_json([["errmsg", "ERROR: Remote host %s not connected" % remote_host]])
+                return
+
+            if not controller and term_name in conn.allow_feedback:
+                allow_feedback_only = True
+
+        if controller or allow_feedback_only:
+            try:
+                msg_list = json.loads(message)
+                if allow_feedback_only:
+                    msg_list = [msg for msg in msg_list if msg[0] == "feedback"]
+            except Exception, excp:
+                logging.warning("GTSocket.on_message: ERROR %s", excp)
+                self.write_json([["errmsg", str(excp)]])
+                return
+        else:
             self.write_json([["errmsg", "ERROR: Remote path %s not under control" % self.remote_path]])
             return
 
-        reconnect = False
         req_list = []
         try:
-            msg_list = json.loads(message)
             for msg in msg_list:
                 if msg[0] == "reconnect_host":
-                    reconnect = True
+                    if conn:
+                        # Close host connection (should automatically reconnect)
+                        conn.on_close()
+                        return
 
                 elif msg[0] == "check_updates":
                     # Check for announcements/updates
@@ -519,18 +546,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 else:
                     req_list.append(msg)
-
-            remote_host, term_name = self.remote_path.split("/")
-            if not self.wildcard:
-                conn = TerminalConnection.get_connection(remote_host)
-                if not conn:
-                    self.write_json([["errmsg", "ERROR: Remote host %s not connected" % remote_host]])
-                    return
-
-                if reconnect:
-                    # Close host connection (should automatically reconnect)
-                    conn.on_close()
-                    return
 
             matchpaths = TerminalConnection.get_matching_paths(self.wildcard) if self.wildcard else [self.remote_path]
             if self.wildcard:
@@ -586,6 +601,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                                  ssl_options=ssl_options, max_packet_buf=2)
         self.term_set = set()
         self.term_count = 0
+        self.allow_feedback = set()
 
     def shutdown(self):
         print >> sys.stderr, "Shutting down server connection %s <- %s" % (self.connection_id, self.source)
@@ -623,10 +639,15 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
             else:
                 fwd_list.append(msg)
-
-        ws_list = GTSocket._watch_set.get(self.connection_id+"/"+term_name) or set()
+                if msg[0] == "terminal" and msg[1] == "graphterm_feedback":
+                    if msg[2]:
+                        self.allow_feedback.add(term_name)
+                    else:
+                        self.allow_feedback.discard(term_name)
 
         path = self.connection_id + "/" + term_name
+        ws_list = GTSocket._watch_set.get(path) or set()
+
         for regexp, ws_id in GTSocket._wildcards.itervalues():
             if regexp.match(path):
                 ws_list.add(ws_id)
