@@ -446,11 +446,15 @@ this time. Look at the command line for the feedback.)</p>
 </div>
 <div class="section" id="command-recall">
 <h2><a class="toc-backref" href="#id12">2.7&nbsp;&nbsp;&nbsp;Command recall</a></h2>
-<p>Use <em>up/down arrows</em> after partially typing a command to search for
-matching commands with the same prefix, and use <em>right arrow</em> to edit
-the completed command or use the <em>Enter</em> key to execute it. (To use the
-command recall feature of the underlaying bash shell, use Control-P
-and Control-N, instead of the up/down arrows.)</p>
+<p>If the command line is empty, <em>up/down arrows</em> will use the underlying
+shell for command recall (like Control-P and Control-N). If the
+command line contains any text, including whitespace,
+<em>up/down arrows</em> will cause GraphTerm to search for matching
+previous commands that begin with the text already typed (ignoring
+any leading whitespace). You can use the <em>right arrow</em> to
+complete the recalled command (for editing) or use the <em>Enter</em> key
+to execute it. Typing any other key, including the <em>left arrow</em>,
+will cancel the command recall process.</p>
 </div>
 <div class="section" id="ipad-usage">
 <h2><a class="toc-backref" href="#id13">2.8&nbsp;&nbsp;&nbsp;iPad usage</a></h2>

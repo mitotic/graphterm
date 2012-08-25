@@ -118,11 +118,15 @@ this time. Look at the command line for the feedback.)
 Command recall
 ---------------------------------------------------------------------------------------
 
-Use *up/down arrows* after partially typing a command to search for
-matching commands with the same prefix, and use *right arrow* to edit
-the completed command or use the *Enter* key to execute it. (To use the
-command recall feature of the underlaying bash shell, use Control-P
-and Control-N, instead of the up/down arrows.)
+If the command line is empty, *up/down arrows* will use the underlying
+shell for command recall (like Control-P and Control-N). If the
+command line contains any text, including whitespace,
+*up/down arrows* will cause GraphTerm to search for matching
+previous commands that begin with the text already typed (ignoring
+any leading whitespace). You can use the *right arrow* to
+complete the recalled command (for editing) or use the *Enter* key
+to execute it. Typing any other key, including the *left arrow*,
+will cancel the command recall process. 
 
 iPad usage
 ---------------------------------------------------------------------------------------
