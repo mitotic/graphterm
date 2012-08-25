@@ -231,7 +231,7 @@ except ImportError:
     from UserDict import DictMixin as MutableMapping
 
 
-OTRACE_VERSION = "0.30"
+OTRACE_VERSION = "0.30.0+"
 
 __all__ = ["OTrace", "OShell", "OTraceException"]
 
@@ -919,18 +919,27 @@ class TraceConsole(object):
             self.locals_dict[TRACE_INFO] = {}
         self.locals_dict[TRACE_INFO][trace_attr] = value
 
-    def loop(self):
-        """Start trace input loop"""
+    def loop(self, wait_to_run=False):
+        """Start trace input loop.
+        If wait_to_run, block until run command is issued in oshell.
+        (wait_to_run requires new_thread or no_input)
+        If not no_input, block until shutdown.
+        """
+        if wait_to_run:
+            assert self.thread or self.no_input
+            self.queue = Queue.Queue()
+            self.expect_run = True
+
         if self.thread:
             self.thread.start()
         else:
+            # Blocks if not no_input
             self.run()
 
-    def run_loop(self):
-        """Start trace run loop, blocking to wait for run commands"""
-        self.queue = Queue.Queue()
+        if not wait_to_run:
+            return
+
         while not self.shutting_down:
-            self.expect_run = True
             try:
                 run_args = self.queue.get(block=True, timeout=1)
             except Queue.Empty:
@@ -1326,7 +1335,7 @@ The command prefix "pr" may be omitted, and is assumed by default.
 """,
 
 "run":
-"""run function [arg1 ...]   # Run function in main thread
+"""run function [arg1 ...]   # Run function in main thread with optional string list argument
 """,
 
 "save":
@@ -1465,7 +1474,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
             "dn":   ["cd", DOWN_STACK],
             "dv":   ["cd", DOWN_STACK, ";", "view", "-i"],
             "doc":  ["view", "-d", "-i"],
-            "hup":  ["exec", "import", "os", ";", "import", "signal", ";", "os.kill(os.getpid(),signal.SIGHUP)"],
+            "interrupt":  ["exec", "import", "os", ";", "import", "signal", ";", "os.kill(os.getpid(),signal.SIGINT)"],
             "ls":   ["ls", "-C"],
             "show": ["view", "-i"],
             "up":   ["cd", UP_STACK],
@@ -1485,9 +1494,9 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
             readline.set_completer(self.completer)
             readline.parse_and_bind('tab: complete')
 
-    def loop(self):
+    def loop(self, wait_to_run=False):
         """Start input loop for OShell."""
-        super(OShell, self).loop()
+        super(OShell, self).loop(wait_to_run=wait_to_run)
 
     def run(self):
         if self.init_func:
@@ -3189,7 +3198,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
         """Run function in main thread"""
         out_str, err_str = "", ""
         if not self.expect_run:
-             return (out_str, "Already running task; wait for it to complete")
+             return (out_str, "Already running task; 'interrupt' it or wait for it to complete")
         if not self.queue:
              return (out_str, "Cannot run function unless otrace is in separate thread")
         if not comps:
@@ -5607,11 +5616,33 @@ untag = OTrace.untag
 get_tag = OTrace.get_tag
 set_tag = OTrace.set_tag
 
-def set_trace(globals_dict, locals_dict=None):
-    """Invoke otrace within code interactively, like pdb. Use quit command to continue execution"""
-    trace_shell = OShell(locals_dict=locals_dict or globals_dict, globals_dict=globals_dict,
+def set_trace(globals_dict, locals_dict=None, new_thread=False, wait_to_run=False,
+              init_file=""):
+    """Invoke otrace and return OShell instance.
+    pdb-like usage:
+       import otrace
+       otrace.set_trace(globals())
+
+    The above call will block and otrace will read commands from stdin
+    until the 'quit' command is issued.
+
+    If new_thread=True, the call will return immediately, and otrace will wait for
+    commands from stdin in a new thread, while the main thread executes the program.
+    (For clean termination, the main thread should invoke the 'shutdown' method on
+    the returned OShell instance.)
+
+    If wait_to_run=True, the call will block, and the 'run' command in otrace
+    can be used to run functions. (new_thread is implied)
+
+    Optional init_file contains commands to initialize otrace.
+    """
+    trace_shell = OShell(globals_dict=globals_dict,
+                         locals_dict=locals_dict or globals_dict,
+                         new_thread=(new_thread or wait_to_run),
+                         init_file=init_file,
                          allow_unsafe=True)
-    trace_shell.loop()
+    trace_shell.loop(wait_to_run=wait_to_run)
+    return trace_shell
 
     
 def test():
@@ -5734,15 +5765,11 @@ def main(args=None):
         logging.warning("SIGTERM signal received")
         Trace_shell.shutdown()
 
-    def sighup(signal, frame):
-        logging.warning("SIGHUP signal received")
-
     signal.signal(signal.SIGTERM, sigterm)
-    signal.signal(signal.SIGHUP, sighup)
 
     try:
         # Start oshell loop in new thread
-        Trace_shell.loop()
+        Trace_shell.loop(wait_to_run=(not funcname))
 
         if funcname:
             # Delay to ensure any tracing has started
@@ -5754,9 +5781,6 @@ def main(args=None):
                 funcobj(args)
             else:
                 funcobj()
-        else:
-            # Block, waiting for run commands
-            Trace_shell.run_loop()
 
     except Exception, excp:
         traceback.print_exc()

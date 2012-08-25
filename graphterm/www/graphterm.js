@@ -663,12 +663,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var appendSelector = gParams.wildcard ? "#session-log .preventry" : "#session-log .curentry";
 		if (action == "html_output") {
 		    var pagelet_html = '<div class="pagelet">'+command[1]+'</div>\n';
-		    var new_elem = $(pagelet_html).hide().appendTo(appendSelector);
-		    $(appendSelector+" .pagelet .gterm-rowimg").addClass("icons");
-		    if (!gWebSocket.icons)
-			$(appendSelector+" .pagelet .gterm-rowimg").hide();
+		    var newElem = $(pagelet_html).hide().appendTo(appendSelector);
 		    $(appendSelector+" .pagelet .gterm-link").bindclick(otraceClickHandler);
-		    new_elem.show();
+		    newElem.show();
 		} else {
 		    $(command[1]).appendTo(appendSelector);
 		}
@@ -733,12 +730,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    } else if (!response_type || response_type == "pagelet") {
 			var widget_html = (content_type == "text/html") ? '<div id="session-widget" class="widget">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
-			var new_elem = $(widget_html).replaceAll("#session-widget");
+			var newElem = $(widget_html).replaceAll("#session-widget");
 		    }
 
 		} else if (cmd_type == "graphterm_output") {
 		    var entry_class = "entry"+gPromptIndex;
-		    var classes = " " +entry_class;
+		    var classes = entry_class;
 		    var params = cmd_arg[0];
 		    var content = cmd_arg[1];
 		    if (content)
@@ -746,6 +743,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var content_type = params.headers.content_type;
 		    var response_type = params.headers.x_gterm_response;
 		    var response_params = params.headers.x_gterm_parameters;
+		    if (response_params.classes)
+			classes += " " + response_params.classes;
 		    //console.log("graphterm_output: params: ", params);
 		    if (response_type == "error_message") {
 			alert(content);
@@ -776,6 +775,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 		    } else if (!response_type || response_type == "pagelet") {
 			var pagelet_display = response_params.display || "block";
+			var pageletSelector = "#session-bufscreen .pagelet."+entry_class;
 			if (pagelet_display.substr(0,4) == "full") {
 			    // Hide previous entries, removing previous pagelets for this entry
 			    if (pagelet_display == "fullwindow" || pagelet_display == "fullscreen")
@@ -786,7 +786,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    } else {
 				StartFullpage(pagelet_display, true);
 			    }
-			    $("#session-bufscreen").children(".pagelet."+entry_class).remove();
+			    $(pageletSelector).remove();
 			    if ("scroll" in response_params && response_params.scroll != "down")
 				gScrollTop = true;
 			} else {
@@ -797,20 +797,34 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet '+classes+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
 			try {
-			    var new_elem = $(pagelet_html).hide().appendTo("#session-bufscreen");
-			    if (response_params.form_input) {
-				new_elem.find(".gterm-form-button").bindclick(GTFormSubmit);
-				new_elem.find(".gterm-form-label").bind("hover", GTFormHelp);
+			    var newElem = $(pagelet_html);
+			    if (newElem.hasClass("gterm-blockseq")) {
+				var prevBlock = $("#session-bufscreen .pagelet.gterm-blockseq:not(.gterm-blockseqtoggle)");
+				if (response_params.block && response_params.block == "overwrite" && prevBlock.length == 1 && prevBlock.is($("#session-bufscreen :last-child")) ) {
+				    // Overwrite previous blockseq element
+				    prevBlock.replaceWith(newElem);
+				    newElem = null;
+				} else {
+				    // Hide previous blockseq element
+				    prevBlock.addClass("gterm-blockseqtoggle").addClass("gterm-blockseqhide");
+				}
 			    }
-			    $("#session-bufscreen .pagelet .gterm-rowimg").addClass("icons");
-			    if (!gWebSocket.icons)
-				$("#session-bufscreen .pagelet .gterm-rowimg").hide();
 
-			    $('#session-bufscreen .pagelet."'+entry_class+'" td .gterm-link').bindclick(gtermPageletClickHandler);
-			    $('#session-bufscreen .pagelet."'+entry_class+'" td img').bind("dragstart", function(evt) {evt.preventDefault();});
+			    if (newElem) {
+				newElem = newElem.hide().appendTo("#session-bufscreen");
 
-			    GTDropBindings($('#session-bufscreen .pagelet."'+entry_class+'" .droppable'));
-			    new_elem.show();
+				if (response_params.form_input) {
+				    newElem.find(".gterm-form-button").bindclick(GTFormSubmit);
+				    newElem.find(".gterm-form-label").bind("hover", GTFormHelp);
+				}
+
+				newElem.show();
+			    }
+			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
+			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
+			    $(pageletSelector+' .gterm-blockseqlink').bindclick(gtermLinkClickHandler);
+
+			    GTDropBindings($(pageletSelector+' .droppable'));
 			} catch(err) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
 			}
@@ -1247,13 +1261,7 @@ function gtermSelectHandler(event) {
 
     case "icons":
 	gWebSocket.icons = (selectedOption == "on");
-        if (gWebSocket.icons) {
-            $(".noicons").hide();
-            $(".icons").show();
-        } else {
-            $(".noicons").show();
-            $(".icons").hide();
-        }
+	$("#terminal").toggleClass("showicons", gWebSocket.icons);
 	break;
 
       case "webcast":
@@ -1397,9 +1405,8 @@ function gtermClickPaste(text, file_url, options) {
 function gtermLinkClickHandler(event) {
     var contextMenu = gControlActive;
     GTReceivedUserInput("click");
-    var text = $(this).text();
     var file_url = "";
-    var options = {}
+    var options = {};
 
     if ($(this).hasClass("gterm-cmd-prompt")) {
 	if (contextMenu) {
@@ -1413,12 +1420,18 @@ function gtermLinkClickHandler(event) {
 	var cmd_output = $(this).parent().nextUntil(".promptrow");
 	cmd_output.toggleClass("gterm-hideoutput");
 	$(this).parent().toggleClass("gterm-hideoutput");
+
     } if ($(this).hasClass("gterm-cmd-text")) {
-	gtermClickPaste(text, file_url, options);
+	gtermClickPaste($(this).text(), file_url, options);
+
     } if ($(this).hasClass("gterm-cmd-path")) {
 	file_url = makeFileURL($(this).attr("href"));
 	gtermClickPaste("", file_url, options);
+
+    } if ($(this).hasClass("gterm-blockseqlink")) {
+	$(this).parent(".gterm-blockseqtoggle").toggleClass("gterm-blockseqhide");
     }
+
     if (contextMenu) {
 	alert("Context menu not yet implemented");
 	return false;
@@ -2226,9 +2239,6 @@ function ShowFinder(params, content) {
     var finder_html = '<div class="finder" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n';
 
     $("#session-finderbody").html(finder_html);
-    $("#session-finderbody .gterm-rowimg").addClass("icons");
-    if (!gWebSocket.icons)
-	$("#session-finderbody .gterm-rowimg").hide();
     
     $('#session-finderbody td .gterm-link').bindclick(gtermFinderClickHandler)
 

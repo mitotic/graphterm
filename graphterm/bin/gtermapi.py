@@ -1,5 +1,5 @@
 """
-gtermapi: Common code for gterm-aware programs
+gtermapi: API module for gterm-aware programs
 """
 
 import base64
@@ -39,11 +39,15 @@ def wrap_write(content, headers={}):
     """Wrap content, with headers, and write to stdout"""
     write(wrap(content, headers=headers))
 
-def write_html(html, display="block", dir=""):
+def write_html(html, display="block", dir="", add_headers={}):
     """Write html pagelet to stdout"""
+    params = {"display": display,
+              "scroll": "top",
+              "current_directory": dir}
+    params.update(add_headers)
     html_headers = {"content_type": "text/html",
                     "x_gterm_response": "pagelet",
-                    "x_gterm_parameters": {"display": display, "scroll": "top", "current_directory": dir}
+                    "x_gterm_parameters": params
                     }
     wrap_write(html, headers=html_headers)
 
@@ -95,7 +99,7 @@ def create_blob(content, content_type="text/html", blob_id=""):
     
 class BlobStringIO(StringIO.StringIO):
     def __init__(self, content_type="text/html"):
-        self.content_type = "application/pdf" if content_type=="pdf" else "image/"+content_type
+        self.content_type = content_type
         self.blob_id, self.blob_url = make_blob_url()
         StringIO.StringIO.__init__(self)
 
@@ -112,24 +116,6 @@ def preload_images(urls):
                }
 
     wrap_write("", headers=headers)
-
-def show_image(url):
-    IMGFORMAT = '<img class="gterm-blockimg" src="%s"></img><br>' 
-    write_html(IMGFORMAT % url)
-
-def gmatplotlib_setup():
-    import matplotlib
-    matplotlib.use("Agg")
-
-def gsavefig(format="png"):
-    import matplotlib.pyplot as plt
-
-    content_type = "application/pdf" if format=="pdf" else "image/"+format
-    outbuf = BlobStringIO(content_type)
-    plt.savefig(outbuf, format=format)
-    blob_url = outbuf.close()
-    show_image(blob_url)
-    
 
 FILE_URI_PREFIX = "file://"
 FILE_PREFIX = "/file/"

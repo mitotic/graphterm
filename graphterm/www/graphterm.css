@@ -256,7 +256,15 @@ img.gterm-blockimg {
     max-height: 100%;
 }
 
-span.gterm-link, a.gterm-link {
+.gterm-blockseq:not(.gterm-blockseqhide) span.gterm-blockseqlink {
+    display: none;
+}
+
+.gterm-blockseq.gterm-blockseqhide img, .gterm-blockseq.gterm-blockseqhide div {
+    display: none;
+}
+
+span.gterm-link, a.gterm-link, span.gterm-blockseqlink {
     color: blue;
     cursor: pointer;
     text-decoration: none;
@@ -284,6 +292,10 @@ input.gterm-input-arg[type=text] {
 
 #terminal.webcast #menubar-label-webcast {
     color: red;
+}
+
+#terminal:not(.showicons) .pagelet .gterm-rowimg {
+    display: none;
 }
 
 /* Screens */

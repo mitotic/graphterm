@@ -86,12 +86,7 @@ def main(args=None):
         logging.warning("SIGTERM signal received")
         host_shutdown()
 
-    def sighup(signal, frame):
-        logging.warning("SIGHUP signal received")
-
     signal.signal(signal.SIGTERM, sigterm)
-    signal.signal(signal.SIGHUP, sighup)
-
 
     try:
         if funcname:
@@ -106,7 +101,7 @@ def main(args=None):
                 funcobj()
         else:
             # Blocks until run command is issued
-            Trace_shell.run_loop()
+            Trace_shell.loop(wait_to_run=True)
 
     except Exception, excp:
         traceback.print_exc()
