@@ -8,9 +8,12 @@ import hashlib
 import hmac
 import json
 import os
+import Queue
 import random
+import subprocess
 import sys
 import termios
+import threading
 import tty
 import uuid
 
@@ -25,6 +28,9 @@ URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
 Host, Session = Path.split("/") if Path else ("", "") 
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
+
+App_dir = os.path.join(os.getenv("HOME"), ".graphterm")
+Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
 
 def wrap(html, headers={}):
     """Wrap html, with headers, between escape sequences"""
@@ -64,12 +70,12 @@ def write_blank(display="fullpage"):
     """Write blank pagelet to stdout"""
     write_html("", display=display)
 
-def open_url(url):
+def open_url(url, target="_blank"):
     """Open url in new window"""
-    blank_headers = {"x_gterm_response": "open_url",
-                     "x_gterm_parameters": {"url": url}
-                     }
-    wrap_write("", headers=blank_headers)
+    url_headers = {"x_gterm_response": "open_url",
+                   "x_gterm_parameters": {"url": url, "target": target}
+                   }
+    wrap_write("", headers=url_headers)
 
 def get_file_url(filepath, relative=False):
     """Construct file URL with hmac cookie suffix. If relative, return '/file/host/path'"""
@@ -310,3 +316,38 @@ class FormParser(object):
         if form_values and trim:
             form_values = dict((k,v.strip()) for k, v in form_values.items())
         return form_values
+
+
+def command_output(command_args, **kwargs):
+	""" Executes a command and returns the string tuple (stdout, stderr)
+	keyword argument timeout can be specified to time out command (defaults to 1 sec)
+	"""
+	timeout = kwargs.pop("timeout", 1)
+	def command_output_aux():
+            try:
+		proc = subprocess.Popen(command_args, stdout=subprocess.PIPE,
+					stderr=subprocess.PIPE)
+		return proc.communicate()
+            except Exception, excp:
+                return "", str(excp)
+        if not timeout:
+            return command_output_aux()
+
+        exec_queue = Queue.Queue()
+        def execute_in_thread():
+            exec_queue.put(command_output_aux())
+        thrd = threading.Thread(target=execute_in_thread)
+        thrd.start()
+        try:
+            return exec_queue.get(block=True, timeout=timeout)
+        except Queue.Empty:
+            return "", "Timed out after %s seconds" % timeout
+
+def open_browser(url):
+    if sys.platform.startswith("linux"):
+        command_args = ["xdg-open", url]
+    else:
+        command_args = ["open", url]
+
+    return command_output(command_args, timeout=5)
+

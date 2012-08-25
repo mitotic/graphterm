@@ -44,6 +44,8 @@ import lineterm
 import packetserver
 import version
 
+from bin import gtermapi
+
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
@@ -118,31 +120,6 @@ restore freedom to the galaxy....
 
 """
                                 
-def command_output(command_args, **kwargs):
-	""" Executes a command and returns the string tuple (stdout, stderr)
-	keyword argument timeout can be specified to time out command (defaults to 15 sec)
-	"""
-	timeout = kwargs.pop("timeout", 15)
-	def command_output_aux():
-            try:
-		proc = subprocess.Popen(command_args, stdout=subprocess.PIPE,
-					stderr=subprocess.PIPE, **kwargs)
-		return proc.communicate()
-            except Exception, excp:
-                return "", str(excp)
-        if not timeout:
-            return command_output_aux()
-
-        exec_queue = Queue.Queue()
-        def execute_in_thread():
-            exec_queue.put(command_output_aux())
-        thrd = threading.Thread(target=execute_in_thread)
-        thrd.start()
-        try:
-            return exec_queue.get(block=True, timeout=timeout)
-        except Queue.Empty:
-            return "", "Timed out after %s seconds" % timeout
-
 class BlockingCall(object):
     """ Class to execute a blocking function in a separate thread and callback with return value.
     """
@@ -196,14 +173,14 @@ def ssl_cert_gen(hostname="localhost", clientname="gterm-local", cwd=None, new=F
     cmd_list = server_cert_gen_cmds if new else server_cert_gen_cmds[-1:]
     for cmd in cmd_list:
         cmd_args = shlex.split(cmd % params)
-        std_out, std_err = command_output(cmd_args, cwd=cwd, timeout=15)
+        std_out, std_err = gtermapi.command_output(cmd_args, cwd=cwd, timeout=15)
         if std_err:
             logging.warning("gtermserver: SSL keygen %s %s", std_out, std_err)
     fingerprint = std_out
     if new:
         for cmd in client_cert_gen_cmds:
             cmd_args = shlex.split(cmd % params)
-            std_out, std_err = command_output(cmd_args, cwd=cwd, timeout=15)
+            std_out, std_err = gtermapi.command_output(cmd_args, cwd=cwd, timeout=15)
             if std_err:
                 logging.warning("gtermserver: SSL client keygen %s %s", std_out, std_err)
     return fingerprint
@@ -978,6 +955,10 @@ def run_server(options, args):
     Http_server.listen(http_port, address=http_host)
     logging.warning("Auth code = %s %s" % (GTSocket.get_auth_code(), auth_file))
 
+    if options.terminal:
+        url = "%s://%s:%d/local/new" % ("https" if options.https else "http", http_host, http_port)
+        gtermapi.open_browser(url)
+
     def test_fun():
         raise Exception("TEST EXCEPTION")
 
@@ -1039,6 +1020,8 @@ def main():
     parser.add_option("", "--port", dest="port", default=gtermhost.DEFAULT_HTTP_PORT,
                       help="IP port (default: %d)" % gtermhost.DEFAULT_HTTP_PORT, type="int")
 
+    parser.add_option("", "--terminal", dest="terminal", action="store_true",
+                      help="Open new terminal window")
     parser.add_option("", "--internal_host", dest="internal_host", default="",
                       help="internal host name (or IP address) (default: external host name)")
     parser.add_option("", "--internal_port", dest="internal_port", default=0,

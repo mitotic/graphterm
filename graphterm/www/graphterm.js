@@ -765,7 +765,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 							     response_params.command]]]);
 
 		    } else if (response_type == "open_url") {
-			window.open(response_params.url, target="_blank");
+			window.open(response_params.url, target=(response_params.target || "_blank"));
 
 		    } else if (response_type == "preload_images") {
 			GTPreloadImages(response_params.urls);
@@ -1763,6 +1763,12 @@ function AjaxKeypress(evt) {
 	    kc+=32;
 	if (kc>=97 && kc<=122) {
 	    k=String.fromCharCode(27)+String.fromCharCode(kc);
+	}
+
+	if (evt.ctrlKey && kc == 116) {
+	    // Ctrl-Alt-T: Open new terminal
+	    OpenNew()
+	    return false;
 	}
 
     } else if (gControlActive && kc == 91) {

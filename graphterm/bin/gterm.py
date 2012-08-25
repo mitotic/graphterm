@@ -7,44 +7,15 @@ import hashlib
 import hmac
 import logging
 import os
-import Queue
 import random
-import subprocess
 import sys
-import threading
 
 import tornado.httpclient
 
+import gtermapi
+
 Http_addr = "localhost"
 Http_port = 8900
-
-App_dir = os.path.join(os.getenv("HOME"), ".graphterm")
-Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
-
-def command_output(command_args, **kwargs):
-	""" Executes a command and returns the string tuple (stdout, stderr)
-	keyword argument timeout can be specified to time out command (defaults to 1 sec)
-	"""
-	timeout = kwargs.pop("timeout", 1)
-	def command_output_aux():
-            try:
-		proc = subprocess.Popen(command_args, stdout=subprocess.PIPE,
-					stderr=subprocess.PIPE)
-		return proc.communicate()
-            except Exception, excp:
-                return "", str(excp)
-        if not timeout:
-            return command_output_aux()
-
-        exec_queue = Queue.Queue()
-        def execute_in_thread():
-            exec_queue.put(command_output_aux())
-        thrd = threading.Thread(target=execute_in_thread)
-        thrd.start()
-        try:
-            return exec_queue.get(block=True, timeout=timeout)
-        except Queue.Empty:
-            return "", "Timed out after %s seconds" % timeout
 
 def getuid(pid):
     """Return uid of running process"""
@@ -62,7 +33,7 @@ def getuid(pid):
 def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, protocol="http"):
     """Simulate user form submission by executing a HTTP request"""
 
-    cert_dir = App_dir
+    cert_dir = gtermapi.App_dir
     server_name = "localhost"
     client_prefix = server_name + "-gterm-local"
     ca_certs = cert_dir+"/"+server_name+".crt"
@@ -96,7 +67,7 @@ def auth_token(secret, connection_id, client_nonce, server_nonce):
 def main():
     global Http_addr, Http_port
     from optparse import OptionParser
-    usage = "usage: gterm [-h ... options]"
+    usage = "usage: gterm [-h ... options] [[host/]session]"
     parser = OptionParser(usage=usage)
 
     parser.add_option("", "--https", dest="https", action="store_true",
@@ -111,18 +82,34 @@ def main():
     (options, args) = parser.parse_args()
     protocol = "https" if options.https else "http"
 
+    path = ""
+    if args:
+        if "/" in args[0]:
+            path = args[0]
+        else:
+            path = (gtermapi.Host or "local") + "/" + args[0]
+
+    if gtermapi.Lterm_cookie:
+        # Open new terminal window from within graphterm window
+        path = path or (gtermapi.Host + "/" + "new")
+        url = gtermapi.URL + "/" + path
+        target = "_blank" if url.endswith("/new") else path
+        gtermapi.open_url(url, target=target)
+        return
+
     if options.server_auth:
-        if not os.path.exists(Gterm_secret_file):
+        # Authenticate server
+        if not os.path.exists(gtermapi.Gterm_secret_file):
             print >> sys.stderr, "gterm: Server not running (no secret file); use 'gtermserver' command to start it."
             sys.exit(1)
 
         try:
-            with open(Gterm_secret_file) as f:
+            with open(gtermapi.Gterm_secret_file) as f:
                 Http_port, Gterm_pid, Gterm_secret = f.read().split()
                 Http_port = int(Http_port)
                 Gterm_pid = int(Gterm_pid)
         except Exception, excp:
-            print >> sys.stderr, "gterm: Error in reading %s: %s" % (Gterm_secret_file, excp)
+            print >> sys.stderr, "gterm: Error in reading %s: %s" % (gtermapi.Gterm_secret_file, excp)
             sys.exit(1)
 
         if os.getuid() != getuid(Gterm_pid):
@@ -145,13 +132,12 @@ def main():
         # TODO: Send server token to server in URL to authenticate
         ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
 
+    # Open graphterm window using browser
     url = "%s://%s:%d" % (protocol, Http_addr, Http_port)
-    if sys.platform.startswith("linux"):
-        command_args = ["xdg-open", url]
-    else:
-        command_args = ["open", url]
+    if path:
+        url += "/" + path
 
-    std_out, std_err = command_output(command_args, timeout=5)
+    std_out, std_err = gtermapi.open_browser(url)
     if std_err:
         print >> sys.stderr, "gterm: ERROR in opening browser window '%s' - %s\n Check if server is running. If not, start it with 'gtermserver' command." % (" ".join(command_args), std_err)
         sys.exit(1)
