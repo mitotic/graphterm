@@ -41,11 +41,15 @@ parser = OptionParser(usage=usage)
 
 parser.add_option("-c", "--csv", dest="csv", action="store_true", help="CSV input")
 parser.add_option("-j", "--json", dest="json", action="store_true",  help="JSON input")
+parser.add_option("", "--opacity", dest="opacity", default=1.0,
+                  help="Feed opacity (default: 1.0)")
 
 (options, args) = parser.parse_args()
 
 params = {"scroll": "top", "current_directory": os.getcwd()}
 params["display"] = "fullscreen"
+if options.opacity:
+    params["opacity"] = options.opacity
 
 Headers = {"content_type": "text/html"}
 Headers["x_gterm_response"] = "pagelet"

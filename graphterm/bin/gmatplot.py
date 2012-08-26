@@ -4,6 +4,7 @@
 gmatplot: Convenience functions of gterm-aware matplotlib usage
 """
 
+import time
 import gtermapi
 
 def display_blockimg(url, overwrite=False):
@@ -43,11 +44,16 @@ def demo():
     plt.plot([1,2,3,2,3,0])
     gplot_savefig(format=fmt)
 
+    time.sleep(2)
+
     plt.plot([1,2,3,2,3,1])
     gplot_savefig(format=fmt)
 
-    for x in range(2,5):
-        plt.plot([1,2,3,2,3,x])
+    n = 20
+    dx = 5.0/n
+    for j in range(1,n):
+        time.sleep(0.5)
+        plt.plot([1,2,3,2,3,1+j*dx])
         gplot_savefig(format=fmt, overwrite=True)
 
 if __name__ == "__main__":

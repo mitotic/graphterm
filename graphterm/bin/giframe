@@ -14,22 +14,25 @@ from optparse import OptionParser
 
 import gtermapi
 
-usage = "usage: %prog [file]"
+usage = "usage: %prog [file|URL]"
 parser = OptionParser(usage=usage)
 
 (options, args) = parser.parse_args()
 
 if args:
-    filename = args[0]
-    fullname = os.path.expanduser(filename)
-    filepath = os.path.normcase(os.path.abspath(fullname))
+    if args[0].startswith("http:") or args[0].startswith("https:"):
+        iframe_url = args[0]
+    else:
+        filename = args[0]
+        fullname = os.path.expanduser(filename)
+        filepath = os.path.normcase(os.path.abspath(fullname))
 
-    if not os.path.exists(filepath) or not os.path.isfile(filepath):
-        print >> sys.stderr, "File %s not found" % filename
-        sys.exit(1)
+        if not os.path.exists(filepath) or not os.path.isfile(filepath):
+            print >> sys.stderr, "File %s not found" % filename
+            sys.exit(1)
 
-    mimetype, encoding = mimetypes.guess_type(filepath)
-    iframe_url = gtermapi.get_file_url(filepath, relative=True)
+        mimetype, encoding = mimetypes.guess_type(filepath)
+        iframe_url = gtermapi.get_file_url(filepath, relative=True)
 
 else:
     try:

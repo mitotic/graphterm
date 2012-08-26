@@ -849,9 +849,9 @@ class ProxyFileHandler(tornado.web.RequestHandler):
         if self.request.path.startswith("/blob/"):
             headers.append(("Expires", datetime.datetime.utcnow() +
                                       datetime.timedelta(seconds=MAX_CACHE_TIME)))
-            headers.append(("Cache-Control", "max-age="+str(MAX_CACHE_TIME)))
+            headers.append(("Cache-Control", "private, max-age="+str(MAX_CACHE_TIME)))
         elif last_modified and content_type:
-            headers.append(("Cache-Control", "no-cache"))
+            headers.append(("Cache-Control", "private, max-age=0, must-revalidate"))
 
         cache = self.request.method != "HEAD" and (self.request.path.startswith("/blob/") or
                                                      (Cache_files and last_modified) )

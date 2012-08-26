@@ -64,6 +64,10 @@ Exec_errmsg = False
 
 ENCODING = "utf-8"  # "utf-8" or "ascii"
 
+# Bash PROMPT CMD variable (and export version)
+BASH_PROMPT_CMD = 'export PS1=$GRAPHTERM_PROMPT; echo -n "\033[?%s;${GRAPHTERM_COOKIE}h$PWD\033[?%s;l"'
+EXPT_PROMPT_CMD = 'export PS1=$GRAPHTERM_PROMPT; echo -n `printf \"\\033\"`\"[?%s;${GRAPHTERM_COOKIE}h$PWD\"`printf \"\\033\"`\"[?%s;l\"'
+
 STYLE4 = 4
 UNI24 = 24
 UNIMASK = 0xffffff
@@ -389,13 +393,12 @@ class ScreenBuf(object):
                 self.cursory = None
                 self.main_screen = None
                 self.alt_screen = None
-                self.current_scroll_count = 0
-                self.last_scroll_count = 0
                 self.entry_index = 0
-                self.scroll_lines = []
+                self.current_scroll_count = 0
+
+                self.clear_buf()
                 self.cleared_current_dir = None
                 self.cleared_last = False
-                self.full_update = True
 
                 self.fg_color = fg_color
                 self.bg_color = bg_color
@@ -404,6 +407,11 @@ class ScreenBuf(object):
                 self.bold_style = 0x08
 
                 self.default_nul = self.default_style << UNI24
+
+        def clear_buf(self):
+                self.last_scroll_count = self.current_scroll_count
+                self.scroll_lines = []
+                self.full_update = True
 
         def reconnect(self):
                 self.last_scroll_count = self.current_scroll_count - len(self.scroll_lines)
@@ -528,6 +536,8 @@ class ScreenBuf(object):
                 return span_list
 
         def __repr__(self):
+                if not self.main_screen:
+                        return ""
                 d = dump(self.main_screen.data, trim=True)
                 r = ""
                 for i in range(self.height):
@@ -679,6 +689,10 @@ class Terminal(object):
                                 self.main_screen.data[:min_width] = saved_line[2]
 
                 self.screen = self.alt_screen if self.alt_mode else self.main_screen
+                self.needs_updating = True
+
+        def clear(self):
+                self.screen_buf.clear_buf()
                 self.needs_updating = True
 
         def reconnect(self):
@@ -1522,20 +1536,7 @@ class Multiplex(object):
                                                         env[var] = Exec_path + ":" + env[var]
                                 env["COLUMNS"] = str(width)
                                 env["LINES"] = str(height)
-                                env["TERM"] = self.term_type or TERM_TYPE
-                                env["GRAPHTERM_COOKIE"] = str(cookie)
-                                env["GRAPHTERM_SHARED_SECRET"] = self.shared_secret
-                                env["GRAPHTERM_PATH"] = "%s/%s" % (self.host, term_name)
-                                if self.server_url:
-                                        env["GRAPHTERM_URL"] = self.server_url
-                                        
-                                if self.widget_port:
-                                        env["GRAPHTERM_SOCKET"] = "/dev/tcp/localhost/%d" % self.widget_port
-                                        
-                                if self.prompt:
-                                        env["GRAPHTERM_PROMPT"] = "".join(self.prompt) + " "
-                                        ##env["PROMPT_COMMAND"] = "export PS1=$GRAPHTERM_PROMPT; unset PROMPT_COMMAND"
-                                        env["PROMPT_COMMAND"] = 'export PS1=$GRAPHTERM_PROMPT; echo -n "\033[?%s;${GRAPHTERM_COOKIE}h$PWD\033[?%s;l"' % (GRAPHTERM_SCREEN_CODES[0], GRAPHTERM_SCREEN_CODES[0])
+                                env.update( dict(self.term_env(term_name, cookie)) )
 
                                 # cd to HOME
                                 os.chdir(os.path.expanduser("~"))
@@ -1553,6 +1554,37 @@ class Multiplex(object):
                                         Exec_errmsg = True
                                         self.screen_callback(term_name, "errmsg", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
                                 return term_name, cookie
+
+        def term_env(self, term_name, cookie, export=False):
+                env = []
+                env.append( ("TERM", self.term_type or TERM_TYPE) )
+                env.append( ("GRAPHTERM_COOKIE", str(cookie)) )
+                env.append( ("GRAPHTERM_SHARED_SECRET", self.shared_secret) )
+                env.append( ("GRAPHTERM_PATH", "%s/%s" % (self.host, term_name)) )
+                if self.server_url:
+                        env.append( ("GRAPHTERM_URL", self.server_url) )
+
+                if self.widget_port:
+                        env.append( ("GRAPHTERM_SOCKET", "/dev/tcp/localhost/%d" % self.widget_port) )
+
+                if self.prompt:
+                        env.append( ("GRAPHTERM_PROMPT", "".join(self.prompt) + " ") )
+                        ##env.append( ("PROMPT_COMMAND", "export PS1=$GRAPHTERM_PROMPT; unset PROMPT_COMMAND") )
+                        cmd_fmt = EXPT_PROMPT_CMD if export else BASH_PROMPT_CMD
+
+                        env.append( ("PROMPT_COMMAND", cmd_fmt % (GRAPHTERM_SCREEN_CODES[0], GRAPHTERM_SCREEN_CODES[0]) ) )
+
+                return env
+                
+        def export_environment(self, term_name):
+                term = self.proc.get(term_name)
+                if term:
+                    for name, value in self.term_env(term_name, term.cookie, export=True):
+                        try:
+                            term.pty_write("export %s='%s'\n" % (name, value))
+                        except Exception:
+                            print >> sys.stderr, "lineterm: Error exporting environment to %s" % term_name
+                            break
 
         def set_size(self, term_name, height, width):
                 # python bug http://python.org/sf/1112949 on amd64
@@ -1693,6 +1725,13 @@ class Multiplex(object):
                         if not term:
                                 return
                         term.reconnect()
+
+        def clear(self, term_name):
+                with self.lock:
+                        term = self.proc.get(term_name)
+                        if not term:
+                                return
+                        term.clear()
 
         def clear_last_entry(self, term_name, last_entry_index=None):
                 with self.lock:

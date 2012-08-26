@@ -59,7 +59,7 @@ You can use the command ``which gls`` to determine the directory
 containing graphterm-aware commands, to browse
 for other commands, which include:
 
-   ``giframe [filename]``    To view files (or HTML from stdin) in
+   ``giframe [filename|URL]``    To view files/URLs (or HTML from stdin) in
    inline iframe
 
    ``gimage [-f] [filenames]``     To view images inline, or as a
@@ -304,19 +304,30 @@ the use of SSL certificates and server/client authentication.
 it, although it is not yet ready for everyday use.)
 
 
-Using it with SSH port forwarding
+SSH and port forwarding
 ---------------------------------------------------------------------------------
 
-Currently, the most secure way to remotely access the GraphTerm server
-is to use SSH port forwarding. For example, if you are connecting to
-your work computer from home, and wish to connect to the GraphTerm
-server running as ``localhost`` on your work computer, use the command::
+If you login to a remote computer using SSH, you can use the
+*Action -> Export Environment*  menu option to set the Bash shell
+environment variables on the remote computer. This will allow
+some, but not all, of GraphTerm's features to work on the remote
+session. If you wish to use more features, set the ``PATH`` environment
+variable on the remote machine to allow access to ``gls`` and other
+commands, and also use reverse port forwarding to forward your
+local port(s) to the remote computer, e.g.::
+
+   ssh -R 8898:localhost:8898 user@remote-computer
+
+Currently, the most secure way to access the GraphTerm server running
+on a remote computer is to use SSH port forwarding. For example, if
+you are connecting to your work computer from home, and wish to
+connect to the GraphTerm server running as ``localhost`` on your work
+computer, use the command::
 
    ssh -L 8900:localhost:8900 user@work-computer
 
 This will allow you to connect to ``http://localhost:8900`` on the browser
 on your home computer to access GraphTerm running on your work computer.
-(You can also use port forwarding in reverse, if need be, using the ``-R`` option.)
 
 
 *otrace* integration

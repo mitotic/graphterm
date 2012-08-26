@@ -259,7 +259,7 @@ class FormParser(object):
             classes = ""
             if j < arg_count:
                 classes += ' gterm-input-arg'
-            if isinstance(opt_default, basestring):
+            if isinstance(opt_default, (basestring, float, int, long)):
                 if first_arg:
                     attrs += ' autofocus="autofocus"'
                 input_html = Input_text_template % (id_suffix, opt_name, opt_name, classes, opt_default.replace('"', "&quot;"), attrs)

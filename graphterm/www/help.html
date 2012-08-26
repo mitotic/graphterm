@@ -338,7 +338,7 @@ ul.auto-toc {
 <li><a class="reference internal" href="#slideshows" id="id19">2.14&nbsp;&nbsp;&nbsp;Slideshows</a></li>
 <li><a class="reference internal" href="#widgets-sockets-and-interactivity" id="id20">2.15&nbsp;&nbsp;&nbsp;Widgets, sockets, and interactivity</a></li>
 <li><a class="reference internal" href="#security" id="id21">2.16&nbsp;&nbsp;&nbsp;Security</a></li>
-<li><a class="reference internal" href="#using-it-with-ssh-port-forwarding" id="id22">2.17&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></li>
+<li><a class="reference internal" href="#ssh-and-port-forwarding" id="id22">2.17&nbsp;&nbsp;&nbsp;SSH and port forwarding</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#otrace-integration" id="id23">3&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></li>
@@ -398,7 +398,7 @@ and read the <em>UsingGraphicalFeatures</em> tutorial for usage examples.</p>
 containing graphterm-aware commands, to browse
 for other commands, which include:</p>
 <blockquote>
-<p><tt class="docutils literal">giframe [filename]</tt>    To view files (or HTML from stdin) in
+<p><tt class="docutils literal">giframe [filename|URL]</tt>    To view files/URLs (or HTML from stdin) in
 inline iframe</p>
 <p><tt class="docutils literal">gimage <span class="pre">[-f]</span> [filenames]</tt>     To view images inline, or as a
 fullpage slideshow (with <tt class="docutils literal"><span class="pre">-f</span></tt> option)</p>
@@ -613,18 +613,29 @@ the use of SSL certificates and server/client authentication.
 (SSL/https support is already built-in. Feel free to experiment with
 it, although it is not yet ready for everyday use.)</p>
 </div>
-<div class="section" id="using-it-with-ssh-port-forwarding">
-<h2><a class="toc-backref" href="#id22">2.17&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></h2>
-<p>Currently, the most secure way to remotely access the GraphTerm server
-is to use SSH port forwarding. For example, if you are connecting to
-your work computer from home, and wish to connect to the GraphTerm
-server running as <tt class="docutils literal">localhost</tt> on your work computer, use the command:</p>
+<div class="section" id="ssh-and-port-forwarding">
+<h2><a class="toc-backref" href="#id22">2.17&nbsp;&nbsp;&nbsp;SSH and port forwarding</a></h2>
+<p>If you login to a remote computer using SSH, you can use the
+<em>Action -&gt; Export Environment</em>  menu option to set the Bash shell
+environment variables on the remote computer. This will allow
+some, but not all, of GraphTerm's features to work on the remote
+session. If you wish to use more features, set the <tt class="docutils literal">PATH</tt> environment
+variable on the remote machine to allow access to <tt class="docutils literal">gls</tt> and other
+commands, and also use reverse port forwarding to forward your
+local port(s) to the remote computer, e.g.:</p>
+<pre class="literal-block">
+ssh -R 8898:localhost:8898 user&#64;remote-computer
+</pre>
+<p>Currently, the most secure way to access the GraphTerm server running
+on a remote computer is to use SSH port forwarding. For example, if
+you are connecting to your work computer from home, and wish to
+connect to the GraphTerm server running as <tt class="docutils literal">localhost</tt> on your work
+computer, use the command:</p>
 <pre class="literal-block">
 ssh -L 8900:localhost:8900 user&#64;work-computer
 </pre>
 <p>This will allow you to connect to <tt class="docutils literal"><span class="pre">http://localhost:8900</span></tt> on the browser
-on your home computer to access GraphTerm running on your work computer.
-(You can also use port forwarding in reverse, if need be, using the <tt class="docutils literal"><span class="pre">-R</span></tt> option.)</p>
+on your home computer to access GraphTerm running on your work computer.</p>
 </div>
 </div>
 <div class="section" id="otrace-integration">

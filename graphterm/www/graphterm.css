@@ -218,7 +218,7 @@ img.gterm-img {
 
 /* Widget */
 #session-widgetcontainer {
-    opacity: 0.5;
+    opacity: 1.0;
     z-index: 2000;
     position: fixed;
     top: 1.5em;

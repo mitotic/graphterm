@@ -253,6 +253,14 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 elif action == "kill_term":
                     self.remove_term(term_name)
 
+                elif action == "clear_term":
+                    if self.lineterm:
+                        self.lineterm.clear(term_name)
+
+                elif action == "export_environment":
+                    if self.lineterm:
+                        self.lineterm.export_environment(term_name)
+
                 elif action == "keypress":
                     if self.lineterm:
                         self.lineterm.term_write(term_name, cmd[0].encode(self.term_encoding, "ignore"))

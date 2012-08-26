@@ -353,6 +353,7 @@ form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display"
 form_parser.add_option("csv", False, short="c", help="CSV output (to STDERR, if -f)", raw=True)
 form_parser.add_option("json", False, short="j", help="JSON output (to STDERR, if -f)", raw=True)
 form_parser.add_option("text", False, short="t", help="Text output (to STDERR, if -f)", raw=True)
+form_parser.add_option("opacity", 1.0, help="Feed opacity (default: 1.0)")
 
 form_parser.add_option("auth_file", Default_auth_file, raw=True,
                        help="File with authentication tokens in JSON format (default: %s) % Default_auth_file")
@@ -368,6 +369,9 @@ if not options.fullscreen and not options.csv and not options.json and not optio
 check_auth_file(options.auth_file)
 
 params = {"scroll": "top", "current_directory": os.getcwd()}
+if options.opacity:
+        params["opacity"] = options.opacity
+
 params["display"] = "fullscreen" if options.fullscreen else "block"
 
 Headers = {"content_type": "text/html"}

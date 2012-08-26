@@ -464,6 +464,10 @@ function GTUpdateController() {
 	handle_resize();
 }
 
+function GTClearTerminal() {
+    $("#session-bufscreen").children().remove();
+}
+
 function GTPreloadImages(urls) {
     if (!urls.length)
 	return;
@@ -736,7 +740,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    console.log("ERROR in pagelet_json:", err, content);
 			}
 		    } else if (!response_type || response_type == "pagelet") {
-			var widget_html = (content_type == "text/html") ? '<div id="session-widget" class="widget">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
+			var widget_opacity = response_params.opacity || "1.0";
+			var widget_html = (content_type == "text/html") ? '<div id="session-widget" class="widget" style="opacity: '+widget_opacity+';">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
 			var newElem = $(widget_html).replaceAll("#session-widget");
 			if (content)
@@ -760,6 +765,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    //console.log("graphterm_output: params: ", params);
 		    if (response_type == "error_message") {
 			alert(content);
+		    } else if (response_type == "clear_terminal") {
+			GTClearTerminal();
 		    } else if (response_type == "open_terminal") {
 			gWebSocket.write([["open_terminal", [response_params.term_name,
 							     response_params.command]]]);
@@ -814,7 +821,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				var prevBlock = $("#session-bufscreen .pagelet.gterm-blockseq:not(.gterm-blockseqtoggle)");
 				if (response_params.block && response_params.block == "overwrite" && prevBlock.length == 1 && prevBlock.is($("#session-bufscreen :last-child")) ) {
 				    // Overwrite previous blockseq element
-				    prevBlock.replaceWith(newElem);
+				    if (prevBlock.find(".gterm-blockimg").length == 1 && newElem.find(".gterm-blockimg").length == 1) {
+					// Replace IMG src attribute
+					prevBlock.find(".gterm-blockimg").attr("src", newElem.find(".gterm-blockimg").attr("src"))
+				    } else {
+					// Replace element
+					prevBlock.replaceWith(newElem);
+				    }
 				    newElem = null;
 				} else {
 				    // Hide previous blockseq element
@@ -1257,6 +1270,11 @@ function pasteHandler(evt) {
     }, 100);
 }
 
+function GTExportEnvironment() {
+    if (gWebSocket && gWebSocket.terminal)
+	gWebSocket.write([["export_environment"]]);
+}
+
 function gtermSelectHandler(event) {
     var idcomps = $(this).attr("id").split("-");
     var selectedOption = $(this).val();
@@ -1271,6 +1289,8 @@ function gtermSelectHandler(event) {
 	    GTermAbout();
 	else if (selectedOption == "updates")
 	    CheckUpdates();
+	else if (selectedOption == "export_env")
+	    GTExportEnvironment();
 	else if (selectedOption == "reconnect")
 	    ReconnectHost();
 	else if (selectedOption == "steal")
@@ -1334,6 +1354,12 @@ function gtermMenuClickHandler(event) {
     case "expand":
 	$("#session-bufscreen .oldentry").removeClass("gterm-hideoutput");
 	break;
+    case "clear":
+	GTClearTerminal();
+	if (gWebSocket && gWebSocket.terminal)
+	    gWebSocket.write([["clear_term"]]);
+	//text = "\x01\x0B";  // Ctrl-A Ctrl-K
+	break;
     case "detach":
 	window.location = "/";
 	break;
@@ -1365,9 +1391,6 @@ function gtermMenuClickHandler(event) {
     case "right":
 	if (HandleArrowKeys(39))
 	    text = "\x1b[C";
-	break;
-    case "clear":
-	text = "\x01\x0B";  // Ctrl-A Ctrl-K
 	break;
     case "command":
 	GetFinder("command");
