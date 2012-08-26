@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+#
+
+"""
+giframe: Display file (or HTML from stdin) in inline iframe
+"""
+
+import mimetypes
+import os
+import sys
+import time
+
+from optparse import OptionParser
+
+import gtermapi
+
+usage = "usage: %prog [file]"
+parser = OptionParser(usage=usage)
+
+(options, args) = parser.parse_args()
+
+if args:
+    filename = args[0]
+    fullname = os.path.expanduser(filename)
+    filepath = os.path.normcase(os.path.abspath(fullname))
+
+    if not os.path.exists(filepath) or not os.path.isfile(filepath):
+        print >> sys.stderr, "File %s not found" % filename
+        sys.exit(1)
+
+    mimetype, encoding = mimetypes.guess_type(filepath)
+    iframe_url = gtermapi.get_file_url(filepath, relative=True)
+
+else:
+    try:
+        content = sys.stdin.read()
+    except (EOFError, KeyboardInterrupt):
+        content = None
+
+    if not content:
+        print >> sys.stderr, "Error in reading from stdin"
+        sys.exit(1)
+
+    iframe_url = gtermapi.create_blob(content, content_type="text/html")
+
+IFRAMEFORMAT = '<iframe src="%s" width="100%%" height="95%%"></iframe><pre>Click here and type Control-C to exit</pre>'
+
+gtermapi.write_html(IFRAMEFORMAT % iframe_url, display="fullscreen")
+
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    gtermapi.write_blank()
+
