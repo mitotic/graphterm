@@ -647,13 +647,12 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_c
 
 def run_host(options, args):
     global Gterm_host, Host_secret, Trace_shell, Xterm, Killterm
-    server_addr = args[0]
-    host_name = args[1]
+    host_name = args[0]
     protocol = "https" if options.https else "http"
 
     oshell_globals = globals() if options.oshell else None
 
-    Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, server_addr,
+    Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=options.server_port,
                                                          connect_kw={"term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
@@ -693,11 +692,13 @@ def run_host(options, args):
 
 def main():
     from optparse import OptionParser
-    usage = "usage: gtermhost [-h ... options] <serveraddr> <hostname>"
+    usage = "usage: gtermhost [-h ... options] <hostname>"
     parser = OptionParser(usage=usage)
 
+    parser.add_option("", "--server_addr", dest="server_addr", default="localhost",
+                      help="Server hostname (or IP address) (default: localhost)")
     parser.add_option("", "--server_port", dest="server_port", default=DEFAULT_HOST_PORT,
-                      help="server port (default: %d)" % DEFAULT_HOST_PORT, type="int")
+                      help="Server port (default: %d)" % DEFAULT_HOST_PORT, type="int")
 
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
@@ -716,11 +717,11 @@ def main():
                       help="daemon=start/stop/restart/status")
 
     (options, args) = parser.parse_args()
-    if len(args) != 2 and options.daemon != "stop":
+    if len(args) != 1 and options.daemon != "stop":
         print >> sys.stderr, usage
         sys.exit(1)
 
-    if not HOST_RE.match(args[1]):
+    if not HOST_RE.match(args[0]):
         print >> sys.stderr, "Invalid characters in host name"
         sys.exit(1)
 

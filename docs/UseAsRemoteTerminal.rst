@@ -67,13 +67,14 @@ Connecting multiple hosts to gtermserver
 
 
 The ``gtermhost`` command can be used to connect from any computer to
-``gtermserver`` running on a management cmputer as follows:
+``gtermserver`` running on a management cmputer as follows::
 
-     gtermhost <serveraddr> <hostname>
+     gtermhost --server_addr=<serveraddr> <hostname>
 
 where ``serveraddr`` is the address or name of the computer where
-``gtermserver`` is running. (By default, it listens for host
-connections on port 8899.) You can use SSH tunneling to
+``gtermserver`` is running (which defaults to localhost).
+By default, the server listens for host
+connections on port 8899. You can use SSH tunneling to
 access ``gtermserver`` on the management computer, and thus access the
 hosts, which should be on a secure private network.
 

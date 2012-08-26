@@ -331,20 +331,23 @@ ul.auto-toc {
 <li><a class="reference internal" href="#command-recall" id="id12">2.7&nbsp;&nbsp;&nbsp;Command recall</a></li>
 <li><a class="reference internal" href="#ipad-usage" id="id13">2.8&nbsp;&nbsp;&nbsp;iPad usage</a></li>
 <li><a class="reference internal" href="#choosing-the-terminal-type" id="id14">2.9&nbsp;&nbsp;&nbsp;Choosing the terminal type</a></li>
-<li><a class="reference internal" href="#sessions-and-screensharing" id="id15">2.10&nbsp;&nbsp;&nbsp;Sessions and &quot;screensharing&quot;</a></li>
-<li><a class="reference internal" href="#webcasting" id="id16">2.11&nbsp;&nbsp;&nbsp;Webcasting</a></li>
-<li><a class="reference internal" href="#multiple-hosts" id="id17">2.12&nbsp;&nbsp;&nbsp;Multiple hosts</a></li>
-<li><a class="reference internal" href="#security" id="id18">2.13&nbsp;&nbsp;&nbsp;Security</a></li>
-<li><a class="reference internal" href="#using-it-with-ssh-port-forwarding" id="id19">2.14&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></li>
+<li><a class="reference internal" href="#multiple-hosts" id="id15">2.10&nbsp;&nbsp;&nbsp;Multiple hosts</a></li>
+<li><a class="reference internal" href="#sessions-and-screensharing" id="id16">2.11&nbsp;&nbsp;&nbsp;Sessions and &quot;screensharing&quot;</a></li>
+<li><a class="reference internal" href="#wildcard-sessions" id="id17">2.12&nbsp;&nbsp;&nbsp;Wildcard sessions</a></li>
+<li><a class="reference internal" href="#webcasting" id="id18">2.13&nbsp;&nbsp;&nbsp;Webcasting</a></li>
+<li><a class="reference internal" href="#slideshows" id="id19">2.14&nbsp;&nbsp;&nbsp;Slideshows</a></li>
+<li><a class="reference internal" href="#widgets-sockets-and-interactivity" id="id20">2.15&nbsp;&nbsp;&nbsp;Widgets, sockets, and interactivity</a></li>
+<li><a class="reference internal" href="#security" id="id21">2.16&nbsp;&nbsp;&nbsp;Security</a></li>
+<li><a class="reference internal" href="#using-it-with-ssh-port-forwarding" id="id22">2.17&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#cloud-integration" id="id20">3&nbsp;&nbsp;&nbsp;Cloud integration</a></li>
-<li><a class="reference internal" href="#otrace-integration" id="id21">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></li>
-<li><a class="reference internal" href="#api-for-graphterm-aware-programs" id="id22">5&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></li>
-<li><a class="reference internal" href="#implementation" id="id23">6&nbsp;&nbsp;&nbsp;Implementation</a></li>
-<li><a class="reference internal" href="#caveats-and-limitations" id="id24">7&nbsp;&nbsp;&nbsp;Caveats and limitations</a></li>
-<li><a class="reference internal" href="#credits" id="id25">8&nbsp;&nbsp;&nbsp;Credits</a></li>
-<li><a class="reference internal" href="#license" id="id26">9&nbsp;&nbsp;&nbsp;License</a></li>
+<li><a class="reference internal" href="#otrace-integration" id="id23">3&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></li>
+<li><a class="reference internal" href="#cloud-integration" id="id24">4&nbsp;&nbsp;&nbsp;Cloud integration</a></li>
+<li><a class="reference internal" href="#api-for-graphterm-aware-programs" id="id25">5&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></li>
+<li><a class="reference internal" href="#implementation" id="id26">6&nbsp;&nbsp;&nbsp;Implementation</a></li>
+<li><a class="reference internal" href="#caveats-and-limitations" id="id27">7&nbsp;&nbsp;&nbsp;Caveats and limitations</a></li>
+<li><a class="reference internal" href="#credits" id="id28">8&nbsp;&nbsp;&nbsp;Credits</a></li>
+<li><a class="reference internal" href="#license" id="id29">9&nbsp;&nbsp;&nbsp;License</a></li>
 </ul>
 </div>
 <div class="section" id="documentation-and-support">
@@ -361,45 +364,58 @@ for using GraphTerm.</p>
 <pre class="literal-block">
 gtermserver --auth_code=none
 </pre>
-<p>(You can use the <tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run it in the background.)
-Then, open up a browser that supports websockets, such as Google
-Chrome, Firefox, or Safari (Chrome works best), and enter the
-following URL:</p>
+<p>Type  <tt class="docutils literal">gtermserver <span class="pre">-h</span></tt> to view all options. You can use the
+<tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run it in the background.</p>
+<p>Once the server is running, you can open a terminal window on the
+localhost in the following ways:</p>
+<blockquote>
+<ul class="simple">
+<li>Specify the <tt class="docutils literal"><span class="pre">--terminal</span></tt> option when starting <tt class="docutils literal">gtermserver</tt></li>
+<li>Use the <tt class="docutils literal">gterm</tt> command in any terminal</li>
+<li>Within a GraphTerm window, you can use the <tt class="docutils literal">New</tt> menu option, or
+use the keyboard shortcut <em>Ctrl-Alt-T</em> to create a new GraphTerm window</li>
+</ul>
+</blockquote>
+<p>To open a remote terminal window, open up a browser of your
+choice that supports websockets, such as Google Chrome,
+Firefox, or Safari (Chrome works best), and enter the following URL:</p>
 <pre class="literal-block">
 http://localhost:8900
 </pre>
-<p>Alternatively, you can use the <tt class="docutils literal">gterm</tt> command to open up the
-browser window.</p>
 <p>Once within the <tt class="docutils literal">graphterm</tt> browser page, select the host you
-wish to connect to and create a new terminal session on the host.
-Then try out the following commands:</p>
+wish to connect to and create a new terminal session on the host.</p>
+<p>Once you have a terminal, try out the following commands:</p>
 <pre class="literal-block">
 gls &lt;directory&gt;
 gvi &lt;text-filename&gt;
 </pre>
 <p>These are graphterm-aware scripts that imitate
 basic features of the standard <tt class="docutils literal">ls</tt> and <tt class="docutils literal">vi</tt> commands.
-Use the <tt class="docutils literal"><span class="pre">-h</span></tt> option to display help information for these commands.
-(To display images as thumbnails, use the <tt class="docutils literal">gls <span class="pre">-i</span> ...</tt> command.)
-You can use the command <tt class="docutils literal">which gls</tt> to determine the directory
+To display images as thumbnails, use the <tt class="docutils literal">gls <span class="pre">-i</span> ...</tt> command.
+Use the <tt class="docutils literal"><span class="pre">-h</span></tt> option to display help information for these commands,
+and read the <em>UsingGraphicalFeatures</em> tutorial for usage examples.</p>
+<p>You can use the command <tt class="docutils literal">which gls</tt> to determine the directory
 containing graphterm-aware commands, to browse
 for other commands, which include:</p>
 <blockquote>
-<p><tt class="docutils literal">gimages <span class="pre">[-f]</span> [filenames]</tt>     To view images inline, or as a
+<p><tt class="docutils literal">giframe [filename]</tt>    To view files (or HTML from stdin) in
+inline iframe</p>
+<p><tt class="docutils literal">gimage <span class="pre">[-f]</span> [filenames]</tt>     To view images inline, or as a
 fullpage slideshow (with <tt class="docutils literal"><span class="pre">-f</span></tt> option)</p>
+<p><tt class="docutils literal">gmatplot.py</tt>   A <tt class="docutils literal">matplotlib</tt> plotting demo</p>
 <p><tt class="docutils literal">gweather [location]</tt> To view weather forecasts</p>
-<p><tt class="docutils literal">gtweets <span class="pre">[-f]</span> [search_keyword]</tt> To display a tweet stream</p>
+<p><tt class="docutils literal">gtweet <span class="pre">[-s</span> <span class="pre">keywords]|tweet</span></tt>  To send, search, or receive tweets</p>
 </blockquote>
 <div class="section" id="visual-cues">
 <h2><a class="toc-backref" href="#id6">2.1&nbsp;&nbsp;&nbsp;Visual cues</a></h2>
 <p>In the default theme, <em>blue</em> color denotes text that can be <em>clicked</em>
-or <em>tapped</em>. The action triggered by clicking depends on multiple
-factors, such as whether there is text in the current command line,
+or <em>tapped</em>. The action triggered by clicking depends upon two
+factors, whether there is text in the current command line,
 and whether the Control modifier in the <em>Bottom menu</em> is active.
 Click on the last displayed prompt to toggle display of the <em>Bottom
 menu</em>. Clicking on other prompts toggles display of the command
-output (unless the Control modifier is used, in which case the command
-line is copied and pasted.)</p>
+output (unless the Control modifier is used, in which case the
+entire command line is copied and pasted.)</p>
 </div>
 <div class="section" id="navigating-folders-opening-files">
 <h2><a class="toc-backref" href="#id7">2.2&nbsp;&nbsp;&nbsp;Navigating folders/opening files</a></h2>
@@ -471,8 +487,30 @@ You can use the <tt class="docutils literal"><span class="pre">--term_type</span
 the default terminal type, or use the <tt class="docutils literal">export TERM=screen</tt> command.
 (Fully supporting these terminal types is a work in progress.)</p>
 </div>
+<div class="section" id="multiple-hosts">
+<h2><a class="toc-backref" href="#id15">2.10&nbsp;&nbsp;&nbsp;Multiple hosts</a></h2>
+<p>More than one host can connect to the GraphTerm server. The local
+host is connected by default (but this can be disabled using the
+<tt class="docutils literal"><span class="pre">--nolocal</span></tt> option). To connect an additional host, run the
+following command on the computer you wish to connect:</p>
+<pre class="literal-block">
+gtermhost --server_addr=&lt;serveraddr&gt; &lt;hostname&gt;
+</pre>
+<p>where <tt class="docutils literal">serveraddr</tt> is the address or name of the computer where the
+GraphTerm server is running (which defaults to localhost). You can use the
+<tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the <tt class="docutils literal">gtermhost</tt> command
+in the background. By default, the Graphterm
+server listens for host connections on port 8899. <em>The multiple host
+feature should only be used within a secure network, not on the public internet.</em></p>
+<p>NOTE: Unlike the <tt class="docutils literal">sshd</tt> server, the <tt class="docutils literal">gtermhost</tt> command is designed to
+be run by a normal user, not a privileged user. So different users can
+connect to the GraphTerm server pretending to be different &quot;hosts&quot;
+on the same computer. (If you are running a Python server, it can
+connect directly to the GraphTerm server as a &quot;host&quot;, allowing it to
+be dynamically introspected and debugged using <a class="reference external" href="http://info.mindmeldr.com/code/otrace">otrace</a>.)</p>
+</div>
 <div class="section" id="sessions-and-screensharing">
-<h2><a class="toc-backref" href="#id15">2.10&nbsp;&nbsp;&nbsp;Sessions and &quot;screensharing&quot;</a></h2>
+<h2><a class="toc-backref" href="#id16">2.11&nbsp;&nbsp;&nbsp;Sessions and &quot;screensharing&quot;</a></h2>
 <p>For each host, sessions are assigned default names like <tt class="docutils literal">tty1</tt>
 etc. You can also create unique session names simply by using it in an
 URL, e.g.:</p>
@@ -493,36 +531,75 @@ session using your home browser.</p>
 designed for a cooperative environment, where everyone trusts everyone
 else. (This may change in the future.)</p>
 </div>
+<div class="section" id="wildcard-sessions">
+<h2><a class="toc-backref" href="#id17">2.12&nbsp;&nbsp;&nbsp;Wildcard sessions</a></h2>
+<p>A session path is of the form <tt class="docutils literal">session_host/session_name</tt>. You can
+use the shell wildcard patterns <tt class="docutils literal">*, <span class="pre">?,</span> []</tt> in the session path. For
+example, you can open a wildcard session for multiple hosts using the URL:</p>
+<pre class="literal-block">
+http://localhost:8900/*/tty1
+</pre>
+<p>For normal shell terminals, a wildcard session will open a &quot;blank&quot; window,
+but any input you type in it will be broadcast to all sessions
+matching the pattern. (To receive visual feedback,
+you will need to view one or more of the matching sessions at the
+same time.)</p>
+<p>For <tt class="docutils literal">otrace</tt> debugging sessions of the form <tt class="docutils literal">*/osh</tt>, GraphTerm
+will multiplex the input and output in wildcard terminals. Your input
+will be echoed and broadcast, and output from each of the matching
+sessions will be displayed, preceded by an identifying header
+(with the special string <tt class="docutils literal">ditto</tt> used to indicate repeated output).
+See the <em>otrace</em> integration section for more information.</p>
+<p>NOTE: Multiplexed input/output display cannot be easily implemented for
+regular shell terminals.</p>
+</div>
 <div class="section" id="webcasting">
-<h2><a class="toc-backref" href="#id16">2.11&nbsp;&nbsp;&nbsp;Webcasting</a></h2>
+<h2><a class="toc-backref" href="#id18">2.13&nbsp;&nbsp;&nbsp;Webcasting</a></h2>
 <p>If you enable the <em>Webcast</em> in the top menu, anyone can use the
 session URL to view the session, without the need for
 authentication, but will not be able to steal it. <em>Use this feature
 with caution to avoid exposing exposing sensitive data.</em></p>
 </div>
-<div class="section" id="multiple-hosts">
-<h2><a class="toc-backref" href="#id17">2.12&nbsp;&nbsp;&nbsp;Multiple hosts</a></h2>
-<p>More than one host can connect to the GraphTerm server. The local
-host is connected by default (but this can be disabled using the
-<tt class="docutils literal"><span class="pre">--nolocal</span></tt> option). To connect an additional host, run the
-following command on the computer you wish to connect:</p>
+<div class="section" id="slideshows">
+<h2><a class="toc-backref" href="#id19">2.14&nbsp;&nbsp;&nbsp;Slideshows</a></h2>
+<p>The <tt class="docutils literal">gimage</tt> command, which displays images inline, can be used for
+slideshows and simple presentations. Just <tt class="docutils literal">cd</tt> to a directory
+that has the images for a slideshow, and type:</p>
 <pre class="literal-block">
-gtermhost &lt;serveraddr&gt; &lt;hostname&gt;
+gimage -f
 </pre>
-<p>where <tt class="docutils literal">serveraddr</tt> is the address or name of the computer where the
-GraphTerm server is running. You can use the <tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the
-<tt class="docutils literal">gtermhost</tt> command in the background. By default, the Graphterm
-server listens for host connections on port 8899. <em>The multiple host
-feature should only be used within a secure network, not on the public internet.</em></p>
-<p>NOTE: Unlike the <tt class="docutils literal">sshd</tt> server, the <tt class="docutils literal">gtermhost</tt> command is designed to
-be run by a normal user, not a privileged user. So different users can
-connect to the GraphTerm server pretending to be different &quot;hosts&quot;
-on the same computer. (If you are running a Python server, it can
-connect directly to the GraphTerm server as a &quot;host&quot;, allowing it to
-be dynamically introspected and debugged using <a class="reference external" href="http://info.mindmeldr.com/code/otrace">otrace</a>.)</p>
+<p>To select a subset of images in the directory, you can use a wildcard
+pattern. For publicly webcasting a slideshow, use the <tt class="docutils literal"><span class="pre">-b</span></tt> option.</p>
+</div>
+<div class="section" id="widgets-sockets-and-interactivity">
+<h2><a class="toc-backref" href="#id20">2.15&nbsp;&nbsp;&nbsp;Widgets, sockets, and interactivity</a></h2>
+<p>A widget appears as an overlay on the terminal (like
+<em>picture-in-picture</em> for TVs, or the dashboard on the Mac). It is an
+experimental feature that allows programs running in the background to
+display information overlaid on the terminal. The specific use case is
+displaying user feedback on the screen during a presentation (e.g.,
+like Twitter feeds). You can try it out in a directory that
+contains your presentation slides as images:</p>
+<pre class="literal-block">
+gfeedback 2&gt; $GRAPHTERM_SOCKET 0&lt;&amp;2 | gfeed &gt; $GRAPHTERM_SOCKET &amp;
+gimage -f
+</pre>
+<p>The first command uses <tt class="docutils literal">gfeedback</tt> to capture feedback from others
+viewing the terminal session as a stream of lines from the bash socket
+$GRAPHTERM_SOCKET. The viewers use the overlaid <em>feedback</em> button
+to provide feedback. The feedback data is piped to <tt class="docutils literal">gfeed</tt> which
+displays its <tt class="docutils literal">stdin</tt> stream as a  &quot;live feed&quot; overlay, also via
+$GRAPHTERM_SOCKET.
+The second commands displays all the images in the directory as a
+slideshow.</p>
+<p>To display a live twitter feed as an overlay on a presentation, you can use the commands:</p>
+<pre class="literal-block">
+gtweet -f -s topic &gt; $GRAPHTERM_SOCKET &amp;
+gimage -f
+</pre>
 </div>
 <div class="section" id="security">
-<h2><a class="toc-backref" href="#id18">2.13&nbsp;&nbsp;&nbsp;Security</a></h2>
+<h2><a class="toc-backref" href="#id21">2.16&nbsp;&nbsp;&nbsp;Security</a></h2>
 <p><em>The GraphTerm is not yet ready to be executed with root privileges</em>.
 Run it logged in as a regular user. The <tt class="docutils literal"><span class="pre">--auth_code</span></tt> option can be
 used to specify an authentication code required for users connecting
@@ -537,7 +614,7 @@ the use of SSL certificates and server/client authentication.
 it, although it is not yet ready for everyday use.)</p>
 </div>
 <div class="section" id="using-it-with-ssh-port-forwarding">
-<h2><a class="toc-backref" href="#id19">2.14&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></h2>
+<h2><a class="toc-backref" href="#id22">2.17&nbsp;&nbsp;&nbsp;Using it with SSH port forwarding</a></h2>
 <p>Currently, the most secure way to remotely access the GraphTerm server
 is to use SSH port forwarding. For example, if you are connecting to
 your work computer from home, and wish to connect to the GraphTerm
@@ -550,8 +627,39 @@ on your home computer to access GraphTerm running on your work computer.
 (You can also use port forwarding in reverse, if need be, using the <tt class="docutils literal"><span class="pre">-R</span></tt> option.)</p>
 </div>
 </div>
+<div class="section" id="otrace-integration">
+<h1><a class="toc-backref" href="#id23">3&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></h1>
+<p>GraphTerm was originally developed as a graphical front-end for
+<a class="reference external" href="http://info.mindmeldr.com/code/otrace">otrace</a>,
+an object-oriented python debugger. Any Python program
+can serve as a &quot;host&quot; and be connected to the GraphTerm server
+using the <tt class="docutils literal">gotrace</tt> command:</p>
+<pre class="literal-block">
+gotrace example.py
+</pre>
+<p>The above command loads <tt class="docutils literal">example.py</tt> as a module and connects
+to the GraphTerm server for debugging. This program will appear in
+the list of hosts under the name <tt class="docutils literal">example</tt>. Open the terminal session
+<tt class="docutils literal">example/osh</tt> to connect to the <em>otrace</em> console, and issue
+the <tt class="docutils literal">run &lt;function&gt;</tt> command to begin executing a function in
+<tt class="docutils literal">example.py</tt>. You can also initiate program execution
+directly from the command line as follows:</p>
+<pre class="literal-block">
+gotrace -f test example.py arg1 arg2
+</pre>
+<p>The above command executes the function <tt class="docutils literal"><span class="pre">test(arg=[])</span></tt> in
+<tt class="docutils literal">example.py</tt>, where <tt class="docutils literal">arg</tt> is a list of string arguments from
+the command line.</p>
+<p>If you wish to use the <em>otrace</em> console features for multiplexing,
+without actually needing to a debug a program, you can use
+the <tt class="docutils literal"><span class="pre">--oshell</span></tt> option when using <tt class="docutils literal">gtermhost</tt> to connect
+to the server.</p>
+<p>(You can also embed code in a Python program to directly connect
+to the GraphTerm server for monitoring/debugging. See
+<tt class="docutils literal">gotrace.py</tt> to find out how it can be done.)</p>
+</div>
 <div class="section" id="cloud-integration">
-<h1><a class="toc-backref" href="#id20">3&nbsp;&nbsp;&nbsp;Cloud integration</a></h1>
+<h1><a class="toc-backref" href="#id24">4&nbsp;&nbsp;&nbsp;Cloud integration</a></h1>
 <p>The GraphTerm distribution includes the scripts <tt class="docutils literal">ec2launch, ec2list, ec2scp,</tt>
 and <tt class="docutils literal">ec2ssh</tt> to launch and monitor Amazon Web Services EC2 instances
 to run GraphTerm in the &quot;cloud&quot;. You will need to have an Amazon AWS
@@ -568,13 +676,13 @@ gtermserver --daemon=start --auth_code=none --host=&lt;primary_domain_or_address
 <p><em>Note: This is totally insecure and should not be used for handling any sensitive information.</em>
 Ensure that the security group associated with the cloud instance
 allows access to inbound TCP port 22 (for SSH access), 8900 (for GraphTerm users to connect), and
-port 8899 (for GraphTerm hosts to connect). Also, when using <tt class="docutils literal">ec2scp</tt> and <tt class="docutils literal">sc2ssh</tt>
+port 8899 (for GraphTerm hosts to connect). Also, when using <tt class="docutils literal">ec2scp</tt> and <tt class="docutils literal">ec2ssh</tt>
 to access the instance, ensure that you specify the appropriate login name (e.g., <tt class="docutils literal">ubuntu</tt>
 for Ubuntu distribution).
 Secondary cloud instances should connect to the GraphTerm server on
 the primary instance using the command:</p>
 <pre class="literal-block">
-gtermhost --daemon=start &lt;primary_domain_or_address&gt; &lt;secondary_host_name&gt;
+gtermhost --daemon=start --server_addr=&lt;primary_domain_or_address&gt; &lt;secondary_host_name&gt;
 </pre>
 <p>For increased security in a publicly-accessible server, you will need to use a cryptic authentication code,
 and also use <em>https</em> instead of <em>http</em>, with SSL certificates. Since GraphTerm is currently in
@@ -582,17 +690,8 @@ and also use <em>https</em> instead of <em>http</em>, with SSL certificates. Sin
 (To avoid these problems, use SSH port forwarding to access GraphTerm
 on <tt class="docutils literal">localhost</tt> whenever possble.)</p>
 </div>
-<div class="section" id="otrace-integration">
-<h1><a class="toc-backref" href="#id21">4&nbsp;&nbsp;&nbsp;<em>otrace</em> integration</a></h1>
-<p>GraphTerm was originally developed as a graphical front-end for
-<a class="reference external" href="http://info.mindmeldr.com/code/otrace">otrace</a>,
-an object-oriented python debugger. Use the <tt class="docutils literal"><span class="pre">--oshell</span></tt>
-option when connecting a host to the server enables <tt class="docutils literal">otrace</tt>
-debugging features, allowing for dynamic introspection and debugging of the
-program running on the host.</p>
-</div>
 <div class="section" id="api-for-graphterm-aware-programs">
-<h1><a class="toc-backref" href="#id22">5&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></h1>
+<h1><a class="toc-backref" href="#id25">5&nbsp;&nbsp;&nbsp;API for GraphTerm-aware programs</a></h1>
 <p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
 writes to to the standard output in a format similar to a HTTP
 response, preceded and followed by
@@ -601,9 +700,9 @@ response, preceded and followed by
 \x1b[?1155;&lt;cookie&gt;h
 {&quot;content_type&quot;: &quot;text/html&quot;, ...}
 
-&lt;table&gt;
+&lt;div&gt;
 ...
-&lt;/table&gt;
+&lt;/div&gt;
 \x1b[?1155l
 </pre>
 <p>where <tt class="docutils literal">&lt;cookie&gt;</tt> denotes a numeric value stored in the environment
@@ -614,12 +713,14 @@ names and values, using JSON format. This is followed by a blank line,
 and then any data (such as the HTML fragment to be displayed).</p>
 <p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
 can be written in any language, much like a CGI script.
-See the programs <tt class="docutils literal">gls</tt>, <tt class="docutils literal">gimages</tt>, <tt class="docutils literal">gvi</tt>, <tt class="docutils literal">gweather</tt>, <tt class="docutils literal">ec2launch</tt> and
-<tt class="docutils literal">ec2list</tt> for examples of GraphTerm API usage. (You can use the <tt class="docutils literal">which gls</tt>
-command to figure out where these programs are located.)</p>
+See the programs <tt class="docutils literal">gls</tt>, <tt class="docutils literal">gimage</tt>, <tt class="docutils literal">gvi</tt>, <tt class="docutils literal">gweather</tt>, <tt class="docutils literal">ec2launch</tt> and
+<tt class="docutils literal">ec2list</tt> for examples of GraphTerm API usage. You can use the <tt class="docutils literal">which gls</tt>
+command to figure out where these programs are located.
+The file <tt class="docutils literal">gtermapi.py</tt> contains many helper functions for accessing
+the GraphTerm API.</p>
 </div>
 <div class="section" id="implementation">
-<h1><a class="toc-backref" href="#id23">6&nbsp;&nbsp;&nbsp;Implementation</a></h1>
+<h1><a class="toc-backref" href="#id26">6&nbsp;&nbsp;&nbsp;Implementation</a></h1>
 <p>The GraphTerm server written in pure python, using the
 <a class="reference external" href="http://tornadoweb.org">Tornado  web  framework</a>,
 with websocket support. The GraphTerm client uses standard
@@ -633,14 +734,14 @@ is running is available for opening terminal sessions. Other computers
 can also connect to the GraphTerm server, on a different port (8899),
 to make them accessible as hosts for connection from the browser.</p>
 <p>A pseudo-tty (<tt class="docutils literal">pty</tt>) is opened on the host for each terminal
-session. By setting the <tt class="docutils literal">PROMP_HOST</tt> environment variable, GraphTerm
+session. By setting the <tt class="docutils literal">PROMP_COMMAND</tt> environment variable, GraphTerm
 determines when the <tt class="docutils literal">stdout</tt> of the previous command ends, and the
 <tt class="docutils literal">prompt</tt> for the new command begins.</p>
 <p>The connection between the browser and the GraphTerm server is
 implemented using websockets (bi-directional HTTP). The GraphTerm
-server acts as a router sending input from different terminal session
-to the appropriate <tt class="docutils literal">pty</tt> on the different hosts, and transmitting
-output from the <tt class="docutils literal">pty</tt> to the appropriate browser window.</p>
+server acts as a router sending input from controlling browser terminal sessions
+to the appropriate <tt class="docutils literal">pty</tt> on the host computer, and transmitting
+output from each <tt class="docutils literal">pty</tt> to all connected browser terminal sessions.</p>
 <p>GraphTerm extends the <tt class="docutils literal">xterm</tt> terminal API by adding a
 new control sequence for programs to transmit a CGI-like HTTP response
 through standard output (via a websocket) to be displayed in the
@@ -648,7 +749,7 @@ browser window. GraphTerm-aware programs can interact with the
 user using HTML forms etc.</p>
 </div>
 <div class="section" id="caveats-and-limitations">
-<h1><a class="toc-backref" href="#id24">7&nbsp;&nbsp;&nbsp;Caveats and limitations</a></h1>
+<h1><a class="toc-backref" href="#id27">7&nbsp;&nbsp;&nbsp;Caveats and limitations</a></h1>
 <blockquote>
 <ul>
 <li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
@@ -670,7 +771,7 @@ should be able to so in the future.)</li>
 </blockquote>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#id25">8&nbsp;&nbsp;&nbsp;Credits</a></h1>
+<h1><a class="toc-backref" href="#id28">8&nbsp;&nbsp;&nbsp;Credits</a></h1>
 <p><tt class="docutils literal">GraphTerm</tt> is inspired by two earlier projects that implement the
 terminal interface within the browser,
 <a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a> and
@@ -683,7 +784,7 @@ Opening Crawl with CSS3</a>.</p>
 <p><tt class="docutils literal">GraphTerm</tt> was developed as part of the <a class="reference external" href="http://mindmeldr.com">Mindmeldr</a> project, which is aimed at improving classroom interaction.</p>
 </div>
 <div class="section" id="license">
-<h1><a class="toc-backref" href="#id26">9&nbsp;&nbsp;&nbsp;License</a></h1>
+<h1><a class="toc-backref" href="#id29">9&nbsp;&nbsp;&nbsp;License</a></h1>
 <p><tt class="docutils literal">GraphTerm</tt> is distributed as open source under the <a class="reference external" href="http://www.opensource.org/licenses/bsd-license.php">BSD-license</a>.</p>
 </div>
 </div>

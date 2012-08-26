@@ -3,6 +3,7 @@ GraphTerm Help (from the README file)
 .. sectnum::
 .. contents::
 
+
 Documentation and Support
 =========================================================
 
@@ -12,7 +13,7 @@ which also has `tutorials and examples <http://info.mindmeldr.com/code/graphterm
 for using GraphTerm.
 
 Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
- 
+
 
 Usage
 =================================
@@ -21,49 +22,66 @@ To start the ``GraphTerm`` server, use the command::
 
   gtermserver --auth_code=none
 
-(You can use the ``--daemon=start`` option to run it in the background.)
-Then, open up a browser that supports websockets, such as Google
-Chrome, Firefox, or Safari (Chrome works best), and enter the
-following URL::
+Type  ``gtermserver -h`` to view all options. You can use the
+``--daemon=start`` option to run it in the background.
+
+Once the server is running, you can open a terminal window on the
+localhost in the following ways:
+
+ - Specify the ``--terminal`` option when starting ``gtermserver``
+
+ - Use the ``gterm`` command in any terminal
+
+ - Within a GraphTerm window, you can use the ``New`` menu option, or
+   use the keyboard shortcut *Ctrl-Alt-T* to create a new GraphTerm window
+
+To open a remote terminal window, open up a browser of your
+choice that supports websockets, such as Google Chrome,
+Firefox, or Safari (Chrome works best), and enter the following URL::
 
   http://localhost:8900
 
-Alternatively, you can use the ``gterm`` command to open up the
-browser window.
-
 Once within the ``graphterm`` browser page, select the host you
 wish to connect to and create a new terminal session on the host.
-Then try out the following commands::
+
+Once you have a terminal, try out the following commands::
 
   gls <directory>
   gvi <text-filename>
 
 These are graphterm-aware scripts that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
-Use the ``-h`` option to display help information for these commands.
-(To display images as thumbnails, use the ``gls -i ...`` command.)
+To display images as thumbnails, use the ``gls -i ...`` command.
+Use the ``-h`` option to display help information for these commands,
+and read the *UsingGraphicalFeatures* tutorial for usage examples.
+
 You can use the command ``which gls`` to determine the directory
 containing graphterm-aware commands, to browse
 for other commands, which include:
 
-   ``gimages [-f] [filenames]``     To view images inline, or as a
+   ``giframe [filename]``    To view files (or HTML from stdin) in
+   inline iframe
+
+   ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
+
+   ``gmatplot.py``   A ``matplotlib`` plotting demo
 
    ``gweather [location]`` To view weather forecasts
 
-   ``gtweets [-f] [search_keyword]`` To display a tweet stream
+   ``gtweet [-s keywords]|tweet``  To send, search, or receive tweets
 
 Visual cues
 -----------------------------------------------------------
 
 In the default theme, *blue* color denotes text that can be *clicked*
-or *tapped*. The action triggered by clicking depends on multiple
-factors, such as whether there is text in the current command line,
+or *tapped*. The action triggered by clicking depends upon two
+factors, whether there is text in the current command line,
 and whether the Control modifier in the *Bottom menu* is active.
 Click on the last displayed prompt to toggle display of the *Bottom
 menu*. Clicking on other prompts toggles display of the command
-output (unless the Control modifier is used, in which case the command
-line is copied and pasted.)
+output (unless the Control modifier is used, in which case the
+entire command line is copied and pasted.)
 
 
 Navigating folders/opening files
@@ -145,6 +163,31 @@ You can use the ``--term_type`` option when running the server to set
 the default terminal type, or use the ``export TERM=screen`` command.
 (Fully supporting these terminal types is a work in progress.)
 
+Multiple hosts
+---------------------------------------------------------------------------------------
+
+More than one host can connect to the GraphTerm server. The local
+host is connected by default (but this can be disabled using the
+``--nolocal`` option). To connect an additional host, run the
+following command on the computer you wish to connect::
+
+     gtermhost --server_addr=<serveraddr> <hostname>
+
+where ``serveraddr`` is the address or name of the computer where the
+GraphTerm server is running (which defaults to localhost). You can use the
+``--daemon=start`` option to run the ``gtermhost`` command
+in the background. By default, the Graphterm
+server listens for host connections on port 8899. *The multiple host
+feature should only be used within a secure network, not on the public internet.*
+
+NOTE: Unlike the ``sshd`` server, the ``gtermhost`` command is designed to
+be run by a normal user, not a privileged user. So different users can
+connect to the GraphTerm server pretending to be different "hosts"
+on the same computer. (If you are running a Python server, it can
+connect directly to the GraphTerm server as a "host", allowing it to
+be dynamically introspected and debugged using `otrace <http://info.mindmeldr.com/code/otrace>`_.)
+
+
 Sessions and "screensharing"
 ---------------------------------------------------------------------------------------
 
@@ -170,6 +213,31 @@ designed for a cooperative environment, where everyone trusts everyone
 else. (This may change in the future.)
 
 
+Wildcard sessions
+---------------------------------------------------------------------------------------
+
+A session path is of the form ``session_host/session_name``. You can
+use the shell wildcard patterns ``*, ?, []`` in the session path. For
+example, you can open a wildcard session for multiple hosts using the URL::
+
+      http://localhost:8900/*/tty1
+
+For normal shell terminals, a wildcard session will open a "blank" window,
+but any input you type in it will be broadcast to all sessions
+matching the pattern. (To receive visual feedback,
+you will need to view one or more of the matching sessions at the
+same time.)
+
+For ``otrace`` debugging sessions of the form ``*/osh``, GraphTerm
+will multiplex the input and output in wildcard terminals. Your input
+will be echoed and broadcast, and output from each of the matching
+sessions will be displayed, preceded by an identifying header
+(with the special string ``ditto`` used to indicate repeated output).
+See the *otrace* integration section for more information.
+
+NOTE: Multiplexed input/output display cannot be easily implemented for
+regular shell terminals.
+
 Webcasting
 ---------------------------------------------------------------------------------------
 
@@ -178,28 +246,45 @@ session URL to view the session, without the need for
 authentication, but will not be able to steal it. *Use this feature
 with caution to avoid exposing exposing sensitive data.*
 
-Multiple hosts
+Slideshows
 ---------------------------------------------------------------------------------------
 
-More than one host can connect to the GraphTerm server. The local
-host is connected by default (but this can be disabled using the
-``--nolocal`` option). To connect an additional host, run the
-following command on the computer you wish to connect::
+The ``gimage`` command, which displays images inline, can be used for
+slideshows and simple presentations. Just ``cd`` to a directory
+that has the images for a slideshow, and type::
 
-     gtermhost <serveraddr> <hostname>
+  gimage -f
 
-where ``serveraddr`` is the address or name of the computer where the
-GraphTerm server is running. You can use the ``--daemon=start`` option to run the
-``gtermhost`` command in the background. By default, the Graphterm
-server listens for host connections on port 8899. *The multiple host
-feature should only be used within a secure network, not on the public internet.*
+To select a subset of images in the directory, you can use a wildcard
+pattern. For publicly webcasting a slideshow, use the ``-b`` option.
 
-NOTE: Unlike the ``sshd`` server, the ``gtermhost`` command is designed to
-be run by a normal user, not a privileged user. So different users can
-connect to the GraphTerm server pretending to be different "hosts"
-on the same computer. (If you are running a Python server, it can
-connect directly to the GraphTerm server as a "host", allowing it to
-be dynamically introspected and debugged using `otrace <http://info.mindmeldr.com/code/otrace>`_.)
+Widgets, sockets, and interactivity
+--------------------------------------------------------------------------------------
+
+A widget appears as an overlay on the terminal (like
+*picture-in-picture* for TVs, or the dashboard on the Mac). It is an
+experimental feature that allows programs running in the background to
+display information overlaid on the terminal. The specific use case is
+displaying user feedback on the screen during a presentation (e.g.,
+like Twitter feeds). You can try it out in a directory that
+contains your presentation slides as images::
+
+  gfeedback 2> $GRAPHTERM_SOCKET 0<&2 | gfeed > $GRAPHTERM_SOCKET &
+  gimage -f
+
+The first command uses ``gfeedback`` to capture feedback from others
+viewing the terminal session as a stream of lines from the bash socket
+$GRAPHTERM_SOCKET. The viewers use the overlaid *feedback* button
+to provide feedback. The feedback data is piped to ``gfeed`` which
+displays its ``stdin`` stream as a  "live feed" overlay, also via
+$GRAPHTERM_SOCKET.
+The second commands displays all the images in the directory as a
+slideshow.
+
+To display a live twitter feed as an overlay on a presentation, you can use the commands::
+
+   gtweet -f -s topic > $GRAPHTERM_SOCKET &
+   gimage -f
 
 
 Security
@@ -234,6 +319,41 @@ on your home computer to access GraphTerm running on your work computer.
 (You can also use port forwarding in reverse, if need be, using the ``-R`` option.)
 
 
+*otrace* integration
+===============================
+
+GraphTerm was originally developed as a graphical front-end for
+`otrace <http://info.mindmeldr.com/code/otrace>`_,
+an object-oriented python debugger. Any Python program
+can serve as a "host" and be connected to the GraphTerm server
+using the ``gotrace`` command::
+
+  gotrace example.py
+
+The above command loads ``example.py`` as a module and connects
+to the GraphTerm server for debugging. This program will appear in
+the list of hosts under the name ``example``. Open the terminal session
+``example/osh`` to connect to the *otrace* console, and issue
+the ``run <function>`` command to begin executing a function in
+``example.py``. You can also initiate program execution
+directly from the command line as follows::
+
+  gotrace -f test example.py arg1 arg2
+ 
+The above command executes the function ``test(arg=[])`` in
+``example.py``, where ``arg`` is a list of string arguments from
+the command line.
+
+If you wish to use the *otrace* console features for multiplexing,
+without actually needing to a debug a program, you can use
+the ``--oshell`` option when using ``gtermhost`` to connect
+to the server.
+
+(You can also embed code in a Python program to directly connect
+to the GraphTerm server for monitoring/debugging. See
+``gotrace.py`` to find out how it can be done.)
+
+
 Cloud integration
 ===============================
 
@@ -253,30 +373,19 @@ demonstration or teaching purposes, use the following command on the instance::
 *Note: This is totally insecure and should not be used for handling any sensitive information.*
 Ensure that the security group associated with the cloud instance
 allows access to inbound TCP port 22 (for SSH access), 8900 (for GraphTerm users to connect), and
-port 8899 (for GraphTerm hosts to connect). Also, when using ``ec2scp`` and ``sc2ssh``
+port 8899 (for GraphTerm hosts to connect). Also, when using ``ec2scp`` and ``ec2ssh``
 to access the instance, ensure that you specify the appropriate login name (e.g., ``ubuntu``
 for Ubuntu distribution).
 Secondary cloud instances should connect to the GraphTerm server on
 the primary instance using the command::
 
-   gtermhost --daemon=start <primary_domain_or_address> <secondary_host_name>
+   gtermhost --daemon=start --server_addr=<primary_domain_or_address> <secondary_host_name>
 
 For increased security in a publicly-accessible server, you will need to use a cryptic authentication code,
 and also use *https* instead of *http*, with SSL certificates. Since GraphTerm is currently in
 *alpha* status, security cannot be guaranteed even with these options enabled.
 (To avoid these problems, use SSH port forwarding to access GraphTerm
 on ``localhost`` whenever possble.)
-
-*otrace* integration
-===============================
-
-GraphTerm was originally developed as a graphical front-end for
-`otrace <http://info.mindmeldr.com/code/otrace>`_,
-an object-oriented python debugger. Use the ``--oshell``
-option when connecting a host to the server enables ``otrace``
-debugging features, allowing for dynamic introspection and debugging of the
-program running on the host.
-
 
 API for GraphTerm-aware programs
 ==========================================
@@ -289,9 +398,9 @@ response, preceded and followed by
   \x1b[?1155;<cookie>h
   {"content_type": "text/html", ...}
 
-  <table>
+  <div>
   ...
-  </table>
+  </div>
   \x1b[?1155l
 
 where ``<cookie>`` denotes a numeric value stored in the environment
@@ -303,9 +412,11 @@ and then any data (such as the HTML fragment to be displayed).
 
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 can be written in any language, much like a CGI script.
-See the programs ``gls``, ``gimages``, ``gvi``, ``gweather``, ``ec2launch`` and
-``ec2list`` for examples of GraphTerm API usage. (You can use the ``which gls``
-command to figure out where these programs are located.)
+See the programs ``gls``, ``gimage``, ``gvi``, ``gweather``, ``ec2launch`` and
+``ec2list`` for examples of GraphTerm API usage. You can use the ``which gls``
+command to figure out where these programs are located.
+The file ``gtermapi.py`` contains many helper functions for accessing
+the GraphTerm API.
 
 
 Implementation
@@ -326,15 +437,15 @@ can also connect to the GraphTerm server, on a different port (8899),
 to make them accessible as hosts for connection from the browser.
 
 A pseudo-tty (``pty``) is opened on the host for each terminal
-session. By setting the ``PROMP_HOST`` environment variable, GraphTerm
+session. By setting the ``PROMP_COMMAND`` environment variable, GraphTerm
 determines when the ``stdout`` of the previous command ends, and the
 ``prompt`` for the new command begins.
 
 The connection between the browser and the GraphTerm server is
 implemented using websockets (bi-directional HTTP). The GraphTerm
-server acts as a router sending input from different terminal session
-to the appropriate ``pty`` on the different hosts, and transmitting
-output from the ``pty`` to the appropriate browser window.
+server acts as a router sending input from controlling browser terminal sessions
+to the appropriate ``pty`` on the host computer, and transmitting
+output from each ``pty`` to all connected browser terminal sessions.
 
 GraphTerm extends the ``xterm`` terminal API by adding a
 new control sequence for programs to transmit a CGI-like HTTP response
