@@ -69,6 +69,8 @@ Gterm_secret = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leadi
 
 Check_state_cookie = False             # Controls checking of state cookie for file access
 
+Cache_files = False                     # Controls caching of files (blobs are always cached)
+
 MAX_COOKIE_STATES = 100
 MAX_WEBCASTS = 500
 
@@ -682,7 +684,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     except Exception:
                         pass
 
-Blob_cache = gtermhost.BlobCache()
+Proxy_cache = gtermhost.BlobCache()
 
 class ProxyFileHandler(tornado.web.RequestHandler):
     """Serves file requests
@@ -721,11 +723,30 @@ class ProxyFileHandler(tornado.web.RequestHandler):
         if not host or not self.file_path:
             raise tornado.web.HTTPError(403, "Null host/filename")
 
-        if self.request.path.startswith("/blob/"):
-            btime, headers, content = Blob_cache.get_blob(self.request.path)
-            if headers:
-                # Return cached blob
-                self.finish_write(headers, content)
+        if_mod_since_datetime = None
+        if_mod_since = self.request.headers.get("If-Modified-Since")
+        if if_mod_since:
+            if_mod_since_datetime = gtermhost.str2datetime(if_mod_since)
+
+        self.cached_copy = None
+        last_modified = None
+        last_modified_datetime = None
+        btime, bheaders, bcontent = Proxy_cache.get_blob(self.request.path)
+        if bheaders:
+            # Path in cache
+            last_modified = dict(bheaders).get("Last-Modified")
+            if last_modified:
+                last_modified_datetime = gtermhost.str2datetime(last_modified)
+
+            if self.request.path.startswith("/blob/"):
+                if last_modified_datetime and \
+                   if_mod_since_datetime and \
+                   if_mod_since_datetime >= last_modified_datetime:
+                      # Remote copy is up-to-date
+                      self.send_error(304)  # Not modified status code
+                      return
+                # Return immutable cached blob
+                self.finish_write(bheaders, bcontent)
                 return
 
         if self.request.path.startswith("/file/"):
@@ -754,12 +775,19 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             if fpath_hmac != self.get_argument("hmac", ""):
                 raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
+            if bheaders:
+                # File copy is cached
+                if last_modified_datetime and \
+                    if_mod_since_datetime and \
+                    if_mod_since_datetime < last_modified_datetime:
+                        # Remote copy older than cached copy; change if_mod_since to cache copy time
+                        self.cached_copy = (btime, bheaders, bcontent)
+                        if_mod_since = last_modified
+
         self.async_id = self.get_async_id()
         self._async_requests[self.async_id] = self
 
         self.timeout_callback = IO_loop.add_timeout(time.time()+REQUEST_TIMEOUT, functools.partial(self.complete_request, self.async_id))
-
-        if_mod_since = self.request.headers.get("If-Modified-Since")
 
         TerminalConnection.send_to_connection(host, "request", "", [["file_request", self.async_id, self.request.method, self.file_path, if_mod_since]])
 
@@ -773,7 +801,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
         if cache:
             # Cache blob
-            Blob_cache.add_blob(self.request.path, headers, content)
+            Proxy_cache.add_blob(self.request.path, headers, content)
 
     def complete_get(self, status=(), last_modified=None, etag=None, content_type=None, content_length=None,
                      content_b64=""):
@@ -785,8 +813,13 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
         IO_loop.remove_timeout(self.timeout_callback)
 
+        if status[0] == 304 and self.cached_copy and self.request.method != "HEAD":
+            # Not modified since cached copy was created; return cached copy
+            self.finish_write(self.cached_copy[1], self.cached_copy[2])
+            return
+
         if status[0] != 200:
-            # Error status
+            # "Error" status
             self.send_error(status[0])
             return
 
@@ -820,7 +853,9 @@ class ProxyFileHandler(tornado.web.RequestHandler):
         elif last_modified and content_type:
             headers.append(("Cache-Control", "public"))
 
-        self.finish_write(headers, content, cache=self.request.path.startswith("/blob/"))
+        cache = self.request.method != "HEAD" and (self.request.path.startswith("/blob/") or
+                                                     (Cache_files and last_modified) )
+        self.finish_write(headers, content, cache=cache)
 
 
 def run_server(options, args):

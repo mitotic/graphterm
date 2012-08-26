@@ -72,6 +72,10 @@ def datetime2str(datetime_obj):
     tm = calendar.timegm(datetime_obj.utctimetuple())
     return email.utils.formatdate(tm, localtime=False, usegmt=True)
 
+def str2datetime(datetime_str):
+    """Return datetime object from string, formatted for last-modified"""
+    date_tuple = email.utils.parsedate(datetime_str)
+    return datetime.datetime.fromtimestamp(time.mktime(date_tuple))
     
 def dict2kwargs(dct, unicode2str=False):
     """Converts unicode keys in a dict to ascii, to allow it to be used for keyword args.
@@ -353,8 +357,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     content_b64 = ""
                     remote_modtime = None
                     if if_mod_since:
-                        date_tuple = email.utils.parsedate(if_mod_since)
-                        remote_modtime = datetime.datetime.fromtimestamp(time.mktime(date_tuple))
+                        remote_modtime = str2datetime(if_mod_since)
 
                     if not file_path.startswith("/"):
                         # Blob request
