@@ -108,8 +108,12 @@ url = Google_weather_url + urlencode({"weather": location})
 
 weather_xml = urlopen(url).read()
 
-dom = xml.dom.minidom.parseString(weather_xml)
-
+try:
+    dom = xml.dom.minidom.parseString(weather_xml)
+except Exception:
+    print >> sys.stderr, "Error in accessing Google Weather API. Try again a few more times"
+    sys.exit(1)
+    
 weather_dict = xml2dict(dom, schema)
 
 html = title_template % weather_dict["forecast_information"][0] + cur_template % weather_dict["current_conditions"][0]

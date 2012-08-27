@@ -231,7 +231,7 @@ except ImportError:
     from UserDict import DictMixin as MutableMapping
 
 
-OTRACE_VERSION = "0.30.0+"
+OTRACE_VERSION = "0.30.9"
 
 __all__ = ["OTrace", "OShell", "OTraceException"]
 

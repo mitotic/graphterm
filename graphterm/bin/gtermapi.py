@@ -259,15 +259,15 @@ class FormParser(object):
             classes = ""
             if j < arg_count:
                 classes += ' gterm-input-arg'
-            if isinstance(opt_default, (basestring, float, int, long)):
-                if first_arg:
-                    attrs += ' autofocus="autofocus"'
-                input_html = Input_text_template % (id_suffix, opt_name, opt_name, classes, opt_default.replace('"', "&quot;"), attrs)
-
-            elif isinstance(opt_default, bool):
+            if isinstance(opt_default, bool):
                 if opt_default:
                     attrs += " checked"
                 input_html = Input_checkbox_template % (id_suffix, opt_name, opt_name, classes, attrs)
+
+            elif isinstance(opt_default, (basestring, float, int, long)):
+                if first_arg:
+                    attrs += ' autofocus="autofocus"'
+                input_html = Input_text_template % (id_suffix, opt_name, opt_name, classes, str(opt_default).replace('"', "&quot;"), attrs)
 
             elif isinstance(opt_default, (list, tuple)):
                 opt_list = []
