@@ -30,7 +30,23 @@ and the hosts will automatically reconnect.
 See the `README <http://info.mindmeldr.com/code/graphterm/graphterm-readme>`_
 file for basic instructions on installing and starting up GraphTerm.
 
-Accessing graphTerm from a remote computer using SSH
+Accessing GraphTerm features across SSH logins
+======================================================================================
+
+If you login to a remote computer using SSH, you can use the
+*Action -> Export Environment*  menu option to set the Bash shell
+environment variables on the remote computer. This will allow
+some, but not all, of GraphTerm's features to work on the remote
+session. If you wish to use more features, set the ``PATH`` environment
+variable on the remote machine to allow access to ``gls`` and other
+commands, and also use reverse port forwarding to forward your
+local port(s) to the remote computer. For example, if you wish
+to connect remote hosts to the GraphTerm server, use::
+
+   ssh -R 8899:localhost:8899 user@remote-computer
+
+
+Accessing GraphTerm server from a remote computer using SSH 
 ======================================================================================
 
 Assume that you will be running ``gtermserver`` on your ``work-computer`` as
@@ -82,3 +98,30 @@ NOTE: Unlike the ``sshd`` server, the ``gtermhost`` command is designed to
 be run by a normal user, not a privileged user. So different users can
 connect to ``gtermserver`` pretending to be different "hosts"
 on the same computer. 
+
+Wildcard sessions
+======================================================================================
+
+A session path is of the form ``session_host/session_name``. You can
+use the shell wildcard patterns ``*, ?, []`` in the session path. For
+example, you can open a wildcard session for multiple hosts using the URL::
+
+      http://localhost:8900/*/tty1
+
+For normal shell terminals, a wildcard session will open a "blank" window,
+but any input you type in it will be broadcast to all sessions
+matching the pattern. (To receive visual feedback,
+you will need to view one or more of the matching sessions at the
+same time.)
+
+For ``otrace`` debugging sessions of the form ``*/osh``, GraphTerm
+will multiplex the input and output in wildcard terminals. Your input
+will be echoed and broadcast, and output from each of the matching
+sessions will be displayed, preceded by an identifying header
+(with the special string ``ditto`` used to indicate repeated output).
+See the *otrace* integration section in the
+`README <http://info.mindmeldr.com/code/graphterm/graphterm-readme>`_
+file for more information.
+
+NOTE: Multiplexed input/output display cannot be easily implemented for
+regular shell terminals.
