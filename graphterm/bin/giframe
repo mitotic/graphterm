@@ -17,23 +17,22 @@ import gtermapi
 usage = "usage: %prog [file|URL]"
 parser = OptionParser(usage=usage)
 
-(options, args) = parser.parse_args()
+parser.add_option("", "--opacity", dest="opacity", default=1.0,
+                  help="Feed opacity (default: 1.0)")
 
+(options, args) = parser.parse_args()
 if args:
     if args[0].startswith("http:") or args[0].startswith("https:"):
         iframe_url = args[0]
     else:
-        filename = args[0]
-        fullname = os.path.expanduser(filename)
-        filepath = os.path.normcase(os.path.abspath(fullname))
+        if gtermapi.Export_host:
+            iframe_url = gtermapi.create_blob(from_file=args[0])
+        else:
+            iframe_url = gtermapi.get_file_url(args[0], relative=True, exists=True)
 
-        if not os.path.exists(filepath) or not os.path.isfile(filepath):
-            print >> sys.stderr, "File %s not found" % filename
+        if not iframe_url:
+            print >> sys.stderr, "File %s not found" % args[0]
             sys.exit(1)
-
-        mimetype, encoding = mimetypes.guess_type(filepath)
-        iframe_url = gtermapi.get_file_url(filepath, relative=True)
-
 else:
     try:
         content = sys.stdin.read()
@@ -48,7 +47,7 @@ else:
 
 IFRAMEFORMAT = '<iframe src="%s" width="100%%" height="95%%"></iframe><pre>Click here and type Control-C to exit</pre>'
 
-gtermapi.write_html(IFRAMEFORMAT % iframe_url, display="fullscreen")
+gtermapi.write_html(IFRAMEFORMAT % iframe_url, display="fullscreen", add_headers={"opacity": options.opacity})
 
 try:
     while True:

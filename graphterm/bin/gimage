@@ -36,6 +36,9 @@ if not args:
     args = [x for x in args if not x.startswith(".")]
     args.sort()
 
+if gtermapi.Export_host:
+    options.blobs = True
+
 if options.blobs:
     print >> sys.stderr, "Loading images ..."
 
@@ -54,9 +57,7 @@ for filename in args:
     mimetype, encoding = mimetypes.guess_type(filepath)
     if mimetype and mimetype.startswith("image/"):
         if options.blobs:
-            with open(filepath) as fp:
-                content = fp.read()
-            file_url = gtermapi.create_blob(content, content_type=mimetype)
+            file_url = gtermapi.create_blob(from_file=filepath, content_type=mimetype)
         else:
             file_url = gtermapi.get_file_url(filepath, relative=True)
         file_list.append((file_url, filepath, filename))

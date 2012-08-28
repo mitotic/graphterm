@@ -7,6 +7,7 @@ import StringIO
 import hashlib
 import hmac
 import json
+import mimetypes
 import os
 import Queue
 import random
@@ -21,6 +22,7 @@ from optparse import OptionParser
 
 HEX_DIGITS = 16
 
+Export_host = os.getenv("GRAPHTERM_EXPORT", "")
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
 Path = os.getenv("GRAPHTERM_PATH", "")
@@ -77,8 +79,16 @@ def open_url(url, target="_blank"):
                    }
     wrap_write("", headers=url_headers)
 
-def get_file_url(filepath, relative=False):
-    """Construct file URL with hmac cookie suffix. If relative, return '/file/host/path'"""
+def get_file_url(filepath, relative=False, exists=False):
+    """Construct file URL by expanding/normalizing filepath, with hmac cookie suffix.
+    If relative, return '/file/host/path'
+    """
+    if not filepath.startswith("/"):
+        filepath = os.path.normcase(os.path.abspath(os.path.expanduser(filepath)))
+        
+    if exists and not os.path.exists(filepath):
+        return None
+
     filehmac = "?hmac="+hmac.new(str(Shared_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
     if relative:
         return "/file/" + Host + filepath + filehmac
@@ -89,8 +99,30 @@ def make_blob_url(blob_id=""):
     blob_id = blob_id or str(uuid.uuid4())
     return (blob_id, "/blob/"+Host+"/"+blob_id)
 
-def create_blob(content, content_type="text/html", blob_id=""):
+def create_blob(content=None, from_file="", content_type="", blob_id=""):
     """Create blob and returns URL to blob"""
+    if content is None:
+        if not from_file:
+            print >> sys.stderr, "Error: No content and no file to create blob"
+            return None
+        fullname = os.path.expanduser(from_file)
+        filepath = os.path.normcase(os.path.abspath(fullname))
+
+        if not os.path.exists(filepath) or not os.path.isfile(filepath):
+            print >> sys.stderr, "File %s not found" % from_file
+            return None
+
+        try:
+            with open(filepath) as fp:
+                content = fp.read()
+        except Exception, excp:
+            print >> sys.stderr, "Error in reading file %s: %s" % (from_file, excp)
+            return None
+
+        if not content_type:
+            content_type, encoding = mimetypes.guess_type(filepath)
+
+    content_type = content_type or "text/html"
     params = {}
     blob_id, blob_url = make_blob_url(blob_id)
     params["blob_id"] = blob_id

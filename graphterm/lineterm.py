@@ -10,7 +10,7 @@ The contents of this file remain in the public-domain.
 from __future__ import with_statement
 
 import array, cgi, copy, fcntl, glob, logging, mimetypes, optparse, os, pty
-import re, signal, select, sys, threading, time, termios, tty, struct, pwd
+import re, signal, select, socket, sys, threading, time, termios, tty, struct, pwd
 
 import random
 try:
@@ -35,7 +35,7 @@ IDLE_TIMEOUT = 300      # Idle timeout in seconds
 UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
-NO_COPY_ENV = set(["TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
+NO_COPY_ENV = set(["GRAPHTERM_EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)
@@ -1574,6 +1574,8 @@ class Multiplex(object):
 
                         env.append( ("PROMPT_COMMAND", cmd_fmt % (GRAPHTERM_SCREEN_CODES[0], GRAPHTERM_SCREEN_CODES[0]) ) )
 
+                if export:
+                    env.append( ("GRAPHTERM_EXPORT", socket.getfqdn() or "unknown") )
                 return env
                 
         def export_environment(self, term_name):
