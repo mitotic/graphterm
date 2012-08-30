@@ -167,7 +167,7 @@ Once the app is setup, the Twitter client can be used as follows::
   # Display all tweets mentioning "python"
   gtweet --search python
   # Display direct messages and tweets directed to the user
-  gtweet --user 
+  gtweet --recv
 
 By default, the Twitter client displays tweets graphically using
 the fullscreen (``-f``) option, although it also has text (``--text``)

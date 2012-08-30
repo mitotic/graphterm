@@ -61,7 +61,7 @@ whether entered by typing, clicking, or tapping.
 It is also themable using CSS.
 
 Images of GraphTerm in action can be found in `screenshots <https://github.com/mitotic/graphterm/blob/master/SCREENSHOTS.rst>`_ 
-and in this `YouTube Video <http://youtu.be/JBMexdwXN8w>`_.
+and in this `YouTube Video <http://youtu.be/TvO1SnEpwfE>`_.
 Here is a sample screenshot illustrating graphical ``gls`` and ``cat`` command
 output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome).
 
@@ -230,7 +230,7 @@ Drag and drop
 -------------------------------------------------------------------------
 Sort of works! You can drag a filename (*grabbing the icon does not
 work*) and drop it on a folder, an executable, or the command line.
-For drag-and-drop bwteeen two GraphTerm windows running on the same
+For drag-and-drop between two GraphTerm windows running on the same
 host, the file will be moved to the destination folder. For windows
 on two different hosts, the file will be copied.
 (Graphical feedback for this operation is not properly implemented at
@@ -316,7 +316,7 @@ assumes a cooperative environment, where everyone trusts everyone
 else. (This may change in the future.)
 
 
-Wildcard sessions
+Wildcard sessions and multiplexing
 ---------------------------------------------------------------------------------------
 
 A session path is of the form ``session_host/session_name``. You can
