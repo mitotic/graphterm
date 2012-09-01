@@ -1525,10 +1525,16 @@ function gtermBottomSelectHandler(event) {
 	    text = String.fromCharCode(9);
 	else if (selectedOption == "escape")
 	    text = String.fromCharCode(27);
+	else if (selectedOption == "controla")
+	    text = String.fromCharCode(1);
 	else if (selectedOption == "controlc")
 	    text = String.fromCharCode(3);
 	else if (selectedOption == "controld")
 	    text = String.fromCharCode(4);
+	else if (selectedOption == "controle")
+	    text = String.fromCharCode(5);
+	else if (selectedOption == "controlk")
+	    text = String.fromCharCode(11);
 	else if (selectedOption == "controlz")
 	    text = String.fromCharCode(26);
 	break;
@@ -2449,7 +2455,7 @@ function GTHideSplash(animate) {
 	$("#gtermsplash").animate({ 
             "margin-top": "+=300px",
             opacity: 0.0,
-	}, 1000, function() { $("#gtermsplash").hide(); });
+	}, 2000, function() { $("#gtermsplash").hide(); });
     } else {
 	$("#gtermsplash").hide();
     }
