@@ -27,6 +27,8 @@ var WRITE_LOG = function (str) {};
 var DEBUG_LOG = function (str) {};
 var DEBUG_LOG = function (str) {console.log(str)};
 
+var ELLIPSIS = "...";
+
 var gRowHeight = 16;
 var gColWidth  = 8;
 var gBottomMargin = 14;
@@ -555,6 +557,12 @@ GTWebSocket.prototype.onopen = function(evt) {
   console.log("GTWebSocket.onopen: ");
 }
 
+function GTAutosizeIFrame(elem) {
+    // After a delay, adjust size of all iframe child elements to match actual size
+    setTimeout( function() { $(elem).find("iframe").each( function() {
+	$(this).height($(this).contents().find('body').height() + 20);} ) }, 500 );
+}
+
 GTWebSocket.prototype.onmessage = function(evt) {
     if (this.closed)
 	return;
@@ -772,7 +780,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 							     response_params.command]]]);
 
 		    } else if (response_type == "open_url") {
-			window.open(response_params.url, target=(response_params.target || "_blank"));
+			var specList = ["location=no", "menubar=no", "toolbar=no"];
+			if (response_params.width)
+			    specList.push("width="+response_params.width);
+			if (response_params.width)
+			    specList.push("height="+response_params.height);
+					  window.open(response_params.url, (response_params.target || "_blank"), specList.join(","));
 
 		    } else if (response_type == "preload_images") {
 			GTPreloadImages(response_params.urls);
@@ -813,7 +826,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    EndFullpage();
 			}
 			var current_dir = ("current_directory" in params.headers) ? params.headers.current_directory : "";
-			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet '+classes+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
+			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet entry '+classes+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
 			try {
 			    var newElem = $(pagelet_html);
@@ -844,6 +857,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				}
 
 				newElem.show();
+				if (response_params.autosize)
+				    GTAutosizeIFrame(newElem);
 			    }
 			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
@@ -977,7 +992,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    if (update_scroll.length) {
 			for (var j=0; j<update_scroll.length; j++) {
 			    var delCommands = $("#session-bufscreen .promptrow").length - MAX_COMMAND_BUFFER;
-			    var delOutput = $("#session-bufscreen :not(promptrow)").length - MAX_LINE_BUFFER;
+			    var delOutput = $("#session-bufscreen .entry:not(.promptrow):not(.gterm-ellipsis)").length - MAX_LINE_BUFFER;
 			    if (delCommands > 0 || delOutput > 0) {
 				var bufRows = $("#session-bufscreen").children();
 				var deletingCommand = delCommands > 0;
@@ -999,7 +1014,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 					    rowElem.remove();
 					    delOutput -= 1;
 					} else if (outputCount == 1) {
-					    rowElem.html("...");
+					    rowElem.addClass("gterm-ellipsis");
+					    rowElem.html(ELLIPSIS);
 					}
 				    } else {
 					break;
@@ -1032,7 +1048,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    gPromptIndex = newPromptIndex;
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
-			    var row_html = '<pre id="'+entry_id+'" class="row '+entry_class+'">'+row_escaped+"\n</pre>";
+			    var row_html = '<pre id="'+entry_id+'" class="row entry '+entry_class+'">'+row_escaped+"\n</pre>";
 			    $(row_html).appendTo("#session-bufscreen");
 			    $("#"+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
 			}

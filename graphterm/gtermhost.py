@@ -563,6 +563,16 @@ class WidgetStream(object):
                 self.set_feedback_status(feedback)
             else:
                 logging.warning("gtermhost: Invalid feedback cookie %s", feedback)
+
+        elif headers["x_gterm_response"] == "create_blob":
+            blob_id = headers["x_gterm_parameters"].get("blob_id")
+            if not blob_id:
+                logging.warning("gtermhost: No id for blob creation")
+            elif "content_length" not in headers:
+                logging.warning("gtermhost: No content_length specified for create_blob")
+            else:
+                host_connection.blob_cache.add_blob(blob_id, headers, content)
+
         else:
             params = {"validated": True, "headers": headers}
             host_connection.send_request_threadsafe("response", term_name, [["terminal", "graphterm_widget", [params,
