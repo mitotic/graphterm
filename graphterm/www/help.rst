@@ -53,14 +53,15 @@ These are graphterm-aware scripts that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
 To display images as thumbnails, use the ``gls -i ...`` command.
 Use the ``-h`` option to display help information for these commands,
-and read the *UsingGraphicalFeatures* tutorial for usage examples.
+and read the
+`UsingGraphicalFeatures tutorial <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials/graphterm-tutorial-graphical>`_ for usage examples.
 
 You can use the command ``which gls`` to determine the directory
 containing graphterm-aware commands, to browse
 for other commands, which include:
 
    ``giframe [filename|URL]``    To view files/URLs (or HTML from stdin) in
-   inline iframe
+   inline *iframe*
 
    ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
@@ -70,6 +71,10 @@ for other commands, which include:
    ``gweather [location]`` To view weather forecasts
 
    ``gtweet [-s keywords]|tweet``  To send, search, or receive tweets
+
+(There is also a sample ``gcowsay`` command which can be downloaded
+separately from its `Github repository <https://github.com/mitotic/gcowsync>`_)
+
 
 Visual cues
 -----------------------------------------------------------
@@ -102,7 +107,7 @@ Enter key to execute it.
 Icon display
 ------------------------------
 
-Select ``icons`` in the top menu to activate icon display for commands
+Select ``icons`` in the top menu to activate icon display for commands like
 ``gls``.
 
 
@@ -127,7 +132,7 @@ Drag and drop
 -------------------------------------------------------------------------
 Sort of works! You can drag a filename (*grabbing the icon does not
 work*) and drop it on a folder, an executable, or the command line.
-For drag-and-drop bwteeen two GraphTerm windows running on the same
+For drag-and-drop between two GraphTerm windows running on the same
 host, the file will be moved to the destination folder. For windows
 on two different hosts, the file will be copied.
 (Graphical feedback for this operation is not properly implemented at
@@ -208,12 +213,12 @@ For example, if you forgot to detach your session at work, you can
 to securely access your work desktop, and then steal the
 session using your home browser.
 
-NOTE: Although GraphTerm supports multiple users, it is currently
-designed for a cooperative environment, where everyone trusts everyone
+NOTE: Although GraphTerm supports multiple users, it currently
+assumes a cooperative environment, where everyone trusts everyone
 else. (This may change in the future.)
 
 
-Wildcard sessions
+Wildcard sessions and multiplexing
 ---------------------------------------------------------------------------------------
 
 A session path is of the form ``session_host/session_name``. You can
@@ -262,24 +267,34 @@ Widgets, sockets, and interactivity
 --------------------------------------------------------------------------------------
 
 A widget appears as an overlay on the terminal (like
-*picture-in-picture* for TVs, or the dashboard on the Mac). It is an
+*picture-in-picture* for TVs, or dashboard widgets on the Mac). This is an
 experimental feature that allows programs running in the background to
-display information overlaid on the terminal. The specific use case is
-displaying user feedback on the screen during a presentation (e.g.,
-like Twitter feeds). You can try it out in a directory that
+display information overlaid on the terminal. The widget is accessed
+by redirecting ``stdout`` to a Bash ``tcp`` socket device whose
+address is stored in the environment variable ``GRAPHTERM_SOCKET``.
+For example, the following command will run a background job
+to open a new terminal in an overlay *iframe*::
+
+  giframe --opacity=0.2 http://localhost:8900/local/new > $GRAPHTERM_SOCKET &
+
+You can use the overlay terminal just like a regular terminal, including
+having recursive overlays within the overlay!
+
+A specific example of widget use is to display live feedback on the
+screen during a presentation. You can try it out in a directory that
 contains your presentation slides as images::
 
   gfeedback 2> $GRAPHTERM_SOCKET 0<&2 | gfeed > $GRAPHTERM_SOCKET &
   gimage -f
 
 The first command uses ``gfeedback`` to capture feedback from others
-viewing the terminal session as a stream of lines from the bash socket
+viewing the terminal session as a stream of lines from
 $GRAPHTERM_SOCKET. The viewers use the overlaid *feedback* button
-to provide feedback. The feedback data is piped to ``gfeed`` which
-displays its ``stdin`` stream as a  "live feed" overlay, also via
-$GRAPHTERM_SOCKET.
-The second commands displays all the images in the directory as a
-slideshow.
+to provide feedback. The ``stdout`` from ``gfeedback`` is piped to
+``gfeed`` which displays its ``stdin`` stream as a  "live feed"
+overlay, also via $GRAPHTERM_SOCKET.
+(The ``gimage -f`` command displays all the images in the directory as a
+slideshow.)
 
 To display a live twitter feed as an overlay on a presentation, you can use the commands::
 
@@ -300,7 +315,7 @@ use SSH port forwarding (see below) to securely connect to the
 GraphTerm server for remote access.
 As the code matures, security will be improved through
 the use of SSL certificates and server/client authentication.
-(SSL/https support is already built-in. Feel free to experiment with
+(SSL/https support is already built in. Feel free to experiment with
 it, although it is not yet ready for everyday use.)
 
 
@@ -369,34 +384,47 @@ Cloud integration
 ===============================
 
 The GraphTerm distribution includes the scripts ``ec2launch, ec2list, ec2scp,``
-and ``ec2ssh`` to launch and monitor Amazon Web Services EC2 instances
-to run GraphTerm in the "cloud". You will need to have an Amazon AWS
-account to use these scripts, and also need to install the ``boto`` python module. 
-To create an instance, use the command::
+and ``ec2ssh`` to launch and monitor Amazon Web Services EC2
+instances. These are the scripts used to test new
+versions of GraphTerm by running them in the "cloud".
+You will need to have an Amazon AWS
+account to use these scripts, and also need to install
+the ``boto`` python module. 
 
-   ec2instance <instance_tagname>
+To create an instance, use the ``ec2launch`` command.
+You will be presented with a "web form" to enter details of the instance
+to be launched. Once you fill in the form and submit it, a command
+line will be automatically created, with command options, to launch
+the instance. To launch another instance with slightly different
+properties, you can simply recall the command line and edit it.
+Ensure that the security group associated with the cloud instance
+allows access to inbound TCP port 22 (for SSH access), 8900
+(for GraphTerm users to connect), and
+port 8899 (for GraphTerm hosts to connect).
 
 To *temporarily* run a publicly accessible GraphTerm server for
-demonstration or teaching purposes, use the following command on the instance::
+demonstration or teaching purposes, log in to the instance using
+the command ``ec2ssh ubuntu@instance_address``, wait a few
+minutes for ``tornado`` and ``graphterm`` packages to finish
+installing, and then issue the following command::
 
    gtermserver --daemon=start --auth_code=none --host=<primary_domain_or_address>
 
 *Note: This is totally insecure and should not be used for handling any sensitive information.*
-Ensure that the security group associated with the cloud instance
-allows access to inbound TCP port 22 (for SSH access), 8900 (for GraphTerm users to connect), and
-port 8899 (for GraphTerm hosts to connect). Also, when using ``ec2scp`` and ``ec2ssh``
-to access the instance, ensure that you specify the appropriate login name (e.g., ``ubuntu``
-for Ubuntu distribution).
+
 Secondary cloud instances should connect to the GraphTerm server on
 the primary instance using the command::
 
    gtermhost --daemon=start --server_addr=<primary_domain_or_address> <secondary_host_name>
 
-For increased security in a publicly-accessible server, you will need to use a cryptic authentication code,
-and also use *https* instead of *http*, with SSL certificates. Since GraphTerm is currently in
-*alpha* status, security cannot be guaranteed even with these options enabled.
+For increased security in a publicly-accessible server,
+you can use a cryptic authentication code,
+and also use *https* instead of *http*, with SSL certificates.
+Since GraphTerm is currently in *alpha* status,
+security cannot be guaranteed even with these options enabled.
 (To avoid these problems, use SSH port forwarding to access GraphTerm
 on ``localhost`` whenever possble.)
+
 
 API for GraphTerm-aware programs
 ==========================================
@@ -423,12 +451,14 @@ and then any data (such as the HTML fragment to be displayed).
 
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 can be written in any language, much like a CGI script.
-See the programs ``gls``, ``gimage``, ``gvi``, ``gweather``, ``ec2launch`` and
-``ec2list`` for examples of GraphTerm API usage. You can use the ``which gls``
+See the programs ``gls``, ``gimage``, ``giframe``, ``gvi``, ``gfeed``,
+``gweather``, ``ec2launch`` and ``ec2list`` for examples
+of GraphTerm API usage. You can use the ``which gls``
 command to figure out where these programs are located.
 The file ``gtermapi.py`` contains many helper functions for accessing
-the GraphTerm API.
-
+the GraphTerm API. See also the
+`gcowsay <https://github.com/mitotic/gcowsync>`_ program for an
+example of a stand-alone GraphTerm-aware command.
 
 Implementation
 ==========================================
