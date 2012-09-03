@@ -175,7 +175,7 @@ for other commands, which include:
    ``gtweet [-s keywords]|tweet``  To send, search, or receive tweets
 
 (There is also a sample ``gcowsay`` command which can be downloaded
-separately from its `Github repository <https://github.com/mitotic/gcowsync>`_)
+separately from its `Github repository <https://github.com/mitotic/gcowsay>`_)
 
 
 Visual cues
@@ -559,7 +559,7 @@ of GraphTerm API usage. You can use the ``which gls``
 command to figure out where these programs are located.
 The file ``gtermapi.py`` contains many helper functions for accessing
 the GraphTerm API. See also the
-`gcowsay <https://github.com/mitotic/gcowsync>`_ program for an
+`gcowsay <https://github.com/mitotic/gcowsay>`_ program for an
 example of a stand-alone GraphTerm-aware command.
 
 Implementation
