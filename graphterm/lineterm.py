@@ -109,7 +109,7 @@ def uclean(ustr, trim=False, encoded=False):
 def prompt_offset(line, prompt, meta=None):
         """Return offset at end of prompt (not including trailing space), or zero"""
         offset = 0
-        if meta or (prompt and prompt[0] and line.startswith(prompt[0])):
+        if (meta and not meta[JCONTINUATION]) or (prompt and prompt[0] and line.startswith(prompt[0])):
                 end_offset = line.find(prompt[2])
                 if end_offset >= 0:
                         offset = end_offset + len(prompt[2])
