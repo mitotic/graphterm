@@ -43,15 +43,58 @@ stars3d theme, with icons enabled
 
    <hr style="margin-bottom: 3em;">
 
-Graphical weather forecast (using Google Weather API)
+Graphical weather forecast (using Yahoo Weather API)
 =========================================================
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gweather.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-yweather1.png
    :align: center
 
-   Showing the screen for the command ``gweather College Station`` to
-   illustrate inline HTML display. If the location is omitted, a HTML
-   form will be displayed to enter the location name.
+   Showing the screen for the command ``yweather`` to
+   illustrate inline HTML display. Since the location argument
+   is omitted, a HTML  form is be displayed to enter the location
+   name. 
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-yweather2.png
+   :align: center
+
+   The submitted location information is used to generate  new
+   command, ``yweather -f austin``, and execute it for inline
+   weather display.
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+Inline HTML document display
+=========================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-giframe1.png
+   :align: center
+
+   Showing the screen for the command ``rs2html README.rst | giframe`` to
+   illustrate inline HTML document display. The ``rs2html README.rst``
+   converts a *ReStructured Text* doument to HTML, writing the output to
+   ``stdout``. The ``giframe`` command wraps the HTML in an *iframe*
+   and displays it inline.
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+Inline data visualization (plotting using matplotlib)
+=========================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gmatplot1.png
+   :align: center
+
+   Showing the screen for the demo program ``gmatplot.py`` which
+   generates ``matplotlib`` plots as PNG files and displays them inline.
 
    ..
 
@@ -120,6 +163,22 @@ Split scrolling
    Showing the split-screen scrolling mode, where the command
    line is anchored at the bottom of the screen. Clicking on ``gls``
    output will paste filenames into the command line.
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+Miscellaneous screenshots
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-ec2launch1.png
+   :align: center
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gweeet1.png
+   :align: center
 
    ..
 

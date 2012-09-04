@@ -170,7 +170,7 @@ for other commands, which include:
 
    ``gmatplot.py``   A ``matplotlib`` plotting demo
 
-   ``gweather [location]`` To view weather forecasts
+   ``yweather [location]`` To view weather forecasts
 
    ``gtweet [-s keywords]|tweet``  To send, search, or receive tweets
 
@@ -224,7 +224,8 @@ Copy/paste
 ---------------------------------------------------------------------------------------
 
 *Click on the cursor* before pasting text from the clipboard using
-Control-V, Command-V, or the Paste command from the Edit menu.
+Control-V, Command-V, or the Paste command in the Browser.
+Alternatively, you can use the *Actions->Paste special* menu item.
 NOTE: Pasting text copied from a non-plain text source, such as a web page,
 may not always work properly. A workaround is to paste the text into a
 temporary location as plain text (such as in a plain text editor),
@@ -554,7 +555,7 @@ and then any data (such as the HTML fragment to be displayed).
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 can be written in any language, much like a CGI script.
 See the programs ``gls``, ``gimage``, ``giframe``, ``gvi``, ``gfeed``,
-``gweather``, ``ec2launch`` and ``ec2list`` for examples
+``yweather``, ``ec2launch`` and ``ec2list`` for examples
 of GraphTerm API usage. You can use the ``which gls``
 command to figure out where these programs are located.
 The file ``gtermapi.py`` contains many helper functions for accessing

@@ -1,0 +1,188 @@
+#!/usr/bin/env python
+#
+
+"""
+yweather: Display weather using Yahoo Weather API
+"""
+
+import json
+import os
+import random
+import sys
+import time
+
+import xml.dom.minidom
+
+from optparse import OptionParser
+
+import urllib
+try:
+    from urllib.request import urlopen
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlopen, urlencode
+
+Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
+Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
+                "\x1b[?1155l"]
+
+def wrap(html):
+    return Html_escapes[0] + html + Html_escapes[1]
+
+Yahoo_geoplanet_url = 'http://query.yahooapis.com/v1/public'
+Yahoo_weather_url = "http://weather.yahooapis.com/forecastrss?w="
+Yahoo_img_url = "http://l.yimg.com/a/i/us/we/52"
+
+
+yahoo_template = '<br><a href="%s"><img src="%s"/></a> (provided by <a href="http://www.weather.com" >The Weather Channel</a>)'
+
+title_template = """
+<p><b>Current weather in %s</b><br>
+"""
+cur_template = """
+<div>
+<img src="http://l.yimg.com/a/i/us/we/52/%(code)s.gif" alt="%(text)s"> <span class="weather-item">%(temp)s &deg;F,</span> <span class="weather-item">%(text)s</span><p>
+<b>Forecast</b>
+</div>
+"""
+
+fcst_template = """
+<div>
+<img src="http://l.yimg.com/a/i/us/we/52/%(code)s.gif" alt="%(text)s"> <span class="weather-item">%(day)s:</span> <span class="weather-item">%(text)s,</span> <span class="weather-item">Low %(low)s &deg;F,</span> <span class="weather-item">High %(high)s &deg;F</span>
+</div>
+"""
+
+form_template =  """<div class="gterm-form">Please specify location for weather info:
+    <input id="yweather-input%s" name="arg1" type="text" autocomplete="off" autofocus="autofocus"></input><p>
+<input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformnames="arg1"></input>
+<input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>
+</div>"""
+
+usage = "usage: %prog [-f] <location>"
+parser = OptionParser(usage=usage)
+parser.add_option("-f", "--fullpage",
+                  action="store_true", dest="fullpage", default=False,
+                  help="Fullpage display")
+parser.add_option("-t", "--text",
+                  action="store_true", dest="text", default=False,
+                  help="Plain text display")
+parser.add_option("", "--wait",
+                  action="store_true", dest="wait", default=False,
+                  help="Wait, do not quit after display")
+
+(options, args) = parser.parse_args()
+location = " ".join(args)
+
+if not options.fullpage and not sys.stdout.isatty():
+    options.text = True
+
+params = {"scroll": "top", "current_directory": os.getcwd()}
+params["display"] = "fullpage" if options.fullpage else "block"
+
+headers = {"content_type": "text/html"}
+headers["x_gterm_response"] = "pagelet"
+headers["x_gterm_parameters"] = params
+
+if not location:
+    if not Lterm_cookie or options.text:
+        print >> sys.stderr, "Please specify location"
+        sys.exit(1)
+    random_id = "1%09d" % random.randrange(0, 10**9)
+    form_html = form_template % (random_id, random_id)
+    params["display"] = "fullpage"
+    params["form_input"] = True
+    params["form_command"] = "yweather -f"
+    print wrap(json.dumps(headers)+"\n\n"+form_html)
+    sys.exit(1)
+    
+def xml2dict(root_elem, schema):
+    retval = {}
+    for key, value in schema.iteritems():
+        lst = []
+        retval[key] = lst
+        for elem in dom.documentElement.getElementsByTagName(key):
+            if isinstance(value, dict):
+                vals = xml2dict(elem, value)
+            elif isinstance(value, (list, tuple)):
+                vals = {}
+                for key2 in value:
+                    if key2.startswith("."):
+                        vals[key2[1:]] = elem.getAttribute(key2[1:])
+                    else:
+                        vals[key2] = elem.getElementsByTagName(key2)[0].firstChild.nodeValue
+            else:
+                vals = elem.firstChild.nodeValue
+            lst.append(vals)
+    return retval
+
+def flatten(nested_dict, prefix="", dct={}):
+    for key, value in nested_dict.iteritems():
+        if isinstance(value, (list, tuple)):
+            if not value:
+                continue
+            if isinstance(value[0], dict):
+                flatten(value[0], prefix=prefix+key+".", dct=dct)
+            else:
+                dct[prefix+key] = value[0]
+        else:
+            dct[prefix+key] = value
+
+    return dct
+
+schema = {"title": "",
+          "description": "",
+          "link": "",
+          "image": ["link", "url"],
+          "yweather:condition": [".day", ".date", ".text", ".code", ".temp"],
+          "yweather:forecast": [".day", ".date", ".text", ".code", ".low", ".high"],
+          }
+
+geoplanet_url = Yahoo_geoplanet_url+'/yql?q=select%20*%20from%20geo.places%20where%20text%3D%22'+urllib.quote_plus(location)+'%22&format=json'
+
+location_json = json.loads(urlopen(geoplanet_url).read())
+
+try:
+    place = location_json["query"]["results"]["place"][0]
+    woeid = place["woeid"]
+    place_name = place["name"] + ", " + place["admin1"]["content"] + " (" + place["country"]["content"] + ")"
+except Exception:
+    print >> sys.stderr, "Could not locate '" + location + "'"
+    sys.exit(1)
+
+weather_url = Yahoo_weather_url+str(woeid)
+weather_xml = urlopen(weather_url).read()
+
+try:
+    dom = xml.dom.minidom.parseString(weather_xml)
+except Exception:
+    print >> sys.stderr, "Error in accessing Google Weather API. Try again a few more times"
+    sys.exit(1)
+
+
+weather_dict = xml2dict(dom, schema)
+
+html = yahoo_template % (weather_dict["link"][0], weather_dict["image"][0]["url"])
+
+html += title_template % place_name
+html += cur_template % weather_dict["yweather:condition"][0]
+
+for fcst in weather_dict["yweather:forecast"]:
+    html += fcst_template % fcst
+
+html += "<br>\n"
+
+if not Lterm_cookie or options.text:
+    sys.stdout.write("".join(weather_dict["description"]))
+else:
+    sys.stdout.write(wrap(json.dumps(headers)+"\n\n"+html))
+
+sys.stdout.flush()
+
+if options.wait:
+    try:
+        while True:
+            time.sleep(2)
+    except KeyboardInterrupt:
+        # Erase
+        sys.stdout.write(wrap(json.dumps(headers)+"\n\n"))
+        sys.stdout.flush()
