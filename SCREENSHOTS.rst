@@ -50,8 +50,8 @@ Graphical weather forecast (using Yahoo Weather API)
    :align: center
 
    Showing the screen for the command ``yweather`` to
-   illustrate inline HTML display. Since the location argument
-   is omitted, a HTML  form is be displayed to enter the location
+   illustrate inline HTML form display. Since the location argument
+   is omitted, the  form is displayed to enter the location
    name. 
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-yweather2.png
@@ -76,8 +76,8 @@ Inline HTML document display
 
    Showing the screen for the command ``rs2html README.rst | giframe`` to
    illustrate inline HTML document display. The ``rs2html README.rst``
-   converts a *ReStructured Text* doument to HTML, writing the output to
-   ``stdout``. The ``giframe`` command wraps the HTML in an *iframe*
+   command converts a *ReStructured Text* doument to HTML, writing the output
+   to ``stdout``. The ``giframe`` command wraps the HTML in an *iframe*
    and displays it inline.
 
    ..
@@ -177,7 +177,7 @@ Miscellaneous screenshots
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-ec2launch1.png
    :align: center
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gweeet1.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gtweet1.png
    :align: center
 
    ..
