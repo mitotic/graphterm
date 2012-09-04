@@ -40,6 +40,7 @@
         <option value="about">About GraphTerm</option>
         <option value="updates">Check for updates</option>
         <option value="export_env">Export environment</option>
+        <option value="paste_special">Paste special</option>
         <option value="reconnect">Reconnect to host</option>
         <option value="steal">Steal session</option>
       </select>
@@ -197,13 +198,27 @@ href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphter
 </div> <!-- acearea -->
 
 <!-- popups -->
+<div id="gterm-popupmask" class="gterm-popupmask"></div>
+
+<div id="gterm-alertarea" class="gterm-popup gterm-popupshrink">
+  <span class="gterm-popupclose">&nbsp;X&nbsp;</span>
+  <p>
+  <div name="gterm-alertarea-content" id="gterm-alertarea-content"></div>
+</div> <!-- gterm-alertarea -->
+
+<div id="gterm-pastearea" class="gterm-popup">
+  <button class="gterm-popupbutton" name="paste_text">Paste text</button>
+  <button class="gterm-popupbutton" name="cancel">Cancel</button>
+  <br>
+  <textarea name="gterm-pastearea-content" id="gterm-pastearea-content" rows="5" cols="60"></textarea>
+</div> <!-- gterm-pastearea -->
+
 <div id="gterm-feedbackarea" class="gterm-popup">
   <button class="gterm-popupbutton" name="send">Send</button>
   <button class="gterm-popupbutton" name="cancel">Cancel</button>
   <br>
   <textarea name="gterm-feedbackarea-content" id="gterm-feedbackarea-content" rows="5" cols="60"></textarea>
 </div> <!-- gterm-feedbackarea -->
-<div id="gterm-feedbackarea-mask" class="gterm-popupmask"></div>
 
 </body>
 </html>

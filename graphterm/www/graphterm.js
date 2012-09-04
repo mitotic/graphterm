@@ -583,7 +583,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	    var action = command[0];
 
             if (action == "abort") {
-		alert(command[1]);
+		GTPopAlert(command[1]);
 		window.location = "/";
 
             } else if (action == "authenticate") {
@@ -724,9 +724,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var cmd_type = command[1];
 		var cmd_arg = command[2];
 		if (cmd_type == "errmsg") {
-		    alert("ERROR: "+cmd_arg[0]);
+		    GTPopAlert("ERROR: "+cmd_arg[0]);
 		} else if (cmd_type == "save_status") {
-		    alert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
+		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
 
 		} else if (cmd_type == "graphterm_feedback") {
 		    gtermFeedbackStatus(cmd_arg);
@@ -772,7 +772,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			classes += " " + response_params.classes;
 		    //console.log("graphterm_output: params: ", params);
 		    if (response_type == "error_message") {
-			alert(content);
+			GTPopAlert(content);
 		    } else if (response_type == "clear_terminal") {
 			GTClearTerminal();
 		    } else if (response_type == "open_terminal") {
@@ -1079,7 +1079,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		GTStartEdit(editParams, content);
 
             } else if (action == "errmsg") {
-		alert(command[1]);
+		GTPopAlert(command[1]);
 
 	    } else {
 		console.log("GTWebSocket.onmessage: Invalid message type: "+action);
@@ -1259,9 +1259,9 @@ function pasteHandler(evt) {
 	if (innerElem.attr("contentEditable") == "true") {
 	    // Firefox paste implementation (setting inner span to not contentEditable does not work)
 	    pasteText = elem.text();
-	    var pasteStart = elem.attr("data-gtermpastestart");
-	    var pasteEnd = elem.attr("data-gtermpasteend");
-	    if (pasteText && pasteStart && pasteEnd) {
+	    if (pasteText) {
+		var pasteStart = elem.attr("data-gtermpastestart") || "0";
+		var pasteEnd = elem.attr("data-gtermpasteend") || "0";
 		var startOffset = parseInt(pasteStart); 
 		var endOffset = parseInt(pasteEnd);
 		if (startOffset == 0 && endOffset == 0) {
@@ -1269,9 +1269,6 @@ function pasteHandler(evt) {
 		} else if (startOffset == 1 && endOffset == 1) {
 		    pasteText = pasteText.substr(1);
 		}
-	    } else if (pasteText) {
-		console.log("pasteHandler: ERROR no paste offset defined")
-		pasteText = "";
 	    }
 	} else {
 	    // Default paste implementation
@@ -1307,6 +1304,8 @@ function gtermSelectHandler(event) {
 	    CheckUpdates();
 	else if (selectedOption == "export_env")
 	    GTExportEnvironment();
+	else if (selectedOption == "paste_special")
+	    GTPasteSpecialBegin();
 	else if (selectedOption == "reconnect")
 	    ReconnectHost();
 	else if (selectedOption == "steal")
@@ -1427,6 +1426,27 @@ function gtermMenuClickHandler(event) {
 	gWebSocket.term_input(text);
     }
     return false;
+}
+
+function GTPopAlert(text, is_html) {
+    if (!is_html)
+	text = "<pre>"+GTEscape(text)+"</pre>";
+    $("#gterm-alertarea-content").html(text);
+
+    popupShow("#gterm-alertarea", null, null, "alert");
+}
+
+function GTPasteSpecialBegin(event) {
+    $("#gterm-pastearea-content").val("");
+    popupShow("#gterm-pastearea", GTPasteSpecialEnd, null, "paste");
+}
+
+function GTPasteSpecialEnd(buttonElem) {
+    var action = $(buttonElem).attr("name");
+    var text = $("#gterm-pastearea-content").val();
+    if (text && action == "paste_text")
+	gWebSocket.term_input(text);
+    popupClose();
 }
 
 function gtermFeedbackStatus(status) {
@@ -1914,15 +1934,15 @@ function OpenNew(host, term_name, options) {
 }
 
 function GTermAbout() {
-    alert("GraphTerm: A Graphical Terminal Interface\n\nVersion: "+gParams.version+"\n\nhttp://info.mindmeldr.com/code/graphterm");
+    GTPopAlert('GraphTerm: A Graphical Terminal Interface<p>Version: '+gParams.version+'<p><a href="http://info.mindmeldr.com/code/graphterm/graphterm-readme#credits" target="_blank">http://info.mindmeldr.com/code/graphterm</a>', true);
 }
 
 function CheckUpdates() {
     $.getJSON(PYPI_JSON_URL, function(data) {
 	if (gParams.version == data.info.version) {
-	    alert("GraphTerm is up-to-date (version: "+gParams.version+").");
+	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.version+').');
 	} else {
-	    alert("New version "+data.info.version+" is available.\nUse 'easy_install --upgrade graphterm'\n or download from from "+PYPI_URL);
+	    GTPopAlert('New version of GraphTerm ('+data.info.version+') is available.<p>Use <b>easy_install --upgrade graphterm</b><br> or download from from <a href="'+PYPI_URL+'" target="_blank">PyPI</a>', true);
 	}
     });
     gWebSocket.write([["check_updates"]]);
@@ -1991,7 +2011,7 @@ function popupButton(event) {
 
 function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType, popupParams) {
   // Display element as modal popup window
-  var maskSelector = elementSelector + "-mask";
+  var maskSelector = "#gterm-popupmask";
 
   gPopupCallback = popupCallback || null;
   gPopupConfirmClose = popupConfirmClose || null;
@@ -2028,7 +2048,7 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
 }
 
 function GTCaptureInput() {
-    return gForm || (gEditing && gParams.controller) || gPopupType == "feedback";
+    return gForm || (gEditing && gParams.controller) || gPopupType;
 }
 
 function GTStartEdit(params, content) {

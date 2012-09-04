@@ -385,10 +385,20 @@ input.gterm-input-arg[type=text] {
     z-index: 9900;
     padding: 20px;
     background-color: #ffffff;
+    border-radius: 16px;
 }
 
 .gterm-popupnarrow {
     width: 70%;
+}
+
+.gterm-popupshrink {
+    width: auto;
+}
+
+span.gterm-popupclose {
+    background-color: #aaaaaa;
+    cursor: pointer;
 }
 
 /* Log style */
