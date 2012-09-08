@@ -1452,8 +1452,8 @@ class Terminal(object):
                 
 class Multiplex(object):
         def __init__(self, screen_callback, command=None, shared_secret="",
-                     host="", server_url="", prompt=[], term_type="linux", widget_port=0,
-                     logfile="", app_name="graphterm"):
+                     host="", server_url="", prompt=[], term_type="linux", api_version="",
+                     widget_port=0, logfile="", app_name="graphterm"):
                 """ prompt = [prefix, format, suffix]
                 """
                 ##signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -1464,6 +1464,7 @@ class Multiplex(object):
                 self.server_url = server_url
                 self.prompt = prompt
                 self.term_type = term_type
+                self.api_version = api_version
                 self.widget_port = widget_port
                 self.logfile = logfile
                 self.app_name = app_name
@@ -1563,6 +1564,9 @@ class Multiplex(object):
                 env.append( ("GRAPHTERM_PATH", "%s/%s" % (self.host, term_name)) )
                 if self.server_url:
                         env.append( ("GRAPHTERM_URL", self.server_url) )
+
+                if self.api_version:
+                        env.append( ("GRAPHTERM_API", self.api_version) )
 
                 if self.widget_port:
                         env.append( ("GRAPHTERM_SOCKET", "/dev/tcp/localhost/%d" % self.widget_port) )

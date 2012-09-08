@@ -383,6 +383,10 @@ function GTStrip(text) {
     return text.replace(/^[\xa0]/,"").replace(/[\xa0]$/,"").replace(/[\xa0]/g," "); 
 }
 
+function GTPreserveLinebreaks(html) {
+    return html.replace(/\r\n/g,"<br>").replace(/\r/g,"<br>").replace(/\n/g,"<br>");
+}
+
 function GTEscape(text, pre_offset, prompt_offset, prompt_id) {
     var prefix = "";
     if (prompt_offset) {
@@ -1429,8 +1433,9 @@ function gtermMenuClickHandler(event) {
 }
 
 function GTPopAlert(text, is_html) {
-    if (!is_html)
-	text = "<pre>"+GTEscape(text)+"</pre>";
+    if (!is_html) {
+	text = '<div class="gterm-alert gterm-prewrap">'+GTPreserveLinebreaks(GTEscape(text))+'</div>';
+    }
     $("#gterm-alertarea-content").html(text);
 
     popupShow("#gterm-alertarea", null, null, "alert");
@@ -1934,15 +1939,18 @@ function OpenNew(host, term_name, options) {
 }
 
 function GTermAbout() {
-    GTPopAlert('GraphTerm: A Graphical Terminal Interface<p>Version: '+gParams.version+'<p><a href="http://info.mindmeldr.com/code/graphterm/graphterm-readme#credits" target="_blank">http://info.mindmeldr.com/code/graphterm</a>', true);
+    GTPopAlert('<b>'+GTEscape(gParams.about_description)+"</b><p>\n&nbsp;&nbsp;Version: "+gParams.about_version+
+	       '<p>\n&nbsp;&nbsp;Author(s): '+ GTEscape(gParams.about_authors.join(", "))+
+               '<p>\n&nbsp;&nbsp;Website: <a href="'+gParams.about_url+'" target="_blank">'+gParams.about_url+'</a>',
+               true);
 }
 
 function CheckUpdates() {
     $.getJSON(PYPI_JSON_URL, function(data) {
-	if (gParams.version == data.info.version) {
-	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.version+').');
+	if (gParams.about_version == data.info.version) {
+	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').');
 	} else {
-	    GTPopAlert('New version of GraphTerm ('+data.info.version+') is available.<p>Use <b>easy_install --upgrade graphterm</b><br> or download from from <a href="'+PYPI_URL+'" target="_blank">PyPI</a>', true);
+	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<p>Use <b>easy_install --upgrade graphterm</b><br> or download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
 	}
     });
     gWebSocket.write([["check_updates"]]);

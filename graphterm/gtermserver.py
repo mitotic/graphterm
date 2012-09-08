@@ -39,10 +39,10 @@ try:
 except ImportError:
     otrace = None
 
+import about
 import gtermhost
 import lineterm
 import packetserver
-import version
 
 from bin import gtermapi
 
@@ -418,7 +418,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
-                                        "version": version.current, "controller": self.controller,
+                                        "about_version": about.version, "about_authors": about.authors,
+                                        "about_url": about.url, "about_description": about.description,
+                                        "controller": self.controller,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "feedback": term_feedback,
                                         "state_id": self.authorized["state_id"]}]])
@@ -635,6 +637,22 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         fwd_list = []
         for msg in msg_list:
             if msg[0] == "term_params":
+                client_version = msg[1]["version"]
+                min_client_version = msg[1]["min_version"]
+                try:
+                    min_client_comps = gtermapi.split_version(min_client_version)
+                    if gtermapi.split_version(client_version) < gtermapi.split_version(about.min_version):
+                        raise Exception("Obsolete client version %s (expected %s+)" % (client_version, about.min_version))
+
+                    if gtermapi.split_version(about.version) < min_client_comps:
+                        raise Exception("Obsolete server version %s (need %d.%d+)" % (about.version, min_client_comps[0], min_client_comps[1]))
+
+                except Exception, excp:
+                    errmsg = "gtermserver: Failed version compatibility check: %s" % excp
+                    logging.error(errmsg)
+                    self.send_request("request", "", [["shutdown", errmsg]])
+                    raise Exception(errmsg)
+                
                 self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
                 self.term_set = set(msg[1]["term_names"])
             elif msg[0] == "file_response":
@@ -1040,7 +1058,7 @@ def run_server(options, args):
         ioloop_thread = threading.Thread(target=IO_loop.start)
         ioloop_thread.start()
         time.sleep(1)   # Time to start thread
-        print >> sys.stderr, "GraphTerm server (v%s) listening on %s:%s" % (version.current, http_host, http_port)
+        print >> sys.stderr, "GraphTerm server (v%s) listening on %s:%s" % (about.version, http_host, http_port)
 
         print >> sys.stderr, "\nType ^C to stop server"
         if Trace_shell and options.oshell_input:

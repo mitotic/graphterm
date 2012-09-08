@@ -20,13 +20,20 @@ import uuid
 
 from optparse import OptionParser
 
+API_VERSION = "0.30.9"
+API_MIN_VERSION = "0.30"
+
 HEX_DIGITS = 16
+
+
+Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/")
 
 Export_host = os.getenv("GRAPHTERM_EXPORT", "")
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
 Path = os.getenv("GRAPHTERM_PATH", "")
 URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
+
 Host, Session = Path.split("/") if Path else ("", "") 
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
@@ -34,12 +41,24 @@ Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
 App_dir = os.path.join(os.getenv("HOME"), ".graphterm")
 Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
 
+def split_version(version_str):
+    """Splits version string "major.minor.revision" and returns list of ints [major, minor]"""
+    if not version_str:
+        return [0, 0]
+    return map(int, version_str.split(".")[:2])
+
+Min_version = split_version(Min_version_str or Version_str) 
+Api_version = split_version(API_VERSION)
+
 def wrap(html, headers={}):
     """Wrap html, with headers, between escape sequences"""
     return Html_escapes[0] + json.dumps(headers) + "\n\n" + html + Html_escapes[1]
 
 def write(data):
     """Write data to stdout and flush"""
+    if Api_version < Min_version:
+        raise Exception("Obsolete API version %s (need %d.%d+)" % (API_VERSION, Min_version[0], Min_version[1]))
+
     sys.stdout.write(data)
     sys.stdout.flush()
 

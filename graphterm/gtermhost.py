@@ -34,6 +34,10 @@ except ImportError:
     from ordereddict import OrderedDict
 
 import tornado.netutil
+
+from bin import gtermapi
+
+import about
 import lineterm
 import packetserver
 
@@ -148,7 +152,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
     def handle_connect(self):
         normalized_host = get_normalized_host(self.connection_id)
-        self.remote_response("", [["term_params", {"host_secret": self.host_secret,
+        self.remote_response("", [["term_params", {"version": about.version,
+                                                  "min_version": about.min_version,
+                                                  "host_secret": self.host_secret,
                                                   "normalized_host": normalized_host,
                                                   "term_names": self.terms.keys()}]])
         if self.widget_port:
@@ -184,9 +190,13 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
     def xterm(self, term_name="", height=25, width=80, command=SHELL_CMD):
         if not self.lineterm:
+            version_str = gtermapi.API_VERSION
+            if gtermapi.API_MIN_VERSION and version_str != gtermapi.API_MIN_VERSION and not version_str.startswith(gtermapi.API_MIN_VERSION+"."):
+                version_str += "/" + gtermapi.API_MIN_VERSION
             self.lineterm = lineterm.Multiplex(self.screen_callback, command=command,
                                                shared_secret=self.host_secret, host=self.connection_id,
                                                server_url=self.server_url, prompt=SHELL_PROMPT, term_type=self.term_type,
+                                               api_version=version_str,
                                                widget_port=self.widget_port, logfile=self.lterm_logfile)
         term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width)
         self.add_term(term_name, lterm_cookie)
@@ -242,7 +252,12 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             for cmd in req_list:
                 action = cmd.pop(0)
 
-                if action == "reconnect":
+                if action == "shutdown":
+                    if cmd:
+                        logging.warning("gtermhost: SHUTDOWN %s", cmd[0])
+                    self.shutdown()
+
+                elif action == "reconnect":
                     if self.lineterm:
                         self.lineterm.reconnect(term_name)
 

@@ -34,7 +34,7 @@ Yahoo_weather_url = "http://weather.yahooapis.com/forecastrss?w="
 Yahoo_img_url = "http://l.yimg.com/a/i/us/we/52"
 
 
-yahoo_template = '<br><a href="%s"><img src="%s"/></a> (provided by <a href="http://www.weather.com" >The Weather Channel</a>)'
+yahoo_template = '<br><a href="%s"><img src="%s"/></a>'
 
 title_template = """
 <p><b>Current weather in %s</b><br>

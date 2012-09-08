@@ -4,7 +4,7 @@ import os, sys
 from setuptools import setup
 from setuptools.command.install import install as _install
 
-import graphterm.version
+import graphterm.about
 
 class install(_install):
     def run(self):
@@ -36,11 +36,11 @@ setup(name="graphterm",
                                        ]},
       install_requires=requires,
       include_package_data=True,
-      version=graphterm.version.current,
-      description="GraphTerm: A Graphical Terminal Interface",
+      version=graphterm.about.version,
+      description=graphterm.about.description,
+      url=graphterm.about.url,
       author="Ramalingam Saravanan",
-      author_email="sarava@sarava.net",
-      url="http://info.mindmeldr.com/code/graphterm",
+      author_email="sarava@mindmeldr.com",
       license="BSD License",
       keywords=["command line interface", "console", "multiplexer", "remote desktop",
                 "terminal", "terminal emulator", "xterm"],

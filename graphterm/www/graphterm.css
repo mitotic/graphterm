@@ -11,7 +11,7 @@ body {
 }
 
 /* Need font styling for both body and pre; otherwise pre styling will be overridden by useragent default */
-body, pre {
+body, pre, .gterm-prewrap {
     font-family: elite, courier, monaco, monospace;
     font-size: 16px;
 }
@@ -35,13 +35,13 @@ body.ipadscreen  {
 }
 
 /* Generic element styles */
-div, pre, span {
+div, span, pre, .gterm-prewrap {
     margin: 0;
     padding-top: 0;
     padding-bottom: 0;
  }
 
-pre {
+pre, .gterm-prewrap {
     line-height: 120%;
 }
 
@@ -385,7 +385,7 @@ input.gterm-input-arg[type=text] {
     z-index: 9900;
     padding: 20px;
     background-color: #ffffff;
-    border-radius: 16px;
+    border-radius: 10px;
 }
 
 .gterm-popupnarrow {
@@ -393,11 +393,21 @@ input.gterm-input-arg[type=text] {
 }
 
 .gterm-popupshrink {
+    max-width: 90%;
     width: auto;
+    background-color: #eeeeee;
+    moz-box-shadow: 0 0 10px rgba(0,0,0,.4);
+    webkit-box-shadow: 0 0 10px rgba(0,0,0,.4);
+    -box-shadow: 0 0 10px rgba(0,0,0,.4);
 }
 
 span.gterm-popupclose {
-    background-color: #aaaaaa;
+    position: absolute;
+    top: 0px;
+    right: 5px;
+    padding: 5px;
+    font-size: 1.5em;
+    font-weight: bold;
     cursor: pointer;
 }
 
