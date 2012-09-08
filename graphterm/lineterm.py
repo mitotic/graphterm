@@ -104,7 +104,7 @@ def uclean(ustr, trim=False, encoded=False):
         # Replace NULs with spaces and DELs with "?"
         ustr = ustr.replace(u"\x00", u" ").replace(u"\x7f", u"?")
 
-        return ustr.encode(ENCODING, "ignore") if encoded else ustr
+        return ustr.encode(ENCODING, "replace") if encoded else ustr
 
 def prompt_offset(line, prompt, meta=None):
         """Return offset at end of prompt (not including trailing space), or zero"""
@@ -656,6 +656,8 @@ class Terminal(object):
                 self.cursor_y_bak = self.cursor_y = 0
                 self.cursor_eol = 0
                 self.current_nul = self.screen_buf.default_nul
+                self.echobuf = ""
+                self.echobuf_count = 0
                 self.outbuf = ""
                 self.last_html = ""
                 self.active_rows = 0
@@ -833,19 +835,50 @@ class Terminal(object):
                 """Called when CR or LF is received from the user to indicate possible end of command"""
                 self.current_meta = None   # Command entry is completed
                 
-        def echo(self, c):
+        def echo(self, char):
+                char_code = ord(char)
+                if ENCODING == "utf-8" and (char_code & 0x80):
+                        # Multi-byte UTF-8
+                        if char_code & 0x40:
+                                # New UTF-8 sequence
+                                self.echobuf = char
+                                if not (char_code & 0x20):
+                                        self.echobuf_count = 2
+                                elif not (char_code & 0x10):
+                                        self.echobuf_count = 3
+                                elif not (char_code & 0x08):
+                                        self.echobuf_count = 4
+                                else:
+                                        # Invalid UTF encoding (> 4 bytes?)
+                                        self.echobuf = ""
+                                        self.echobuf_count = 0
+                                return
+                        # Continue UTF-8 sequence
+                        if not self.echobuf:
+                                # Ignore incomplete UTF-8 sequence
+                                return
+                        self.echobuf += char
+                        if len(self.echobuf) < self.echobuf_count:
+                                return
+                        # Complete UTF-8 sequence
+                        uchar = self.echobuf.decode("utf-8", "replace")
+                        self.echobuf = ""
+                        self.echobuf_count = 0
+                else:
+                        uchar = unichr(char_code)
+
                 if self.logfile and self.logchars < MAX_LOG_CHARS:
                         with open(self.logfile, "a") as logf:
                                 if not self.logchars:
                                         logf.write("TXT:")
-                                logf.write(c)
+                                logf.write(uchar.encode("utf-8", "replace"))
                                 self.logchars += 1
                                 if self.logchars == MAX_LOG_CHARS:
                                         logf.write("\n")
                 if self.cursor_eol:
                         self.cursor_down()
                         self.cursor_x = 0
-                self.screen.data[(self.cursor_y*self.width)+self.cursor_x] = self.current_nul | ord(c)
+                self.screen.data[(self.cursor_y*self.width)+self.cursor_x] = self.current_nul | ord(uchar)
                 self.cursor_right()
                 if not self.alt_mode:
                         self.active_rows = max(self.cursor_y+1, self.active_rows)
