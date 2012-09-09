@@ -1,4 +1,4 @@
-include LICENSE.txt *.rst *.html
+include COPYING LICENSE.txt *.rst *.html
 recursive-include graphterm *.py *.js *.css *.html *.rst *.txt *.gif *.jpg *.png
 graft graphterm/bin
 graft graphterm/certs

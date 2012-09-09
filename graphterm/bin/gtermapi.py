@@ -2,6 +2,12 @@
 gtermapi: API module for gterm-aware programs
 """
 
+# The code in this particular file (gtermapi.py) is
+# released in the public domain, so that it maybe
+# re-used in other projects without any restrictions.
+# It was developed as part of the GraphTerm project
+#    https://github.com/mitotic/graphterm
+
 import base64
 import StringIO
 import hashlib
@@ -20,8 +26,8 @@ import uuid
 
 from optparse import OptionParser
 
-API_VERSION = "0.30.9"
-API_MIN_VERSION = "0.30"
+API_VERSION = "0.31.0"
+API_MIN_VERSION = "0.31"
 
 HEX_DIGITS = 16
 

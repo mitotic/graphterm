@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-""" Lineterm: Line-oriented pseudo-tty wrapper
+""" Lineterm: Line-oriented pseudo-tty wrapper for GraphTerm
+  https://github.com/mitotic/graphterm
+
 Derived from the public-domain Ajaxterm code, v0.11 (2008-11-13).
   https://github.com/antonylesuisse/qweb
   http://antony.lesuisse.org/software/ajaxterm/
