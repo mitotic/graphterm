@@ -38,7 +38,7 @@ Host, Session = Path.split("/") if Path else ("", "")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
 
-App_dir = os.path.join(os.getenv("HOME"), ".graphterm")
+App_dir = os.path.join(os.path.expanduser("~"), ".graphterm")
 Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
 
 def split_version(version_str):

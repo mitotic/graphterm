@@ -18,6 +18,7 @@ import ec2common
 import gtermapi
 
 ssh_dir = os.path.expanduser("~/.ssh")
+gterm_user = "ubuntu"
 
 usage = "usage: %prog [-h ... ] <instance-tagname>"
 
@@ -28,6 +29,10 @@ form_parser.add_option("key_name", "ec2key", help="Instance management SSH key n
 form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
 form_parser.add_option("security", "default", help="Security group")
 form_parser.add_option("domain", help="Instance domain")
+form_parser.add_option("connect_to_gterm", "", help="Connect to GraphTerm")
+form_parser.add_option("start_gterm", False, help="Start GraphTerm")
+form_parser.add_option("pylab", False, help="Install PyLab")
+form_parser.add_option("oshell", False, help="OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
 
 form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
@@ -65,6 +70,23 @@ easy_install tornado
 easy_install graphterm
 sudo gterm_setup
 """
+
+if options.pylab:
+    startup_script += "apt-get install -y python-numpy python-scipy python-matplotlib\n"
+
+command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
+if options.oshell:
+    command_format += " --oshell"
+
+if options.start_gterm:
+    if not options.domain:
+        raise Exception("Must specify domain to start GraphTerm server")
+    startup_script += (command_format % "gtermserver") + " --auth_code=none --host="+options.domain+"\n"
+
+if options.connect_to_gterm:
+    if not options.domain:
+        raise Exception("Must specify domain to connect to GraphTerm server")
+    startup_script += (command_format % "gtermhost") + " --server_addr="+options.connect_to_gterm+" "+subdomain_name+"\n"
 
 # Connect to EC2
 ec2 = boto.connect_ec2()
