@@ -1296,7 +1296,7 @@ class Terminal(object):
                 status = ""
                 try:
                         with open(filepath, "w") as f:
-                                f.write(filedata)
+                                f.write(base64.b64decode(filedata))
                 except Exception, excp:
                         status = str(excp)
                 self.screen_callback(self.term_name, "save_status", [filepath, status])

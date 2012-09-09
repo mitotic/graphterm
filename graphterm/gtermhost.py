@@ -319,7 +319,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "input":
                     cmd_input = cmd[0].encode("ascii", "ignore").lstrip()   # Unescaped text
-                    here_doc = cmd[1]
+                    here_doc = base64.b64decode(cmd[1]) if cmd[1] else cmd[1]
                     entry_list = []
 
                     if cmd_input == "cat episode4.txt":
@@ -471,7 +471,7 @@ class GTCallbackMixin(object):
                                           editor=editor, modify=modify)
         params = {"editor": editor, "modify": modify, "command": "edit -f "+filepath if modify else "",
                   "filepath": filepath, "filetype": filetype}
-        self.oshell_client.remote_response(OSHELL_NAME, [["edit", params, content]])
+        self.oshell_client.remote_response(OSHELL_NAME, [["edit", params, base64.b64encode(content) if content else ""]])
         return (None, None)
 
 if otrace:

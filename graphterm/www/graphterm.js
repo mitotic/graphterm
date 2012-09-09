@@ -120,6 +120,14 @@ var JFILENAME = 2;
 var JFILEPATH = 3;
 var JQUERY = 4;
 
+function utf8_to_b64(utf8str) {
+    return $.base64.encode(unescape(encodeURIComponent(utf8str)));
+}
+
+function b64_to_utf8(b64str) {
+    return decodeURIComponent(escape($.base64.decode(b64str)));
+}
+
 function createFileURI(uri) {
     if (uri.substr(0,FILE_URI_PREFIX.length) == FILE_URI_PREFIX)
 	return uri;
@@ -739,7 +747,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var params = cmd_arg[0];
 		    var content = cmd_arg[1];
 		    if (content)
-			content = $.base64.decode(content);
+			content = b64_to_utf8(content);
 		    //console.log("graphterm_widget", params, content);
 		    var content_type = params.headers.content_type;
 		    var response_type = params.headers.x_gterm_response;
@@ -768,7 +776,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var params = cmd_arg[0];
 		    var content = cmd_arg[1];
 		    if (content)
-			content = $.base64.decode(content);
+			content = b64_to_utf8(content);
 		    var content_type = params.headers.content_type;
 		    var response_type = params.headers.x_gterm_response;
 		    var response_params = params.headers.x_gterm_parameters;
@@ -1078,7 +1086,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
             } else if (action == "edit") {
 		var editParams = command[1];
-		var content = command[2];
+		var content = b64_to_utf8(command[2]);
 
 		GTStartEdit(editParams, content);
 
@@ -2112,9 +2120,9 @@ function GTEndEdit(save) {
     if (gParams.controller && gEditing.params.modify && newContent != gEditing.content) {
 	if (save) {
 	    if (gEditing.params.command) {
-		gWebSocket.write([["input", gEditing.params.command, newContent]]);
+		gWebSocket.write([["input", gEditing.params.command, utf8_to_b64(newContent)]]);
 	    } else {
-		gWebSocket.write([["save_file", gEditing.params.filepath, newContent]]);
+		gWebSocket.write([["save_file", gEditing.params.filepath, utf8_to_b64(newContent)]]);
 	    }
 	} else if (!window.confirm("Discard changes?")) {
 	    return false;
