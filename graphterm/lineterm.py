@@ -1354,7 +1354,7 @@ class Terminal(object):
                 line = dump(self.peek(self.active_rows-1, 0, self.active_rows-1, self.width), trim=True)
                 meta = self.screen.meta[self.active_rows-1]
                 cwd = meta[JCURDIR] if meta else getcwd(self.pid)
-                offset = prompt_offset(line, self.prompt, cwd)
+                offset = prompt_offset(line, self.prompt, (cwd, 0))
 
                 try:
                         clear_last = int(clear_last) if clear_last else 0
