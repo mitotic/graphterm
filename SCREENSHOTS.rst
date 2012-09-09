@@ -8,6 +8,8 @@ ls vs. gls
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-ls-gls.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Comparing plain vanilla ``ls`` command and the graphterm-aware ``gls``.
    The icons and the blue filenames are clickable. (The icon display
@@ -48,6 +50,8 @@ Graphical weather forecast (using Yahoo Weather API)
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-yweather1.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Showing the screen for the command ``yweather`` to
    illustrate inline HTML form display. Since the location argument
@@ -56,9 +60,11 @@ Graphical weather forecast (using Yahoo Weather API)
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-yweather2.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
-   The submitted location information is used to generate  new
-   command, ``yweather -f austin``, and execute it for inline
+   The submitted location information is used to generate a new
+   command, ``yweather -f  "new york"``, and execute it for inline
    weather display.
 
    ..
@@ -73,6 +79,8 @@ Inline HTML document display
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-giframe1.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Showing the screen for the command ``rs2html README.rst | giframe`` to
    illustrate inline HTML document display. The ``rs2html README.rst``
@@ -92,6 +100,8 @@ Inline data visualization (plotting using matplotlib)
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gmatplot1.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Showing the screen for the demo program ``gmatplot.py`` which
    generates ``matplotlib`` plots as PNG files and displays them inline.
@@ -108,6 +118,8 @@ Text editing (emacs)
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-emacs.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Showing the screen for the command ``emacs gtermserver.py`` to
    illustrate backwards compatibility with the traditional terminal interface.
@@ -124,6 +136,8 @@ Graphical code editing using a "cloud" editor
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gvi.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Showing the screen for the command ``gvi gtermserver.py`` to
    illustrate graphical editing using the Ajax.org Cloud9 editor (ACE).
@@ -140,6 +154,8 @@ Collapsed mode
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-collapsed.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Showing the screen when all command output is collapsed. Clicking
    on any of the underlined prompts will display the command output.
@@ -159,6 +175,8 @@ Split scrolling
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-split.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    Showing the split-screen scrolling mode, where the command
    line is anchored at the bottom of the screen. Clicking on ``gls``
@@ -176,9 +194,13 @@ Miscellaneous screenshots
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-ec2launch1.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gtweet1.png
    :align: center
+   :width: 90%
+   :figwidth: 85%
 
    ..
 
