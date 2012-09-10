@@ -696,9 +696,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var appendSelector = gParams.wildcard ? "#session-log .preventry" : "#session-log .curentry";
 		if (action == "html_output") {
 		    var pagelet_html = '<div class="pagelet">'+command[1]+'</div>\n';
-		    var newElem = $(pagelet_html).hide().appendTo(appendSelector);
+		    var newElem = $(pagelet_html).appendTo(appendSelector);
 		    $(appendSelector+" .pagelet .gterm-link").bindclick(otraceClickHandler);
-		    newElem.show();
 		} else {
 		    $(command[1]).appendTo(appendSelector);
 		}
@@ -861,14 +860,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    }
 
 			    if (newElem) {
-				newElem = newElem.hide().appendTo("#session-bufscreen");
+				newElem = newElem.appendTo("#session-bufscreen");
 
 				if (response_params.form_input) {
 				    newElem.find(".gterm-form-button").bindclick(GTFormSubmit);
 				    newElem.find(".gterm-form-label").bind("hover", GTFormHelp);
 				}
 
-				newElem.show();
 				if (response_params.autosize)
 				    GTAutosizeIFrame(newElem);
 			    }
