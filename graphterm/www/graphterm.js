@@ -595,8 +595,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	    var action = command[0];
 
             if (action == "abort") {
-		GTPopAlert(command[1]);
+		alert(command[1]);
 		window.location = "/";
+
+            } else if (action == "alert") {
+		alert(command[1]);
 
             } else if (action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
@@ -734,7 +737,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    openTerminal();
 		var cmd_type = command[1];
 		var cmd_arg = command[2];
-		if (cmd_type == "errmsg") {
+		if (cmd_type == "alert") {
+		    alert(cmd_arg[0]);
+		} else if (cmd_type == "errmsg") {
 		    GTPopAlert("ERROR: "+cmd_arg[0]);
 		} else if (cmd_type == "save_status") {
 		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));

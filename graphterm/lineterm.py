@@ -1588,7 +1588,7 @@ class Multiplex(object):
                                 self.set_size(term_name, height, width)
                                 if not is_executable(Gls_path) and not Exec_errmsg:
                                         Exec_errmsg = True
-                                        self.screen_callback(term_name, "errmsg", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
+                                        self.screen_callback(term_name, "alert", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
                                 return term_name, cookie
 
         def term_env(self, term_name, cookie, export=False):
