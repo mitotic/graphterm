@@ -62,31 +62,37 @@ if not os.path.exists(ssh_dir):
     print >> sys.stderr, "ec2launch: %s directory not found!" % ssh_dir
     sys.exit(1)
 
-startup_script = """#!/bin/bash
-set -e -x
-apt-get update && apt-get upgrade -y
-apt-get install -y python-setuptools
-easy_install tornado
-easy_install graphterm
-sudo gterm_setup
-"""
+setup_file = "SETUP_OVER"
+
+startup_commands = ["#!/bin/bash",
+"set -e -x",
+"apt-get update && apt-get upgrade -y",
+"apt-get install -y python-setuptools",
+"easy_install tornado",
+"easy_install graphterm",
+"gterm_setup",
+]
 
 if options.pylab:
-    startup_script += "apt-get install -y python-numpy python-scipy python-matplotlib\n"
+    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib"]
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
 if options.oshell:
     command_format += " --oshell"
 
 if options.start_gterm:
-    if not options.domain:
-        raise Exception("Must specify domain to start GraphTerm server")
-    startup_script += (command_format % "gtermserver") + " --auth_code=none --host="+options.domain+"\n"
+    host_domain = options.domain or "`hostname`"
+    startup_commands += [(command_format % "gtermserver") + " --auth_code=none --host="+host_domain]
+    startup_commands += ["iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"]
 
 if options.connect_to_gterm:
     if not options.domain:
         raise Exception("Must specify domain to connect to GraphTerm server")
-    startup_script += (command_format % "gtermhost") + " --server_addr="+options.connect_to_gterm+" "+subdomain_name+"\n"
+    startup_commands += [(command_format % "gtermhost") + " --server_addr="+options.connect_to_gterm+" "+subdomain_name]
+
+startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
+
+startup_script = "\n".join(startup_commands) + "\n"
 
 # Connect to EC2
 ec2 = boto.connect_ec2()
@@ -101,8 +107,8 @@ if options.dry_run:
     print >> sys.stderr, "run_instances:", dict(image_id=options.ami,
                                                 instance_type=options.type,
                                                 key_name=options.key_name,
-                                                security_groups=[options.security],
-                                                user_data=startup_script)
+                                                security_groups=[options.security])
+    print >> sys.stderr, "startup_script:", startup_script
     sys.exit(1)
 
 # Launch instance
@@ -155,3 +161,18 @@ if options.domain:
     ec2common.cname(route53conn, zone, options.domain, instance_domain)
 
 print "Created EC2 instance: id=%s, domain=%s" % (instance_id, instance_domain)
+
+ssh_cmd_args = ["ssh", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
+                "-o", "StrictHostKeyChecking=no", gterm_user+"@"+instance_domain]
+wait_cmd = "while [ ! -f "+setup_file+" ]; do sleep 1; done"
+
+print "Waiting for remote setup to complete..."
+time.sleep(30)
+out, err = gtermapi.command_output(ssh_cmd_args + [wait_cmd], timeout=360)
+
+if out:
+    print out
+if err:
+    print >> sys.stderr, err
+else:
+    print "Remote setup completed."
