@@ -5,9 +5,11 @@
 ec2launch: Launch Amazon AWS EC2 instance
 """
 
+import collections
 import json
 import os
 import random
+import re
 import sys
 import time
 from optparse import OptionParser
@@ -20,17 +22,17 @@ import gtermapi
 ssh_dir = os.path.expanduser("~/.ssh")
 gterm_user = "ubuntu"
 
-usage = "usage: %prog [-h ... ] <instance-tagname>"
+usage = "usage: %prog [-h ... ] <instance-hostname>"
 
 form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance with the following tag: ", command="ec2launch -f")
-form_parser.add_argument(label="", help="Instance name")
-form_parser.add_option("type", ("", "t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
+form_parser.add_argument(label="", help="Instance hostname")
+form_parser.add_option("type", ("t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
-form_parser.add_option("security", "default", help="Security group")
+form_parser.add_option("auth_code", "none", help="Authentication code")
+form_parser.add_option("server_secret", "", help="Server secret for host authentication (to connect from anywhere)")
 form_parser.add_option("domain", help="Instance domain")
-form_parser.add_option("connect_to_gterm", "", help="Connect to GraphTerm")
-form_parser.add_option("start_gterm", False, help="Start GraphTerm")
+form_parser.add_option("connect_to_gterm", "", help="Domain name of GraphTerm server to connect to")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("oshell", False, help="OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
@@ -40,27 +42,45 @@ form_parser.add_option("text", False, short="t", help="Text only", raw=True)
 
 (options, args) = form_parser.parse_args()
 
-if args:
-    instance_tag = args[0]
-elif options.domain:
-    instance_tag = options.domain
-elif not options.dry_run:
-    if not gtermapi.Lterm_cookie or options.text:
+if not gtermapi.Lterm_cookie or not sys.stdout.isatty():
+    options.text = True
+
+if not args:
+    if options.text:
         print >> sys.stderr, form_parser.get_usage()
         sys.exit(1)
     gtermapi.write_form(form_parser.create_form(), command="ec2launch -f")
     sys.exit(1)
     
-if options.domain:
-    subdomain_name, sep, top_level_domain = options.domain.partition(".")
-else:
-    subdomain_name, top_level_domain = "", ""
+instance_tag = args[0]
+
+if not re.match(r"^[a-z][a-z0-9\-]*$", instance_tag):
+    raise Exception("Invalid characters in instance tag: "+instance_tag)
 
 key_file = os.path.join(ssh_dir, options.key_name+".pem")
 
 if not os.path.exists(ssh_dir):
     print >> sys.stderr, "ec2launch: %s directory not found!" % ssh_dir
     sys.exit(1)
+
+GroupRule = collections.namedtuple("GroupRule",
+                                   ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
+
+HostGroupName = "gtermhost"
+ServerGroupName = "gtermserver"
+
+SecurityGroups = [
+    (HostGroupName, "GraphTerm host group", [
+        GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
+        ]),
+
+    (ServerGroupName, "GraphTerm server group", [
+        GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
+        GroupRule("tcp", "80", "80", "0.0.0.0/0", None),
+        GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if options.server_secret else HostGroupName),
+        ],
+     )
+    ]
 
 setup_file = "SETUP_OVER"
 
@@ -79,16 +99,22 @@ if options.pylab:
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
 if options.oshell:
     command_format += " --oshell"
-
-if options.start_gterm:
-    host_domain = options.domain or "`hostname`"
-    startup_commands += [(command_format % "gtermserver") + " --auth_code=none --host="+host_domain]
-    startup_commands += ["iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"]
+if options.server_secret:
+    command_format += ' --server_secret="'+options.server_secret+'"'
 
 if options.connect_to_gterm:
-    if not options.domain:
-        raise Exception("Must specify domain to connect to GraphTerm server")
-    startup_commands += [(command_format % "gtermhost") + " --server_addr="+options.connect_to_gterm+" "+subdomain_name]
+    security_groups = [HostGroupName]
+    server_addr = options.connect_to_gterm
+    if "." not in server_addr:
+        if not options.domain:
+            raise Exception("Must specify domain to connect to GraphTerm server")
+        server_addr = server_addr + "." + options.domain
+    startup_commands += [(command_format % "gtermhost") + " --server_addr="+server_addr+" "+instance_tag]
+else:
+    security_groups = [ServerGroupName]
+    host_domain = "`hostname`"
+    startup_commands += ["iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"]
+    startup_commands += [(command_format % "gtermserver") + ' --auth_code="'+options.auth_code+'" --host='+host_domain]
 
 startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
 
@@ -96,6 +122,55 @@ startup_script = "\n".join(startup_commands) + "\n"
 
 # Connect to EC2
 ec2 = boto.connect_ec2()
+
+def get_security_group(ec2conn, group_name):
+    groups = [x for x in ec2conn.get_all_security_groups() if x.name == group_name]
+    return groups[0] if groups else None
+
+def create_or_update_security_group(ec2conn, group_name, description="", rules=[]):
+    """Create (or update) security group"""
+    group = get_security_group(ec2conn, group_name)
+    new_rules = rules[:]
+    if group:
+        # Group already exists
+        for rule in group.rules:
+            # Check each rule
+            cidr_ip = rule.grants[0].cidr_ip if rule.grants[0].cidr_ip else "0.0.0.0/0"
+            src_group_name = None if rule.grants[0].cidr_ip else rule.grants[0].name
+            old_rule = GroupRule(rule.ip_protocol,
+                                 rule.from_port,
+                                 rule.to_port,
+                                 cidr_ip,
+                                 src_group_name)
+            if old_rule in new_rules:
+                # Old rule still valid
+                new_rules.remove(old_rule)
+            else:
+                # Old rule no longer valid
+                group.revoke(ip_protocol=rule.ip_protocol,
+                             from_port=rule.from_port,
+                             to_port=rule.to_port,
+                             cidr_ip=cidr_ip,
+                             src_group=get_security_group(ec2conn, src_group_name) if src_group_name else None)
+    else:
+        group = ec2conn.create_security_group(group_name, description or group_name)
+                                        
+
+    for rule in new_rules:
+        # Create new rules
+        if rule.src_group_name:
+            src_group = get_security_group(ec2conn, rule.src_group_name)
+            if not src_group:
+                raise Exception("Source group %s not found" % rule.src_group_name)
+        else:
+            src_group = None
+
+        group.authorize(ip_protocol=rule.ip_protocol,
+                        from_port=rule.from_port,
+                        to_port=rule.to_port,
+                        cidr_ip=rule.cidr_ip,
+                        src_group=src_group)
+    return group
 
 # Create key pair, if needed
 if not os.path.exists(key_file):
@@ -107,15 +182,19 @@ if options.dry_run:
     print >> sys.stderr, "run_instances:", dict(image_id=options.ami,
                                                 instance_type=options.type,
                                                 key_name=options.key_name,
-                                                security_groups=[options.security])
+                                                security_groups=security_groups)
     print >> sys.stderr, "startup_script:", startup_script
     sys.exit(1)
+
+# Create security groups as needed
+for group_name, description, rules in SecurityGroups:
+    create_or_update_security_group(ec2, group_name, description=description, rules=rules)
 
 # Launch instance
 reservation = ec2.run_instances(image_id=options.ami,
                                 instance_type=options.type,
                                 key_name=options.key_name,
-                                security_groups=[options.security],
+                                security_groups=security_groups,
                                 user_data=startup_script)
 instance = reservation.instances[0]
 
@@ -124,9 +203,14 @@ Status_template =  """<em>Creating instance</em> <b>%s</b>: status=<b>%s</b> (wa
 
 status = instance.update()
 start_time = time.time()
+
+if options.text:
+    print >> sys.stderr, "Waiting for instance to be created..."
+    
 while status == "pending":
     timesec = int(time.time() - start_time)
-    gtermapi.write_html(Status_template % (instance_tag, status, timesec), display="fullpage")
+    if not options.text:
+        gtermapi.write_html(Status_template % (instance_tag, status, timesec), display="fullpage")
     time.sleep(3)
     status = instance.update()
 
@@ -153,12 +237,12 @@ if not instance_obj:
 instance_domain = instance_obj.public_dns_name
 
 if options.domain:
-    route53conn, zone = ec2common.get_zone(top_level_domain)
+    route53conn, zone = ec2common.get_zone(options.domain)
     if not zone:
         print >> sys.stderr, "No Route53 zone found for %s" % options.domain
 
     # Create new CNAME entry pointing to instance public DNS
-    ec2common.cname(route53conn, zone, options.domain, instance_domain)
+    ec2common.cname(route53conn, zone, instance_tag+"."+options.domain, instance_domain)
 
 print "Created EC2 instance: id=%s, domain=%s" % (instance_id, instance_domain)
 
