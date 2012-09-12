@@ -189,6 +189,25 @@ Split scrolling
 
    <hr style="margin-bottom: 3em;">
 
+On the Raspberry Pi
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-raspberrypi1.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Showing GraphTerm running on a credit-card sized
+   computer, `Raspberry Pi <http://www.raspberrypi.org/faqs>`_,
+   remotely  accessed using a laptop. It runs rather slowly, but is usable.
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
 Miscellaneous screenshots
 ==================================================
 
