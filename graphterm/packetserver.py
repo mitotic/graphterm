@@ -623,6 +623,7 @@ class RPCLink(object):
             if token != server_token:
                 self.send_json([0, ["shutdown", ["Invalid server token"]] ], nobuffer=True)
                 self.shutdown()
+                logging.warning("RPCLink.rpc_connect: Invalid server token")
                 return
             self.rpc_client_token = client_token
             self.send_json([0, ["validate", [self.rpc_client_token, self.received_id], self.rpc_state]], nobuffer=True)
@@ -633,6 +634,7 @@ class RPCLink(object):
                 self.send_json([0, ["shutdown", ["Invalid key version: %s" % key_version]] ],
                                nobuffer=True)
                 self.shutdown()
+                logging.warning("RPCLink.rpc_connect: Invalid key version: %s", key_version)
                 return
 
             self.rpc_unvalidated_id = connection_id
@@ -645,6 +647,7 @@ class RPCLink(object):
         if token != self.rpc_client_token:
             self.send_json([0, ["shutdown", ["Invalid client token"]] ], nobuffer=True)
             self.shutdown()
+            logging.warning("RPCLink.rpc_server_validate: Invalid client token")
             return False
         self.new_connection(self.rpc_unvalidated_id)
         self.send_json([0, ["validate", [None, self.received_id], self.rpc_state]], nobuffer=True)

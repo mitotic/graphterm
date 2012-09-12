@@ -1961,7 +1961,7 @@ function CheckUpdates() {
 	if (gParams.about_version == data.info.version) {
 	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').');
 	} else {
-	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<p>Use <b>easy_install --upgrade graphterm</b><br> or download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
+	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<p>Upgrade using <b>sudo easy_install --upgrade graphterm</b><br>Followed by <b>sudo gterm_setup</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
 	}
     });
     gWebSocket.write([["check_updates"]]);

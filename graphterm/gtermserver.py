@@ -600,8 +600,9 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     matchpaths.append(path)
         return matchpaths
         
-    def __init__(self, stream, address, server_address, ssl_options={}):
+    def __init__(self, stream, address, server_address, key_secret=None, key_version=None, ssl_options={}):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
+                                                 key_secret=key_secret, key_version=key_version,
                                                  ssl_options=ssl_options, max_packet_buf=2)
         self.term_set = set()
         self.term_count = 0
@@ -1002,7 +1003,8 @@ def run_server(options, args):
 
     internal_server_ssl = {"certfile": certfile, "keyfile": keyfile} if options.internal_https else None
     internal_client_ssl = {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": certfile} if options.internal_https else None
-    TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop, ssl_options=internal_server_ssl)
+    TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
+                                        key_secret=(options.server_secret or None), ssl_options=internal_server_ssl)
 
     if options.internal_https or options.nolocal:
         # Internal https causes tornado to loop  (client fails to connect to server)
@@ -1014,8 +1016,10 @@ def run_server(options, args):
         Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST, internal_host,
                                                          server_port=internal_port,
                                                          connect_kw={"ssl_options": internal_client_ssl,
+                                                                     "command": options.shell_command,
                                                                      "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
+                                                                     "key_secret": options.server_secret or None,
                                                                      "lterm_logfile": options.lterm_logfile,
                                                                      "widget_port":
                                                                        (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
@@ -1093,6 +1097,8 @@ def main():
                       help="Hostname (or IP address) (default: localhost)")
     parser.add_option("", "--port", dest="port", default=gtermhost.DEFAULT_HTTP_PORT,
                       help="IP port (default: %d)" % gtermhost.DEFAULT_HTTP_PORT, type="int")
+    parser.add_option("", "--server_secret", dest="server_secret", default="",
+                      help="Server secret (for host authentication)")
 
     parser.add_option("", "--terminal", dest="terminal", action="store_true",
                       help="Open new terminal window")
@@ -1103,6 +1109,9 @@ def main():
 
     parser.add_option("", "--nolocal", dest="nolocal", action="store_true",
                       help="Disable connection to localhost")
+
+    parser.add_option("", "--shell_command", dest="shell_command", default="",
+                      help="Shell command")
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
     parser.add_option("", "--oshell_input", dest="oshell_input", action="store_true",

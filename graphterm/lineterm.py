@@ -60,7 +60,8 @@ Log_ignored = False
 MAX_LOG_CHARS = 8
 
 BINDIR = "bin"
-Exec_path = os.path.join(os.path.dirname(__file__), BINDIR)
+File_dir = os.path.dirname(__file__)
+Exec_path = os.path.join(File_dir, BINDIR)
 Gls_path = os.path.join(Exec_path, "gls")
 Exec_errmsg = False
 
@@ -1613,19 +1614,23 @@ class Multiplex(object):
 
                         env.append( ("PROMPT_COMMAND", cmd_fmt % (GRAPHTERM_SCREEN_CODES[0], GRAPHTERM_SCREEN_CODES[0]) ) )
 
-                if export:
-                    env.append( ("GRAPHTERM_EXPORT", socket.getfqdn() or "unknown") )
+                env.append( ("GRAPHTERM_DIR", File_dir) )
                 return env
                 
         def export_environment(self, term_name):
                 term = self.proc.get(term_name)
                 if term:
+                    term.pty_write('[ "$GRAPHTERM_COOKIE" ] || export GRAPHTERM_EXPORT="%s"\n' % (socket.getfqdn() or "unknown",))
                     for name, value in self.term_env(term_name, term.cookie, export=True):
                         try:
-                            term.pty_write("export %s='%s'\n" % (name, value))
+                            if name in ("GRAPHTERM_DIR",):
+                                term.pty_write( ('[ "$%s" ] || ' % name) + ("export %s='%s'\n" % (name, value)) )
+                            else:
+                                term.pty_write( "export %s='%s'\n" % (name, value) )  # Keep inner single quotes to handle PROMPT_COMMAND
                         except Exception:
                             print >> sys.stderr, "lineterm: Error exporting environment to %s" % term_name
                             break
+                    term.pty_write('[[ "$PATH" != */graphterm/* ]] && [ -d "$GRAPHTERM_DIR" ] && export PATH="$GRAPHTERM_DIR/%s:$PATH"\n' % BINDIR)
 
         def set_size(self, term_name, height, width):
                 # python bug http://python.org/sf/1112949 on amd64

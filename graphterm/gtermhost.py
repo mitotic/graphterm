@@ -46,7 +46,7 @@ RETRY_SEC = 15
 OSHELL_NAME = "osh"
 
 ##SHELL_CMD = "bash -l"
-SHELL_CMD = "/bin/bash -l"
+SHELL_CMD = "/bin/bash"
 
 # Short prompt (long prompt with directory metadata fills most of row)
 ##PROMPT_PREFIX = '<gtprompt/>'    # Unique prompt prefix
@@ -125,18 +125,21 @@ class BlobCache(object):
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
     all_cookies = {}
-    def __init__(self, host, port, command=SHELL_CMD, host_secret="", oshell=False, io_loop=None, ssl_options={},
-                 term_type="", term_encoding="utf-8", widget_port=0, lterm_logfile=""):
+    def __init__(self, host, port, host_secret="", oshell=False, io_loop=None, ssl_options={},
+                 command="", term_type="", term_encoding="utf-8", widget_port=0, lterm_logfile="", key_secret=None, key_version=None):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
-                                             reconnect_sec=RETRY_SEC, server_type="frame")
-        self.term_type = term_type
+                                             reconnect_sec=RETRY_SEC, server_type="frame",
+                                             key_secret=key_secret, key_version=key_version)
         self.host_secret = host_secret
-        self.widget_port = widget_port
-        self.term_encoding = term_encoding
-        self.lterm_logfile = lterm_logfile
-        self.command = command
         self.oshell = oshell
+
+        self.command = command or SHELL_CMD
+        self.term_type = term_type
+        self.term_encoding = term_encoding
+        self.widget_port = widget_port
+        self.lterm_logfile = lterm_logfile
+
         self.terms = {}
         self.lineterm = None
         self.server_url = ("https" if ssl_options else "http") + "://" + host + ":" + str(port+1)
@@ -188,12 +191,12 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         else:
             self.lineterm.kill_term(term_name)
 
-    def xterm(self, term_name="", height=25, width=80, command=SHELL_CMD):
+    def xterm(self, term_name="", height=25, width=80, command=""):
         if not self.lineterm:
             version_str = gtermapi.API_VERSION
             if gtermapi.API_MIN_VERSION and version_str != gtermapi.API_MIN_VERSION and not version_str.startswith(gtermapi.API_MIN_VERSION+"."):
                 version_str += "/" + gtermapi.API_MIN_VERSION
-            self.lineterm = lineterm.Multiplex(self.screen_callback, command=command,
+            self.lineterm = lineterm.Multiplex(self.screen_callback, command=(command or self.command),
                                                shared_secret=self.host_secret, host=self.connection_id,
                                                server_url=self.server_url, prompt=SHELL_PROMPT, term_type=self.term_type,
                                                api_version=version_str,
@@ -624,7 +627,7 @@ def gterm_shutdown(trace_shell=None):
             pass
 
 Host_connections = {}
-def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_cmd=SHELL_CMD, connect_kw={},
+def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, connect_kw={},
                   oshell_globals=None, oshell_thread=False, oshell_unsafe=False, oshell_workdir="",
                   oshell_init="", oshell_db_interface=None, oshell_hold_wrapper=None,
                   oshell_no_input=True, gterm_callback=None, io_loop=None):
@@ -649,7 +652,7 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, shell_c
     host_secret = "%016x" % random.randrange(0, 2**64)
 
     host_connection = TerminalClient.get_client(host_name,
-                         connect=(server_addr, server_port, shell_cmd, host_secret, bool(oshell_globals)),
+                         connect=(server_addr, server_port, host_secret, bool(oshell_globals)),
                           connect_kw=connect_kw)
 
     Host_connections[host_secret] = host_connection
@@ -687,8 +690,10 @@ def run_host(options, args):
 
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=options.server_port,
-                                                         connect_kw={"term_type": options.term_type,
+                                                         connect_kw={"command": options.shell_command,
+                                                                     "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
+                                                                     "key_secret": options.server_secret or None,
                                                                      "widget_port":
                                                                      (DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
@@ -732,7 +737,11 @@ def main():
                       help="Server hostname (or IP address) (default: localhost)")
     parser.add_option("", "--server_port", dest="server_port", default=DEFAULT_HOST_PORT,
                       help="Server port (default: %d)" % DEFAULT_HOST_PORT, type="int")
+    parser.add_option("", "--server_secret", dest="server_secret", default="",
+                      help="Server secret (for host authentication)")
 
+    parser.add_option("", "--shell_command", dest="shell_command", default=SHELL_CMD,
+                      help="Shell command (default: %s) % SHELL_CMD")
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
     parser.add_option("", "--oshell_input", dest="oshell_input", action="store_true",
