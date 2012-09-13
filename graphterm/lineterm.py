@@ -14,6 +14,11 @@ from __future__ import with_statement
 import array, cgi, copy, fcntl, glob, logging, mimetypes, optparse, os, pty
 import re, signal, select, socket, sys, threading, time, termios, tty, struct, pwd
 
+try:
+    import ujson as json
+except ImportError:
+    import json
+
 import random
 try:
     random = random.SystemRandom()
@@ -23,7 +28,6 @@ except NotImplementedError:
 import base64
 import hashlib
 import hmac
-import json
 import Queue
 import shlex
 import subprocess

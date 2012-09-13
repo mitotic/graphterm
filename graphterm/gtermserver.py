@@ -11,7 +11,6 @@ import email.utils
 import functools
 import hashlib
 import hmac
-import json
 import logging
 import os
 import Queue
@@ -33,6 +32,11 @@ try:
     random = random.SystemRandom()
 except NotImplementedError:
     import random
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 try:
     import otrace
