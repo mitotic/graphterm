@@ -88,7 +88,7 @@
           <!--
           <img src="/static/images/graphic.jpg" class="lateral"></img>
           -->
-          <div id="session-bufellipsis" class="gterm-link" onclick="ExitFullscreen()"><h3>...</h3></div>
+          <div id="session-bufellipsis" class="gterm-link" onclick="ExitFullpage()"><h3>...</h3></div>
           <div id="session-feedback" class="session-feedback">
             <input id="session-feedback-button" type="button" value="feedback"/>
           </div>
@@ -139,11 +139,12 @@
                 <span id="headfoot-down"    class="headfoot">&#x25BC;</span>&nbsp;&nbsp;
                 <span id="headfoot-delete"  class="headfoot">&#x232B;</span>&nbsp;&nbsp;
                 <span id="headfoot-left"    class="headfoot">&lt;</span>&nbsp;&nbsp;
-                <span id="headfoot-right"   class="headfoot">&gt;</span>&nbsp;&nbsp;
+                <span id="headfoot-right"   class="headfoot">&gt;</span>&nbsp;
+                <span id="headfoot-tab"     class="headfoot">TAB</span>
+                <span id="headfoot-enter"   class="headfoot">Enter</span>
                 <select id="headfoot-key" class="headfootselect" size=1>
                   <option value="key" selected>Key</option>
                   <option value="space">Space</option>
-                  <option value="tab">Tab</option>
                   <option value="escape">Escape</option>
                   <option value="controla">Ctrl-A</option>
                   <option value="controlc">Ctrl-C</option>
@@ -155,7 +156,6 @@
                 <span id="headfoot-command" class="headfoot toggle gterm-not-implemented">Cmd</span>
                 <span id="headfoot-options" class="headfoot toggle gterm-not-implemented">Opt</span>
                 <span id="headfoot-file"    class="headfoot toggle gterm-not-implemented">File</span>
-                <span id="headfoot-enter"   class="headfoot">Enter</span>
                 <!--
                 <input id="headfoot-input"  class="headfoot" size=3 placeholder="Insert">
                 -->

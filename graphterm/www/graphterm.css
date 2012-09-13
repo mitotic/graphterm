@@ -206,7 +206,7 @@ img.gterm-img {
 }
 
 .pagelet.gterm-fullwindow {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     background: white;
@@ -214,6 +214,10 @@ img.gterm-img {
     z-index: 1000;
     width: 100%;
     height: 100%;
+}
+
+body.mobilescreen .pagelet.gterm-fullwindow {
+    height: 95%;
 }
 
 /* Widget */

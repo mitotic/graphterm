@@ -17,6 +17,8 @@ var gSafariBrowser = !gChromeBrowser && navigator.userAgent.toLowerCase().indexO
 
 var gSafariIPad = gSafariBrowser && navigator.userAgent.toLowerCase().indexOf('ipad') > -1;
 
+var gMobileDisplay = gSafariIPad;
+
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
 
@@ -1422,6 +1424,9 @@ function gtermMenuClickHandler(event) {
 	if (HandleArrowKeys(39))
 	    text = "\x1b[C";
 	break;
+    case "tab":
+	text = "\x09";
+	break;
     case "command":
 	GetFinder("command");
 	break;
@@ -1573,8 +1578,6 @@ function gtermBottomSelectHandler(event) {
 
 	if (selectedOption == "space")
 	    text = String.fromCharCode(32);
-	else if (selectedOption == "tab")
-	    text = String.fromCharCode(9);
 	else if (selectedOption == "escape")
 	    text = String.fromCharCode(27);
 	else if (selectedOption == "controla")
@@ -2259,11 +2262,20 @@ function RunPrefixMethod(obj, method) {
 var gFullpageDisplay = null;
 function StartFullpage(display, split) {
     gFullpageDisplay = display;
-    $("#session-bufscreen").addClass("fullpage");
-    if (split) {
-	$("#session-bufellipsis").show();
-	if (gAlwaysSplitScreen && !gSplitScreen)
-	    SplitScreen("fullpage");
+    if (display == "fullpage") {
+	$("#session-bufscreen").addClass("fullpage");
+	if (split) {
+	    $("#session-bufellipsis").show();
+	    if (gAlwaysSplitScreen && !gSplitScreen)
+		SplitScreen("fullpage");
+	}
+    }
+
+    if (display == "fullwindow" || display == "fullscreen") {
+	if (gMobileDisplay) {
+	    $("#session-term").addClass("display-footer");
+	}
+	setTimeout(function() {ScrollTop(null)}, 250); // Scroll background to bottom of screen
     }
 
     if (display == "fullscreen") {
@@ -2290,6 +2302,8 @@ function EndFullpage() {
     $("#session-bufscreen").removeClass("fullpage");
     if (gSplitScreen)
 	MergeScreen("fullpage");
+
+    $("#session-bufscreen .pagelet.gterm-fullwindow").removeClass("gterm-fullwindow");
 }
 
 function ExitFullpage() {
@@ -2540,6 +2554,8 @@ $(document).ready(function() {
     console.log("Ready");
     $(document).attr("title", window.location.pathname.substr(1));
 
+    if (gMobileDisplay)
+	$("body").addClass("mobilescreen");
     if (gSafariIPad)
 	$("body").addClass("ipadscreen");
 
@@ -2550,7 +2566,7 @@ $(document).ready(function() {
     $("#session-findercontainer").hide();
     $("#session-widgetcontainer").hide();  // IMPORTANT (else top menu will be invisibly blocked)
     $(".menubar-select").change(gtermSelectHandler);
-    $(".session-footermenu select").change(gtermBottomSelectHandler);
+    $("#session-footermenu select").change(gtermBottomSelectHandler);
     $("#session-headermenu .headfoot").bindclick(gtermMenuClickHandler);
     $("#session-footermenu .headfoot").bindclick(gtermMenuClickHandler);
     $("#session-feedback-button").bindclick(gtermFeedbackHandler);
