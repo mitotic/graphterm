@@ -268,7 +268,7 @@ img.gterm-blockimg {
     display: none;
 }
 
-span.gterm-link, a.gterm-link, span.gterm-blockseqlink {
+span.gterm-link, a.gterm-link, span.gterm-help-link, span.gterm-blockseqlink {
     color: blue;
     cursor: pointer;
     text-decoration: none;
@@ -399,7 +399,7 @@ input.gterm-input-arg[type=text] {
 .gterm-popupshrink {
     max-width: 90%;
     width: auto;
-    background-color: #eeeeee;
+    background-color: #ffffff;
     moz-box-shadow: 0 0 10px rgba(0,0,0,.4);
     webkit-box-shadow: 0 0 10px rgba(0,0,0,.4);
     -box-shadow: 0 0 10px rgba(0,0,0,.4);

@@ -871,7 +871,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 				if (response_params.form_input) {
 				    newElem.find(".gterm-form-button").bindclick(GTFormSubmit);
-				    newElem.find(".gterm-form-label").bind("hover", GTFormHelp);
+				    newElem.find(".gterm-help-link").bindclick(GTHelpLink);
 				}
 
 				if (response_params.autosize)
@@ -1545,6 +1545,13 @@ function gtermLinkClickHandler(event) {
 }
 
 function gtermPageletClickHandler(event) {
+    var confirm = $(this).attr("data-gtermconfirm");
+    if (confirm) {
+	if (!window.confirm(confirm)) {
+	    return false;
+	}
+    }
+
     var contextMenu = gControlActive;
     GTReceivedUserInput("click");
     var text = $(this).text();
@@ -1560,6 +1567,7 @@ function gtermPageletClickHandler(event) {
     options.command = $(this).attr("data-gtermcmd");
     var cd_command = (options.command.indexOf("cd ") == 0);
     options.clear_last = (pagelet.length && cd_command) ? pagelet.attr("data-gtermpromptindex") : "0";
+
     gtermClickPaste("", file_url, options);
     //console.log("gtermPageletClickHandler", file_url, options);
     return false;
@@ -2173,8 +2181,14 @@ function GTEndForm(text, cancel) {
     gFormIndex = null;
 }
 
-function GTFormHelp(evt) {
+function GTHelpLink(evt) {
     var helpStr = $(this).attr("data-gtermhelp");
+    if (helpStr) {
+	var html = '<div class="gterm-help gterm-prewrap">'+GTPreserveLinebreaks(GTEscape(helpStr))+'</div>';
+	$("#gterm-helparea-content").html(html);
+	popupShow("#gterm-helparea", null, null, "help");
+    }
+    return false;
 }
 
 function GTFormSubmit(evt) {
