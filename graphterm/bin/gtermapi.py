@@ -26,7 +26,7 @@ import uuid
 
 from optparse import OptionParser
 
-API_VERSION = "0.31.0"
+API_VERSION = "0.32.0"
 API_MIN_VERSION = "0.31"
 
 HEX_DIGITS = 16

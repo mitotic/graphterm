@@ -2,6 +2,7 @@
 *~
 *.pyc
 README.html
+RELEASE_NOTES.html
 SCREENSHOTS.html
 docs/*.html
 build/*
