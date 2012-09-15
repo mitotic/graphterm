@@ -16,7 +16,7 @@ body, pre, .gterm-prewrap {
     font-size: 16px;
 }
 
-body.bold {
+body.bold, body.bold pre, body.bold .gterm-prewrap, body.bold td {
     font-weight: bold;
 }
 
