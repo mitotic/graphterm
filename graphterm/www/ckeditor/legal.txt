@@ -1,0 +1,1 @@
+CKEditor is distributed under the MPL License
