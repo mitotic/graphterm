@@ -2602,6 +2602,11 @@ $(window).unload(function() {
 $(document).ready(function() {
     //LoadHandler();
     console.log("Ready");
+    if (!("WebSocket" in window)) {
+	$("body").text("This browser does not support the WebSocket interface that is required for GraphTerm to work. Please use another browser that supports it, such as the latest versions of Chrome/Firefox/Safari or IE10.");
+	return false;
+    }
+
     $(document).attr("title", window.location.pathname.substr(1));
 
     if (gMobileDisplay) {
