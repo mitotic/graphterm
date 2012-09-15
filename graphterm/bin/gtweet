@@ -69,7 +69,7 @@ Auth_parser.add_option("access_key", label="Access token: ", help="Access token"
 Auth_parser.add_option("access_secret", label="Access token secret: ", help="Access token secret")
 
 pagelet_html = """<script>
-var GTPageletMaxTweets = 20;
+var GTPageletMaxTweets = 36;
 function GTPageletJSON(pageletElem, tweet) {
     // Display new tweet, sliding it into the top line
     $('<li><img src="/static/images/twitter_bird_32.png"> '+tweet+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
@@ -264,7 +264,10 @@ class TwitterStreamReader(object):
                 sys.stdout.flush()
 
         if options.fullscreen:
-            tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
+            if options.anon:
+                tweet_html = cgi.escape(message["text"])
+            else:
+                tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
             gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers)
 
 def read_twitter_user_stream(Auth_tokens, keywords=[], recv=False):
@@ -348,6 +351,7 @@ form_parser = gtermapi.FormParser(usage=usage, title="Text to tweet or keywords 
 form_parser.add_argument(help="Tweet text for sending, or keywords for receiving")
 form_parser.add_option("search", False, short="s", help="Search for all tweets containing specified keywords (to STDERR, if fullscreen)")
 form_parser.add_option("recv", False, short="r", help="Receive tweets mentioning this user or any keywords (to STDERR, if fullscreen)")
+form_parser.add_option("anon", False, short="a", help="Anonymize (hide user names in public display)")
 
 form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display", raw=True)
 form_parser.add_option("csv", False, short="c", help="CSV output (to STDERR, if -f)", raw=True)

@@ -16,6 +16,7 @@ import gtermapi
 SPECIAL_FILES = set(["..", ".", "~"])
 
 gbrowsecmd = os.getenv("GRAPHTERM_BROWSE_CMD", "") or "gbrowse"
+gimagecmd = os.getenv("GRAPHTERM_IMAGE_CMD", "") or "gimage"
 glscmd = os.getenv("GRAPHTERM_LS_CMD", "") or "gls"
 gopencmd = os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
 gvicmd = os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
@@ -24,7 +25,7 @@ FILE_TYPES = {"directory": ("/static/images/tango-folder.png", "cd %(path); "+gl
               "executable": ("/static/images/tango-application-x-executable.png", ""),
               "audiofile": ("/static/images/tango-audio-x-generic.png", gbrowsecmd),
               "htmlfile": ("/static/images/tango-text-html.png", gvicmd),
-              "imagefile": ("/static/images/tango-image-x-generic.png", gbrowsecmd),
+              "imagefile": ("/static/images/tango-image-x-generic.png", gimagecmd),
               "pdffile": ("/static/images/tango-text-x-generic-template.png", gbrowsecmd),
               "plainfile": ("/static/images/tango-text-x-generic-template.png", gopencmd),
               "textfile": ("/static/images/tango-text-x-generic.png", gvicmd),

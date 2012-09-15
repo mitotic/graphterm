@@ -249,7 +249,7 @@ Form_template =  """<div id="gterm-form-%s" class="gterm-form"><span class="gter
 </div>"""
 
 
-Label_template = """<span class="gterm-form-label" data-gtermhelp="%s">%s</span>"""
+Label_template = """<span class="gterm-form-label %s" data-gtermhelp="%s">%s</span>"""
 
 Input_text_template = """<input id="gterm_%s_%s" name="%s" class="gterm-form-input%s" type="text" value="%s" autocomplete="off" %s></input>"""
 
@@ -311,7 +311,7 @@ class FormParser(object):
             if j == arg_count:
                 input_list.append("<table>\n")
 
-            label_html = Label_template % (opt_help, label)
+            label_html = Label_template % ("gterm-help-link" if opt_help else "", opt_help, label)
             attrs = ""
             classes = ""
             if j < arg_count:

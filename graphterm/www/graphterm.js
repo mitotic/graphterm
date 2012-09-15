@@ -24,6 +24,7 @@ var gDefaultEditor = gMobileDisplay ? "ckeditor" : "ace";
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
 
+var RELEASE_NOTES_URL = "http://info.mindmeldr.com/code/graphterm/graphterm-release-notes";
 var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
 var PYPI_JSON_URL = PYPI_URL + "/json?callback=?";
 
@@ -1974,7 +1975,7 @@ function CheckUpdates() {
 	if (gParams.about_version == data.info.version) {
 	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').');
 	} else {
-	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<p>Upgrade using <b>sudo easy_install --upgrade graphterm</b><br>Followed by <b>sudo gterm_setup</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
+	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<br>See <a href="'+RELEASE_NOTES_URL+'" target="_blank">Release Notes</a> for details.<p>Upgrade using <b>sudo easy_install --upgrade graphterm</b><br>Followed by <b>sudo gterm_setup</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
 	}
     });
     gWebSocket.write([["check_updates"]]);
