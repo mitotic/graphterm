@@ -19,6 +19,8 @@ var gSafariIPad = gSafariBrowser && navigator.userAgent.toLowerCase().indexOf('i
 
 var gMobileDisplay = gSafariIPad;
 
+var gDefaultEditor = gMobileDisplay ? "ckeditor" : "ace";
+
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
 
@@ -1074,7 +1076,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    if (gScrollTop) {
 			gScrollTop = false;
 			ScrollTop(0);
-		    } else if (this.theme == "default") {
+		    } else if (!$("body").hasClass("three-d")) {
 			if (!gSplitScreen)
 			    ScrollScreen(alt_mode);
 		    } else {
@@ -2081,18 +2083,47 @@ function GTCaptureInput() {
     return gForm || (gEditing && gParams.controller) || gPopupType;
 }
 
+function GTClearCKEditor() {
+    for (var name in CKEDITOR.instances){
+	var instance = CKEDITOR.instances[name];
+	instance.destroy();
+    }
+}
+function GTResizeCKEditor() {
+    var defaultHeight = 300;
+    var newHeight = window.innerHeight-150; 
+    var height = defaultHeight > newHeight ? defaultHeight : newHeight;
+    for (var name in CKEDITOR.instances){
+	var instance = CKEDITOR.instances[name];
+	instance.resize('100%', height);
+    }
+}
+
 function GTStartEdit(params, content) {
     $("#terminal").hide();
-    gEditing = {params: params, content: content};
-    if (gEditing.params.editor == "web") {
-	$("#pop_editarea_content").val(content);
-	popupShow("#pop_editarea", "editarea");
+    var editor = params.editor ? params.editor : gDefaultEditor;
+    gEditing = {params: params, content: content, editor: editor};
+    if (gEditing.editor == "web") {
+	$("#gterm-texteditarea-content").val(content);
+	popupShow("#gterm-texteditarea", "editarea");
+    } else if (gEditing.editor == "ckeditor") {
+	GTClearCKEditor();
+	if ($("#jseditarea_content").length)
+	    $("#jseditarea_content").remove();
+	$("#jseditarea_title").text("CKEditor");
+	$('<div name="jseditarea_content" id="jseditarea_content">/div>').appendTo("#jseditarea_container");
+	$("#jseditarea").show();
+	CKEDITOR.config.startupMode = (params.filetype == "html") ? "wysiwyg" : "source";
+	gEditing.ckeditor = $("#jseditarea_content").ckeditor({toolbar: "Basic"});
+	$("#jseditarea_content").ckeditorGet().setData(content);
+        setTimeout(GTResizeCKEditor, 500);
     } else {
-	if ($("#acearea_content").length)
-	    $("#acearea_content").remove();
-	$('<div name="acearea_content" id="acearea_content">/div>').appendTo("#acearea");
-	$("#acearea").show();
-	gEditing.ace = ace.edit("acearea_content");
+	if ($("#jseditarea_content").length)
+	    $("#jseditarea_content").remove();
+	$("#jseditarea_title").text("Ajax.org Cloud9 Editor");
+	$('<div name="jseditarea_content" id="jseditarea_content">/div>').appendTo("#jseditarea_container");
+	$("#jseditarea").show();
+	gEditing.ace = ace.edit("jseditarea_content");
 
 	try {
 	    // Overrride undo manager to broadcast edit deltas
@@ -2126,8 +2157,10 @@ function GTStartEdit(params, content) {
 
 function GTEndEdit(save) {
     var newContent;
-    if (gEditing.params.editor == "web") {
-	newContent = $("#pop_editarea_content").val();
+    if (gEditing.editor == "web") {
+	newContent = $("#gterm-texteditarea-content").val();
+    } else if (gEditing.editor == "ckeditor") {
+	newContent = $("#jseditarea_content").ckeditorGet().getData();
     } else {
 	newContent = gEditing.ace.getSession().getValue();
     }
@@ -2142,11 +2175,13 @@ function GTEndEdit(save) {
 	    return false;
 	}
     }
-    if (gEditing.params.editor == "web") {
+    if (gEditing.editor == "web") {
 	popupClose(false);
     } else {
-	$("#acearea").hide();
-	$("#acearea_content").remove();
+	if (gEditing.editor == "ckeditor")
+	    GTClearCKEditor();
+	$("#jseditarea").hide();
+	$("#jseditarea_content").remove();
     }
     gEditing = null;
     $("#terminal").show();
@@ -2568,14 +2603,16 @@ $(document).ready(function() {
     console.log("Ready");
     $(document).attr("title", window.location.pathname.substr(1));
 
-    if (gMobileDisplay)
+    if (gMobileDisplay) {
 	$("body").addClass("mobilescreen");
+	ToggleFooter();
+    }
     if (gSafariIPad)
 	$("body").addClass("ipadscreen");
 
     setupTerminal();
     popupSetup();
-    $("#acearea").hide();
+    $("#jseditarea").hide();
     $("#session-bufellipsis").hide();
     $("#session-findercontainer").hide();
     $("#session-widgetcontainer").hide();  // IMPORTANT (else top menu will be invisibly blocked)

@@ -12,6 +12,8 @@
     <script type="text/javascript" src="/static/jquery/js-plugins/rangy-core.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.cookie.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.base64.min.js"></script>
+    <script type="text/javascript" src="/static/ckeditor/ckeditor.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/static/ckeditor/adapters/jquery.js"></script>
     <script src="/static/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="/static/mode-css.js" type="text/javascript" charset="utf-8"></script>
     <script src="/static/mode-html.js" type="text/javascript" charset="utf-8"></script>
@@ -63,7 +65,7 @@
       <span id="menubar-label-theme" class="menubar-label">Theme:</span>
       <select id="menubar-theme" class="menubar-select" size=1>
         <option value="default" selected>default</option>
-        <!-- <option value="stars">stars</option> -->
+        <option value="bold">bold</option>
         <option value="stars3d">stars3d</option>
       </select>
 
@@ -190,15 +192,23 @@ href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphter
   </div> <!-- gtermsplashtext -->
 </div> <!-- gtermsplash -->
 
-<!-- ACE editor -->
-<div id="acearea" class="acearea">
-  Ajax.org Cloud9 Editor
-  <button id="acearea_button_apply" onclick="GTEndEdit(true);">Save</button>
-  <button id="acearea_button_quit" onclick="GTEndEdit(false);">Discard</button>
-</div> <!-- acearea -->
+<!-- ACE/CK editor -->
+<div id="jseditarea" class="jseditarea">
+  <span id="jseditarea_title">Editor</span>
+  <button id="jseditarea_button_apply" onclick="GTEndEdit(true);">Save</button>
+  <button id="jseditarea_button_quit" onclick="GTEndEdit(false);">Discard</button>
+  <div id="jseditarea_container" class="jseditarea_container"></div>
+</div> <!-- jseditarea -->
 
 <!-- popups -->
 <div id="gterm-popupmask" class="gterm-popupmask"></div>
+
+<div id="gterm-texteditarea" class="gterm-popup">
+  <button id="texteditarea_button_apply" onclick="GTEndEdit(true);">Save</button>
+  <button id="texteditarea_button_quit" onclick="GTEndEdit(false);">Discard</button>
+  <br>
+  <textarea name="gterm-texteditarea-content" id="gterm-texteditarea-content" rows="5" cols="60"></textarea>
+</div> <!-- gterm-texteditarea -->
 
 <div id="gterm-alertarea" class="gterm-popup gterm-popupshrink">
   <span class="gterm-popupclose">&#215;</span>

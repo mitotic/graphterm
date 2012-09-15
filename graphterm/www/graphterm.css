@@ -16,6 +16,10 @@ body, pre, .gterm-prewrap {
     font-size: 16px;
 }
 
+body.bold {
+    font-weight: bold;
+}
+
 /* Body screen styles (with button label font sizes) */
 body.smallscreen  {
     font-size: 12px;
@@ -437,7 +441,7 @@ span.gterm-popupclose {
 }
 
 /* Editor style */
-#acearea_content {
+#jseditarea_content {
     position: absolute;
     top: 40;
     left: 0;
