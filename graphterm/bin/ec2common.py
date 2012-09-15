@@ -4,6 +4,7 @@ ec2common: Common code to manage Amazon AWS EC2 instances
 
 import boto
 import os
+import re
 import sys
 import time
 
@@ -47,22 +48,36 @@ Default_auth_file = "~/.boto"
 
 check_auth_file(Default_auth_file)
 
+def get_hosted_zone(route53conn, domain_name):
+    retval = route53conn.get_hosted_zone_by_name(domain_name)
+    if retval:
+        return retval['GetHostedZoneResponse']["HostedZone"]
+    else:
+        return None
 
-def get_zone(zone_domain):
-    route53conn = Route53Connection()
+def create_hosted_zone(route53conn, domain_name):
+    # Create new hosted zone
+    retval = route53conn.create_hosted_zone(domain_name+".")
+    try:
+        return retval['CreateHostedZoneResponse']["HostedZone"]
+    except Exception:
+        raise Exception("Failed to create hosted zone %s; is Route 53 service activated?" % domain_name)
 
-    results = route53conn.get_all_hosted_zones()
-    zones = results['ListHostedZonesResponse']['HostedZones']
+def get_zone_id(hosted_zone):
+    return hosted_zone['Id'].replace('/hostedzone/', '')
 
-    for zone in zones:
-        if zone['Name'] == zone_domain+".":
-            return route53conn, zone
-
-    return (route53conn, None)
+def get_nameservers(route53conn, domain_name):
+    hosted_zone = get_hosted_zone(route53conn, domain_name)
+    if hosted_zone:
+        for rec in route53conn.get_all_rrsets(get_zone_id(hosted_zone)):
+            if rec.type == "NS":
+                return rec.to_print()
+    return None
 
 def cname(route53conn, zone, domain_name, alt_name, ttl=60, remove=False):
     from boto.route53.record import ResourceRecordSets
-    zone_id = zone['Id'].replace('/hostedzone/', '')
+    
+    zone_id = get_zone_id(zone)
     changes = ResourceRecordSets(route53conn, zone_id)
     change = changes.add_change("DELETE" if remove else "CREATE",
                                 name=domain_name,
@@ -78,14 +93,26 @@ def kill(instance_ids=[]):
     ec2 = get_ec2()
     ec2.terminate_instances(instance_ids=instance_ids)
 
-def get_instance_props(instance_id=None):
+def get_instance_props(name=None):
+    """Return property lists for all instances with id or tag matching name (with simple shell wildcarding)"""
+    if name and ("?" in name or "*" in name or "[" in name):
+        name_re = re.compile("^"+name.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")+"$")
+    else:
+        name_re = None
+        
     ec2 = get_ec2()
 
     all_instances = ec2.get_all_instances()
     props_list = []
     for res in all_instances:
         iobj = res.instances[0]
-        if not instance_id or instance_id == iobj.id or any(tag.startswith(instance_id) for tag in iobj.tags):
+        if name_re:
+            matched = any(name_re.match(tag) for tag in iobj.tags)
+        elif name:
+            matched = name == iobj.id or any(name == tag for tag in iobj.tags)
+        else:
+            matched = True
+        if matched:
             props = {"id": iobj.id,
                      "public_dns": iobj.public_dns_name,
                      "key": iobj.key_name,

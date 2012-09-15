@@ -22,19 +22,18 @@ import gtermapi
 ssh_dir = os.path.expanduser("~/.ssh")
 gterm_user = "ubuntu"
 
-usage = "usage: %prog [-h ... ] <instance-hostname>"
+usage = "usage: %prog [-h ... ] <instance-tag|full-domain-name>"
 
-form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance with the following tag: ", command="ec2launch -f")
+form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance with the following hostname: ", command="ec2launch -f")
 form_parser.add_argument(label="", help="Instance hostname")
 form_parser.add_option("type", ("t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
-form_parser.add_option("auth_code", "none", help="Authentication code")
+form_parser.add_option("auth_code", "none", help="User authentication code")
 form_parser.add_option("server_secret", "", help="Server secret for host authentication (to connect from anywhere)")
-form_parser.add_option("domain", help="Instance domain")
-form_parser.add_option("connect_to_gterm", "", help="Domain name of GraphTerm server to connect to")
+form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
 form_parser.add_option("pylab", False, help="Install PyLab")
-form_parser.add_option("oshell", False, help="OTrace shell")
+form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
 
 form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
@@ -54,8 +53,10 @@ if not args:
     
 instance_tag = args[0]
 
-if not re.match(r"^[a-z][a-z0-9\-]*$", instance_tag):
-    raise Exception("Invalid characters in instance tag: "+instance_tag)
+if not re.match(r"^[a-z][a-z0-9\.\-]*$", instance_tag):
+    raise Exception("Invalid characters in instance name: "+instance_tag)
+
+instance_name, sep, instance_domain = instance_tag.partition(".")
 
 key_file = os.path.join(ssh_dir, options.key_name+".pem")
 
@@ -104,12 +105,11 @@ if options.server_secret:
 
 if options.connect_to_gterm:
     security_groups = [HostGroupName]
-    server_addr = options.connect_to_gterm
-    if "." not in server_addr:
-        if not options.domain:
-            raise Exception("Must specify domain to connect to GraphTerm server")
-        server_addr = server_addr + "." + options.domain
-    startup_commands += [(command_format % "gtermhost") + " --server_addr="+server_addr+" "+instance_tag]
+    server_name, sep, server_domain = options.connect_to_gterm.partition(".")
+    if not server_domain:
+        raise Exception("Must specify fully qualified domain name to connect to GraphTerm server")
+    host_name = instance_name if instance_domain == server_domain else instance_tag
+    startup_commands += [(command_format % "gtermhost") + " --server_addr="+ options.connect_to_gterm+" "+host_name]
 else:
     security_groups = [ServerGroupName]
     host_domain = "`hostname`"
@@ -122,6 +122,16 @@ startup_script = "\n".join(startup_commands) + "\n"
 
 # Connect to EC2
 ec2 = boto.connect_ec2()
+
+route53conn = None
+hosted_zone = None
+nameservers = ""
+if instance_domain:
+    route53conn = ec2common.Route53Connection()
+    hosted_zone = ec2common.get_hosted_zone(route53conn, instance_domain)
+    if not hosted_zone:
+        hosted_zone = ec2common.create_hosted_zone(route53conn, instance_domain)
+        nameservers = ec2common.get_nameservers(route53conn, instance_domain)
 
 def get_security_group(ec2conn, group_name):
     groups = [x for x in ec2conn.get_all_security_groups() if x.name == group_name]
@@ -219,8 +229,7 @@ if status != "running":
     sys.exit(1)
 
 # Tag instance
-if instance_tag:
-    instance.add_tag(instance_tag)
+instance.add_tag(instance_tag)
 
 instance_id = reservation.id
 instance_obj = None
@@ -234,23 +243,25 @@ if not instance_obj:
     print >> sys.stderr, "ec2launch: ERROR Unable to find launched instance: %s" % status
     sys.exit(1)
 
-instance_domain = instance_obj.public_dns_name
+public_dns_name = instance_obj.public_dns_name
 
-if options.domain:
-    route53conn, zone = ec2common.get_zone(options.domain)
-    if not zone:
-        print >> sys.stderr, "No Route53 zone found for %s" % options.domain
-
+if hosted_zone:
     # Create new CNAME entry pointing to instance public DNS
-    ec2common.cname(route53conn, zone, instance_tag+"."+options.domain, instance_domain)
+    ec2common.cname(route53conn, hosted_zone, instance_tag, public_dns_name)
 
-print "Created EC2 instance: id=%s, domain=%s" % (instance_id, instance_domain)
+print "Created EC2 instance %s: id=%s, public=%s" % (instance_tag, instance_id, public_dns_name)
 
 ssh_cmd_args = ["ssh", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
-                "-o", "StrictHostKeyChecking=no", gterm_user+"@"+instance_domain]
+                "-o", "StrictHostKeyChecking=no", gterm_user+"@"+public_dns_name]
 wait_cmd = "while [ ! -f "+setup_file+" ]; do sleep 1; done"
 
-print "Waiting for remote setup to complete..."
+
+if nameservers:
+    print >> sys.stderr, "***NOTE*** Please add the following nameservers for domain "+instance_domain
+    print >> sys.stderr, "           ", nameservers
+    print >> sys.stderr, ""
+
+print >> sys.stderr, "Waiting for remote setup to complete..."
 time.sleep(30)
 out, err = gtermapi.command_output(ssh_cmd_args + [wait_cmd], timeout=360)
 
@@ -259,4 +270,5 @@ if out:
 if err:
     print >> sys.stderr, err
 else:
-    print "Remote setup completed."
+    print >> sys.stderr, "Remote setup completed."
+    
