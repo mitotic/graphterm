@@ -152,7 +152,15 @@ elif options.time:
 else:
     File_list.sort(key=lambda x:x[1])
 
-ncols = 4
+try:
+    lines = int(os.getenv("LINES"))
+    columns = int(os.getenv("COLUMNS"))
+except Exception:
+    lines = 24
+    columns = 80
+
+max_width = max([len(fileinfo[1]) for fileinfo in File_list])
+ncols = max(1, columns // (max_width+1))
 
 Table_list = ['<table frame=none border=0>',
               '<colgroup colspan=%d width=1*>' % (ncols,),
