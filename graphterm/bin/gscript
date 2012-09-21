@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+#
+
+"""
+gscript: graphterm scripting
+Actions:
+ - Save all previous commands to a file
+ - Load commands from file into script buffer for future execution
+   (Use Control-Enter key sequence to execute next command from script)
+ - Clear script buffer
+ - Edit script buffer
+"""
+
+import mimetypes
+import os
+import sys
+import tty
+import termios
+
+from optparse import OptionParser
+
+import gtermapi
+
+Work_dir = os.getcwd()
+
+usage = "usage: %prog --buffer --clear --edit [<filename>]"
+parser = OptionParser(usage=usage)
+parser.add_option("-b", "--buffer",
+                  action="store_true", dest="buffer", default=False,
+                  help="Save in script buffer")
+
+parser.add_option("-c", "--clear",
+                  action="store_true", dest="clear", default=False,
+                  help="Clear script buffer")
+
+parser.add_option("-e", "--edit",
+                  action="store_true", dest="edit", default=False,
+                  help="Edit script buffer")
+
+(options, args) = parser.parse_args()
+
+if options.clear:
+    options.buffer = True
+
+if not args and not (options.clear or options.edit):
+    print >> sys.stderr, parser.get_usage()
+    sys.exit(1)
+
+filepath = os.path.abspath(os.path.normpath(args[0])) if args else ""
+
+params = {"action": "buffer" if options.buffer else "save", "filepath": filepath,
+          "editor": "", "modify": options.edit, "command":"", "current_directory": os.getcwd()}
+
+html_headers = {"content_type": "text/plain",
+                "x_gterm_response": "script_op",
+                "x_gterm_parameters": params
+                }
+
+content = ""
+if options.buffer and not (options.clear or options.edit):
+    with open(filepath) as fp:
+        content = fp.read()
+        
+gtermapi.wrap_write(content, headers=html_headers)

@@ -46,6 +46,8 @@ var gEditing = null;
 
 var gFeedback = false;
 
+var gScriptBuffer = [];
+
 var gForm = null;
 var gFormIndex = null;
 
@@ -499,6 +501,16 @@ function GTPreloadImages(urls) {
     }
 }
 
+function GTBufferScript(content) {
+    if (content) {
+	gScriptBuffer = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+	if (gScriptBuffer.length && !gScriptBuffer[gScriptBuffer.length-1])
+	    gScriptBuffer = gScriptBuffer.slice(0, gScriptBuffer.length-1);
+    } else {
+	gScriptBuffer = [];
+    }
+}
+
 function GTWebSocket(auth_user, auth_code) {
     this.failed = false;
     this.opened = false;
@@ -676,7 +688,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$(logPrefix+'<pre class="gterm-log">'+prefix+logArgs[2]+'</pre>').appendTo("#session-log .curentry");
 		$("#session-log .curentry .gterm-log .gterm-link").bindclick(otraceClickHandler);
 
-            } else if (action == "edit_broadcast") {
+            } else if (action == "frame_message") {
+		gFrameDispatcher.receive(command[1]);
+
+            } else if (action == "edit_op") {
 		if (!gParams.controller && gEditing && gEditing.ace) {
 		    if (command[1] == "deltas")
 			gEditing.ace.getSession().doc.applyDeltas(command[2]);
@@ -744,8 +759,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var cmd_arg = command[2];
 		if (cmd_type == "alert") {
 		    alert(cmd_arg[0]);
+
 		} else if (cmd_type == "errmsg") {
 		    GTPopAlert("ERROR: "+cmd_arg[0]);
+
 		} else if (cmd_type == "save_status") {
 		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
 
@@ -813,6 +830,25 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 		    } else if (response_type == "display_finder") {
 			ShowFinder(response_params, content);
+
+		    } else if (response_type == "script_op") {
+			if (response_params.action == "save") {
+			    var commands = [];
+			    $("#session-bufscreen .promptrow").each(function() {
+				commands.push( $(this).text().substr($(this).find(".gterm-cmd-prompt").text().length+1) );
+			    } );
+			    var cmdText = commands.join("\n") + "\n";
+			    gWebSocket.write([["save_file", response_params.filepath, utf8_to_b64(cmdText)]]);
+
+			} else if (response_params.action == "buffer") {
+			    if (response_params.modify) {
+				EndFullpage();
+				var editText = gScriptBuffer.length ? gScriptBuffer.join("\n")+"\n" : "";
+				GTStartEdit(response_params, editText);
+			    } else {
+				GTBufferScript(content);
+			    }
+			}
 
 		    } else if (response_type == "edit_file") {
 			EndFullpage();
@@ -1765,6 +1801,12 @@ function keypressHandler(evt) {
     if (evt.which == 13) {
 	// Enter key
 	var text = GTStrip(GTGetCurCommandText());  // Unescaped text
+	if (gScriptBuffer.length && (evt.ctrlKey || gControlActive)) {
+	    // Scripted command
+	    text = gScriptBuffer.shift();
+	    GTSetCommandText(text)
+	}
+
 	gWebSocket.write([["input", text, null]]);
 
 	if (gParams.wildcard) {
@@ -1846,6 +1888,14 @@ function AjaxKeypress(evt) {
 
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress1", gControlActive, kc, evt.ctrlKey, evt);
+
+    if (kc == 13 && gScriptBuffer.length && (evt.ctrlKey || gControlActive)) {
+	// Scripted command
+	var scriptText = gScriptBuffer.shift();
+	if (scriptText.length)
+	    gWebSocket.term_input(scriptText+"\n", null, true);
+	return false;
+    }
 
     var formSubmitter = ".pagelet.entry"+gPromptIndex+" .gterm-form-command";
     if (kc == 13 && gForm && gParams.controller && $(formSubmitter).length == 1) {
@@ -2035,6 +2085,7 @@ function popupClose(confirm) {
   gPopupConfirmClose = null;
   gPopupType = "";
   gPopupParams = null;
+    ScrollTop(null);
 }
 
 function popupButton(event) {
@@ -2078,6 +2129,8 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
 
   $(elementSelector).find("textarea").focus();
   $(elementSelector).find("input:text").focus();
+
+  gScrollTop = true;
 }
 
 function GTCaptureInput() {
@@ -2136,9 +2189,9 @@ function GTStartEdit(params, content) {
 
 	    GTUndoManager.prototype.execute = function(options) {
 		var deltas = options.args[0][0].deltas;
-		//console.log("GTUndoManager.execute: ", deltas);
 		if (gParams && gParams.controller) {
-		    gWebSocket.write([["edit_broadcast", "deltas", deltas]]);
+		    //console.log("GTUndoManager.execute: ", deltas);
+		    gWebSocket.write([["broadcast", "edit_op", "deltas", deltas]]);
 		}
 		return AceUndoManager.prototype.execute.call(this, options);
 	    };
@@ -2165,7 +2218,12 @@ function GTEndEdit(save) {
     } else {
 	newContent = gEditing.ace.getSession().getValue();
     }
-    if (gParams.controller && gEditing.params.modify && newContent != gEditing.content) {
+
+    if (gEditing.params.action == "buffer") {
+	if (newContent != gEditing.content)
+	    GTBufferScript(newContent);
+
+    } else if (gParams.controller && gEditing.params.modify && newContent != gEditing.content) {
 	if (save) {
 	    if (gEditing.params.command) {
 		gWebSocket.write([["input", gEditing.params.command, utf8_to_b64(newContent)]]);
@@ -2187,8 +2245,8 @@ function GTEndEdit(save) {
     gEditing = null;
     $("#terminal").show();
     ScrollScreen();
-    if (gParams && gParams.controller) {
-	gWebSocket.write([["edit_broadcast", "end", ""]]);
+    if (gParams && gParams.controller && (!gEditing || !gEditing.params.action)) {
+	gWebSocket.write([["broadcast", "edit_op", "end", ""]]);
     }
     return false;
 }
@@ -2338,6 +2396,40 @@ function StartFullpage(display, split) {
 	} catch(err) {console.log("graphterm: Fullscreen ERROR", err);}
     }
 }
+
+function GTFrameDispatcher() {
+    this.msgReceiver = null;
+}
+
+GTFrameDispatcher.prototype.init = function(msgReceiver) {
+    this.msgReceiver = msgReceiver;
+    $(".gterm-frame-footer").hide();
+    $("body").find("iframe").last().focus();
+}
+
+GTFrameDispatcher.prototype.send = function(msg) {
+    if (gWebSocket && gParams.controller)
+	gWebSocket.write([["broadcast", "frame_message", msg]]);
+}
+
+GTFrameDispatcher.prototype.receive = function(msg) {
+    if (!this.msgReceiver)
+	return;
+    try {
+	this.msgReceiver(msg);
+    } catch(err) {
+	console.log("GTFrameDispatcher.receive: "+err);
+    }
+}
+
+GTFrameDispatcher.prototype.close = function() {
+    this.msgReceiver = null;
+    if (gWebSocket && gParams.controller)
+	gWebSocket.term_input("\x03");
+    EndFullpage();
+}
+
+var gFrameDispatcher = new GTFrameDispatcher();
 
 function EndFullpage() {
     //console.log("EndFullpage");
