@@ -155,7 +155,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
     def handle_connect(self):
         normalized_host = get_normalized_host(self.connection_id)
-        self.remote_response("", [["term_params", {"version": about.version,
+        self.remote_response("", "", [["term_params", {"version": about.version,
                                                   "min_version": about.min_version,
                                                   "host_secret": self.host_secret,
                                                   "normalized_host": normalized_host,
@@ -219,15 +219,15 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             except Exception, excp:
                 logging.warning("gtermhost: Error in paste_command: %s", excp)
 
-    def screen_callback(self, term_name, command, arg):
+    def screen_callback(self, term_name, response_id, command, arg):
         # Invoked in lineterm thread; schedule callback in ioloop
         if command == "create_blob":
             self.blob_cache.add_blob(*arg)
         else:
-            self.send_request_threadsafe("response", term_name, [["terminal", command, arg]])
+            self.send_request_threadsafe("response", term_name, response_id, [["terminal", command, arg]])
 
-    def remote_response(self, term_name, message_list):
-        self.send_request_threadsafe("response", term_name, message_list)
+    def remote_response(self, term_name, websocket_id, message_list):
+        self.send_request_threadsafe("response", term_name, websocket_id, message_list)
 
     def remote_request(self, term_name, req_list):
         """
@@ -262,7 +262,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "reconnect":
                     if self.lineterm:
-                        self.lineterm.reconnect(term_name)
+                        self.lineterm.reconnect(term_name, cmd[0])
 
                 elif action == "set_size":
                     if term_name != OSHELL_NAME:
@@ -444,12 +444,12 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     logging.warning("remote_request: ERROR %s", cmd[0])
                 else:
                     raise Exception("Invalid action: "+action)
-            self.remote_response(term_name, resp_list);
+            self.remote_response(term_name, "", resp_list);
         except Exception, excp:
             import traceback
             errmsg = "%s\n%s" % (excp, traceback.format_exc())
             print >> sys.stderr, "TerminalClient.remote_request: "+errmsg
-            self.remote_response(term_name, [["errmsg", errmsg]])
+            self.remote_response(term_name, "", [["errmsg", errmsg]])
             ##self.shutdown()
 
 
@@ -463,7 +463,7 @@ class GTCallbackMixin(object):
     def logmessage(self, log_level, msg, exc_info=None, logtype="", plaintext=""):
         # If log_level is None, always display message
         if self.oshell_client and (log_level is None or log_level >= self.log_level):
-            self.oshell_client.remote_response(OSHELL_NAME, [["log", "", [logtype, log_level, msg]]])
+            self.oshell_client.remote_response(OSHELL_NAME, "", [["log", "", [logtype, log_level, msg]]])
 
         if logtype or log_level is None:
             sys.stderr.write((plaintext or msg)+"\n")
@@ -474,7 +474,7 @@ class GTCallbackMixin(object):
                                           editor=editor, modify=modify)
         params = {"editor": editor, "modify": modify, "command": "edit -f "+filepath if modify else "",
                   "filepath": filepath, "filetype": filetype}
-        self.oshell_client.remote_response(OSHELL_NAME, [["edit", params, base64.b64encode(content) if content else ""]])
+        self.oshell_client.remote_response(OSHELL_NAME, "", [["edit", params, base64.b64encode(content) if content else ""]])
         return (None, None)
 
 if otrace:

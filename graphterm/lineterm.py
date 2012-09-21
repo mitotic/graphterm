@@ -420,10 +420,6 @@ class ScreenBuf(object):
                 self.scroll_lines = []
                 self.full_update = True
 
-        def reconnect(self):
-                self.last_scroll_count = self.current_scroll_count - len(self.scroll_lines)
-                self.full_update = True
-
         def clear_last_entry(self, last_entry_index=None):
                 if not self.scroll_lines or self.entry_index <= 0:
                         return
@@ -463,13 +459,12 @@ class ScreenBuf(object):
                                 self.scroll_lines.pop(0)
 
         def update(self, active_rows, width, height, cursorx, cursory, main_screen,
-                   alt_screen=None, prompt=[]):
+                   alt_screen=None, prompt=[], reconnecting=False):
                 """ Returns full_update, update_rows, update_scroll
                 """
-                full_update = self.full_update
-                self.full_update = False
+                full_update = self.full_update or reconnecting
 
-                if width != self.width or height != self.height:
+                if not reconnecting and (width != self.width or height != self.height):
                         self.width = width
                         self.height = height
                         full_update = True
@@ -499,15 +494,21 @@ class ScreenBuf(object):
                                 offset = prompt_offset(dump(new_row), prompt, screen.meta[j])
                                 update_rows.append([j, offset, "", None, self.dumprichtext(new_row, trim=True)])
 
-                self.cursorx = cursorx
-                self.cursory = cursory
-                self.main_screen = main_screen.make_copy() if main_screen else None
-                self.alt_screen = alt_screen.make_copy() if alt_screen else None
-                if self.last_scroll_count < self.current_scroll_count:
+                if reconnecting:
+                        update_scroll = self.scroll_lines[:]
+                elif self.last_scroll_count < self.current_scroll_count:
                         update_scroll = self.scroll_lines[self.last_scroll_count-self.current_scroll_count:]
                 else:
                         update_scroll = []
-                self.last_scroll_count = self.current_scroll_count
+
+                if not reconnecting:
+                    self.last_scroll_count = self.current_scroll_count
+                    self.full_update = False
+                    self.cursorx = cursorx
+                    self.cursory = cursory
+                    self.main_screen = main_screen.make_copy() if main_screen else None
+                    self.alt_screen = alt_screen.make_copy() if alt_screen else None
+
                 return full_update, update_rows, update_scroll
 
         def dumprichtext(self, data, trim=False):
@@ -674,6 +675,7 @@ class Terminal(object):
                 self.gterm_buf_size = 0
                 self.gterm_entry_index = None
                 self.gterm_validated = False
+                self.gterm_output_buf = []
 
         def resize(self, height, width):
                 reset_flag = (self.width != width or self.height != height)
@@ -704,9 +706,9 @@ class Terminal(object):
                 self.screen_buf.clear_buf()
                 self.needs_updating = True
 
-        def reconnect(self):
-                self.screen_buf.reconnect()
-                self.needs_updating = True
+        def reconnect(self, response_id=""):
+                self.update_callback(response_id=response_id)
+                self.graphterm_output(response_id=response_id, from_buffer=True)
 
         def clear_last_entry(self, last_entry_index=None):
                 self.screen_buf.clear_last_entry(last_entry_index=last_entry_index)
@@ -753,21 +755,27 @@ class Terminal(object):
                 self.update_time = time.time()
                 self.needs_updating = False
 
-                alt_screen = self.alt_screen if self.alt_mode else None
                 if not self.alt_mode:
                         self.scroll_screen()
 
+                self.update_callback()
+
+        def update_callback(self, response_id=""):
+                alt_screen = self.alt_screen if self.alt_mode else None
                 full_update, update_rows, update_scroll = self.screen_buf.update(self.active_rows, self.width, self.height,
                                                                                  self.cursor_x, self.cursor_y,
                                                                                  self.main_screen,
                                                                                  alt_screen=alt_screen,
-                                                                                 prompt=self.prompt)
+                                                                                 prompt=self.prompt,
+                                                                                 reconnecting=bool(response_id))
                 pre_offset = len(self.prompt[0]) if self.prompt else 0
-                self.screen_callback(self.term_name, "row_update",
+                self.screen_callback(self.term_name, response_id, "row_update",
                                      [self.alt_mode, full_update, self.active_rows,
                                       self.width, self.height,
                                       self.cursor_x, self.cursor_y, pre_offset,
                                       update_rows, update_scroll])
+                if not response_id and (update_rows or update_scroll):
+                    self.gterm_output_buf = []
 
         def zero(self, y1, x1, y2, x2, screen=None):
                 if screen is None: screen = self.screen
@@ -1285,19 +1293,25 @@ class Terminal(object):
                                     logging.warning("No content_length specified for create_blob")
                                 else:
                                     # Note: blob content should be Base64 encoded
-                                    self.screen_callback(self.term_name, "create_blob",
+                                    self.screen_callback(self.term_name, "", "create_blob",
                                                          [blob_id, headers, content])
                         elif self.gterm_validated or plain_text:
                                 headers["content_length"] = len(content)
                                 params = {"validated": self.gterm_validated, "headers": headers}
-                                self.screen_callback(self.term_name, "graphterm_output", [params,
-                                     base64.b64encode(content) if content else ""])
+                                self.graphterm_output(params, content)
                 self.gterm_code = None
                 self.gterm_buf = None
                 self.gterm_buf_size = 0
                 self.gterm_validated = False
                 self.gterm_entry_index = None
                 return retval
+
+        def graphterm_output(self, params={}, content="", response_id="", from_buffer=False):
+                if not from_buffer:
+                        self.gterm_output_buf = [params, base64.b64encode(content) if content else ""]
+                elif not self.gterm_output_buf:
+                        return
+                self.screen_callback(self.term_name, response_id, "graphterm_output", self.gterm_output_buf)
 
         def save_file(self, filepath, filedata):
                 status = ""
@@ -1306,7 +1320,7 @@ class Terminal(object):
                                 f.write(base64.b64decode(filedata))
                 except Exception, excp:
                         status = str(excp)
-                self.screen_callback(self.term_name, "save_status", [filepath, status])
+                self.screen_callback(self.term_name, "", "save_status", [filepath, status])
 
         def get_finder(self, kind, directory=""):
                 test_finder_head = """<table frame=none border=0>
@@ -1337,7 +1351,7 @@ class Terminal(object):
                            "x_gterm_response": "display_finder",
                            "x_gterm_parameters": {"finder_type": kind, "current_directory": ""}}
                 params = {"validated": self.gterm_validated, "headers": headers}
-                self.screen_callback(self.term_name, "graphterm_output", [params, content])
+                self.graphterm_output(params, content)
 
         def click_paste(self, text, file_url="", options={}):
                 """Return text or filename (and command) for pasting into command line.
@@ -1593,7 +1607,7 @@ class Multiplex(object):
                                 self.set_size(term_name, height, width)
                                 if not is_executable(Gls_path) and not Exec_errmsg:
                                         Exec_errmsg = True
-                                        self.screen_callback(term_name, "alert", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
+                                        self.screen_callback(term_name, "", "alert", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
                                 return term_name, cookie
 
         def term_env(self, term_name, cookie, export=False):
@@ -1769,12 +1783,12 @@ class Multiplex(object):
                                 return ""
                         return term.click_paste(text, file_url=file_url, options=options)
 
-        def reconnect(self, term_name):
+        def reconnect(self, term_name, response_id=""):
                 with self.lock:
                         term = self.proc.get(term_name)
                         if not term:
                                 return
-                        term.reconnect()
+                        term.reconnect(response_id=response_id)
 
         def clear(self, term_name):
                 with self.lock:
@@ -1844,7 +1858,7 @@ if __name__ == "__main__":
         Prompt = "> "
         Log_file = "term.log"
         Log_file = ""
-        def screen_callback(term_name, command, arg):
+        def screen_callback(term_name, response_id, command, arg):
                 if command == "row_update":
                         alt_mode, reset, active_rows, width, height, cursorx, cursory, pre_offset, update_rows, update_scroll = arg
                         for row_num, row_offset, row_dir, row_markup, row_span in update_rows:

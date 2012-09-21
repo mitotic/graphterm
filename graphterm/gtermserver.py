@@ -410,13 +410,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self._all_users[user][self.websocket_id] = self
 
             display_splash = self.controller and self._counter[0] <= 2
-            matchpaths = TerminalConnection.get_matching_paths(self.wildcard) if self.wildcard else [path]
-            for matchpath in matchpaths:
-                matchhost, matchterm = matchpath.split("/")
-                TerminalConnection.send_to_connection(matchhost, "request", matchterm, [["reconnect"]])
-
             normalized_host, host_secret = "", ""
             if not self.wildcard:
+                TerminalConnection.send_to_connection(host, "request", term_name, [["reconnect", self.websocket_id]])
                 normalized_host = gtermhost.get_normalized_host(host)
                 if self.authorized["auth_type"] in ("null_auth", "code_auth"):
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
@@ -531,7 +527,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if msg[1]:
                             self._webcast_paths[self.remote_path] = time.time()
                             
-                elif msg[0] == "edit_broadcast":
+                elif msg[0] == "broadcast":
                     if self.wildcard:
                         continue
                     ws_list = GTSocket._watch_set.get(self.remote_path)
@@ -539,11 +535,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         continue
                     for ws_id in ws_list:
                         if ws_id != self.websocket_id:
-                            # Broadcast to all watchers (excluding self)
+                            # Broadcast to all watchers (excluding originator)
                             ws = GTSocket._all_websockets.get(ws_id)
                             if ws:
                                 try:
-                                    ws.write_message(json.dumps([msg]))
+                                    # Strip broadcast prefix from message
+                                    ws.write_message(json.dumps([msg[1:]]))
                                 except Exception, excp:
                                     logging.error("edit_broadcast: ERROR %s", excp)
                                     try:
@@ -638,7 +635,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
             self.term_set.discard(term_name)
         return term_name
 
-    def remote_response(self, term_name, msg_list):
+    def remote_response(self, term_name, websocket_id, msg_list):
         fwd_list = []
         for msg in msg_list:
             if msg[0] == "term_params":
@@ -671,11 +668,14 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         self.allow_feedback.discard(term_name)
 
         path = self.connection_id + "/" + term_name
-        ws_list = GTSocket._watch_set.get(path) or set()
+        if websocket_id:
+            ws_list = [websocket_id]
+        else:
+            ws_list = GTSocket._watch_set.get(path) or set()
 
-        for regexp, ws_id in GTSocket._wildcards.itervalues():
-            if regexp.match(path):
-                ws_list.add(ws_id)
+            for regexp, ws_id in GTSocket._wildcards.itervalues():
+                if regexp.match(path):
+                    ws_list.add(ws_id)
             
         if not ws_list:
             return
