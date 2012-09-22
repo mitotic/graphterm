@@ -159,7 +159,7 @@ except Exception:
     lines = 24
     columns = 80
 
-max_width = max([len(fileinfo[1]) for fileinfo in File_list])
+max_width = max([5]+[len(fileinfo[1]) for fileinfo in File_list])
 ncols = max(1, columns // (max_width+1))
 
 Table_list = ['<table frame=none border=0>',
