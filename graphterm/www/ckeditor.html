@@ -1,0 +1,110 @@
+<!-- ckeditor.html: graphterm editor page -->
+<html>
+  <head>
+    <title>GraphTerm CKEditor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <script type="text/javascript" src="jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="ckeditor/ckeditor.js" charset="utf-8"></script>
+    <script type="text/javascript" src="ckeditor/adapters/jquery.js"></script>
+
+    <script>
+function GTermEditor(frameDispatcher) {
+    this.frameDispatcher = frameDispatcher;
+    this.frameName = "editor";
+    this.frameApp = "ckeditor";
+}
+
+GTermEditor.prototype.resize = function() {
+    var defaultHeight = 300;
+    var newHeight = window.innerHeight-150; 
+    var height = defaultHeight > newHeight ? defaultHeight : newHeight;
+    for (var name in CKEDITOR.instances){
+	var instance = CKEDITOR.instances[name];
+	instance.resize('100%', height);
+    }
+}
+
+GTermEditor.prototype.clear = function() {
+    for (var name in CKEDITOR.instances){
+	var instance = CKEDITOR.instances[name];
+	instance.destroy();
+    }
+}
+
+GTermEditor.prototype.open = function(props) {
+    this.props = props;
+    CKEDITOR.config.startupMode = (props.params.filetype == "html") ? "wysiwyg" : "source";
+    this.editor = $("#editarea_content").ckeditor({toolbar: "Basic"});
+    $("#editarea_content").ckeditorGet().setData(props.content);
+    setTimeout(this.resize, 500);
+}
+
+GTermEditor.prototype.getContent = function() {
+    return $("#editarea_content").ckeditorGet().getData();
+}
+
+GTermEditor.prototype.receive = function(fromUser, toUser, msg) {
+    if (msg[0] != "deltas")
+        this.close()
+}
+
+GTermEditor.prototype.send = function(msg) {
+    if (!this.frameDispatcher)
+        return;
+    try {
+        this.frameDispatcher.send("", "editor", msg);
+    } catch(err) {
+        console.log("GTermEditor.prototype.send: "+err);
+    }
+}
+
+GTermEditor.prototype.close = function(save) {
+    if (!this.frameDispatcher)
+        return;
+    try {
+        this.frameDispatcher.close(this.frameName, save);
+    } catch(err) {
+        console.log("GTermEditor.prototype.close: "+err);
+    }
+}
+
+var gEditor = null;
+
+$(document).ready(function() {
+    if (window.parent && window.parent.gFrameDispatcher) {
+        gEditor = new GTermEditor(window.parent.gFrameDispatcher);
+        gEditor.frameDispatcher.open(gEditor, window.frameElement);
+    } else {
+        gEditor = new GTermEditor(null);
+        var props = {controller: true,
+                     params: {filetype: "text"},
+                     content: "The quick brown fox jumps over the lazy dog."}
+        gEditor.open(props);
+    }
+});
+
+  </script>
+  <style>
+    #editarea_content {
+        width:100%;
+        height: 100%;
+        background-color: white;
+    }
+  </style>
+  </head>
+
+<body>
+<!-- CK editor -->
+<div id="editarea" class="editarea">
+  <span id="editarea_title">CK Editor</span>
+  <button id="editarea_button_apply" onclick="gEditor.close(true);">Save</button>
+  <button id="editarea_button_quit" onclick="gEditor.close(false);">Discard</button>
+  <div id="editarea_container" class="editarea_container">
+    <div id="editarea_content" name="editarea_content"></div>
+  </div>
+</div> <!-- editarea -->
+
+</body>
+</html>

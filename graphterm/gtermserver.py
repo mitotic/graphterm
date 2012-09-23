@@ -60,6 +60,8 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
+APPS_URL = "/static"
+
 App_dir = os.path.join(os.getenv("HOME"), ".graphterm")
 File_dir = os.path.dirname(__file__)
 if File_dir == ".":
@@ -422,7 +424,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "about_url": about.url, "about_description": about.description,
                                         "controller": self.controller,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
-                                        "feedback": term_feedback,
+                                        "apps_url": APPS_URL, "feedback": term_feedback,
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
             logging.warning("GTSocket.open: ERROR %s", excp)
@@ -474,6 +476,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
         controller = self.wildcard or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
 
+        from_user = self.authorized["user"] if self.authorized else ""
         conn = None
         allow_feedback_only = False
         if not self.wildcard:
@@ -527,27 +530,32 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if msg[1]:
                             self._webcast_paths[self.remote_path] = time.time()
                             
-                elif msg[0] == "broadcast":
+                elif msg[0] == "send_msg":
                     if self.wildcard:
                         continue
+                    to_user = msg[1]
                     ws_list = GTSocket._watch_set.get(self.remote_path)
                     if not ws_list:
                         continue
                     for ws_id in ws_list:
-                        if ws_id != self.websocket_id:
-                            # Broadcast to all watchers (excluding originator)
-                            ws = GTSocket._all_websockets.get(ws_id)
-                            if ws:
+                        if ws_id == self.websocket_id:
+                            continue
+                        # Broadcast to all watchers (excluding originator)
+                        ws = GTSocket._all_websockets.get(ws_id)
+                        if not ws:
+                            continue
+                        ws_user = ws.authorized["user"] if ws.authorized else ""
+                        if (not to_user and controller) or to_user == "*" or to_user == ws_user:
+                            try:
+                                # Change command and add from_user
+                                ws.write_message(json.dumps([["receive_msg", from_user] + msg[1:]]))
+                            except Exception, excp:
+                                logging.error("edit_broadcast: ERROR %s", excp)
                                 try:
-                                    # Strip broadcast prefix from message
-                                    ws.write_message(json.dumps([msg[1:]]))
-                                except Exception, excp:
-                                    logging.error("edit_broadcast: ERROR %s", excp)
-                                    try:
-                                        # Close websocket on write error
-                                        ws.close()
-                                    except Exception:
-                                        pass
+                                    # Close websocket on write error
+                                    ws.close()
+                                except Exception:
+                                    pass
 
                 else:
                     req_list.append(msg)

@@ -12,14 +12,6 @@
     <script type="text/javascript" src="/static/jquery/js-plugins/rangy-core.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.cookie.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.base64.min.js"></script>
-    <script type="text/javascript" src="/static/ckeditor/ckeditor.js" charset="utf-8"></script>
-    <script type="text/javascript" src="/static/ckeditor/adapters/jquery.js"></script>
-    <script src="/static/ace/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/ace/mode-css.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/ace/mode-html.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/ace/mode-python.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/ace/mode-xml.js" type="text/javascript" charset="utf-8"></script>
     <script language="JavaScript" src="/static/graphterm.js"></script>
   </head>
 
@@ -193,19 +185,14 @@ href="http://info.mindmeldr.com/code/graphterm">info.mindmeldr.com/code/graphter
 </div> <!-- gtermsplash -->
 
 <!-- ACE/CK editor -->
-<div id="jseditarea" class="jseditarea">
-  <span id="jseditarea_title">Editor</span>
-  <button id="jseditarea_button_apply" onclick="GTEndEdit(true);">Save</button>
-  <button id="jseditarea_button_quit" onclick="GTEndEdit(false);">Discard</button>
-  <div id="jseditarea_container" class="jseditarea_container"></div>
-</div> <!-- jseditarea -->
+<iframe id="gterm-editframe" src="" width="100%" height="100%"></iframe>
 
 <!-- popups -->
 <div id="gterm-popupmask" class="gterm-popupmask"></div>
 
 <div id="gterm-texteditarea" class="gterm-popup">
-  <button id="texteditarea_button_apply" onclick="GTEndEdit(true);">Save</button>
-  <button id="texteditarea_button_quit" onclick="GTEndEdit(false);">Discard</button>
+  <button id="texteditarea_button_apply" onclick="GTEndEditArea(true);">Save</button>
+  <button id="texteditarea_button_quit" onclick="GTEndEditArea(false);">Discard</button>
   <br>
   <textarea name="gterm-texteditarea-content" id="gterm-texteditarea-content" rows="5" cols="60"></textarea>
 </div> <!-- gterm-texteditarea -->

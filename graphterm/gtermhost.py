@@ -43,6 +43,8 @@ import packetserver
 
 RETRY_SEC = 15
 
+AJAX_EDITORS = set(["ace", "ckeditor", "textarea"])
+
 OSHELL_NAME = "osh"
 
 ##SHELL_CMD = "bash -l"
@@ -60,8 +62,8 @@ HTML_ESCAPES = ["\x1b[?1155;", "h",
 DEFAULT_HTTP_PORT = 8900
 DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
 
-HOST_RE = re.compile(r"^[\w\-\.\*\?\[\]]+$")             # Allowed host names
-SESSION_RE = re.compile(r"^[a-z\*\?\[\]][\w\*\?\[\]]*$")           # Allowed session names
+HOST_RE = re.compile(r"^[\w\-\.\*\?\[\]]+$")               # Allowed host names
+SESSION_RE = re.compile(r"^[a-z\*\?\[\]][\w\*\?\[\]]*$")   # Allowed session names
 
 Host_secret = None
 IO_loop = None
@@ -469,7 +471,7 @@ class GTCallbackMixin(object):
             sys.stderr.write((plaintext or msg)+"\n")
 
     def editback(self, content, filepath="", filetype="", editor="", modify=False):
-        if editor and editor != "web":
+        if editor and editor not in AJAX_EDITORS:
             return otrace.TraceCallback.editback(self, content, filepath=filepath, filetype=filetype,
                                           editor=editor, modify=modify)
         params = {"editor": editor, "modify": modify, "command": "edit -f "+filepath if modify else "",

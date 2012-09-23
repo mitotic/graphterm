@@ -1,0 +1,133 @@
+<!-- ace.html: graphterm editor page -->
+<html>
+  <head>
+    <title>GraphTerm Ajax.org Cloud9 Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <script type="text/javascript" src="jquery/jquery.min.js"></script>
+    <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace/mode-css.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace/mode-html.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace/mode-python.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace/mode-xml.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+function GTermEditor(frameDispatcher) {
+    this.frameDispatcher = frameDispatcher;
+    this.frameName = "editor";
+    this.frameApp = "ace";
+}
+
+GTermEditor.prototype.resize = function() {
+}
+
+GTermEditor.prototype.clear = function() {
+}
+
+GTermEditor.prototype.open = function(props) {
+    this.props = props;
+    var params = props.params;
+    //console.log("GTermEditor.open", params);
+    this.editor = ace.edit("editarea_content");
+    //this.editor.setTheme("theme/twilight")
+    try {
+        // Overrride undo manager to broadcast edit deltas
+        function GTUndoManager() {
+        }
+
+        var AceUndoManager = ace.require("ace/undomanager").UndoManager;
+        GTUndoManager.prototype = new AceUndoManager();
+
+        GTUndoManager.prototype.execute = function(options) {
+    	    var deltas = options.args[0][0].deltas;
+  	    if (gEditor.props.controller) {
+	        //console.log("GTUndoManager.execute: ", deltas);
+	        gEditor.send(["deltas", deltas]);
+	    }
+	    return AceUndoManager.prototype.execute.call(this, options);
+	};
+
+	this.editor.getSession().setUndoManager(new GTUndoManager());
+    } catch (err) {}
+
+    try {
+        if (params.filetype)
+	    this.editor.getSession().setMode("ace/mode/"+params.filetype);
+    } catch(err) {
+        console.log("ERROR in mode:", params.filetype, err);
+    }
+
+    this.editor.getSession().setValue(props.content);
+    setTimeout(this.resize, 500);
+}
+
+GTermEditor.prototype.getContent = function() {
+    return this.editor.getSession().getValue();
+}
+
+GTermEditor.prototype.receive = function(fromUser, toUser, msg) {
+    if (msg[0] == "deltas")
+        this.editor.getSession().doc.applyDeltas(msg[1]);
+    else
+        this.close()
+}
+
+GTermEditor.prototype.send = function(msg) {
+    if (!this.frameDispatcher)
+        return;
+    try {
+        this.frameDispatcher.send("", "editor", msg);
+    } catch(err) {
+        console.log("GTermEditor.prototype.send: "+err);
+    }
+}
+
+GTermEditor.prototype.close = function(save) {
+    if (!this.frameDispatcher)
+        return;
+    try {
+        this.frameDispatcher.close(this.frameName, save);
+    } catch(err) {
+        console.log("GTermEditor.prototype.close: "+err);
+    }
+}
+
+var gEditor = null;
+
+$(document).ready(function() {
+    if (window.parent && window.parent.gFrameDispatcher) {
+        gEditor = new GTermEditor(window.parent.gFrameDispatcher);
+        gEditor.frameDispatcher.open(gEditor, window.frameElement);
+    } else {
+        gEditor = new GTermEditor(null);
+        var props = {controller: true,
+                     params: {filetype: "text"},
+                     content: "The quick brown fox jumps over the lazy dog."}
+        gEditor.open(props);
+    }
+});
+  </script>
+  <style>
+    #editarea_content {
+        width:100%;
+        height: 100%;
+        background-color: white;
+    }
+  </style>
+  </head>
+
+<body>
+<!-- ACE editor -->
+<div id="editarea" class="editarea">
+  <span id="editarea_title">Ajax.org Cloud9 Editor</span>
+  <button id="editarea_button_apply" onclick="gEditor.close(true);">Save</button>
+  <button id="editarea_button_quit" onclick="gEditor.close(false);">Discard</button>
+  <div id="editarea_container" class="editarea_container">
+    <div id="editarea_content" name="editarea_content"></div>
+  </div>
+</div> <!-- editarea -->
+
+</body>
+</html>

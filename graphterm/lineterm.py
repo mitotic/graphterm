@@ -1295,6 +1295,9 @@ class Terminal(object):
                                     # Note: blob content should be Base64 encoded
                                     self.screen_callback(self.term_name, "", "create_blob",
                                                          [blob_id, headers, content])
+                        elif self.gterm_validated and response_type == "frame_msg":
+                            self.screen_callback(self.term_name, "", "frame_msg",
+                                 [response_params.get("user",""), response_params.get("frame",""), content])
                         elif self.gterm_validated or plain_text:
                                 headers["content_length"] = len(content)
                                 params = {"validated": self.gterm_validated, "headers": headers}

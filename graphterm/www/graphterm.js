@@ -42,7 +42,7 @@ var gRows = 0;
 var gCols = 0;
 var gWebSocket = null;
 
-var gEditing = null;
+var gTextEditing = null;
 
 var gFeedback = false;
 
@@ -688,16 +688,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$(logPrefix+'<pre class="gterm-log">'+prefix+logArgs[2]+'</pre>').appendTo("#session-log .curentry");
 		$("#session-log .curentry .gterm-log .gterm-link").bindclick(otraceClickHandler);
 
-            } else if (action == "frame_message") {
-		gFrameDispatcher.receive(command[1]);
-
-            } else if (action == "edit_op") {
-		if (!gParams.controller && gEditing && gEditing.ace) {
-		    if (command[1] == "deltas")
-			gEditing.ace.getSession().doc.applyDeltas(command[2]);
-		    else
-			GTEndEdit();
-		}
+            } else if (action == "receive_msg") {
+		var fromUser = command[1];
+		var toUser = command[2];
+		var frameName = command[3];
+		gFrameDispatcher.receive(fromUser, toUser, frameName, command[4]);
 
             } else if (action == "updates_response") {
 		feed_list = command[1];
@@ -765,6 +760,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 		} else if (cmd_type == "save_status") {
 		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
+
+ 		} else if (cmd_type == "frame_msg") {
+		    try {
+			var json_msg = JSON.parse(cmd_arg[2]);
+			gFrameDispatcher.receive("", cmd_arg[0], cmd_arg[1], json_msg);
+		    } catch (err) {
+			console.log("ERROR in frame_msg:", err, content);
+		    }
 
 		} else if (cmd_type == "graphterm_feedback") {
 		    gtermFeedbackStatus(cmd_arg);
@@ -883,7 +886,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    EndFullpage();
 			}
 			var current_dir = ("current_directory" in params.headers) ? params.headers.current_directory : "";
-			var pagelet_html = (content_type == "text/html") ? '<div class="pagelet entry '+classes+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
+			var is_plaintext = (response_type != "iframe") && (content_type != "text/html");
+			var pagelet_content;
+			if (response_type == "iframe") {
+			    pagelet_content = gFrameDispatcher.createFrame(response_params, content);
+			} else {
+			    pagelet_content = content
+			}
+			var pagelet_html = is_plaintext ? '<pre class="plaintext entry '+classes+'">'+pagelet_content+'</pre>\n' : '<div class="pagelet entry '+classes+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'">'+pagelet_content+'</div>\n';
 
 			try {
 			    var newElem = $(pagelet_html);
@@ -1975,11 +1985,15 @@ function AjaxKeypress(evt) {
     }
 
     if (gDebugKeys)
-	console.log("graphterm.AjaxKeypress2", kc, k, k.charCodeAt(0));
+	console.log("graphterm.AjaxKeypress2", kc, k, k.charCodeAt(0), k.length);
 
     if (gForm && k == String.fromCharCode(3)) {
 	// Ctrl-C exit from form
 	GTEndForm("", true);
+    } else if (gPopupType && k == String.fromCharCode(3)) {
+	// Ctrl-C exit from popup
+	popupClose();
+	return false;
     } else if (GTCaptureInput()) {
 	// Editing or processing form
 	return true;
@@ -2134,7 +2148,7 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
 }
 
 function GTCaptureInput() {
-    return gForm || (gEditing && gParams.controller) || gPopupType;
+    return gForm || (gTextEditing && gParams.controller) || gPopupType;
 }
 
 function GTClearCKEditor() {
@@ -2154,102 +2168,56 @@ function GTResizeCKEditor() {
 }
 
 function GTStartEdit(params, content) {
+    console.log("GTStartEdit", editor, params);
     $("#terminal").hide();
-    var editor = params.editor ? params.editor : gDefaultEditor;
-    gEditing = {params: params, content: content, editor: editor};
-    if (gEditing.editor == "web") {
+    if (params.editor == "textarea") {
+	gTextEditing = {params: params, content: content, editor: editor};
 	$("#gterm-texteditarea-content").val(content);
 	popupShow("#gterm-texteditarea", "editarea");
-    } else if (gEditing.editor == "ckeditor") {
-	GTClearCKEditor();
-	if ($("#jseditarea_content").length)
-	    $("#jseditarea_content").remove();
-	$("#jseditarea_title").text("CKEditor");
-	$('<div name="jseditarea_content" id="jseditarea_content">/div>').appendTo("#jseditarea_container");
-	$("#jseditarea").show();
-	CKEDITOR.config.startupMode = (params.filetype == "html") ? "wysiwyg" : "source";
-	gEditing.ckeditor = $("#jseditarea_content").ckeditor({toolbar: "Basic"});
-	$("#jseditarea_content").ckeditorGet().setData(content);
-        setTimeout(GTResizeCKEditor, 500);
     } else {
-	if ($("#jseditarea_content").length)
-	    $("#jseditarea_content").remove();
-	$("#jseditarea_title").text("Ajax.org Cloud9 Editor");
-	$('<div name="jseditarea_content" id="jseditarea_content">/div>').appendTo("#jseditarea_container");
-	$("#jseditarea").show();
-	gEditing.ace = ace.edit("jseditarea_content");
-
-	try {
-	    // Overrride undo manager to broadcast edit deltas
-	    function GTUndoManager() {
-	    }
-
-	    var AceUndoManager = ace.require("ace/undomanager").UndoManager;
-	    GTUndoManager.prototype = new AceUndoManager();
-
-	    GTUndoManager.prototype.execute = function(options) {
-		var deltas = options.args[0][0].deltas;
-		if (gParams && gParams.controller) {
-		    //console.log("GTUndoManager.execute: ", deltas);
-		    gWebSocket.write([["broadcast", "edit_op", "deltas", deltas]]);
-		}
-		return AceUndoManager.prototype.execute.call(this, options);
-	    };
-
-	    gEditing.ace.getSession().setUndoManager(new GTUndoManager());
-	} catch (err) {}
-
-	try {
-	    if (params.filetype)
-		gEditing.ace.getSession().setMode("ace/mode/"+params.filetype);
-	} catch(err) {
-	    console.log("ERROR in mode:", params.filetype, err);
-	}
-	gEditing.ace.getSession().setValue(content);
+	var editor = params.editor ? params.editor : gDefaultEditor;
+	var url = gParams.apps_url+"/"+editor+".html";
+	gFrameDispatcher.createFrame(params, content, url, "gterm-editframe");
+	$("#gterm-editframe").attr("src", url);
+	$("#gterm-editframe").show();
     }
 }
 
-function GTEndEdit(save) {
-    var newContent;
-    if (gEditing.editor == "web") {
-	newContent = $("#gterm-texteditarea-content").val();
-    } else if (gEditing.editor == "ckeditor") {
-	newContent = $("#jseditarea_content").ckeditorGet().getData();
-    } else {
-	newContent = gEditing.ace.getSession().getValue();
-    }
+function GTEndEditArea(save) {
+    if (!gTextEditing)
+	return;
+    var newContent = $("#gterm-texteditarea-content").val();
+    GTEndEdit(newContent, gTextEditing.content, gTextEditing.params, save);
+}
 
-    if (gEditing.params.action == "buffer") {
-	if (newContent != gEditing.content)
-	    GTBufferScript(newContent);
+function GTEndEdit(newContent, oldContent, params, save) {
+    console.log("GTEndEdit", params, save);
+    if (newContent != null) {
+	if (params.action == "buffer") {
+	    if (newContent != oldContent)
+		GTBufferScript(newContent);
 
-    } else if (gParams.controller && gEditing.params.modify && newContent != gEditing.content) {
-	if (save) {
-	    if (gEditing.params.command) {
-		gWebSocket.write([["input", gEditing.params.command, utf8_to_b64(newContent)]]);
+	} else if (gParams.controller && params.modify && newContent != oldContent) {
+	    if (params.command) {
+		gWebSocket.write([["input", params.command, utf8_to_b64(newContent)]]);
 	    } else {
-		gWebSocket.write([["save_file", gEditing.params.filepath, utf8_to_b64(newContent)]]);
+		gWebSocket.write([["save_file", params.filepath, utf8_to_b64(newContent)]]);
 	    }
-	} else if (!window.confirm("Discard changes?")) {
-	    return false;
 	}
     }
-    if (gEditing.editor == "web") {
+
+    if (params.editor == "textarea") {
+	$("#gterm-texteditarea-content").val("");
 	popupClose(false);
+	gTextEditing = null;
     } else {
-	if (gEditing.editor == "ckeditor")
-	    GTClearCKEditor();
-	$("#jseditarea").hide();
-	$("#jseditarea_content").remove();
+	$("#gterm-editframe").attr("src", "");
+	$("#gterm-editframe").hide();
     }
-    gEditing = null;
     $("#terminal").show();
     ScrollScreen();
-    if (gParams && gParams.controller && (!gEditing || !gEditing.params.action)) {
-	gWebSocket.write([["broadcast", "edit_op", "end", ""]]);
-    }
-    return false;
 }
+
 
 function GTStartForm(params, promptIndex) {
     gForm = params || {};
@@ -2398,32 +2366,73 @@ function StartFullpage(display, split) {
 }
 
 function GTFrameDispatcher() {
-    this.msgReceiver = null;
+    this.frameControllers = {};
+    this.frameProps = null;
+    this.frameIndex = 0;
 }
 
-GTFrameDispatcher.prototype.init = function(msgReceiver) {
-    this.msgReceiver = msgReceiver;
+GTFrameDispatcher.prototype.createFrame = function(params, content, url, frameId) {
+    url = url || params.url;
+    if (!frameId) {
+	this.frameIndex += 1;
+	frameId = "frame" + this.frameIndex;
+    }
+
+    this.frameProps = {id: frameId, params: params, content: content,
+                       controller: (gParams && gParams.controller)};
+    return '<iframe id="'+frameId+'" src="'+url+'" width="100%" height="100%></iframe>';
+}
+
+GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
+    this.frameControllers[frameController.frameName] = {controller: frameController, props: this.frameProps};
+
+    var frameId = $(frameObj).attr("id");
+    if (frameController && "open" in frameController && this.frameProps && this.frameProps.id == frameId) {
+	frameController.open(this.frameProps);
+    }
     $(".gterm-frame-footer").hide();
-    $("body").find("iframe").last().focus();
+    $("#"+frameId).focus();
 }
 
-GTFrameDispatcher.prototype.send = function(msg) {
+GTFrameDispatcher.prototype.send = function(toUser, toFrame, msg) {
     if (gWebSocket && gParams.controller)
-	gWebSocket.write([["broadcast", "frame_message", msg]]);
+	gWebSocket.write([["send_msg", toUser, toFrame, msg]]);
 }
 
-GTFrameDispatcher.prototype.receive = function(msg) {
-    if (!this.msgReceiver)
+GTFrameDispatcher.prototype.write = function(text) {
+    if (gWebSocket && gParams.controller)
+	gWebSocket.term_input(text);
+}
+
+GTFrameDispatcher.prototype.receive = function(fromUser, toUser, frameName, msg) {
+    if (!(frameName in this.frameControllers))
 	return;
+
     try {
-	this.msgReceiver(msg);
+	this.frameControllers[frameName].controller.receive(fromUser, toUser, msg);
     } catch(err) {
 	console.log("GTFrameDispatcher.receive: "+err);
     }
 }
 
-GTFrameDispatcher.prototype.close = function() {
-    this.msgReceiver = null;
+GTFrameDispatcher.prototype.close = function(frameName, save) {
+    console.log("GTFrameDispatcher.close", frameName, save);
+    if (!(frameName in this.frameControllers))
+	return;
+
+    var props = this.frameControllers[frameName].props;
+    if (frameName == "editor") {
+	if (!save && !window.confirm("Discard changes?"))
+	    return;
+	var newContent = save ? this.frameControllers[frameName].controller.getContent() : null;
+	GTEndEdit(newContent, props.content, props.params, save);
+
+	if (props.controller && props.params.action != "buffer") {
+	    this.send("*", "editor", ["end", ""]);
+	}
+    }
+    
+    delete this.frameControllers[frameName];
     if (gWebSocket && gParams.controller)
 	gWebSocket.term_input("\x03");
     EndFullpage();
@@ -2719,7 +2728,7 @@ function GTReady() {
 
     setupTerminal();
     popupSetup();
-    $("#jseditarea").hide();
+    $("#gterm-editframe").hide();
     $("#session-bufellipsis").hide();
     $("#session-findercontainer").hide();
     $("#session-widgetcontainer").hide();  // IMPORTANT (else top menu will be invisibly blocked)

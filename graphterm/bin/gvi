@@ -4,8 +4,13 @@
 
 options=""
 file=""
+editor=""
 for arg in $*; do
-   if [[ "$arg" == -* ]]; then
+   if [ "$arg" == "--ace" ]; then
+      editor="ace"
+   elif [ "$arg" == "--ckeditor" ]; then
+      editor="ckeditor"
+   elif [[ "$arg" == -* ]]; then
       options="$options $arg"
    else
       file="$arg"
@@ -33,7 +38,7 @@ echocmd1="echo -n"
 ##echocmd1="/bin/echo -e"
 echocmd2="echo"
 
-headers='{"content_type": "text/html", "x_gterm_response": "edit_file", "x_gterm_parameters": {"filepath": "'"${file}"'", "editor": "", "modify": "true", "command": "", "current_directory": "'"${PWD}"'"}}'
+headers='{"content_type": "text/html", "x_gterm_response": "edit_file", "x_gterm_parameters": {"filepath": "'"${file}"'", "editor": "'"${editor}"'", "modify": "true", "command": "", "current_directory": "'"${PWD}"'"}}'
 
 esc=`printf "\033"`
 nl=`printf "\012"`
