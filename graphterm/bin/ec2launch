@@ -32,6 +32,7 @@ form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu
 form_parser.add_option("auth_code", "none", help="User authentication code")
 form_parser.add_option("server_secret", "", help="Server secret for host authentication (to connect from anywhere)")
 form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
+form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
@@ -64,6 +65,27 @@ if not os.path.exists(ssh_dir):
     print >> sys.stderr, "ec2launch: %s directory not found!" % ssh_dir
     sys.exit(1)
 
+install_file, install_cmd, install_basename, install_baseroot, unarch_cmd = "", "", "", "", ""
+if options.install:
+    install_file, sep, install_cmd = options.install.partition(";")
+    if not os.path.isfile(install_file):
+        raise Exception("Install file "+install_file+" not found")
+    install_basename = os.path.basename(install_file)
+    install_baseroot, ext = os.path.splitext(install_basename)
+    if ext == ".gz":
+        install_baseroot, ext = os.path.splitext(install_baseroot)
+        if ext != ".tar":
+            raise Exception("Invalid extension for install file: "+install_file)
+        unarch_cmd = "tar zxf"
+    elif ext == ".tgz":
+        unarch_cmd = "tar zxf"
+    elif ext == ".tar":
+        unarch_cmd = "tar xf"
+    elif ext == ".zip":
+        unarch_cmd = "unzip"
+    else:
+        raise Exception("Invalid extension for install file: "+install_file)
+
 GroupRule = collections.namedtuple("GroupRule",
                                    ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
 
@@ -80,6 +102,7 @@ SecurityGroups = [
         GroupRule("tcp", "80", "80", "0.0.0.0/0", None),
         GroupRule("tcp", "8888", "8888", "0.0.0.0/0", None),
         GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if options.server_secret else HostGroupName),
+        GroupRule("tcp", "8900", "8900", "0.0.0.0/0", None),
         ],
      )
     ]
@@ -91,9 +114,11 @@ startup_commands = ["#!/bin/bash",
 "apt-get update && apt-get upgrade -y",
 "apt-get install -y python-setuptools",
 "easy_install tornado",
-"easy_install graphterm",
-"gterm_setup",
 ]
+
+if options.auth_code.strip() or options.connect_to_gterm:
+    startup_commands += ["easy_install graphterm",
+                         "gterm_setup"]
 
 if options.pylab:
     startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib"]
@@ -104,18 +129,31 @@ if options.oshell:
 if options.server_secret:
     command_format += ' --server_secret="'+options.server_secret+'"'
 
+init_command = ""
+fwall_command = ""
 if options.connect_to_gterm:
     security_groups = [HostGroupName]
     server_name, sep, server_domain = options.connect_to_gterm.partition(".")
     if not server_domain:
         raise Exception("Must specify fully qualified domain name to connect to GraphTerm server")
     host_name = instance_name if instance_domain == server_domain else instance_tag
-    startup_commands += [(command_format % "gtermhost") + " --server_addr="+ options.connect_to_gterm+" "+host_name]
+    init_command = (command_format % "gtermhost") + " --server_addr="+ options.connect_to_gterm+" "+host_name
+    startup_commands += [ init_command ]
 else:
     security_groups = [ServerGroupName]
-    host_domain = "`hostname`"
-    startup_commands += ["iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"]
-    startup_commands += [(command_format % "gtermserver") + ' --auth_code="'+options.auth_code+'" --host='+host_domain]
+
+    host_domain = instance_tag if instance_domain else "`curl http://169.254.169.254/latest/meta-data/public-hostname`"
+    fwall_command = "iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"
+    startup_commands += [ fwall_command ]
+    if options.auth_code.strip():
+        init_command = (command_format % "gtermserver") + ' --auth_code="'+options.auth_code+'" --host='+host_domain
+        startup_commands += [ init_command ]
+
+if init_command or fwall_command:
+    startup_commands += [ "echo '"+init_command+"' > /etc/init.d/graphterm",
+                          "echo '"+fwall_command+"' > /etc/init.d/graphterm",
+                          "chmod +x /etc/init.d/graphterm",
+                          "update-rc.d graphterm defaults"]
 
 startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
 
@@ -256,7 +294,6 @@ ssh_cmd_args = ["ssh", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
                 "-o", "StrictHostKeyChecking=no", gterm_user+"@"+public_dns_name]
 wait_cmd = "while [ ! -f "+setup_file+" ]; do sleep 1; done"
 
-
 if nameservers:
     print >> sys.stderr, "***NOTE*** Please add the following nameservers for domain "+instance_domain
     print >> sys.stderr, "           ", nameservers
@@ -264,7 +301,23 @@ if nameservers:
 
 print >> sys.stderr, "Waiting for remote setup to complete..."
 time.sleep(30)
-out, err = gtermapi.command_output(ssh_cmd_args + [wait_cmd], timeout=360)
+
+if install_file:
+    scp_cmd_args = ["scp", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
+                    "-o", "StrictHostKeyChecking=no", install_file, gterm_user+"@"+public_dns_name+":"]
+    print >> sys.stderr, " ".join(scp_cmd_args)
+    out, err = gtermapi.command_output(scp_cmd_args, timeout=60)
+    if out:
+        print out
+    if err:
+        print err
+    wait_cmd += "; "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install"
+    if install_cmd:
+        wait_cmd += "; "+install_cmd
+
+print >> sys.stderr, " ".join(ssh_cmd_args)
+print >> sys.stderr, wait_cmd
+out, err = gtermapi.command_output(ssh_cmd_args + [wait_cmd], timeout=600)
 
 if out:
     print out

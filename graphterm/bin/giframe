@@ -7,6 +7,7 @@ giframe: Display file (or HTML from stdin) in inline iframe
 
 import mimetypes
 import os
+import random
 import sys
 import time
 
@@ -50,9 +51,10 @@ else:
 
 headers = {"opacity": options.opacity}
 
-IFRAMEFORMAT = '<iframe src="%s" width="100%%" height="'+str(100 if options.nofooter else 95)+'%%"></iframe>' 
+frameId = "giframe%09d" % random.randrange(0, 10**9) 
+IFRAMEFORMAT = '<iframe id="'+frameId+'" class="gterm-iframe" src="%s" width="100%%" height="'+str(100 if options.nofooter else 95)+'%%"></iframe>' 
 if not options.nofooter:
-    IFRAMEFORMAT += '<pre class="gterm-frame-footer">Click here and type Control-C to exit</pre>'
+    IFRAMEFORMAT = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span><p>' + IFRAMEFORMAT
 
 gtermapi.write_html(IFRAMEFORMAT % iframe_url, display="fullscreen", add_headers=headers)
 

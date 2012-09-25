@@ -929,7 +929,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
 			    $(pageletSelector+' .gterm-blockseqlink').bindclick(gtermLinkClickHandler);
-
+			    $(pageletSelector+' .gterm-iframeclose').bindclick(gtermInterruptHandler);
 			    GTDropBindings($(pageletSelector+' .droppable'));
 			} catch(err) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
@@ -1552,6 +1552,11 @@ function gtermClickPaste(text, file_url, options) {
     gWebSocket.write([["click_paste", text, file_url, options]]);
     if (!gSplitScreen)
 	SplitScreen("paste");
+}
+
+function gtermInterruptHandler(event) {
+    if (gWebSocket && gWebSocket.terminal)
+	gWebSocket.term_input(String.fromCharCode(3));
 }
 
 function gtermLinkClickHandler(event) {
@@ -2390,7 +2395,10 @@ GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
     if (frameController && "open" in frameController && this.frameProps && this.frameProps.id == frameId) {
 	frameController.open(this.frameProps);
     }
-    $(".gterm-frame-footer").hide();
+    if (!gMobileDisplay) {
+	$("#"+frameId).addClass("noheader");
+	$(".gterm-iframeheader").hide();
+    }
     $("#"+frameId).focus();
 }
 

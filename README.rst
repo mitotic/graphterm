@@ -168,6 +168,8 @@ for other commands, which include:
    ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
 
+   ``glandslide``    A GraphTerm-aware version of Landslide, a web-based slideshow program
+
    ``gmatplot.py``   A ``matplotlib`` plotting demo
 
    ``yweather [location]`` To view weather forecasts
@@ -357,7 +359,17 @@ with caution to avoid exposing exposing sensitive data.*
 Slideshows
 ---------------------------------------------------------------------------------------
 
-The ``gimage`` command, which displays images inline, can be used for
+The ``glandslide`` command, which is a slightly modified version of the
+web-based slide slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
+can be used to create a slideshow from Markdown (.md) or reStructured
+Text (.rst) files::
+
+  glandslide -o slides.md | giframe
+
+(The unmodified Landslide program can also be used, with the ``-i``
+option, but remote sharing will not work.)
+
+The ``gimage`` command, which displays images inline, can also be used for
 slideshows and simple presentations. Just ``cd`` to a directory
 that has the images for a slideshow, and type::
 
