@@ -378,7 +378,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.oshell = (term_name == gtermhost.OSHELL_NAME)
 
             self._counter[0] += 1
-            self.websocket_id = self._counter[0]
+            self.websocket_id = str(self._counter[0])
 
             if "?" in path or "*" in path or "[" in path:
                 self.wildcard = re.compile("^"+path.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")+"$")
@@ -504,7 +504,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         req_list = []
         try:
             for msg in msg_list:
-                if msg[0] == "reconnect_host":
+                if msg[0] == "osh_stdout":
+                    TraceInterface.receive_output("stdout", from_user or self.websocket_id, msg[1])
+
+                elif msg[0] == "osh_stderr":
+                    TraceInterface.receive_output("stderr", from_user or self.websocket_id, msg[1])
+
+                elif msg[0] == "reconnect_host":
                     if conn:
                         # Close host connection (should automatically reconnect)
                         conn.on_close()
@@ -580,6 +586,48 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             feed_list = [{"title": entry.title, "summary":entry.summary} for entry in feed_data.entries]
             self.write_json([["updates_response", feed_list]])
             logging.warning(feed_data["feed"]["title"])
+
+# OTrace websocket interface
+class TraceInterface(object):
+    root_depth = 1   # Max. path components for web directory (below /osh/web)
+    trace_hook = None
+
+    @classmethod
+    def set_web_hook(cls, hook):
+        cls.trace_hook = hook
+
+    @classmethod
+    def get_root_tree(cls):
+        """Returns directory dict tree (with depth=root_depth) that is updated automatically"""
+        return GTSocket._all_users or GTSocket._all_websockets
+
+    @classmethod
+    def send_command(cls, path_comps, command):
+        """ Send command to browser via websocket (invoked in the otrace thread)
+        path_comps: path component array (first element identifies websocket)
+        command: Javascript expression to be executed on the browser
+        """
+        # Must be thread-safe
+        if GTSocket._all_users:
+            websocket_id = GTSocket._all_users.get(path_comps[0])
+        else:
+            websocket_id = path_comps[0]
+        websocket = GTSocket._all_websockets.get(websocket_id)
+        if not websocket:
+            cls.receive_output("stderr", "", "No such socket: %s" % path_comps[0])
+            return
+
+        # Schedules callback in event loop
+        tornado.ioloop.IOLoop.instance().add_callback(functools.partial(websocket.write_message,
+                                                                        json.dumps([["osh_stdin", command]])))
+
+    @classmethod
+    def receive_output(cls, channel, username, message):
+        """Receive channel="stdout"/"stderr" output from browser via websocket and forward to oshell
+        """
+        path_comps = [username] if username else []
+        cls.trace_hook(channel, path_comps, message)
+            
 
 def xterm(command="", name=None, host="localhost", port=gtermhost.DEFAULT_HTTP_PORT):
     """Create new terminal"""
@@ -1036,7 +1084,9 @@ def run_server(options, args):
                                                                      "widget_port":
                                                                        (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
-                                                         oshell_unsafe=True, oshell_no_input=(not options.oshell_input),
+                                                         oshell_unsafe=True,
+                                                         oshell_no_input=(not options.oshell_input),
+                                                         oshell_web_interface=TraceInterface,
                                                          io_loop=IO_loop)
         xterm = Local_client.xterm
         killterm = Local_client.remove_term

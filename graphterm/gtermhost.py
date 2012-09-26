@@ -631,8 +631,8 @@ def gterm_shutdown(trace_shell=None):
 Host_connections = {}
 def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, connect_kw={},
                   oshell_globals=None, oshell_thread=False, oshell_unsafe=False, oshell_workdir="",
-                  oshell_init="", oshell_db_interface=None, oshell_hold_wrapper=None,
-                  oshell_no_input=True, gterm_callback=None, io_loop=None):
+                  oshell_init="", oshell_db_interface=None, oshell_web_interface=None,
+                  oshell_hold_wrapper=None, oshell_no_input=True, gterm_callback=None, io_loop=None):
     """ Returns (host_connection, host_secret, trace_shell)
     If io_loop is provided, it is assumed that the caller controls io_loop. Otherwise, gterm_connect
     starts io_loop on a separate thread.
@@ -675,7 +675,9 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, connect
                                 allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
                                 add_env={"GRAPHTERM_COOKIE": host_connection.osh_cookie,
                                          "GRAPHTERM_SHARED_SECRET": host_secret},
-                                init_file=oshell_init, db_interface=oshell_db_interface,
+                                init_file=oshell_init,
+                                db_interface=oshell_db_interface,
+                                web_interface=oshell_web_interface,
                                 hold_wrapper=oshell_hold_wrapper,
                                 no_input=oshell_no_input,
                                 eventloop_callback=io_loop.add_callback)

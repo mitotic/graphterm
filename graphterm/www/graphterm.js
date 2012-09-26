@@ -32,6 +32,8 @@ var WRITE_LOG = function (str) {};
 var DEBUG_LOG = function (str) {};
 var DEBUG_LOG = function (str) {console.log(str)};
 
+var OSH_ECHO = true;
+
 var ELLIPSIS = "...";
 
 var gRowHeight = 16;
@@ -611,7 +613,29 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	    var command = payload_obj[j];
 	    var action = command[0];
 
-            if (action == "abort") {
+            if (action == "osh_stdin") {
+		// Execute JS "command" from otrace console
+		var stdout = "";
+		var stderr = "";
+		try {
+		    if (OSH_ECHO)
+			console.log(command[1]);
+		    var evalout = eval(command[1]);
+		    stdout = evalout ? evalout+"" : "";
+		    if (OSH_ECHO && stdout)
+			console.log(stdout);
+		} catch (err) {
+		    stderr = err+"";
+		    if (OSH_ECHO && stderr)
+			console.log(stderr);
+		}
+		var osh_send = [];
+		if (stderr)
+		    osh_send.push(["osh_stderr", stderr]);
+		osh_send.push(["osh_stdout", stdout]);
+		gWebSocket.write(osh_send);
+
+            } else if (action == "abort") {
 		alert(command[1]);
 		window.location = "/";
 
