@@ -2349,7 +2349,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
         elif self.get_web_path() and len(self.get_web_path()) >= self.web_interface.root_depth:
             # Non-otrace command; handle using web interface
             if Set_params["safe_mode"]:
-                return ("", "Javascript console disabled in safe mode; set safe_mode False")
+                return ("", "Javascript console disabled in safe mode; cd /osh and set safe_mode False")
             try:
                 self.web_interface.send_command(self.get_web_path(), line)
                 return ("_NoPrompt_", None)
@@ -5138,7 +5138,10 @@ class OTrace(object):
             if op_type == "stderr":
                 if oshell.repeat_interval:
                     oshell.set_repeat(None)
-                oshell.std_output(data+"\n")
+                msg = data+"\n"
+                oshell.std_output(msg)
+                if OTrace.callback_handler:
+                        OTrace.callback_handler.logmessage(None, msg)
 
             if op_type == "stdout":
                 if oshell.repeat_interval:
@@ -5152,6 +5155,8 @@ class OTrace(object):
                         data = ALT_SCREEN_OFFSEQ + data
                     data = data+"\n"+oshell.prompt1
                 oshell.std_output(data, flush=True)
+                if OTrace.callback_handler:
+                        OTrace.callback_handler.logmessage(None, data)
         except Exception:
             pass
 
