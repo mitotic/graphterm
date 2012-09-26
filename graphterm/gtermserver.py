@@ -490,7 +490,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
         if controller or allow_feedback_only:
             try:
-                msg_list = json.loads(message)
+                msg_list = json.loads(str(message))
                 if allow_feedback_only:
                     msg_list = [msg for msg in msg_list if msg[0] == "feedback"]
             except Exception, excp:
