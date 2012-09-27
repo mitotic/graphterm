@@ -24,6 +24,8 @@ var gDefaultEditor = gMobileDisplay ? "ckeditor" : "ace";
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
 
+var REPEAT_MILLISEC = 500;
+
 var RELEASE_NOTES_URL = "http://info.mindmeldr.com/code/graphterm/graphterm-release-notes";
 var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
 var PYPI_JSON_URL = PYPI_URL + "/json?callback=?";
@@ -527,6 +529,9 @@ function GTWebSocket(auth_user, auth_code) {
     this.theme = "default";
     this.alt_mode = false;
 
+    this.repeat_command = "";
+    this.repeat_intervalID = null;
+
     var protocol = (window.location.protocol.indexOf("https") == 0) ? "wss" : "ws";
     var ws_url = protocol+":/"+"/"+window.location.host+"/_websocket"+window.location.pathname; // Split the double slash to avoid confusing the JS minifier
     if (this.auth_user || this.auth_code)
@@ -594,6 +599,48 @@ function GTAutosizeIFrame(elem) {
 	$(this).height($(this).contents().find('body').height() + 20);} ) }, 500 );
 }
 
+function GTRepeatCommand() {
+    if (gWebSocket && gWebSocket.repeat_command)
+	gWebSocket.evalCommand(gWebSocket.repeat_command, true);
+}
+
+GTWebSocket.prototype.repeatCommand = function(command) {
+    if (this.repeat_intervalID) {
+	window.clearInterval(this.repeat_intervalID);
+	this.repeat_intervalID = null;
+    }
+
+    if (command) {	
+	this.repeat_command = command;
+	this.repeat_intervalID = window.setInterval(GTRepeatCommand, REPEAT_MILLISEC);
+    } else {
+	this.repeat_command = "";
+    }
+}
+
+GTWebSocket.prototype.evalCommand = function(command, repeat) {
+    var stdout = "";
+    var stderr = "";
+    try {
+	if (OSH_ECHO && !repeat)
+	    console.log(command);
+	var evalout = eval(command);
+	stdout = evalout ? evalout+"" : "";
+	if (OSH_ECHO && stdout && !repeat)
+	    console.log(stdout);
+    } catch (err) {
+	stderr = err+"";
+	if (OSH_ECHO && stderr)
+	    console.log(stderr);
+    }
+
+    var osh_send = [];
+    if (stderr)
+	osh_send.push(["osh_stderr", !!this.repeat_intervalID, stderr]);
+    osh_send.push(["osh_stdout", !!this.repeat_intervalID, stdout]);
+    gWebSocket.write(osh_send);
+}
+
 GTWebSocket.prototype.onmessage = function(evt) {
     if (this.closed)
 	return;
@@ -615,25 +662,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
             if (action == "osh_stdin") {
 		// Execute JS "command" from otrace console
-		var stdout = "";
-		var stderr = "";
-		try {
-		    if (OSH_ECHO)
-			console.log(command[1]);
-		    var evalout = eval(command[1]);
-		    stdout = evalout ? evalout+"" : "";
-		    if (OSH_ECHO && stdout)
-			console.log(stdout);
-		} catch (err) {
-		    stderr = err+"";
-		    if (OSH_ECHO && stderr)
-			console.log(stderr);
+		if (command[1] == "repeat") {
+		    this.repeatCommand();
+		} else if (command[1].substr(0,7) == "repeat ") {
+		    this.repeatCommand(command[1].substr(7));
+		} else {
+		    this.repeatCommand();
+		    this.evalCommand(command[1]);
 		}
-		var osh_send = [];
-		if (stderr)
-		    osh_send.push(["osh_stderr", stderr]);
-		osh_send.push(["osh_stdout", stdout]);
-		gWebSocket.write(osh_send);
 
             } else if (action == "abort") {
 		alert(command[1]);
@@ -707,10 +743,18 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var logPrefix = command[1];
 		var logArgs = command[2];
 		var logtype = logArgs[0] || "log";
-		var prefix = logtype.toUpperCase()+": ";
-		console.log(prefix+logArgs[2]);
-		$(logPrefix+'<pre class="gterm-log">'+prefix+logArgs[2]+'</pre>').appendTo("#session-log .curentry");
-		$("#session-log .curentry .gterm-log .gterm-link").bindclick(otraceClickHandler);
+		var prefix = (logtype.substr(0,3) != "web")  ? logtype.toUpperCase()+": " : "";
+		if (logtype != "webrepeat") {
+		    this.repeatCommand(); // Cancel any repeats, if not repeat web command output
+		}
+		//console.log(prefix+logArgs[2]);
+		var logclasses = "gterm-log"
+		if (logtype == "webrepeat") {
+		    logclasses += " gterm-logrepeat";
+		    $("#session-log .preventry .gterm-logrepeat").remove();
+		}
+		$(logPrefix+'<pre class="'+logclasses+'">'+prefix+logArgs[2]+'</pre>').appendTo("#session-log .preventry");
+		$("#session-log .preventry .gterm-log .gterm-link").bindclick(otraceClickHandler);
 
             } else if (action == "receive_msg") {
 		var fromUser = command[1];

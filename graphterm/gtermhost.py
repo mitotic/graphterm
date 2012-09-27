@@ -467,7 +467,7 @@ class GTCallbackMixin(object):
         if self.oshell_client and (log_level is None or log_level >= self.log_level):
             self.oshell_client.remote_response(OSHELL_NAME, "", [["log", "", [logtype, log_level, msg]]])
 
-        if logtype or log_level is None:
+        if not logtype.startswith("web") and (logtype or log_level is None):
             sys.stderr.write((plaintext or msg)+"\n")
 
     def editback(self, content, filepath="", filetype="", editor="", modify=False):

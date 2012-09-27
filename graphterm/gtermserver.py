@@ -505,10 +505,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         try:
             for msg in msg_list:
                 if msg[0] == "osh_stdout":
-                    TraceInterface.receive_output("stdout", from_user or self.websocket_id, msg[1])
+                    TraceInterface.receive_output("stdout", msg[1], from_user or self.websocket_id, msg[2])
 
                 elif msg[0] == "osh_stderr":
-                    TraceInterface.receive_output("stderr", from_user or self.websocket_id, msg[1])
+                    TraceInterface.receive_output("stderr", msg[1], from_user or self.websocket_id, msg[2])
 
                 elif msg[0] == "reconnect_host":
                     if conn:
@@ -614,7 +614,7 @@ class TraceInterface(object):
             websocket_id = path_comps[0]
         websocket = GTSocket._all_websockets.get(websocket_id)
         if not websocket:
-            cls.receive_output("stderr", "", "No such socket: %s" % path_comps[0])
+            cls.receive_output("stderr", False, "", "No such socket: %s" % path_comps[0])
             return
 
         # Schedules callback in event loop
@@ -622,11 +622,11 @@ class TraceInterface(object):
                                                                         json.dumps([["osh_stdin", command]])))
 
     @classmethod
-    def receive_output(cls, channel, username, message):
+    def receive_output(cls, channel, repeat, username, message):
         """Receive channel="stdout"/"stderr" output from browser via websocket and forward to oshell
         """
         path_comps = [username] if username else []
-        cls.trace_hook(channel, path_comps, message)
+        cls.trace_hook(channel, repeat, path_comps, message)
             
 
 def xterm(command="", name=None, host="localhost", port=gtermhost.DEFAULT_HTTP_PORT):
@@ -1085,6 +1085,7 @@ def run_server(options, args):
                                                                        (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
                                                          oshell_unsafe=True,
+                                                         oshell_thread=(not options.oshell_input),
                                                          oshell_no_input=(not options.oshell_input),
                                                          oshell_web_interface=TraceInterface,
                                                          io_loop=IO_loop)
@@ -1127,9 +1128,9 @@ def run_server(options, args):
         print >> sys.stderr, "GraphTerm server (v%s) listening on %s:%s" % (about.version, http_host, http_port)
 
         print >> sys.stderr, "\nType ^C to stop server"
-        if Trace_shell and options.oshell_input:
+        if Trace_shell:
             Trace_shell.loop()
-        else:
+        if not Trace_shell or not options.oshell_input:
             while Http_server:
                 time.sleep(1)
     except KeyboardInterrupt:

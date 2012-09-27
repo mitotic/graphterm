@@ -2103,7 +2103,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
                     return ("", "Shutting down...")
             return "", ""
 
-        if line.lstrip().startswith("repeat "):
+        if not batch and line.lstrip().startswith("repeat "):
             line = line.lstrip()[len("repeat "):]
             if line:
                 self.set_repeat(line)
@@ -3886,7 +3886,7 @@ class DefaultCallback(TraceCallback):
     """
     def logmessage(self, log_level, msg, exc_info=None, logtype="", plaintext=""):
         # If log_level is None, always display message
-        if log_level is None or log_level >= self.log_level:
+        if not logtype.startswith("web") and (log_level is None or log_level >= self.log_level):
             super(DefaultCallback, self).logmessage(None, msg, exc_info=exc_info, logtype=logtype, plaintext=plaintext)
             
 class CallbackLogHandler(logging.Handler):
@@ -5129,7 +5129,7 @@ class OTrace(object):
         return trace_list
             
     @classmethod
-    def web_hook(cls, op_type, path, data):
+    def web_hook(cls, op_type, repeat, path, data):
         # Must be thread-safe (OK if output only)
         if not OShell.instance:
             return
@@ -5138,25 +5138,29 @@ class OTrace(object):
             if op_type == "stderr":
                 if oshell.repeat_interval:
                     oshell.set_repeat(None)
-                msg = data+"\n"
-                oshell.std_output(msg)
+                if not oshell.no_input:
+                    oshell.std_output(data+"\n")
                 if OTrace.callback_handler:
-                        OTrace.callback_handler.logmessage(None, msg)
+                    OTrace.callback_handler.logmessage(None, data, logtype="weberr")
 
             if op_type == "stdout":
-                if oshell.repeat_interval:
-                    data = CLEAR_SCREEN_SEQUENCE + data
+                outdata = data
+                logtype = "webout"
+                if oshell.repeat_interval or repeat:
+                    outdata = CLEAR_SCREEN_SEQUENCE + outdata
+                    logtype = "webrepeat"
                     if oshell.repeat_alt_screen == 1:
                         oshell.repeat_alt_screen = 2
-                        data = ALT_SCREEN_ONSEQ + data
+                        outdata = ALT_SCREEN_ONSEQ + outdata
                 else:
                     if oshell.repeat_alt_screen == 2:
                         oshell.repeat_alt_screen = 0
-                        data = ALT_SCREEN_OFFSEQ + data
-                    data = data+"\n"+oshell.prompt1
-                oshell.std_output(data, flush=True)
-                if OTrace.callback_handler:
-                        OTrace.callback_handler.logmessage(None, data)
+                        outdata = ALT_SCREEN_OFFSEQ + outdata
+                    outdata = outdata+"\n"+oshell.prompt1
+                if not oshell.no_input:
+                    oshell.std_output(outdata, flush=True)
+                if OTrace.callback_handler and data:
+                    OTrace.callback_handler.logmessage(None, data, logtype=logtype)
         except Exception:
             pass
 
