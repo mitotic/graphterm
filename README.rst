@@ -111,10 +111,16 @@ Documentation and Support
 
 Documentation and updates can be found on the project home page,
 `info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_,
-which also has `tutorials and examples <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials>`_
+which also has some
+`tutorials and examples <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials>`_
 for using GraphTerm.
 
-Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
+**NEW**
+There is a `Google Groups mailing list <https://groups.google.com/group/graphterm>`_
+for announcements of new releases, posting questions related to
+GraphTerm etc. You can also follow `@graphterm <https://twitter.com/intent/user?screen_name=graphterm>`_ on Twitter for updates.
+
+To report bugs and other issues, use the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
 
 
 Usage
@@ -225,13 +231,11 @@ Themes, selected using the top menu, are a work in progress, especially the 3-D 
 Copy/paste
 ---------------------------------------------------------------------------------------
 
-*Click on the cursor* before pasting text from the clipboard using
-Control-V, Command-V, or the Paste command in the Browser.
-Alternatively, you can use the *Actions->Paste special* menu item.
-NOTE: Pasting text copied from a non-plain text source, such as a web page,
-may not always work properly. A workaround is to paste the text into a
-temporary location as plain text (such as in a plain text editor),
-and then copy/paste it from there to GraphTerm.
+*Click on the cursor* before beginning the paste operation (on the command line,
+a box will appear at the cursor location). Then use the
+browser's paste menu command or a keyboard shortcut (like *Command/Control-V*) to
+paste the text. Alternatively, you can use the *Actions->Paste special* menu item.
+
 
 Drag and drop
 -------------------------------------------------------------------------

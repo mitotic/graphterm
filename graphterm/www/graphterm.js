@@ -1495,7 +1495,7 @@ function gtermMenuClickHandler(event) {
 	ScrollScreen();
 	break;
     case "help":
-	alert("Help not yet implemented");
+	GTermHelp()
 	break;
     case "collapse":
 	$("#session-bufscreen .oldentry").addClass("gterm-hideoutput");
@@ -2103,16 +2103,26 @@ function OpenNew(host, term_name, options) {
 function GTermAbout() {
     GTPopAlert('<b>'+GTEscape(gParams.about_description)+"</b><p>\n&nbsp;&nbsp;Version: "+gParams.about_version+
 	       '<p>\n&nbsp;&nbsp;Author(s): '+ GTEscape(gParams.about_authors.join(", "))+
-               '<p>\n&nbsp;&nbsp;Website: <a href="'+gParams.about_url+'" target="_blank">'+gParams.about_url+'</a>',
+               '<p>\n&nbsp;&nbsp;Website: <a href="'+gParams.about_url+'" target="_blank">'+gParams.about_url+'</a>'+
+               '<p>\n&nbsp;&nbsp;Mailing list: <a href="https://groups.google.com/group/graphterm" target="_blank">https://groups.google.com/group/graphterm</a> (<b>NEW</b>)'+
+               '<p>\n&nbsp;&nbsp;Twitter: <a href="https://twitter.com/intent/user?screen_name=graphterm" target="_blank">@graphterm</a>',
+               true);
+}
+
+function GTermHelp() {
+    GTPopAlert('<b>GraphTerm Help</b>'+
+'<p>\n&nbsp;&nbsp;<a href="/static/help.html" target="_blank">General help information</a> (from README file)'+
+'<p>\n&nbsp;&nbsp;<a href="http://info.mindmeldr.com/code/graphterm/graphterm-troubleshooting" target="_blank">Troubleshooting</a>'+
+'<p>\n&nbsp;&nbsp;<a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> (<b>NEW</b>)',
                true);
 }
 
 function CheckUpdates() {
     $.getJSON(PYPI_JSON_URL, function(data) {
 	if (gParams.about_version == data.info.version) {
-	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').');
+	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').<p> There is  now a <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.', true);
 	} else {
-	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<br>See <a href="'+RELEASE_NOTES_URL+'" target="_blank">Release Notes</a> for details.<p>Upgrade using <b>sudo easy_install --upgrade graphterm</b><br>Followed by <b>sudo gterm_setup</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
+	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<br>See <a href="'+RELEASE_NOTES_URL+'" target="_blank">Release Notes</a> for details.<br> There is also a <em>new</em> <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.<p>Upgrade using <b>sudo easy_install --upgrade graphterm</b><br>Followed by <b>sudo gterm_setup</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
 	}
     });
     gWebSocket.write([["check_updates"]]);

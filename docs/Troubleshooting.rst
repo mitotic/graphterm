@@ -42,9 +42,13 @@ How do I paste text?
 ----------------------------------------------------------------------------------
 
 *Click on the cursor* before beginning the paste operation (on the command line,
-you will a box appear at the cursor location). Then use the
-browser's menu or a keyboard shortcut (like *Command/Control-V*) to
-paste the text.
+a box will appear at the cursor location). Then use the
+browser's paste menu command or a keyboard shortcut (like *Command/Control-V*) to
+paste the text. Alternatively, you can use the *Actions->Paste special* menu item.
+NOTE: Pasting text copied from a non-plain text source, such as a web page,
+may not always work properly. A workaround is to paste the text into a
+temporary location as plain text (such as in a plain text editor),
+and then copy/paste it from there to GraphTerm.
 
 Server
 ======================================================
