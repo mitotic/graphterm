@@ -2475,6 +2475,7 @@ GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
     }
     if (!gMobileDisplay) {
 	$("#"+frameId).addClass("noheader");
+	$("#"+frameId).attr("height", "100%");
 	$(".gterm-iframeheader").hide();
     }
     $("#"+frameId).focus();

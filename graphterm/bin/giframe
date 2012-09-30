@@ -54,7 +54,7 @@ headers = {"opacity": options.opacity}
 frameId = "giframe%09d" % random.randrange(0, 10**9) 
 IFRAMEFORMAT = '<iframe id="'+frameId+'" class="gterm-iframe" src="%s" width="100%%" height="'+str(100 if options.nofooter else 95)+'%%"></iframe>' 
 if not options.nofooter:
-    IFRAMEFORMAT = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span><p>' + IFRAMEFORMAT
+    IFRAMEFORMAT = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span>' + IFRAMEFORMAT
 
 gtermapi.write_html(IFRAMEFORMAT % iframe_url, display="fullscreen", add_headers=headers)
 

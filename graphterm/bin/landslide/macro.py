@@ -136,9 +136,9 @@ class FixImagePathsMacro(Macro):
             re.DOTALL | re.UNICODE)
 
         for image in images:
-            full_path = os.path.join(base_url, image)
-
-            content = content.replace(image, full_path)
+            if not image.startswith("http://") and not image.startswith("https://"):
+                full_path = os.path.join(base_url, image)
+                content = content.replace(image, full_path)
 
         return content, classes
 

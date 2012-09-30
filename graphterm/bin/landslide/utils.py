@@ -34,6 +34,9 @@ except ImportError:
 def get_abs_path_url(path, blob=False):
     """ Returns the absolute url for a given local path.
     """
+    if path.startswith("http://") or path.startswith("https://"):
+        return path
+    
     if not gtermapi or not gtermapi.Lterm_cookie:
         return "file://%s" % os.path.abspath(path)
 

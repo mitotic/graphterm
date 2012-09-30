@@ -113,7 +113,11 @@ Documentation and updates can be found on the project home page,
 `info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_,
 which also has some
 `tutorials and examples <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials>`_
-for using GraphTerm.
+for using GraphTerm. You can also use the following command::
+
+  glandslide -o graphterm-talk1.md | giframe
+
+to view a slideshow about GraphTerm within GraphTerm.
 
 **NEW**
 There is a `Google Groups mailing list <https://groups.google.com/group/graphterm>`_
@@ -366,9 +370,11 @@ Slideshows
 The ``glandslide`` command, which is a slightly modified version of the
 web-based slide slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
 can be used to create a slideshow from Markdown (.md) or reStructured
-Text (.rst) files::
+Text (.rst) files. A few sample ``.md`` files are provided in the
+``docs`` directory of the distribution. To view a slideshow about
+GraphTerm, type::
 
-  glandslide -o slides.md | giframe
+  glandslide -o graphterm-talk1.md | giframe
 
 (The unmodified Landslide program can also be used, with the ``-i``
 option, but remote sharing will not work.)

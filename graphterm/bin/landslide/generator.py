@@ -94,6 +94,12 @@ class Generator(object):
             # Only output html in direct output mode, not log messages
             self.verbose = False
 
+        if source and not os.path.exists(source) and not os.path.isabs(source):
+            # Look in graphterm/docs directory
+            docs_source = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", source))
+            if os.path.exists(docs_source):
+                source = docs_source
+
         if not source or not os.path.exists(source):
             raise IOError(u"Source file/directory %s does not exist"
                           % source)

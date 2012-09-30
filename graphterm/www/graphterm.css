@@ -382,6 +382,10 @@ input.gterm-input-arg[type=text] {
     border-style: none;
 }
 
+.gterm-iframeheader {
+    color: red;
+}
+
 .gterm-iframe:not(.noheader) {
     margin-top: 1em;
 }
