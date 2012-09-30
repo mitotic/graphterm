@@ -18,7 +18,7 @@ for arg in $*; do
 done
 
 if [ "$file" == "" ]; then
-    echo "Usage: gvi <filename>"
+    echo "Usage: gvi [--ace|--ckeditor] <filename>"
     exit 1
 fi
 

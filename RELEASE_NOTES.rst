@@ -3,6 +3,23 @@ GraphTerm Release Notes
 .. contents::
 
 
+0.33.0 (Sep. 30, 2012)
+---------------------------------------------------------------------------------
+  - Added references to GraphTerm mailing list/Twitter account
+  - Added Troubleshooting FAQ
+  - Added sample slideshows using ``glandslide``
+  - Implemented ``glandslide``, GraphTerm-aware version of ``landslide``
+    slideshow presenter.
+  - Factored out ace/ckeditor, to be loaded on demand. This
+    significantly speeds up initial load, and allows any editor to be
+    easily embedded using the editor API. Also implemented presenter API
+    using inter-frame communication.
+  - Implemented ``/osh/web/user`` JS console for GraphTerm
+  - ``gvi`` can explicitly choose between ace/ckeditor (for WYSIWYG
+    HTML editing)
+  - Improved ``gls`` column handling
+  - Implemented ``gscript`` for saving/running scripted commands
+  - Added ``ec2launch`` option to copy and install source tarball
 
 0.32.0 (Sep. 15, 2012)
 ---------------------------------------------------------------------------------
