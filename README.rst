@@ -371,7 +371,7 @@ The ``glandslide`` command, which is a slightly modified version of the
 web-based slide slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
 can be used to create a slideshow from Markdown (.md) or reStructured
 Text (.rst) files. A few sample ``.md`` files are provided in the
-``docs`` directory of the distribution. To view a slideshow about
+``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
 GraphTerm, type::
 
   glandslide -o graphterm-talk1.md | giframe

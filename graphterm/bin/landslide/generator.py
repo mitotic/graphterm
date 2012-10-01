@@ -96,9 +96,9 @@ class Generator(object):
 
         if source and not os.path.exists(source) and not os.path.isabs(source):
             # Look in graphterm/docs directory
-            docs_source = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", source))
-            if os.path.exists(docs_source):
-                source = docs_source
+            sample_source = os.path.normpath(os.path.join(os.path.dirname(__file__), source))
+            if os.path.exists(sample_source):
+                source = sample_source
 
         if not source or not os.path.exists(source):
             raise IOError(u"Source file/directory %s does not exist"
