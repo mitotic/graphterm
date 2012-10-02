@@ -1,3 +1,6 @@
+//  Landslide 1.0.1 modified to work with GraphTerm
+//
+
 var gPresenter = null;
 var gDebug = false;
 

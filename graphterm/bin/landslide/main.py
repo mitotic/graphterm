@@ -3,7 +3,7 @@
 
 #  Copyright 2010 Adam Zapletal
 #
-#  Modified by R. Saravanan to work with GraphTerm (2012)
+#  Landslide 1.0.1 modified by R. Saravanan to work with GraphTerm (2012)
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -25,10 +25,7 @@ except ImportError:
     print >> sys.stderr, "To use landslide, please install the following python packages using easy_install (or other methods):\n    jinja2, pygments, markdown (for *.md files), docutils (for *.rst files)"
     sys.exit(1)
 
-try:
-    from landslide import generator
-except ImportError:
-    import generator
+import generator
 
 from optparse import OptionParser
 

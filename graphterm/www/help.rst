@@ -9,10 +9,20 @@ Documentation and Support
 
 Documentation and updates can be found on the project home page,
 `info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_,
-which also has `tutorials and examples <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials>`_
-for using GraphTerm.
+which also has some
+`tutorials and examples <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials>`_
+for using GraphTerm. You can also use the following command::
 
-Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
+  glandslide -o graphterm-talk1.md | giframe
+
+to view a slideshow about GraphTerm within GraphTerm (type``h`` for
+help and ``q`` to quit).
+
+There is a `Google Groups mailing list <https://groups.google.com/group/graphterm>`_
+for announcements of new releases, posting questions related to
+GraphTerm etc. You can also follow `@graphterm <https://twitter.com/intent/user?screen_name=graphterm>`_ on Twitter for updates.
+
+To report bugs and other issues, use the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
 
 
 Usage
@@ -65,6 +75,8 @@ for other commands, which include:
 
    ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
+
+   ``glandslide``    A GraphTerm-aware version of Landslide, a web-based slideshow program
 
    ``gmatplot.py``   A ``matplotlib`` plotting demo
 
@@ -121,13 +133,11 @@ Themes, selected using the top menu, are a work in progress, especially the 3-D 
 Copy/paste
 ---------------------------------------------------------------------------------------
 
-*Click on the cursor* before pasting text from the clipboard using
-Control-V, Command-V, or the Paste command in the Browser.
-Alternatively, you can use the *Actions->Paste special* menu item.
-NOTE: Pasting text copied from a non-plain text source, such as a web page,
-may not always work properly. A workaround is to paste the text into a
-temporary location as plain text (such as in a plain text editor),
-and then copy/paste it from there to GraphTerm.
+*Click on the cursor* before beginning the paste operation (on the command line,
+a box will appear at the cursor location). Then use the
+browser's paste menu command or a keyboard shortcut (like *Command/Control-V*) to
+paste the text. Alternatively, you can use the *Actions->Paste special* menu item.
+
 
 Drag and drop
 -------------------------------------------------------------------------
@@ -255,7 +265,19 @@ with caution to avoid exposing exposing sensitive data.*
 Slideshows
 ---------------------------------------------------------------------------------------
 
-The ``gimage`` command, which displays images inline, can be used for
+The ``glandslide`` command, which is a slightly modified version of the
+web-based slide slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
+can be used to create a slideshow from Markdown (.md) or reStructured
+Text (.rst) files. A few sample ``.md`` files are provided in the
+``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
+GraphTerm, type::
+
+  glandslide -o graphterm-talk1.md | giframe
+
+Type ``h`` for help and ``q`` to quite the slideshow. (The unmodified
+Landslide program can also be used, with the ``-i`` option, but remote sharing will not work.)
+
+The ``gimage`` command, which displays images inline, can also be used for
 slideshows and simple presentations. Just ``cd`` to a directory
 that has the images for a slideshow, and type::
 

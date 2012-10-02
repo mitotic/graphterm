@@ -117,7 +117,8 @@ for using GraphTerm. You can also use the following command::
 
   glandslide -o graphterm-talk1.md | giframe
 
-to view a slideshow about GraphTerm within GraphTerm.
+to view a slideshow about GraphTerm within GraphTerm (type ``h`` for
+help and ``q`` to quit)..
 
 **NEW**
 There is a `Google Groups mailing list <https://groups.google.com/group/graphterm>`_
@@ -376,8 +377,8 @@ GraphTerm, type::
 
   glandslide -o graphterm-talk1.md | giframe
 
-(The unmodified Landslide program can also be used, with the ``-i``
-option, but remote sharing will not work.)
+Type ``h`` for help and ``q`` to quit the slideshow. (The unmodified
+Landslide program can also be used, with the ``-i`` option, but remote sharing will not work.)
 
 The ``gimage`` command, which displays images inline, can also be used for
 slideshows and simple presentations. Just ``cd`` to a directory
