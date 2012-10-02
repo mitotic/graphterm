@@ -178,6 +178,15 @@ GraphTerm Features
 
 
 ---
+GraphTerm can be embedded in a slideshow within GraphTerm
+==========================================================
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+<iframe src="/local/slide/steal" width="90%" height="320"></iframe>
+
+---
 
 ls vs. gls
 =========================================================

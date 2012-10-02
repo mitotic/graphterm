@@ -208,6 +208,27 @@ On the Raspberry Pi
 
    <hr style="margin-bottom: 3em;">
 
+Web slideshows using `Landslide <https://github.com/adamzap/landslide>`_
+=============================================================================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-embedded.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Showing the output of ``glandslide -o graphterm-talk1.md | giframe``
+   command, which displays a HTML5-based slideshow using
+   `Markdown <http://daringfireball.net/projects/markdown/>`_.
+   The displayed slide has an ``iframe`` with another
+   GraphTerm session which is also displaying a slideshow...
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
 Miscellaneous screenshots
 ==================================================
 
