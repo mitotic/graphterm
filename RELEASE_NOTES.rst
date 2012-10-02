@@ -49,8 +49,8 @@ GraphTerm Release Notes
   - Updated documentation
   - Syntax for ``gtermhost`` command has changed slightly
   - *Action->Export* Environment to use GraphTerm across SSH logins
-  - ``gmatlib.py`` to demo inline plotting using matplotlib
-  - Wildcard session names for multiplexed stdin and stout (oshell-only)
+  - ``gmatplot.py`` to demo inline plotting using matplotlib
+  - Wildcard session names for multiplexed stdin and stdout (oshell-only)
   - ``gotrace`` command to use *otrace* with any python program (including those reading from stdin)
   - Clear terminal option
   - ``giframe`` command to display files, URLs and HTML from stdin

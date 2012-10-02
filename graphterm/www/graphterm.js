@@ -533,11 +533,11 @@ function GTWebSocket(auth_user, auth_code) {
     this.repeat_intervalID = null;
 
     var protocol = (window.location.protocol.indexOf("https") == 0) ? "wss" : "ws";
-    var ws_url = protocol+":/"+"/"+window.location.host+"/_websocket"+window.location.pathname; // Split the double slash to avoid confusing the JS minifier
+    this.ws_url = protocol+":/"+"/"+window.location.host+"/_websocket"+window.location.pathname; // Split the double slash to avoid confusing the JS minifier
     if (this.auth_user || this.auth_code)
-	ws_url += "?" + $.param({user: auth_user, code: auth_code});
-    console.log("GTWebSocket url", ws_url);
-    this.ws = new WebSocket(ws_url);
+	this.ws_url += "?" + $.param({user: auth_user, code: auth_code});
+    console.log("GTWebSocket url", this.ws_url);
+    this.ws = new WebSocket(this.ws_url);
     this.ws.onopen = bind_method(this, this.onopen);
     this.ws.onmessage = bind_method(this, this.onmessage);
     this.ws.onclose = bind_method(this, this.onclose);
@@ -1230,10 +1230,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 GTWebSocket.prototype.onclose = function(e) {
   console.log("GTWebSocket.onclose: ");
-  if (this.opened) {
-  } else {
-    this.failed = true;
+  if (!this.opened && !this.closed && !this.failed) {
+      this.failed = true;
+      alert("Failed to open websocket: "+this.ws_url);
   }
+  this.closed = true;
 }
 
 GTWebSocket.prototype.abort = function() {
@@ -1247,7 +1248,6 @@ GTWebSocket.prototype.close = function() {
     return;
 
   this.closed = true;
-  this.opened = false;
   try {
     this.ws.close();
   } catch(err) {
