@@ -1,0 +1,208 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Release Notes &mdash; graphterm 0.33.0+ documentation</title>
+    
+    <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.33.0+',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="graphterm 0.33.0+ documentation" href="index.html" />
+    <link rel="next" title="Using the graphical features of GraphTerm" href="UsingGraphicalFeatures.html" />
+    <link rel="prev" title="Screenshots" href="screenshots.html" /> 
+  </head>
+  <body>
+    <div class="header-wrapper">
+      <div class="header">
+        <div class="headertitle"><a
+          href="index.html">graphterm 0.33.0+ documentation</a></div>
+        <div class="rel">
+          <a href="screenshots.html" title="Screenshots"
+             accesskey="P">previous</a> |
+          <a href="UsingGraphicalFeatures.html" title="Using the graphical features of GraphTerm"
+             accesskey="N">next</a> |
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="document">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="release-notes">
+<h1><a class="toc-backref" href="#id1">Release Notes</a><a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#release-notes" id="id1">Release Notes</a><ul>
+<li><a class="reference internal" href="#sep-30-2012" id="id2">0.33.0 (Sep. 30, 2012)</a></li>
+<li><a class="reference internal" href="#sep-15-2012" id="id3">0.32.0 (Sep. 15, 2012)</a></li>
+<li><a class="reference internal" href="#sep-9-2012" id="id4">0.31.0 (Sep. 9, 2012)</a></li>
+<li><a class="reference internal" href="#aug-26-2012" id="id5">0.30.9 (Aug 26, 2012):</a></li>
+<li><a class="reference internal" href="#aug-15-2012" id="id6">0.30.8 (Aug 15, 2012):</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="sep-30-2012">
+<h2><a class="toc-backref" href="#id2">0.33.0 (Sep. 30, 2012)</a><a class="headerlink" href="#sep-30-2012" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Added references to GraphTerm mailing list/Twitter account</li>
+<li>Added Troubleshooting FAQ</li>
+<li>Added sample slideshows using <tt class="docutils literal"><span class="pre">glandslide</span></tt></li>
+<li>Implemented <tt class="docutils literal"><span class="pre">glandslide</span></tt>, GraphTerm-aware version of <tt class="docutils literal"><span class="pre">landslide</span></tt>
+slideshow presenter.</li>
+<li>Factored out ace/ckeditor, to be loaded on demand. This
+significantly speeds up initial load, and allows any editor to be
+easily embedded using the editor API. Also implemented presenter API
+using inter-frame communication.</li>
+<li>Implemented <tt class="docutils literal"><span class="pre">/osh/web/user</span></tt> JS console for GraphTerm</li>
+<li><tt class="docutils literal"><span class="pre">gvi</span></tt> can explicitly choose between ace/ckeditor (for WYSIWYG
+HTML editing)</li>
+<li>Improved <tt class="docutils literal"><span class="pre">gls</span></tt> column handling</li>
+<li>Implemented <tt class="docutils literal"><span class="pre">gscript</span></tt> for saving/running scripted commands</li>
+<li>Added <tt class="docutils literal"><span class="pre">ec2launch</span></tt> option to copy and install source tarball</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="sep-15-2012">
+<h2><a class="toc-backref" href="#id3">0.32.0 (Sep. 15, 2012)</a><a class="headerlink" href="#sep-15-2012" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Now works on Raspberry Pi out-of-the-box!</li>
+<li>Added CKEditor (doubled size of package)</li>
+<li>Much improved iPad experience (bottom menu on by default; CKEditor for
+<tt class="docutils literal"><span class="pre">gvi</span></tt> editing; <strong>bold</strong> theme)</li>
+<li>Updated screenshots</li>
+<li>Revamped <tt class="docutils literal"><span class="pre">ec2launch</span></tt> and <tt class="docutils literal"><span class="pre">ec2list</span></tt> for EC2 cluster management</li>
+<li>Clicking on image in <tt class="docutils literal"><span class="pre">gls</span></tt> output now displays image inline</li>
+<li>Popup help display for forms</li>
+<li><tt class="docutils literal"><span class="pre">--key_secret</span></tt> option for HMAC digest server-host authentication</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="sep-9-2012">
+<h2><a class="toc-backref" href="#id4">0.31.0 (Sep. 9, 2012)</a><a class="headerlink" href="#sep-9-2012" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Updated screenshots and documentation</li>
+<li>Replaced broken <tt class="docutils literal"><span class="pre">gweather</span></tt> with <tt class="docutils literal"><span class="pre">yweather</span></tt> (for inline forecasts)</li>
+<li>Better popups/alerts</li>
+<li>Added <tt class="docutils literal"><span class="pre">Control</span> <span class="pre">A-E-K</span></tt> to Bottom menu</li>
+<li>Improved Unicode output</li>
+<li>Version checks for API</li>
+<li>Improved <tt class="docutils literal"><span class="pre">ec2launch</span></tt> to autostart <tt class="docutils literal"><span class="pre">gtermserver</span></tt> and install <em>PyLab</em></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="aug-26-2012">
+<h2><a class="toc-backref" href="#id5">0.30.9 (Aug 26, 2012):</a><a class="headerlink" href="#aug-26-2012" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Updated documentation</li>
+<li>Syntax for <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command has changed slightly</li>
+<li><em>Action-&gt;Export</em> Environment to use GraphTerm across SSH logins</li>
+<li><tt class="docutils literal"><span class="pre">gmatplot.py</span></tt> to demo inline plotting using matplotlib</li>
+<li>Wildcard session names for multiplexed stdin and stdout (oshell-only)</li>
+<li><tt class="docutils literal"><span class="pre">gotrace</span></tt> command to use <em>otrace</em> with any python program (including those reading from stdin)</li>
+<li>Clear terminal option</li>
+<li><tt class="docutils literal"><span class="pre">giframe</span></tt> command to display files, URLs and HTML from stdin</li>
+<li>Transient blob storage for images and inline <em>matplotlib</em> output</li>
+<li>Capture interactive feedback using <tt class="docutils literal"><span class="pre">GRAPHTERM_SOCKET</span></tt></li>
+<li>Modified command recall handling</li>
+<li>Fixed invisible widget overlay bug</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="aug-15-2012">
+<h2><a class="toc-backref" href="#id6">0.30.8 (Aug 15, 2012):</a><a class="headerlink" href="#aug-15-2012" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>First public release + many quick fixes</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="sidebar">
+          <h3>Table Of Contents</h3>
+          <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Using GraphTerm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="UsingGraphicalFeatures.html">Using the graphical features of GraphTerm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="UseAsRemoteTerminal.html">Use as a remote terminal</a></li>
+</ul>
+
+          <h3 style="margin-top: 1.5em;">Search</h3>
+          <form class="search" action="search.html" method="get">
+            <input type="text" name="q" />
+            <input type="submit" value="Go" />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+          </form>
+          <p class="searchtip" style="font-size: 90%">
+            Enter search terms or a module, class or function name.
+          </p>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <a href="screenshots.html" title="Screenshots"
+             >previous</a> |
+          <a href="UsingGraphicalFeatures.html" title="Using the graphical features of GraphTerm"
+             >next</a> |
+          <a href="genindex.html" title="General Index"
+             >index</a>
+            <br/>
+            <a href="_sources/release-notes.txt"
+               rel="nofollow">Show Source</a>
+        </div>
+
+        <div class="right">
+          
+    <div class="footer">
+        &copy; Copyright 2012, R. Saravanan.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+  </body>
+</html>

@@ -1,0 +1,234 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>1   GraphTerm Troubleshooting &mdash; graphterm 0.33.0+ documentation</title>
+    
+    <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.33.0+',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="graphterm 0.33.0+ documentation" href="index.html" />
+    <link rel="next" title="1   GraphTerm Implementation" href="implementation.html" />
+    <link rel="prev" title="Using GraphTerm" href="usage.html" /> 
+  </head>
+  <body>
+    <div class="header-wrapper">
+      <div class="header">
+        <div class="headertitle"><a
+          href="index.html">graphterm 0.33.0+ documentation</a></div>
+        <div class="rel">
+          <a href="usage.html" title="Using GraphTerm"
+             accesskey="P">previous</a> |
+          <a href="implementation.html" title="1   GraphTerm Implementation"
+             accesskey="N">next</a> |
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="document">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="graphterm-troubleshooting">
+<h1><a class="toc-backref" href="#id1">1&nbsp;&nbsp;&nbsp;GraphTerm Troubleshooting</a><a class="headerlink" href="#graphterm-troubleshooting" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="auto-toc simple">
+<li><a class="reference internal" href="#graphterm-troubleshooting" id="id1">1&nbsp;&nbsp;&nbsp;GraphTerm Troubleshooting</a><ul class="auto-toc">
+<li><a class="reference internal" href="#terminal" id="id2">1.1&nbsp;&nbsp;&nbsp;Terminal</a><ul class="auto-toc">
+<li><a class="reference internal" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" id="id3">1.1.1&nbsp;&nbsp;&nbsp;I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a></li>
+<li><a class="reference internal" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" id="id4">1.1.2&nbsp;&nbsp;&nbsp;I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a></li>
+<li><a class="reference internal" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" id="id5">1.1.3&nbsp;&nbsp;&nbsp;When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a></li>
+<li><a class="reference internal" href="#how-do-i-paste-text" id="id6">1.1.4&nbsp;&nbsp;&nbsp;How do I paste text?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#server" id="id7">1.2&nbsp;&nbsp;&nbsp;Server</a><ul class="auto-toc">
+<li><a class="reference internal" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" id="id8">1.2.1&nbsp;&nbsp;&nbsp;I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a></li>
+<li><a class="reference internal" href="#can-i-run-the-graphterm-server-on-port-80-or-443" id="id9">1.2.2&nbsp;&nbsp;&nbsp;Can I run the GraphTerm server on port 80 (or 443)?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-graphterm-on-windows" id="id10">1.3&nbsp;&nbsp;&nbsp;Using GraphTerm on Windows</a><ul class="auto-toc">
+<li><a class="reference internal" href="#does-graphterm-work-on-windows" id="id11">1.3.1&nbsp;&nbsp;&nbsp;Does GraphTerm work on Windows?</a></li>
+<li><a class="reference internal" href="#graphterm-fails-to-load-properly-on-windows" id="id12">1.3.2&nbsp;&nbsp;&nbsp;GraphTerm fails to load properly on Windows?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-graphterm-on-the-ipad" id="id13">1.4&nbsp;&nbsp;&nbsp;Using GraphTerm on the iPad</a><ul class="auto-toc">
+<li><a class="reference internal" href="#how-do-i-access-the-virtual-keyboard-on-the-ipad" id="id14">1.4.1&nbsp;&nbsp;&nbsp;How do I access the virtual keyboard on the iPad?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="terminal">
+<h2><a class="toc-backref" href="#id2">1.1&nbsp;&nbsp;&nbsp;Terminal</a><a class="headerlink" href="#terminal" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="i-get-the-error-message-bash-gls-permission-denied-on-the-terminal">
+<h3><a class="toc-backref" href="#id3">1.1.1&nbsp;&nbsp;&nbsp;I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">easy_install</span> <span class="pre">...</span></tt> command does not set the execute permission for
+commands like <tt class="docutils literal"><span class="pre">gls</span></tt>. You need to execute the command <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt>
+after installation to set the permissions. (The <tt class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span>
+<span class="pre">install</span></tt> command automatically sets permissions.)</p>
+</div>
+<div class="section" id="i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal">
+<h3><a class="toc-backref" href="#id4">1.1.2&nbsp;&nbsp;&nbsp;I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" title="Permalink to this headline">¶</a></h3>
+<p>The environment variable <tt class="docutils literal"><span class="pre">GRAPHTERM_DIR</span></tt> contains the directory
+where <tt class="docutils literal"><span class="pre">gls</span></tt> and other commands are located. GraphTerm tries to set
+the <tt class="docutils literal"><span class="pre">PATH</span></tt> variable to automatically include this directory. But
+sometimes this may fail, in which case you would need to modify you
+shell initialization files to include <tt class="docutils literal"><span class="pre">$GRAPHTERM_DIR</span></tt> in <tt class="docutils literal"><span class="pre">$PATH</span></tt>.
+(The menu command <em>Actions-.Export environment</em> may also help in this
+situation.)</p>
+</div>
+<div class="section" id="when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work">
+<h3><a class="toc-backref" href="#id5">1.1.3&nbsp;&nbsp;&nbsp;When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a><a class="headerlink" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" title="Permalink to this headline">¶</a></h3>
+<p>This is normal behavior. Many GraphTerm features only work on the
+computer that the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> program is running on. By default, SSH is treated
+like any other program that accesses the terminal for
+input/output. However, you can use the <em>Actions-.Export environment</em>
+menu command to set shell environment variables on the remote computer
+to restore some, but not all, of GraphTerm features.</p>
+</div>
+<div class="section" id="how-do-i-paste-text">
+<h3><a class="toc-backref" href="#id6">1.1.4&nbsp;&nbsp;&nbsp;How do I paste text?</a><a class="headerlink" href="#how-do-i-paste-text" title="Permalink to this headline">¶</a></h3>
+<p><em>Click on the cursor</em> before beginning the paste operation (on the command line,
+a box will appear at the cursor location). Then use the
+browser&#8217;s paste menu command or a keyboard shortcut (like <em>Command/Control-V</em>) to
+paste the text. Alternatively, you can use the <em>Actions-&gt;Paste special</em> menu item.
+NOTE: Pasting text copied from a non-plain text source, such as a web page,
+may not always work properly. A workaround is to paste the text into a
+temporary location as plain text (such as in a plain text editor),
+and then copy/paste it from there to GraphTerm.</p>
+</div>
+</div>
+<div class="section" id="server">
+<h2><a class="toc-backref" href="#id7">1.2&nbsp;&nbsp;&nbsp;Server</a><a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser">
+<h3><a class="toc-backref" href="#id8">1.2.1&nbsp;&nbsp;&nbsp;I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a><a class="headerlink" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" title="Permalink to this headline">¶</a></h3>
+<p>Ensure that you have included the port number in the URL, e.g., <tt class="docutils literal"><span class="pre">http//example.com:8900</span></tt>
+Also, ensure that any firewall on the server allows incoming
+connections to the default port 8900 .</p>
+</div>
+<div class="section" id="can-i-run-the-graphterm-server-on-port-80-or-443">
+<h3><a class="toc-backref" href="#id9">1.2.2&nbsp;&nbsp;&nbsp;Can I run the GraphTerm server on port 80 (or 443)?</a><a class="headerlink" href="#can-i-run-the-graphterm-server-on-port-80-or-443" title="Permalink to this headline">¶</a></h3>
+<p>You would need run the server as the root user, which is not recommended
+at this stage of GraphTerm development. A better way to achieve this is
+to redirect traffic from port 80 to port 8900. On a Linux server, this
+can be achieved by executing a single command (as root):</p>
+<div class="highlight-python"><pre>iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900</pre>
+</div>
+</div>
+</div>
+<div class="section" id="using-graphterm-on-windows">
+<h2><a class="toc-backref" href="#id10">1.3&nbsp;&nbsp;&nbsp;Using GraphTerm on Windows</a><a class="headerlink" href="#using-graphterm-on-windows" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="does-graphterm-work-on-windows">
+<h3><a class="toc-backref" href="#id11">1.3.1&nbsp;&nbsp;&nbsp;Does GraphTerm work on Windows?</a><a class="headerlink" href="#does-graphterm-work-on-windows" title="Permalink to this headline">¶</a></h3>
+<p>The GraphTerm client should work on a Windows browser that supports Websockets,
+like the  latest versions of Chrome/Firefox/Safari or IE10. The
+GraphTerm server is currently not supported on Windows. (Although the
+server is written in pure python, it needs access to the
+pseudo-terminal device that is only supported on Unix/Linux.)</p>
+</div>
+<div class="section" id="graphterm-fails-to-load-properly-on-windows">
+<h3><a class="toc-backref" href="#id12">1.3.2&nbsp;&nbsp;&nbsp;GraphTerm fails to load properly on Windows?</a><a class="headerlink" href="#graphterm-fails-to-load-properly-on-windows" title="Permalink to this headline">¶</a></h3>
+<p>Ensure that you are using a browser that supports Websockets, like the
+latest versions of Chrome/Firefox/Safari or IE10.
+Some Anti-virus programs block Websockets on the browser. You may need to
+turn them off, or allow access to the domain where the GraphTerm
+server is running.</p>
+</div>
+</div>
+<div class="section" id="using-graphterm-on-the-ipad">
+<h2><a class="toc-backref" href="#id13">1.4&nbsp;&nbsp;&nbsp;Using GraphTerm on the iPad</a><a class="headerlink" href="#using-graphterm-on-the-ipad" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="how-do-i-access-the-virtual-keyboard-on-the-ipad">
+<h3><a class="toc-backref" href="#id14">1.4.1&nbsp;&nbsp;&nbsp;How do I access the virtual keyboard on the iPad?</a><a class="headerlink" href="#how-do-i-access-the-virtual-keyboard-on-the-ipad" title="Permalink to this headline">¶</a></h3>
+<p><em>Tap the cursor</em> access the virtual keyboard on the iPad. If the
+command line ends up behind the keyboard, retract the keyboard
+and tap the cursor again.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="sidebar">
+          <h3>Table Of Contents</h3>
+          <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Using GraphTerm</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release-notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="UsingGraphicalFeatures.html">Using the graphical features of GraphTerm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="UseAsRemoteTerminal.html">Use as a remote terminal</a></li>
+</ul>
+
+          <h3 style="margin-top: 1.5em;">Search</h3>
+          <form class="search" action="search.html" method="get">
+            <input type="text" name="q" />
+            <input type="submit" value="Go" />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+          </form>
+          <p class="searchtip" style="font-size: 90%">
+            Enter search terms or a module, class or function name.
+          </p>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <a href="usage.html" title="Using GraphTerm"
+             >previous</a> |
+          <a href="implementation.html" title="1   GraphTerm Implementation"
+             >next</a> |
+          <a href="genindex.html" title="General Index"
+             >index</a>
+            <br/>
+            <a href="_sources/troubleshooting.txt"
+               rel="nofollow">Show Source</a>
+        </div>
+
+        <div class="right">
+          
+    <div class="footer">
+        &copy; Copyright 2012, R. Saravanan.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+  </body>
+</html>
