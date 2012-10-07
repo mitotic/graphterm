@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to graphterm documentation! &mdash; graphterm 0.33.0+ documentation</title>
+    <title>GraphTerm: A Graphical Terminal Interface &mdash; graphterm 0.33.0+ documentation</title>
     
     <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,7 +26,14 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="graphterm 0.33.0+ documentation" href="#" />
-    <link rel="next" title="GraphTerm: A Graphical Terminal Interface" href="README.html" /> 
+    <link rel="next" title="GraphTerm: A Graphical Terminal Interface" href="README.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35342722-1']);
+  _gaq.push(['_trackPageview']);
+</script>
+
   </head>
   <body>
     <div class="header-wrapper">
@@ -50,9 +57,77 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="welcome-to-graphterm-documentation">
-<h1>Welcome to graphterm documentation!<a class="headerlink" href="#welcome-to-graphterm-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Welcome to GraphTerm</p>
+  <div class="section" id="graphterm-a-graphical-terminal-interface">
+<h1>GraphTerm: A Graphical Terminal Interface<a class="headerlink" href="#graphterm-a-graphical-terminal-interface" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Updates:</dt>
+<dd>1. You can join the Google Groups
+<a class="reference external" href="https://groups.google.com/group/graphterm">mailing list</a>
+or follow <a class="reference external" href="https://twitter.com/intent/user?screen_name=graphterm">&#64;graphterm</a>
+on Twitter for updates.
+2. The latest version is <a class="reference external" href="http://pypi.python.org/pypi/graphterm">0.33.0</a>,
+released September 30, 2012. See the
+<a class="reference external" href="http://code.mindmeldr.com/graphterm/release-notes">Release Notes</a></dd>
+</dl>
+<iframe allowtransparency="true" frameborder="0" scrolling="no"
+src="https://platform.twitter.com/widgets/tweet_button.html?url=http://code.mindmeldr.com/graphterm&via=graphterm&text=A%20Graphical%20Terminal%20Interface&count=none"
+style="width:130px; height:20px;"></iframe><iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fcode.mindmeldr.com%2Fgraphterm&amp;send=false&amp;layout=standard&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:35px;" allowTransparency="true"></iframe><p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is a browser-based graphical terminal interface, that
+aims to seamlessly blend the command line and graphical user
+interfaces. The goal is to provide a fully backwards-compatible terminal
+emulator for <tt class="docutils literal"><span class="pre">xterm</span></tt>.  You should be able to use it just like a regular terminal
+interface, accessing additional graphical features only as needed. GraphTerm builds
+upon two earlier projects,
+<a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a>
+which implemented a terminal using the Mozilla framework and
+<a class="reference external" href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm</a>
+which is an AJAX/Python terminal implementation. (Another recent
+project along these lines is  <a class="reference external" href="http://acko.net/blog/on-termkit/">TermKit</a>.)</p>
+<p>A GraphTerm terminal window is just a web page served from the
+GraphTerm web server program. Multiple users can connect
+simultaneously to the web server to share terminal sessions.
+Multiple hosts can also connect to the server (on a different port),
+allowing a single user to access all of them via the browser.
+The GraphTerm server acts as a <em>router</em>, sending input from browser
+windows for different users to the appropriate terminal (pseudo-tty)
+sessions running on different hosts, and transmitting the
+terminal output back to the browser windows.</p>
+<p>This flexible, networked implementation allows for several possible
+applications for GraphTerm, such as:</p>
+<blockquote>
+<div><ul class="simple">
+<li>an <strong>enhanced terminal</strong> that combines the command line with basic
+GUI operations like navigating folders, file drag-and-drop,
+displaying images etc.</li>
+<li>a web-based <strong>remote desktop</strong> that supports a simple GUI
+without the need for installing VNC or X-windows on the remote host</li>
+<li>a <strong>detachable terminal multiplexer</strong>, sort of like GNU <tt class="docutils literal"><span class="pre">screen</span></tt> or
+<tt class="docutils literal"><span class="pre">tmux</span></tt></li>
+<li>an <strong>inline data visualization tool</strong> to view output from plotting
+libraries like <tt class="docutils literal"><span class="pre">matplotlib</span></tt></li>
+<li>a <strong>collaborative terminal</strong> that can be remotely accessed
+by multiple users simultaneously, to run programs, edit files etc.</li>
+<li>a <strong>simple presentation tool</strong> for webcasting images as slideshows
+(and receiving live feedback)</li>
+<li>a <strong>management console</strong> for a cluster of real or virtual hosts,
+with wildcard access to hosts/sessions (e.g., to manage a virtual
+computer lab using cloud instances),</li>
+</ul>
+</div></blockquote>
+<p>The interface is designed to be touch-friendly for use with tablets,
+relying upon command re-use to minimize the need for a keyboard.
+It preserves history for all commands, whether entered by typing,
+clicking, or tapping. It is also themable using CSS.</p>
+<p>You can find more information on installing and using GraphTerm in the
+<a class="reference external" href="http://code.mindmeldr.com/graphterm/README.html">README</a> file.
+Images of GraphTerm in action can be found in
+<a class="reference external" href="http://code.mindmeldr.com/graphterm/screenshots.html">screenshots</a>
+and in this
+<a class="reference external" href="http://youtu.be/JBMexdwXN8w">YouTube Video</a>.
+For updates, join the Google Groups
+<a class="reference external" href="https://groups.google.com/group/graphterm">mailing list</a>  or</p>
+<iframe allowtransparency="true" frameborder="0" scrolling="no"
+src="https://platform.twitter.com/widgets/follow_button.html?screen_name=graphterm&count=none"
+style="width:130px; height:20px;"></iframe><p><p>For more information, see the following:</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="README.html">README</a></li>
@@ -61,9 +136,17 @@
 <li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release-notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="UsingGraphicalFeatures.html">Using the graphical features of GraphTerm</a></li>
-<li class="toctree-l1"><a class="reference internal" href="UseAsRemoteTerminal.html">Use as a remote terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and talks</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://youtu.be/TvO1SnEpwfE">Demo video</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://pypi.python.org/pypi/graphterm">PyPI Package Index (for downloading and installing)</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/mitotic/graphterm">Source code at Github</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced topics</a></li>
 </ul>
+</div>
+<p>Here is a sample screenshot illustrating graphical <tt class="docutils literal"><span class="pre">gls</span></tt> and <tt class="docutils literal"><span class="pre">cat</span></tt> command
+output using a 3D perspective theme (captured on OS X Lion, using Google Chrome).</p>
+<div class="figure align-center" style="width: 95%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png" style="width: 95%;" />
 </div>
 </div>
 
@@ -81,8 +164,11 @@
 <li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release-notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="UsingGraphicalFeatures.html">Using the graphical features of GraphTerm</a></li>
-<li class="toctree-l1"><a class="reference internal" href="UseAsRemoteTerminal.html">Use as a remote terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and talks</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://youtu.be/TvO1SnEpwfE">Demo video</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://pypi.python.org/pypi/graphterm">PyPI Package Index (for downloading and installing)</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/mitotic/graphterm">Source code at Github</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced topics</a></li>
 </ul>
 
           <h3 style="margin-top: 1.5em;">Search</h3>
@@ -99,6 +185,7 @@
         <div class="clearer"></div>
       </div>
     </div>
+
 
     <div class="footer-wrapper">
       <div class="footer">
@@ -122,6 +209,20 @@
         <div class="clearer"></div>
       </div>
     </div>
+
+<div class="footer">This page uses <a href="http://analytics.google.com/">
+Google Analytics</a> to collect statistics. You can disable it by blocking
+the JavaScript coming from www.google-analytics.com.
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ?
+              'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+  })();
+</script>
+</div>
 
   </body>
 </html>

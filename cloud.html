@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1   GraphTerm Implementation &mdash; graphterm 0.33.0+ documentation</title>
+    <title>GraphTerm in the cloud &mdash; graphterm 0.33.0+ documentation</title>
     
     <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,8 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="graphterm 0.33.0+ documentation" href="index.html" />
-    <link rel="next" title="Screenshots" href="screenshots.html" />
-    <link rel="prev" title="1   GraphTerm Troubleshooting" href="troubleshooting.html" />
+    <link rel="up" title="Advanced topics" href="advanced.html" />
+    <link rel="next" title="Using GraphTerm with OTrace" href="tracing.html" />
+    <link rel="prev" title="API for writing GraphTerm-aware programs" href="API.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -42,9 +43,9 @@
         <div class="headertitle"><a
           href="index.html">graphterm 0.33.0+ documentation</a></div>
         <div class="rel">
-          <a href="troubleshooting.html" title="1   GraphTerm Troubleshooting"
+          <a href="API.html" title="API for writing GraphTerm-aware programs"
              accesskey="P">previous</a> |
-          <a href="screenshots.html" title="Screenshots"
+          <a href="tracing.html" title="Using GraphTerm with OTrace"
              accesskey="N">next</a> |
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a>
@@ -60,43 +61,50 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="graphterm-implementation">
-<h1><a class="toc-backref" href="#id1">1&nbsp;&nbsp;&nbsp;GraphTerm Implementation</a><a class="headerlink" href="#graphterm-implementation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="graphterm-in-the-cloud">
+<h1><a class="toc-backref" href="#id1">GraphTerm in the cloud</a><a class="headerlink" href="#graphterm-in-the-cloud" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
-<ul class="auto-toc simple">
-<li><a class="reference internal" href="#graphterm-implementation" id="id1">1&nbsp;&nbsp;&nbsp;GraphTerm Implementation</a></li>
+<ul class="simple">
+<li><a class="reference internal" href="#graphterm-in-the-cloud" id="id1">GraphTerm in the cloud</a></li>
 </ul>
 </div>
-<div class="figure align-center" style="width: 70%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-architecture.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-architecture.png" style="width: 90%;" />
+<p>The GraphTerm distribution includes the scripts <tt class="docutils literal"><span class="pre">ec2launch,</span> <span class="pre">ec2list,</span> <span class="pre">ec2scp,</span></tt>
+and <tt class="docutils literal"><span class="pre">ec2ssh</span></tt> to launch and monitor Amazon Web Services EC2
+instances. These are the scripts used to test new
+versions of GraphTerm by running them in the &#8220;cloud&#8221;.
+You will need to have an Amazon AWS
+account to use these scripts, and also need to install
+the <tt class="docutils literal"><span class="pre">boto</span></tt> python module.</p>
+<p>To create an instance, use the <tt class="docutils literal"><span class="pre">ec2launch</span></tt> command.
+You will be presented with a &#8220;web form&#8221; to enter details of the instance
+to be launched. Once you fill in the form and submit it, a command
+line will be automatically created, with command options, to launch
+the instance. To launch another instance with slightly different
+properties, you can simply recall the command line and edit it.
+Ensure that the security group associated with the cloud instance
+allows access to inbound TCP port 22 (for SSH access), 8900
+(for GraphTerm users to connect), and
+port 8899 (for GraphTerm hosts to connect).</p>
+<p>To <em>temporarily</em> run a publicly accessible GraphTerm server for
+demonstration or teaching purposes, log in to the instance using
+the command <tt class="docutils literal"><span class="pre">ec2ssh</span> <span class="pre">ubuntu&#64;instance_address</span></tt>, wait a few
+minutes for <tt class="docutils literal"><span class="pre">tornado</span></tt> and <tt class="docutils literal"><span class="pre">graphterm</span></tt> packages to finish
+installing, and then issue the following command:</p>
+<div class="highlight-python"><pre>gtermserver --daemon=start --auth_code=none --host=&lt;primary_domain_or_address&gt;</pre>
 </div>
-<p>The GraphTerm server written in pure python, using the
-<a class="reference external" href="http://tornadoweb.org">Tornado  web  framework</a>,
-with websocket support. The GraphTerm client uses standard
-HTML5+Javascript+CSS (with jQuery).</p>
-<p>The GraphTerm server may be run on your desktop or on a remote
-computer. Users create and access terminal sessions by the connecting to
-the Graphterm server on port 8900, either directly or through SSH
-port forwarding.
-By default, the localhost on the computer where the GraphTerm server
-is running is available for opening terminal sessions. Other computers
-can also connect to the GraphTerm server, on a different port (8899),
-to make them accessible as hosts for connection from the browser.</p>
-<p>A pseudo-tty (<tt class="docutils literal"><span class="pre">pty</span></tt>) is opened on the host for each terminal
-session. By setting the <tt class="docutils literal"><span class="pre">PROMP_COMMAND</span></tt> environment variable, GraphTerm
-determines when the <tt class="docutils literal"><span class="pre">stdout</span></tt> of the previous command ends, and the
-<tt class="docutils literal"><span class="pre">prompt</span></tt> for the new command begins.</p>
-<p>The connection between the browser and the GraphTerm server is
-implemented using websockets (bi-directional HTTP). The GraphTerm
-server acts as a router sending input from controlling browser terminal sessions
-to the appropriate <tt class="docutils literal"><span class="pre">pty</span></tt> on the host computer, and transmitting
-output from each <tt class="docutils literal"><span class="pre">pty</span></tt> to all connected browser terminal sessions.</p>
-<p>GraphTerm extends the <tt class="docutils literal"><span class="pre">xterm</span></tt> terminal API by adding a
-new control sequence for programs to transmit a CGI-like HTTP response
-through standard output (via a websocket) to be displayed in the
-browser window. GraphTerm-aware programs can interact with the
-user using HTML forms etc.</p>
+<p><em>Note: This is totally insecure and should not be used for handling any sensitive information.</em></p>
+<p>Secondary cloud instances should connect to the GraphTerm server on
+the primary instance using the command:</p>
+<div class="highlight-python"><pre>gtermhost --daemon=start --server_addr=&lt;primary_domain_or_address&gt; &lt;secondary_host_name&gt;</pre>
+</div>
+<p>For increased security in a publicly-accessible server,
+you can use a cryptic authentication code,
+and also use <em>https</em> instead of <em>http</em>, with SSL certificates.
+Since GraphTerm is currently in <em>alpha</em> status,
+security cannot be guaranteed even with these options enabled.
+(To avoid these problems, use SSH port forwarding to access GraphTerm
+on <tt class="docutils literal"><span class="pre">localhost</span></tt> whenever possble.)</p>
 </div>
 
 
@@ -106,15 +114,16 @@ user using HTML forms etc.</p>
         </div>
         <div class="sidebar">
           <h3>Table Of Contents</h3>
-          <ul class="current">
+          <ul>
 <li class="toctree-l1"><a class="reference internal" href="README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Using GraphTerm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release-notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="UsingGraphicalFeatures.html">Using the graphical features of GraphTerm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="UseAsRemoteTerminal.html">Use as a remote terminal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced topics</a></li>
 </ul>
 
           <h3 style="margin-top: 1.5em;">Search</h3>
@@ -136,14 +145,14 @@ user using HTML forms etc.</p>
     <div class="footer-wrapper">
       <div class="footer">
         <div class="left">
-          <a href="troubleshooting.html" title="1   GraphTerm Troubleshooting"
+          <a href="API.html" title="API for writing GraphTerm-aware programs"
              >previous</a> |
-          <a href="screenshots.html" title="Screenshots"
+          <a href="tracing.html" title="Using GraphTerm with OTrace"
              >next</a> |
           <a href="genindex.html" title="General Index"
              >index</a>
             <br/>
-            <a href="_sources/implementation.txt"
+            <a href="_sources/cloud.txt"
                rel="nofollow">Show Source</a>
         </div>
 
