@@ -5,6 +5,7 @@ README.html
 RELEASE_NOTES.html
 SCREENSHOTS.html
 docs/*.html
+graphterm/www/docs/*
 build/*
 dist/*
 graphterm.egg-info/*

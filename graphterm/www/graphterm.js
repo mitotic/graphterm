@@ -26,7 +26,7 @@ var MAX_COMMAND_BUFFER = 100;
 
 var REPEAT_MILLISEC = 500;
 
-var RELEASE_NOTES_URL = "http://info.mindmeldr.com/code/graphterm/graphterm-release-notes";
+var RELEASE_NOTES_URL = "http://code.mindmeldr.com/graphterm/release-notes.html";
 var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
 var PYPI_JSON_URL = PYPI_URL + "/json?callback=?";
 
@@ -2111,8 +2111,8 @@ function GTermAbout() {
 
 function GTermHelp() {
     GTPopAlert('<b>GraphTerm Help</b>'+
-'<p>\n&nbsp;&nbsp;<a href="/static/help.html" target="_blank">General help information</a> (from README file)'+
-'<p>\n&nbsp;&nbsp;<a href="http://info.mindmeldr.com/code/graphterm/graphterm-troubleshooting" target="_blank">Troubleshooting</a>'+
+'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/usage.html" target="_blank">General usage information</a>'+
+'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/troubleshooting.html" target="_blank">Troubleshooting</a>'+
 '<p>\n&nbsp;&nbsp;<a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> (<b>NEW</b>)',
                true);
 }

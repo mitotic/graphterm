@@ -3,7 +3,7 @@
 # otrace: An object-oriented debugger for nonlinear tracing
 #
 # otrace was developed as part of the Mindmeldr project.
-# Documentation can be found at http://info.mindmeldr.com/code/otrace
+# Documentation can be found at http://code.mindmeldr.com/otrace
 #
 #  BSD License
 #
@@ -306,7 +306,7 @@ ISUBDIR = 1
 FILE_EXTENSIONS = {"css": "css", "htm": "html", "html": "html", "js": "javascript", "py": "python",
                    "xml": "xml"}
 
-DOC_URL = "http://info.mindmeldr.com/code/otrace"
+DOC_URL = "http://code.mindmeldr.com/otrace"
 DEFAULT_BANNER = """  ***otrace object shell (v%s)*** (type 'help' for info)""" % OTRACE_VERSION
 
 Help_params = OrderedDict()
