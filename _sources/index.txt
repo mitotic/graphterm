@@ -33,7 +33,23 @@ which implemented a terminal using the Mozilla framework and
 `AjaxTerm <https://github.com/antonylesuisse/qweb/tree/master/ajaxterm>`_
 which is an AJAX/Python terminal implementation. (Another recent
 project along these lines is  `TermKit <http://acko.net/blog/on-termkit/>`_.)
- 
+For more information, see the following:
+
+.. toctree::
+   :maxdepth: 1
+
+   README <README>
+   Using GraphTerm <usage>
+   Troubleshooting <troubleshooting>
+   Implementation <implementation>
+   Screenshots <screenshots>
+   Release Notes <release-notes>
+   Tutorials and talks <tutorials>
+   Demo video <http://youtu.be/TvO1SnEpwfE>
+   PyPI Package Index (for downloading and installing) <http://pypi.python.org/pypi/graphterm>
+   Source code at Github <https://github.com/mitotic/graphterm>
+   advanced
+
 A GraphTerm terminal window is just a web page served from the
 GraphTerm web server program. Multiple users can connect
 simultaneously to the web server to share terminal sessions.
@@ -89,23 +105,6 @@ For updates, join the Google Groups
   <iframe allowtransparency="true" frameborder="0" scrolling="no"
   src="https://platform.twitter.com/widgets/follow_button.html?screen_name=graphterm&count=none"
   style="width:130px; height:20px;"></iframe><p>
-
-For more information, see the following:
-
-.. toctree::
-   :maxdepth: 1
-
-   README <README>
-   Using GraphTerm <usage>
-   Troubleshooting <troubleshooting>
-   Implementation <implementation>
-   Screenshots <screenshots>
-   Release Notes <release-notes>
-   Tutorials and talks <tutorials>
-   Demo video <http://youtu.be/TvO1SnEpwfE>
-   PyPI Package Index (for downloading and installing) <http://pypi.python.org/pypi/graphterm>
-   Source code at Github <https://github.com/mitotic/graphterm>
-   advanced
 
 Here is a sample screenshot illustrating graphical ``gls`` and ``cat`` command
 output using a 3D perspective theme (captured on OS X Lion, using Google Chrome).
