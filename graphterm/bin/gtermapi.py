@@ -97,12 +97,13 @@ def write_blank(display="fullpage"):
     """Write blank pagelet to stdout"""
     write_html("", display=display)
 
-def display_blockimg(url, overwrite=False):
+def display_blockimg(url, overwrite=False, alt=""):
     """Display block image in a sequence.
     New image display causes previous images to be hidden.
     Display of hidden images can be toggled by clicking.
     """
-    IMGFORMAT = '<span class="gterm-blockseqlink"><em>&lt;image&gt;</em></span><img class="gterm-blockimg gterm-blockseqlink" src="%s"></img><br>'
+    alt_attr = ' alt="'+alt+'"' if alt else ''
+    IMGFORMAT = '<span class="gterm-blockseqlink"><em>&lt;'+(alt or 'image')+'&gt;</em></span><img class="gterm-blockimg gterm-blockseqlink" src="%s"'+alt_attr+'><br>'
     add_headers={"classes": "gterm-blockseq"}
     if overwrite:
         add_headers["block"] = "overwrite"

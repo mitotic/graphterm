@@ -11,7 +11,7 @@ def gplot_setup():
     import matplotlib
     matplotlib.use("Agg")
 
-def gplot_savefig(format="png", overwrite=False):
+def gplot_savefig(format="png", overwrite=False, title=""):
     """Save figure as a blob and display as block image
     """
     import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ def gplot_savefig(format="png", overwrite=False):
     outbuf = gtermapi.BlobStringIO(content_type)
     plt.savefig(outbuf, format=format)
     blob_url = outbuf.close()
-    gtermapi.display_blockimg(blob_url, overwrite=overwrite)
+    gtermapi.display_blockimg(blob_url, overwrite=overwrite, alt=title)
     
 def demo():
     """gterm-aware matplotlib demo"""
@@ -31,12 +31,12 @@ def demo():
     fmt = "png" # or "pdf"
 
     plt.plot([1,2,3,2,3,0])
-    gplot_savefig(format=fmt)
+    gplot_savefig(format=fmt, title="Simple plot")
 
     time.sleep(2)
 
     plt.plot([1,2,3,2,3,1])
-    gplot_savefig(format=fmt)
+    gplot_savefig(format=fmt, title="Simple animation")
 
     n = 20
     dx = 5.0/n
