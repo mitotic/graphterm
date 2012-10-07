@@ -6,7 +6,14 @@
 GraphTerm: A Graphical Terminal Interface
 ===================================================
 
-Updates:
+.. raw:: html
+
+  <iframe allowtransparency="true" frameborder="0" scrolling="no"
+  src="https://platform.twitter.com/widgets/tweet_button.html?url=http://code.mindmeldr.com/graphterm&via=graphterm&text=A%20Graphical%20Terminal%20Interface&count=none"
+  style="width:80px; height:27px;"></iframe>
+  <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fcode.mindmeldr.com%2Fgraphterm&amp;send=false&amp;layout=standard&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:53px; height:30px;" allowTransparency="true"></iframe>
+
+*Updates:*
    1. You can join the Google Groups
    `mailing list <https://groups.google.com/group/graphterm>`_
    or follow `@graphterm <https://twitter.com/intent/user?screen_name=graphterm>`_
@@ -14,13 +21,6 @@ Updates:
    2. The latest version is `0.33.0 <http://pypi.python.org/pypi/graphterm>`_,
    released September 30, 2012. See the
    `Release Notes <http://code.mindmeldr.com/graphterm/release-notes>`_
-
-.. raw:: html
-
-  <iframe allowtransparency="true" frameborder="0" scrolling="no"
-  src="https://platform.twitter.com/widgets/tweet_button.html?url=http://code.mindmeldr.com/graphterm&via=graphterm&text=A%20Graphical%20Terminal%20Interface&count=none"
-  style="width:80px; height:27px;"></iframe>
-  <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fcode.mindmeldr.com%2Fgraphterm&amp;send=false&amp;layout=standard&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:53px; height:30px;" allowTransparency="true"></iframe>
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
