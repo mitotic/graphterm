@@ -109,9 +109,9 @@ Documentation and Support
 =========================================================
 
 Usage info and other documentation can be found on the project home page,
-`info.mindmeldr.com/code/graphterm <http://info.mindmeldr.com/code/graphterm>`_,
+`code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_,
 which also has some
-`tutorials and examples <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials>`_
+`tutorials and ralks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
 for using GraphTerm.
 
 You can also use the following command::

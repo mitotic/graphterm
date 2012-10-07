@@ -19,7 +19,7 @@ Updates:
 
   <iframe allowtransparency="true" frameborder="0" scrolling="no"
   src="https://platform.twitter.com/widgets/tweet_button.html?url=http://code.mindmeldr.com/graphterm&via=graphterm&text=A%20Graphical%20Terminal%20Interface&count=none"
-  style="width:80px; height:25px;"></iframe>
+  style="width:80px; height:27px;"></iframe>
   <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fcode.mindmeldr.com%2Fgraphterm&amp;send=false&amp;layout=standard&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:53px; height:30px;" allowTransparency="true"></iframe>
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that

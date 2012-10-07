@@ -45,7 +45,7 @@ basic features of the standard ``ls`` and ``vi`` commands.
 To display images as thumbnails, use the ``gls -i ...`` command.
 Use the ``-h`` option to display help information for these commands,
 and read the
-`UsingGraphicalFeatures tutorial <http://info.mindmeldr.com/code/graphterm/graphterm-tutorials/graphterm-tutorial-graphical>`_ for usage examples.
+`UsingGraphicalFeatures tutorial <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_ for usage examples.
 
 You can use the command ``which gls`` to determine the directory
 containing graphterm-aware commands, to browse
@@ -193,7 +193,7 @@ be run by a normal user, not a privileged user. So different users can
 connect to the GraphTerm server pretending to be different "hosts"
 on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a "host", allowing it to
-be dynamically introspected and debugged using `otrace <http://info.mindmeldr.com/code/otrace>`_.)
+be dynamically introspected and debugged using `otrace <http://code.mindmeldr.com/otrace>`_.)
 
 
 Sessions and "screensharing"
