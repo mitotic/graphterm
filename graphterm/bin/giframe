@@ -21,6 +21,10 @@ parser = OptionParser(usage=usage)
 parser.add_option("", "--opacity", dest="opacity", default=1.0,
                   help="Feed opacity (default: 1.0)")
 
+parser.add_option("-f", "--fullscreen",
+                  action="store_true", dest="fullscreen", default=False,
+                  help="Fullscreen display")
+
 parser.add_option("-n", "--nofooter", action="store_true", dest="nofooter", default=False,
                   help="Suppress footer")
 
@@ -50,16 +54,20 @@ else:
     iframe_url = gtermapi.create_blob(content, content_type="text/html")
 
 headers = {"opacity": options.opacity}
+if not options.fullscreen:
+    headers["autosize"] = True
 
-frameId = "giframe%09d" % random.randrange(0, 10**9) 
-IFRAMEFORMAT = '<iframe id="'+frameId+'" class="gterm-iframe" src="%s" width="100%%" height="'+str(100 if options.nofooter else 95)+'%%"></iframe>' 
+frameId = "giframe%09d" % random.randrange(0, 10**9)
+frameHeight = 'height="%d%%%%"' % (100 if options.nofooter else 95,) if options.fullscreen else ''
+
+IFRAMEFORMAT = '<iframe id="'+frameId+'" class="gterm-iframe" src="%s" width="100%%" '+frameHeight+'"></iframe>' 
 if not options.nofooter:
     IFRAMEFORMAT = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span>' + IFRAMEFORMAT
 
-gtermapi.write_html(IFRAMEFORMAT % iframe_url, display="fullscreen", add_headers=headers)
+gtermapi.write_html(IFRAMEFORMAT % iframe_url, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
 
 try:
-    while True:
+    while options.fullscreen:
         time.sleep(1)
 except KeyboardInterrupt:
     gtermapi.write_blank()

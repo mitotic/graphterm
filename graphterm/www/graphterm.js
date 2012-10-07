@@ -596,7 +596,7 @@ GTWebSocket.prototype.onopen = function(evt) {
 function GTAutosizeIFrame(elem) {
     // After a delay, adjust size of all iframe child elements to match actual size
     setTimeout( function() { $(elem).find("iframe").each( function() {
-	$(this).height($(this).contents().find('body').height() + 20);} ) }, 500 );
+	$(this).height($(this).contents().find('body').height() + 25);} ) }, 500 );
 }
 
 function GTRepeatCommand() {

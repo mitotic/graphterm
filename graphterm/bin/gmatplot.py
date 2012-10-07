@@ -7,17 +7,6 @@ gmatplot: Convenience functions of gterm-aware matplotlib usage
 import time
 import gtermapi
 
-def display_blockimg(url, overwrite=False):
-    """Display block image in a sequence.
-    New image display causes previous images to be hidden.
-    Display of hidden images can be toggled by clicking.
-    """
-    IMGFORMAT = '<span class="gterm-blockseqlink"><em>&lt;image&gt;</em></span><img class="gterm-blockimg gterm-blockseqlink" src="%s"></img><br>'
-    add_headers={"classes": "gterm-blockseq"}
-    if overwrite:
-        add_headers["block"] = "overwrite"
-    gtermapi.write_html(IMGFORMAT % url, add_headers=add_headers)
-
 def gplot_setup():
     import matplotlib
     matplotlib.use("Agg")
@@ -31,7 +20,7 @@ def gplot_savefig(format="png", overwrite=False):
     outbuf = gtermapi.BlobStringIO(content_type)
     plt.savefig(outbuf, format=format)
     blob_url = outbuf.close()
-    display_blockimg(blob_url, overwrite=overwrite)
+    gtermapi.display_blockimg(blob_url, overwrite=overwrite)
     
 def demo():
     """gterm-aware matplotlib demo"""
