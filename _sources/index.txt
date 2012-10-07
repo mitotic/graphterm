@@ -25,6 +25,15 @@ Updates:
   <td>
   <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fcode.mindmeldr.com%2Fgraphterm&amp;send=false&amp;layout=standard&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:35px;" allowTransparency="true"></iframe>
   </table>
+  <div class="g-plusone" data-annotation="inline" data-width="300"></div>
+  <!-- Place this tag after the last +1 button tag. -->
+  <script type="text/javascript">
+  (function() {
+  var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+  po.src = 'https://apis.google.com/js/plusone.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+  </script>
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
