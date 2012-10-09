@@ -13,10 +13,18 @@
 
 import sys, os
 
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+custom_theme = "sphinx-bootstrap"
+custom_theme = ""
+
+current_dir = os.path.abspath(os.path.dirname(__file__))
+parent_dir = os.path.dirname(current_dir)
 pkg_name = os.path.basename(parent_dir)
 pkg_dir = os.path.join(parent_dir, pkg_name)
-sys.path.insert(0,pkg_dir)
+sys.path.insert(0, pkg_dir)
+
+if custom_theme:
+    theme_dir = os.path.join(current_dir, '_themes', custom_theme)
+    sys.path.insert(0, theme_dir)
 
 try:
     import about
@@ -40,6 +48,9 @@ if about:
     version = about.version
     release = about.version
 
+def setup(app):
+    app.add_config_value('custom_theme', '', True)
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -52,10 +63,10 @@ if about:
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = []
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.todo', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = [] if custom_theme else ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -78,7 +89,7 @@ master_doc = 'index'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -105,22 +116,32 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'agogo'
+html_theme = custom_theme or 'agogo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #html_theme_options = {}
 
+if html_theme == "sphinx-bootstrap":
+    html_theme_options = {
+        'analytics_code': 'UA-35342722-1',
+        'github_user': 'mitotic',
+        'github_repo': 'graphterm',
+        'twitter_username': 'graphterm',
+        'home_url': 'http://code.mindmeldr.com/graphterm',
+        # 'disqus_shortname': 'mindcoder',
+    }
+
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+html_theme_path = ['_themes']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
+html_short_title = 'graphterm'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -161,7 +182,7 @@ html_static_path = ['_static']
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 #html_show_sphinx = True

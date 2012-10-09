@@ -17,10 +17,12 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+.PHONY: help clean cleanpages pages html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  pages      to export standalone HTML files to project pages repository"
+	@echo "  git_pages  to export pages and sync local project pages with Github"
 	@echo "  html       to make standalone HTML files"
 	@echo "  dirhtml    to make HTML files named index.html in directories"
 	@echo "  singlehtml to make a single large HTML file"
@@ -51,6 +53,11 @@ pages:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(PAGESDIR)
 	@echo
 	@echo "Build finished. The HTML pages are in $(PAGESDIR)."
+
+git_pages: pages
+	#cd $(PAGESDIR) && git add . && git commit -a -m "Publishing $(PKGNAME) at `date`" && git push origin gh-pages
+	@echo
+	@echo "Published package $(PKGNAME) at `date`"
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
