@@ -55,7 +55,7 @@ pages:
 	@echo "Build finished. The HTML pages are in $(PAGESDIR)."
 
 git_pages: pages
-	#cd $(PAGESDIR) && git add . && git commit -a -m "Publishing $(PKGNAME) at `date`" && git push origin gh-pages
+	cd $(PAGESDIR) && git add -A && git commit -a -m "Publishing $(PKGNAME) at `date`" && git push origin gh-pages
 	@echo
 	@echo "Published package $(PKGNAME) at `date`"
 
