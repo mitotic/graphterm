@@ -28,9 +28,10 @@ except ImportError:
     except ImportError:
         import simplejson as json
 
+from tornado import escape
 from tornado import ioloop
 from tornado import iostream
-from tornado import escape
+from tornado import web
 
 SIGN_SEP = "|"
 SIGN_HEXDIGITS = 24
@@ -760,6 +761,60 @@ class RPCLink(object):
         retval = "Error: Invalid remote method %s" % method
         logging.warning("RPCLink.invoke_method: %s: %s", self.connection_id, retval)
         return retval
+
+class AsyncTimeoutRequestHandler(web.RequestHandler):
+    """Serves asynchronous requests with timeout
+    """
+    REQUEST_TIMEOUT = 20
+    _async_counter = long(0)
+    _async_handlers = {}
+
+    @classmethod
+    def get_async_id(cls):
+        cls._async_counter += 1
+        return cls._async_counter
+
+    @classmethod
+    def get_async_handler(cls, async_id):
+        return cls._async_handlers.get(async_id)
+
+    @classmethod
+    def timeout_async_request(cls, async_id):
+        request_handler = cls.get_async_handler(async_id)
+        if not request_handler:
+            return
+        del cls._async_handlers[async_id]
+        request_handler.timeout_callback = None
+        request_handler.send_error(408)
+
+    def setup_timeout(self):
+        self.async_id = self.get_async_id()
+        self._async_handlers[self.async_id] = self
+        self.timeout_callback = ioloop.IOLoop.instance().add_timeout(time.time()+self.REQUEST_TIMEOUT,
+                                   functools.partial(self.__class__.timeout_async_request, self.async_id))
+
+    def cancel_timeout(self):
+        # Cancel timeout
+        if not self.timeout_callback:
+            return False
+        ioloop.IOLoop.instance().remove_timeout(self.timeout_callback)
+        self.timeout_callback = None
+        return True
+
+    @web.asynchronous
+    def get(self, *args, **kwargs):
+        """Sample implementation"""
+        self.setup_timeout()
+
+    @web.asynchronous
+    def post(self, *args, **kwargs):
+        """Sample implementation"""
+        self.setup_timeout()
+
+    def complete_request(self, *args, **kwargs):
+        """Sample implementation"""
+        if not self.cancel_timeout():
+            return
 
 class PolicyServer(PacketConnection):
     def __init__(self, stream, address, server_address, allow_domain="*", allow_ports="843"):
