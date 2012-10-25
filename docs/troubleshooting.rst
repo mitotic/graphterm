@@ -42,14 +42,19 @@ to restore some, but not all, of GraphTerm features.
 How do I paste text?
 ----------------------------------------------------------------------------------
 
-*Click on the cursor* before beginning the paste operation (on the command line,
-a box will appear at the cursor location). Then use the
-browser's paste menu command or a keyboard shortcut (like *Command/Control-V*) to
-paste the text. Alternatively, you can use the *Actions->Paste special* menu item.
-NOTE: Pasting text copied from a non-plain text source, such as a web page,
-may not always work properly. A workaround is to paste the text into a
-temporary location as plain text (such as in a plain text editor),
-and then copy/paste it from there to GraphTerm.
+There are two ways to paste text from the clipboard into GraphTerm.
+First, you can can use the keyboard shortcut *Control-T* to open a
+popup window, paste the text into the popup window using the
+browser's paste menu command or a keyboard shortcut,
+like *Command/Control-V*, and then type *Control-T* again to
+insert the text at the GraphTerm cursor location.
+(The popup paste window can also be accessed from the *Actions* menu.)
+Alternatively, you can *click on the cursor* before beginning the
+paste operation and then paste the text directly. This second
+technique may not always work well for text copied from non-plain
+text sources, such as a web page. A final workaround is to paste the
+text into a temporary location as plain text (such as in a plain text
+editor), and then copy/paste it from there to GraphTerm.
 
 Server
 ======================================================

@@ -1575,7 +1575,9 @@ function GTPopAlert(text, is_html) {
 }
 
 function GTPasteSpecialBegin(event) {
+    var keyEvent = gFirefoxBrowser ? "keypress" : "keydown";
     $("#gterm-pastearea-content").val("");
+    $("#gterm-pastearea-content").bind(keyEvent, pasteKeyHandler);
     popupShow("#gterm-pastearea", GTPasteSpecialEnd, null, "paste");
 }
 
@@ -1585,6 +1587,9 @@ function GTPasteSpecialEnd(buttonElem) {
     if (text && action == "paste_text")
 	gWebSocket.term_input(text);
     popupClose();
+    var keyEvent = gFirefoxBrowser ? "keypress" : "keydown";
+    $("#gterm-pastearea-content").unbind(keyEvent, pasteKeyHandler);
+    ScrollTop(null);
 }
 
 function gtermFeedbackStatus(status) {
@@ -1864,6 +1869,15 @@ function keydownHandler(evt) {
     return true;
 }
 
+function pasteKeyHandler(evt) {
+    //console.log("graphterm.pasteKeyHandler: code ", evt.keyCode, evt.which, evt);
+    if (evt.ctrlKey && (evt.which == 20 || evt.which == (20+64) || evt.which == (20+96))) {
+	GTPasteSpecialEnd($("#gterm-pastearea-pastetext"));
+	return false;
+    }
+    return true;
+}
+
 function keypressHandler(evt) {
     if (gDebugKeys)
 	console.log("graphterm.keypressHandler: code ", evt.keyCode, evt.which, evt);
@@ -2073,7 +2087,10 @@ function AjaxKeypress(evt) {
     }
 
     if (k.length) {
-	if (k.charCodeAt(k.length-1) == 13) {
+	if (evt.ctrlKey && k.charCodeAt(0) == 20) {
+	    // Control-T
+	    GTPasteSpecialBegin()
+	} else if (k.charCodeAt(k.length-1) == 13) {
 	    // Enter key
 	    if (gShowingFinder)
 		HideFinder();
