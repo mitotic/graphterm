@@ -390,6 +390,33 @@ input.gterm-input-arg[type=text] {
     margin-top: 1em;
 }
 
+/* Paste pop styles */
+.gterm-pastedirect {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9900;
+    width: 100px;
+    height: 1em;
+    padding: 5px;
+    background-color: rgba(255,255,255,0);
+    border: none;
+}
+
+.gterm-pastedirect-content {
+    width: 100px;
+    height: 15px;
+    outline: none;
+    color:            rgba(255,255,255,0);
+    background-color: rgba(255,255,255,0);
+    border-color:     rgba(255,255,255,0);
+}
+
+.gterm-pastedirectheader {
+    float: right;
+    color: rgba(180,180,180,0.3);
+}
+
 /* Popup styles */
 .gterm-popupmask {
     position: absolute;
@@ -421,7 +448,7 @@ input.gterm-input-arg[type=text] {
     -box-shadow: 0 0 10px rgba(0,0,0,.4);
 }
 
-span.gterm-iframeclose, span.gterm-popupclose {
+span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
     position: absolute;
     top: 0px;
     right: 5px;

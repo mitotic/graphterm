@@ -21,6 +21,10 @@ var gMobileDisplay = gSafariIPad;
 
 var gDefaultEditor = gMobileDisplay ? "ckeditor" : "ace";
 
+var gAltPasteImpl = !gFirefoxBrowser;
+
+var gPasteSpecialKeycode = 20;  // Control-T shortcut for Paste Special
+
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
 
@@ -1118,9 +1122,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    console.log("graphterm: Error - missing element with ID "+idstr);
 			}
 		    }
-		    if (update_rows.length) {
-			$(".cursorspan").rebind('paste', pasteHandler);
-			$(".cursorspan").rebind('click', pasteReadyHandler);
+		    if (update_rows.length && !gAltPasteImpl) {
+			$(".cursorspan").rebind("paste", pasteHandler);
+			$(".cursorspan").rebind("click", pasteReadyHandler);
 		    }
 
 		    if (update_scroll.length) {
@@ -1415,6 +1419,28 @@ function pasteHandler(evt) {
 	if (gWebSocket && pasteText)
 	    gWebSocket.term_input(pasteText);
     }, 100);
+}
+
+function GTAltPasteHandler() {
+    console.log("GTAltPasteHandler:");
+    if (gPopupActive)
+	return true;
+
+    setTimeout(GTAltPasteHandlerAux, 100);
+    $("#gterm-pastedirect-content").val("");
+    $(".gterm-pastedirect").show();
+    $("#gterm-pastedirect-content").focus();
+    return true;
+}
+
+function GTAltPasteHandlerAux() {
+    $(".gterm-pastedirect").hide();
+    var text = $("#gterm-pastedirect-content").val();
+    $("#gterm-pastedirect-content").val("");
+    console.log("GTAltPasteHandlerAux: ");
+    if (text)
+	gWebSocket.term_input(text);
+    //setTimeout(function() { ScrollTop(null); }, 100);
 }
 
 function GTExportEnvironment() {
@@ -1871,7 +1897,7 @@ function keydownHandler(evt) {
 
 function pasteKeyHandler(evt) {
     //console.log("graphterm.pasteKeyHandler: code ", evt.keyCode, evt.which, evt);
-    if (evt.ctrlKey && (evt.which == 20 || evt.which == (20+64) || evt.which == (20+96))) {
+    if (evt.ctrlKey && (evt.which == gPasteSpecialKeycode || evt.which == (gPasteSpecialKeycode+64) || evt.which == (gPasteSpecialKeycode+96))) {
 	GTPasteSpecialEnd($("#gterm-pastearea-pastetext"));
 	return false;
     }
@@ -2087,8 +2113,8 @@ function AjaxKeypress(evt) {
     }
 
     if (k.length) {
-	if (evt.ctrlKey && k.charCodeAt(0) == 20) {
-	    // Control-T
+	if (evt.ctrlKey && k.charCodeAt(0) == gPasteSpecialKeycode) {
+	    // Paste Special shortcut
 	    GTPasteSpecialBegin()
 	} else if (k.charCodeAt(k.length-1) == 13) {
 	    // Enter key
@@ -2173,6 +2199,8 @@ function Webcast(start) {
 }
 
 // Popup management
+var gPopupActive = false;
+var gPopupCallback = null;
 var gPopupType = "";
 var gPopupParams = null;
 var gPopupConfirmClose = null;
@@ -2195,11 +2223,12 @@ function popupClose(confirm) {
   }
   $(".gterm-popup").hide();
   $(".gterm-popupmask").hide();
+  gPopupActive = false;
   gPopupCallback = null;
   gPopupConfirmClose = null;
   gPopupType = "";
   gPopupParams = null;
-    ScrollTop(null);
+  ScrollTop(null);
 }
 
 function popupButton(event) {
@@ -2211,6 +2240,7 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
   // Display element as modal popup window
   var maskSelector = "#gterm-popupmask";
 
+  gPopupActive = true;
   gPopupCallback = popupCallback || null;
   gPopupConfirmClose = popupConfirmClose || null;
   gPopupType = popupType || "";
@@ -2848,6 +2878,13 @@ function GTReady() {
     $(".gterm-popup").hide();
     $(".gterm-popupmask").hide();
     $(".gterm-popupmask, .gterm-popupclose").click(popupClose);
+
+    $(".gterm-pastedirect").hide();
+
+    if (gAltPasteImpl) {
+	$("body").rebind("paste",  GTAltPasteHandler);
+	$(".gterm-pastedirectclose").click(GTAltPasteHandlerAux);
+    }
 
     if (gMobileBrowser)
 	GTHideSplash();
