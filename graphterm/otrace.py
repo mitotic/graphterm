@@ -2740,7 +2740,7 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
                 elif not isinstance(trace_value, basestring):
                     return (out_str, "Cannot untrace %s" % trace_value)
 
-                fullname = OTrace.remove_trace(trace_name, parent=parent_obj)
+                fullname = OTrace.remove_trace(trace_value, parent=parent_obj)
                 out_str = "untraced %s" % fullname
 
         return (out_str, err_str)
@@ -4128,7 +4128,7 @@ class OTrace(object):
             if method == "*":
                 cls.trace_all = False
                 retvalue = "*"
-            elif method.startswith(PATH_SEP):
+            elif isinstance(method, basestring) and method.startswith(PATH_SEP):
                 # Untrace entity key
                 try:
                     del cls.trace_keys[method]
