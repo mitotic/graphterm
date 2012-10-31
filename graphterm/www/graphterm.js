@@ -21,7 +21,7 @@ var gMobileDisplay = gSafariIPad;
 
 var gDefaultEditor = gMobileDisplay ? "ckeditor" : "ace";
 
-var gAltPasteImpl = !gFirefoxBrowser;
+var gAltPasteImpl = !gFirefoxBrowser && !gMobileDisplay;  // Alternative paste implemention (using hidden textarea)
 
 var gPasteSpecialKeycode = 20;  // Control-T shortcut for Paste Special
 

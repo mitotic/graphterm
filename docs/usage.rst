@@ -119,16 +119,19 @@ Themes, selected using the top menu, are a work in progress, especially the 3-D 
 Copy/paste
 ================================================================
 
-There are two ways to paste text from the clipboard into GraphTerm.
-First, you can can use the keyboard shortcut *Control-T* to open a
+For certain browsers (e.g., desktop Chrome/Safari),
+the usual *Command-V* or *Control-V* key sequence should directly
+paste text from the clipboard. If that doesn't work, there are a couple
+of other ways to paste text.
+First, you can use the keyboard shortcut *Control-T* to open a
 popup window, paste the text into the popup window using the
 browser's paste menu command or a keyboard shortcut,
-like *Command/Control-V*, and then type *Control-T* again to
+such as *Command/Control-V*, and then type *Control-T* again to
 insert the text at the GraphTerm cursor location.
 (The popup paste window can also be accessed from the *Actions* menu.)
-Alternatively, you can *click on the cursor* before beginning the
-paste operation and then paste the text directly. This second
-technique may not always work well for text copied from non-plain
+Alternatively, for some browsers, and on the iPad, you can *click on the cursor*
+before beginning the paste operation and then paste the text directly.
+This second technique may not always work well for text copied from non-plain
 text sources, such as a web page.
 
 
