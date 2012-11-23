@@ -2346,8 +2346,8 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
             else:
                 return (cwd, err_str)
 
-        elif self.get_web_path() and len(self.get_web_path()) >= self.web_interface.root_depth:
-            # Non-otrace command; handle using web interface
+        elif self.get_web_path() and cmd != "ls":
+            # Non-directory command; handle using web interface
             if Set_params["safe_mode"]:
                 return ("", "Javascript console disabled in safe mode; cd /osh and set safe_mode False")
             try:
@@ -3726,14 +3726,14 @@ class TraceCallback(object):
     def logformat(self, fmt=None):
         return ""
 
-    def logmessage(self, log_level, msg, exc_info=None, logtype="", plaintext=""):
+    def logmessage(self, log_level, msg, exc_info=None, logtype="", prompt="", plaintext=""):
         # If log_level is None, always display message
         if logtype or log_level is None or log_level >= self.log_level:
             if OShell.instance:
                 prefix, suffix = OShell.instance.switch_screen(logtype)
             else:
                 prefix, suffix = "", ""
-            sys.stderr.write(prefix+(plaintext or msg)+"\n"+suffix)
+            sys.stderr.write(prefix+(plaintext or msg)+"\n"+suffix+prompt)
             
     def remote_log(self, host=None, remove=False):
         """ Set host (:port) for remote logging. If host is omitted, return current remote host.
@@ -3884,10 +3884,10 @@ class TraceCallback(object):
 class DefaultCallback(TraceCallback):
     """ Simple default callback implementation
     """
-    def logmessage(self, log_level, msg, exc_info=None, logtype="", plaintext=""):
+    def logmessage(self, log_level, msg, exc_info=None, logtype="", prompt="", plaintext=""):
         # If log_level is None, always display message
         if not logtype.startswith("web") and (log_level is None or log_level >= self.log_level):
-            super(DefaultCallback, self).logmessage(None, msg, exc_info=exc_info, logtype=logtype, plaintext=plaintext)
+            super(DefaultCallback, self).logmessage(None, msg, exc_info=exc_info, logtype=logtype, prompt=prompt, plaintext=plaintext)
             
 class CallbackLogHandler(logging.Handler):
      def __init__(self):
@@ -5131,21 +5131,24 @@ class OTrace(object):
     @classmethod
     def web_hook(cls, op_type, repeat, path, data):
         # Must be thread-safe (OK if output only)
-        if not OShell.instance:
-            return
         oshell = OShell.instance
+        if not oshell:
+            return
         try:
-            if op_type == "stderr":
+            if op_type == "stderr" or op_type == "remotelog":
                 if oshell.repeat_interval:
                     oshell.set_repeat(None)
-                if not oshell.no_input:
-                    oshell.std_output(data+"\n")
+
                 if OTrace.callback_handler:
-                    OTrace.callback_handler.logmessage(None, data, logtype="weberr")
+                     logtype = "remotelog" if op_type == "remotelog" else "weberr"
+                     OTrace.callback_handler.logmessage(None, data, logtype=logtype)
+                elif not oshell.no_input:
+                    oshell.std_output(data+"\n")
 
             if op_type == "stdout":
                 outdata = data
                 logtype = "webout"
+                prompt = ""
                 if oshell.repeat_interval or repeat:
                     outdata = CLEAR_SCREEN_SEQUENCE + outdata
                     logtype = "webrepeat"
@@ -5156,11 +5159,12 @@ class OTrace(object):
                     if oshell.repeat_alt_screen == 2:
                         oshell.repeat_alt_screen = 0
                         outdata = ALT_SCREEN_OFFSEQ + outdata
-                    outdata = outdata+"\n"+oshell.prompt1
-                if not oshell.no_input:
-                    oshell.std_output(outdata, flush=True)
+                    outdata = outdata+"\n"
+                    prompt = oshell.prompt1
                 if OTrace.callback_handler and data:
-                    OTrace.callback_handler.logmessage(None, data, logtype=logtype)
+                    OTrace.callback_handler.logmessage(None, data, logtype=logtype, prompt=prompt)
+                elif not oshell.no_input:
+                    oshell.std_output(outdata+prompt, flush=True)
         except Exception:
             pass
 
