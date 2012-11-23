@@ -462,13 +462,15 @@ class GTCallbackMixin(object):
     def set_client(self, oshell_client):
         self.oshell_client = oshell_client
         
-    def logmessage(self, log_level, msg, exc_info=None, logtype="", plaintext=""):
+    def logmessage(self, log_level, msg, exc_info=None, logtype="", prompt="", plaintext=""):
         # If log_level is None, always display message
         if self.oshell_client and (log_level is None or log_level >= self.log_level):
             self.oshell_client.remote_response(OSHELL_NAME, "", [["log", "", [logtype, log_level, msg]]])
 
-        if not logtype.startswith("web") and (logtype or log_level is None):
-            sys.stderr.write((plaintext or msg)+"\n")
+        if logtype or log_level is None:
+            sys.stderr.write((plaintext or msg)+"\n"+prompt)
+            if prompt:
+                sys.stderr.flush()
 
     def editback(self, content, filepath="", filetype="", editor="", modify=False):
         if editor and editor not in AJAX_EDITORS:
