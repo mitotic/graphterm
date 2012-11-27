@@ -9,19 +9,19 @@
 
 // Global variables
 
-var gMobileBrowser = navigator.userAgent.toLowerCase().indexOf('mobile') > -1;
-var gFirefoxBrowser = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-var gWebkitBrowser = navigator.userAgent.toLowerCase().indexOf('webkit') > -1;
-var gChromeBrowser = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-var gSafariBrowser = !gChromeBrowser && navigator.userAgent.toLowerCase().indexOf('safari') > -1;
+var gUserAgent = navigator.userAgent.toLowerCase();
+var gFirefoxBrowser = gUserAgent.indexOf('firefox') > -1;
+var gWebkitBrowser = gUserAgent.indexOf('webkit') > -1;
+var gChromeBrowser = gUserAgent.indexOf('chrome') > -1;
+var gSafariBrowser = !gChromeBrowser && gUserAgent.indexOf('safari') > -1;
 
-var gSafariIPad = gSafariBrowser && navigator.userAgent.toLowerCase().indexOf('ipad') > -1;
+var gMobileBrowser = ('ontouchstart' in window) || gUserAgent.indexOf("android") > -1 || gUserAgent.indexOf("mobile") > -1 || gUserAgent.indexOf("touch") > -1;
 
-var gMobileDisplay = gSafariIPad;
+var gSafariIPad = gSafariBrowser && gUserAgent.indexOf('ipad') > -1;
 
-var gDefaultEditor = gMobileDisplay ? "ckeditor" : "ace";
+var gDefaultEditor = gMobileBrowser ? "ckeditor" : "ace";
 
-var gAltPasteImpl = !gFirefoxBrowser && !gMobileDisplay;  // Alternative paste implemention (using hidden textarea)
+var gAltPasteImpl = !gFirefoxBrowser && !gMobileBrowser;  // Alternative paste implemention (using hidden textarea)
 
 var gPasteSpecialKeycode = 20;  // Control-T shortcut for Paste Special
 
@@ -2478,7 +2478,7 @@ function StartFullpage(display, split) {
     }
 
     if (display == "fullwindow" || display == "fullscreen") {
-	if (gMobileDisplay) {
+	if (gMobileBrowser) {
 	    $("#session-term").addClass("display-footer");
 	}
 	setTimeout(function() {ScrollTop(null)}, 250); // Scroll background to bottom of screen
@@ -2520,7 +2520,7 @@ GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
     if (frameController && "open" in frameController && this.frameProps && this.frameProps.id == frameId) {
 	frameController.open(this.frameProps);
     }
-    if (!gMobileDisplay) {
+    if (!gMobileBrowser) {
 	$("#"+frameId).addClass("noheader");
 	$("#"+frameId).attr("height", "100%");
 	$(".gterm-iframeheader").hide();
@@ -2853,7 +2853,7 @@ function GTReady() {
     //LoadHandler();
     $(document).attr("title", window.location.pathname.substr(1));
 
-    if (gMobileDisplay) {
+    if (gMobileBrowser) {
 	$("body").addClass("mobilescreen");
 	ToggleFooter();
     }
