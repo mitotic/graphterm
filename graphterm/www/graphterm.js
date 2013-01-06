@@ -215,7 +215,8 @@ function splitFileURL(url) {
 }
 
 function getCookie(name) {
-    return unescape($.cookie(name, {raw: true}));
+    var raw_val = $.cookie(name, {raw: true});
+    return raw_val ? unescape(raw_val) : "";
 }
 
 function setCookie(name, value, exp_days) {
@@ -2115,7 +2116,8 @@ function AjaxKeypress(evt) {
     if (k.length) {
 	if (evt.ctrlKey && k.charCodeAt(0) == gPasteSpecialKeycode) {
 	    // Paste Special shortcut
-	    GTPasteSpecialBegin()
+	    GTPasteSpecialBegin();
+            k = "";
 	} else if (k.charCodeAt(k.length-1) == 13) {
 	    // Enter key
 	    if (gShowingFinder)

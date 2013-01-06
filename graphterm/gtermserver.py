@@ -94,7 +94,7 @@ PROTOCOL = "http"
 SUPER_USERS = set(["root"])
 LOCAL_HOST = "local"
 
-RSS_FEED_URL = "http://info.mindmeldr.com/code/graphterm/graphterm-announce/posts.xml"
+RSS_FEED_URL = "http://code.mindmeldr.com/graphterm/graphterm-announce/posts.xml"
 
 def cgi_escape(s):
     return cgi.escape(s) if s else ""

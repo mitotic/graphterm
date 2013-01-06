@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 
-""" gtutor.py: command-line version of OnlinePythonTutor for inline use within GraphTerm (http://info.mindmeldr.com/code/graphterm)
+""" gtutor.py: command-line version of OnlinePythonTutor for inline use within GraphTerm (http://code.mindmeldr.com/graphterm)
 
 Modified from the CGI script web_exec.py.
 

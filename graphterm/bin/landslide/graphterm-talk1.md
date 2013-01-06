@@ -8,7 +8,7 @@ R. Saravanan
 
 Texas A&M University
 
-**sarava@mindmeldr.com**
+**sarava@mitotic.org**
 
 Derived from talks give at:
 
@@ -108,7 +108,7 @@ GraphTerm
 - Alpha quality (dogfood status for the past 7 weeks!)
 
 - Project Page
-  **http://info.mindmeldr.com/code/graphterm**
+  **http://code.mindmeldr.com/graphterm**
 
 - Source code (BSD License)
   **https://github.com/mitotic/graphterm**

@@ -1,7 +1,7 @@
 # GraphTerm: A Graphical Terminal Interface
 #
 # GraphTerm was developed as part of the Mindmeldr project.
-# Documentation can be found at http://info.mindmeldr.com/code/graphterm
+# Documentation can be found at http://code.mindmeldr.com/graphterm
 #
 #  BSD License
 #
