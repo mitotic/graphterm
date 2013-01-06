@@ -111,7 +111,7 @@ Documentation and Support
 Usage info and other documentation can be found on the project home page,
 `code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_,
 which also has some
-`tutorials and ralks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
+`tutorials and talks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
 for using GraphTerm.
 
 You can also use the following command::
