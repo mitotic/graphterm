@@ -4,6 +4,7 @@
 """ gtutor.py: command-line version of OnlinePythonTutor for inline use within GraphTerm (http://code.mindmeldr.com/graphterm)
 
 Modified from the CGI script web_exec.py.
+Original version of OPT: pgbovine-OnlinePythonTutor-v-Aug8-for-DeNero-389-gd1cb398.tar
 
 Place this script in the directory containing pg_logger.py and pg_encoder.py (or run it from that directory)
 
@@ -220,6 +221,9 @@ def main():
       
   # Process script from file ...
   user_script = open(filepath).read()
+
+  # Ensure that the file compiles
+  compile(user_script, filepath, "exec")
 
   pg_logger.exec_script_str(user_script, cumulative_mode, cgi_finalizer)
 
