@@ -1424,7 +1424,7 @@ function pasteHandler(evt) {
 
 function GTAltPasteHandler() {
     console.log("GTAltPasteHandler:");
-    if (gPopupActive)
+    if (gPopupActive || gForm)
 	return true;
 
     setTimeout(GTAltPasteHandlerAux, 100);
@@ -2361,15 +2361,17 @@ function GTEndForm(text, cancel) {
     text = text || "";
     console.log("GTEndForm: ", text, cancel);
     if (cancel) {
-	if (!gForm.form_command)
+	if (gForm && !gForm.form_command)
 	    gWebSocket.term_input("\n");
 	    
     } else {
-	if (gForm.form_command)
+	if (gFormIndex)
 	    gWebSocket.write([["clear_last_entry", gFormIndex+""]]);
-	gWebSocket.term_input(text+"\n", false, gForm.form_command);
+	if (gForm && gForm.form_command)
+	    gWebSocket.term_input(text+"\n", false, gForm.form_command);
     }
-    $("#session-bufscreen").children(".pagelet.entry"+gFormIndex).remove();
+    if (gFormIndex)
+	$("#session-bufscreen").children(".pagelet.entry"+gFormIndex).remove();
     $("#session-screen").show();
     gForm = null;
     gFormIndex = null;
@@ -2386,6 +2388,7 @@ function GTHelpLink(evt) {
 }
 
 function GTFormSubmit(evt) {
+    var formCommand = gForm.form_command;
     if ($(this).hasClass("gterm-form-cancel"))
 	GTEndForm("", true);
 
@@ -2400,7 +2403,6 @@ function GTFormSubmit(evt) {
     } else {
 	inputElems = formElem.find("input, select");
     }
-    var formCommand = gForm.form_command;
     var argStr = "";
     var formValues = {};
     for (var j=0; j<inputElems.length; j++) {
