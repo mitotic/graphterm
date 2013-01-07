@@ -121,7 +121,7 @@ if options.auth_code.strip() or options.connect_to_gterm:
                          "gterm_setup"]
 
 if options.pylab:
-    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib"]
+    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific libnetcdf-dev netcdf-bin"]
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
 if options.oshell:
