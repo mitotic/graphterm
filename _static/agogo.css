@@ -42,7 +42,7 @@ a {
 }
 
 div.bodywrapper a, div.footer a {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .clearer {

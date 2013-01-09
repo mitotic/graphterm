@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using GraphTerm with OTrace &mdash; graphterm 0.34.0 documentation</title>
+    <title>Demo videos &mdash; graphterm 0.34.0 documentation</title>
     
     <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,8 +26,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="graphterm 0.34.0 documentation" href="index.html" />
-    <link rel="up" title="Advanced topics" href="advanced.html" />
-    <link rel="prev" title="GraphTerm in the cloud" href="cloud.html" />
+    <link rel="next" title="Advanced topics" href="advanced.html" />
+    <link rel="prev" title="Use GraphTerm as a remote terminal (like screen or tmux)" href="UseAsRemoteTerminal.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -43,8 +43,10 @@
           <a href="http://code.mindmeldr.com">code.mindmeldr.com</a>/<a href="index.html">graphterm</a>
         </div>
         <div class="rel">
-          <a href="cloud.html" title="GraphTerm in the cloud"
+          <a href="UseAsRemoteTerminal.html" title="Use GraphTerm as a remote terminal (like screen or tmux)"
              accesskey="P">previous</a> |
+          <a href="advanced.html" title="Advanced topics"
+             accesskey="N">next</a> |
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a>
         </div>
@@ -59,40 +61,15 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="using-graphterm-with-otrace">
-<h1><a class="toc-backref" href="#id1">Using GraphTerm with OTrace</a><a class="headerlink" href="#using-graphterm-with-otrace" title="Permalink to this headline">¶</a></h1>
-<div class="contents topic" id="contents">
-<p class="topic-title first">Contents</p>
-<ul class="simple">
-<li><a class="reference internal" href="#using-graphterm-with-otrace" id="id1">Using GraphTerm with OTrace</a></li>
+  <div class="section" id="demo-videos">
+<span id="videos"></span><h1>Demo videos<a class="headerlink" href="#demo-videos" title="Permalink to this headline">¶</a></h1>
+<p id="index-0">The following YouTube video tutorials are available:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="http://youtu.be/jmrmjC1VYsc">GraphTerm - New features demo</a>: This video demonstrates GraphTerm version 0.34.0, with features including inline images, inline SVG, inline plotting, inline version of Online Python Tutor and CSS perspective theming.</li>
+<li><a class="reference external" href="http://youtu.be/TvO1SnEpwfE">GraphTerm - Basic demo</a>: The video demonstrates the basic features of GraphTerm.</li>
 </ul>
-</div>
-<p>GraphTerm was originally developed as a graphical front-end for
-<a class="reference external" href="http://code.mindmeldr.com/otrace">otrace</a>,
-an object-oriented python debugger. Any Python program
-can serve as a &#8220;host&#8221; and be connected to the GraphTerm server
-using the <tt class="docutils literal"><span class="pre">gotrace</span></tt> command:</p>
-<div class="highlight-python"><pre>gotrace example.py</pre>
-</div>
-<p>The above command loads <tt class="docutils literal"><span class="pre">example.py</span></tt> as a module and connects
-to the GraphTerm server for debugging. This program will appear in
-the list of hosts under the name <tt class="docutils literal"><span class="pre">example</span></tt>. Open the terminal session
-<tt class="docutils literal"><span class="pre">example/osh</span></tt> to connect to the <em>otrace</em> console, and issue
-the <tt class="docutils literal"><span class="pre">run</span> <span class="pre">&lt;function&gt;</span></tt> command to begin executing a function in
-<tt class="docutils literal"><span class="pre">example.py</span></tt>. You can also initiate program execution
-directly from the command line as follows:</p>
-<div class="highlight-python"><pre>gotrace -f test example.py arg1 arg2</pre>
-</div>
-<p>The above command executes the function <tt class="docutils literal"><span class="pre">test(arg=[])</span></tt> in
-<tt class="docutils literal"><span class="pre">example.py</span></tt>, where <tt class="docutils literal"><span class="pre">arg</span></tt> is a list of string arguments from
-the command line.</p>
-<p>If you wish to use the <em>otrace</em> console features for multiplexing,
-without actually needing to a debug a program, you can use
-the <tt class="docutils literal"><span class="pre">--oshell</span></tt> option when using <tt class="docutils literal"><span class="pre">gtermhost</span></tt> to connect
-to the server.</p>
-<p>(You can also embed code in a Python program to directly connect
-to the GraphTerm server for monitoring/debugging. See
-<tt class="docutils literal"><span class="pre">gotrace.py</span></tt> to find out how it can be done.)</p>
+</div></blockquote>
 </div>
 
 
@@ -102,7 +79,7 @@ to the GraphTerm server for monitoring/debugging. See
         </div>
         <div class="sidebar">
           <h3>Table Of Contents</h3>
-          <ul>
+          <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Using GraphTerm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
@@ -110,7 +87,7 @@ to the GraphTerm server for monitoring/debugging. See
 <li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release-notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and talks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="videos.html">Demo videos</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Demo videos</a></li>
 <li class="toctree-l1"><a class="reference external" href="http://pypi.python.org/pypi/graphterm">PyPI Package Index (for downloading and installing)</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/mitotic/graphterm">Source code at Github</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced topics</a></li>
@@ -135,8 +112,10 @@ to the GraphTerm server for monitoring/debugging. See
     <div class="footer-wrapper">
       <div class="footer">
         <div class="left">
-          <a href="cloud.html" title="GraphTerm in the cloud"
+          <a href="UseAsRemoteTerminal.html" title="Use GraphTerm as a remote terminal (like screen or tmux)"
              >previous</a> |
+          <a href="advanced.html" title="Advanced topics"
+             >next</a> |
           <a href="genindex.html" title="General Index"
              >index</a>
         </div>

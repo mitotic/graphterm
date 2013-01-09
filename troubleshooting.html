@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1   GraphTerm Troubleshooting &mdash; graphterm 0.33.0+ documentation</title>
+    <title>1   GraphTerm Troubleshooting &mdash; graphterm 0.34.0 documentation</title>
     
     <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.33.0+',
+        VERSION:     '0.34.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="graphterm 0.33.0+ documentation" href="index.html" />
+    <link rel="top" title="graphterm 0.34.0 documentation" href="index.html" />
     <link rel="next" title="1   GraphTerm Implementation" href="implementation.html" />
     <link rel="prev" title="Using GraphTerm" href="usage.html" />
  
@@ -122,14 +122,23 @@ to restore some, but not all, of GraphTerm features.</p>
 </div>
 <div class="section" id="how-do-i-paste-text">
 <h3><a class="toc-backref" href="#id6">1.1.4&nbsp;&nbsp;&nbsp;How do I paste text?</a><a class="headerlink" href="#how-do-i-paste-text" title="Permalink to this headline">¶</a></h3>
-<p><em>Click on the cursor</em> before beginning the paste operation (on the command line,
-a box will appear at the cursor location). Then use the
-browser&#8217;s paste menu command or a keyboard shortcut (like <em>Command/Control-V</em>) to
-paste the text. Alternatively, you can use the <em>Actions-&gt;Paste special</em> menu item.
-NOTE: Pasting text copied from a non-plain text source, such as a web page,
-may not always work properly. A workaround is to paste the text into a
-temporary location as plain text (such as in a plain text editor),
-and then copy/paste it from there to GraphTerm.</p>
+<p>For certain browsers (e.g., desktop Chrome/Safari),
+the usual <em>Command-V</em> or <em>Control-V</em> key sequence should directly
+paste text from the clipboard. If that doesn&#8217;t work there are a couple
+of other ways to paste text.
+First, you can use the keyboard shortcut <em>Control-T</em> to open a
+popup window, paste the text into the popup window using the
+browser&#8217;s paste menu command or a keyboard shortcut,
+such as <em>Command/Control-V</em>, and then type <em>Control-T</em> again to
+insert the text at the GraphTerm cursor location.
+(The popup paste window can also be accessed from the <em>Actions</em> menu.)
+Alternatively, for some browsers, and on the iPad, you can <em>click on the cursor</em>
+before beginning the paste operation and then paste the text directly.
+This second technique may not always work well for text copied from non-plain
+text sources, such as a web page.
+A final workaround is to paste the
+text into a temporary location as plain text (such as in a plain text
+editor), and then copy/paste it from there to GraphTerm.</p>
 </div>
 </div>
 <div class="section" id="server">
@@ -195,7 +204,7 @@ and tap the cursor again.</p>
 <li class="toctree-l1"><a class="reference internal" href="screenshots.html">Screenshots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release-notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and talks</a></li>
-<li class="toctree-l1"><a class="reference external" href="http://youtu.be/TvO1SnEpwfE">Demo video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="videos.html">Demo videos</a></li>
 <li class="toctree-l1"><a class="reference external" href="http://pypi.python.org/pypi/graphterm">PyPI Package Index (for downloading and installing)</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/mitotic/graphterm">Source code at Github</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced topics</a></li>
