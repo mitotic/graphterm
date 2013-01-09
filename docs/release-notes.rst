@@ -3,6 +3,23 @@ Release Notes
 .. contents::
 
 
+0.34.0 (Jan. 6, 2013)
+---------------------------------------------------------------------------------
+
+  - Added *gtutor* command,  command line version of the pythontutor.com
+
+  - Added *gsnowflake.py*, inline SVG demo
+
+  - Added *helloworld.sh* demo program
+
+  - Streamlined copy/paste
+
+  - Bug fixes: UTF-8 paste handling (for Japanese etc.)
+
+  - Moved documentation from Google sites (info.mindmeldr.com) to
+    Github Pages (code.mindmeldr.com)
+
+
 0.33.0 (Sep. 30, 2012)
 ---------------------------------------------------------------------------------
   - Added references to GraphTerm mailing list/Twitter account

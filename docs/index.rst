@@ -18,8 +18,8 @@ GraphTerm: A Graphical Terminal Interface
    `mailing list <https://groups.google.com/group/graphterm>`_
    or follow `@graphterm <https://twitter.com/intent/user?screen_name=graphterm>`_
    on Twitter for updates.
-   2. The latest version is `0.33.0 <http://pypi.python.org/pypi/graphterm>`_,
-   released September 30, 2012. See the
+   2. The latest version is `0.34.0 <http://pypi.python.org/pypi/graphterm>`_,
+   released January 6, 2013. See the
    `Release Notes <http://code.mindmeldr.com/graphterm/release-notes>`_
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that
@@ -45,7 +45,7 @@ For more information, see the following:
    Screenshots <screenshots>
    Release Notes <release-notes>
    Tutorials and talks <tutorials>
-   Demo video <http://youtu.be/TvO1SnEpwfE>
+   videos
    PyPI Package Index (for downloading and installing) <http://pypi.python.org/pypi/graphterm>
    Source code at Github <https://github.com/mitotic/graphterm>
    advanced
