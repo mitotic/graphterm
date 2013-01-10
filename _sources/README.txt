@@ -1,9 +1,12 @@
-GraphTerm: A Graphical Terminal Interface
-*********************************************************************************
-.. contents::
+.. _README:
 
+README
+==================================================================
+ 
+.. contents::
+ 
 Introduction
-=============================
+----------------------------------------------------------------------------------------------
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
@@ -18,7 +21,7 @@ which is an AJAX/Python terminal implementation. (Another recent
 project along these lines is  `TermKit <http://acko.net/blog/on-termkit/>`_.)
 
 A GraphTerm terminal window is just a web page served from the
-GraphTerm web server program. Multiple users can connect
+GraphTerm server program. Multiple users can connect
 simultaneously to the web server to share terminal sessions.
 Multiple hosts can also connect to the server (on a different port),
 allowing a single user to access all of them via the browser.
@@ -41,7 +44,9 @@ applications for GraphTerm, such as:
    ``tmux``
 
  - an **inline data visualization tool** to view output from plotting
-   libraries like ``matplotlib``
+   libraries like ``matplotlib`` (like
+   `iPython  Notebook <http://ipython.org/ipython-doc/dev/interactive/htmlnotebook.html>`_,
+   but at the shell level).
 
  - a **collaborative terminal** that can be remotely accessed
    by multiple users simultaneously, to run programs, edit files etc.
@@ -54,7 +59,7 @@ applications for GraphTerm, such as:
    computer lab using cloud instances),
 
 The interface is designed to be touch-friendly for use with
-tablets, relying upon command re-use to minimize the need for
+tablets, with tappable links and command re-use to minimize the need for
 a keyboard. It preserves history for all commands,
 whether entered by typing, clicking, or tapping.
 It is also themable using CSS.
@@ -71,7 +76,7 @@ output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome
 
 
 Installation
-==============================
+----------------------------------------------------------------------------------------------
 
 To install ``GraphTerm``, you need to have Python 2.6+ and the Bash
 shell on your Mac/Linux/Unix computer. For a quick install, if the python
@@ -106,7 +111,7 @@ version, at `Github <https://github.com/mitotic/graphterm>`_.
 
 
 Documentation and Support
-=========================================================
+----------------------------------------------------------------------------------------------
 
 Usage info and other documentation can be found on the project home page,
 `code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_,
@@ -130,8 +135,8 @@ To report bugs and other issues, use the Github `Issue Tracker <https://github.c
 
 
 
-Caveats and limitations
-===============================
+Caveats and Limitations
+----------------------------------------------------------------------------------------------
 
  - *Reliability:*  This software has not been subject to extensive testing. Use at your own risk.
 
@@ -144,7 +149,7 @@ Caveats and limitations
             should be able to so in the future.)
 
 Credits
-===============================
+----------------------------------------------------------------------------------------------
 
 ``GraphTerm`` is inspired by two earlier projects that implement the
 terminal interface within the browser,
@@ -171,7 +176,7 @@ presentation program and portions of the Online Python Tutorial from
 
 
 License
-=====================
+----------------------------------------------------------------------------------------------
 
 ``GraphTerm`` is distributed as open source under the `BSD-license <http://www.opensource.org/licenses/bsd-license.php>`_.
 

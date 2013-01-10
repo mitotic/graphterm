@@ -5,7 +5,7 @@ Demo videos
 
 .. index:: videos
 
-The following YouTube video tutorials are available:
+The following YouTube demo videos are available:
 
  * `GraphTerm - New features demo <http://youtu.be/jmrmjC1VYsc>`_: This video demonstrates GraphTerm version 0.34.0, with features including inline images, inline SVG, inline plotting, inline version of Online Python Tutor and CSS perspective theming.
 
