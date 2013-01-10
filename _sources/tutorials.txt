@@ -1,10 +1,10 @@
 Tutorials and talks
 ===================================
 
+.. index:: talks, tutorials
+
 .. toctree::
    :maxdepth: 1
-
-.. index:: talks, tutorials
 
    Using the graphical features of GraphTerm <UsingGraphicalFeatures>
    Use as a remote terminal <UseAsRemoteTerminal>
