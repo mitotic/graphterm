@@ -1,5 +1,5 @@
 *********************************************************************************
- Using GraphTerm
+ Getting started with GraphTerm
 *********************************************************************************
 .. contents::
 
@@ -7,7 +7,15 @@
 Introduction
 ====================================================
 
-(See the README file for information on installing GraphTerm.)
+To install ``GraphTerm``, you need to have Python 2.6+ and the Bash
+shell on your Mac/Linux/Unix computer. For a quick install, if the python
+``setuptools`` module is already installed on your system,
+use the following two commands::
+
+   sudo easy_install graphterm
+   sudo gterm_setup 
+
+(See the :ref:`installation` section of the :doc:`README` file for more options on installing GraphTerm.)
 
 To start the ``GraphTerm`` server, use the command::
 

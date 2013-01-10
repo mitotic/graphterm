@@ -1,8 +1,6 @@
 *********************************************************************************
  API for writing GraphTerm-aware programs
 *********************************************************************************
-.. contents::
-
 
 
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_

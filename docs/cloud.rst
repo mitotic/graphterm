@@ -1,8 +1,6 @@
 *********************************************************************************
  GraphTerm in the cloud
 *********************************************************************************
-.. contents::
-
 
 
 The GraphTerm distribution includes the scripts ``ec2launch, ec2list, ec2scp,``

@@ -1,7 +1,6 @@
 *********************************************************************************
  Using GraphTerm with OTrace
 *********************************************************************************
-.. contents::
 
 
 GraphTerm was originally developed as a graphical front-end for

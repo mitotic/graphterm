@@ -1,16 +1,17 @@
-*********************************************************************************
- GraphTerm Troubleshooting
-*********************************************************************************
+.. _troubleshooting:
 
-.. sectnum::
+Troubleshooting
+==================================================================
+
+.. index:: troubleshooting
+
 .. contents::
-
-
+ 
 Terminal
-======================================================
+----------------------------------------------------------------------------------------------
 
 I get the error message "bash: ... gls: Permission denied" on the terminal?
-----------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``sudo easy_install ...`` command does not set the execute permission for
 commands like ``gls``. You need to execute the command ``sudo gterm_setup``
@@ -18,7 +19,7 @@ after installation to set the permissions. (The ``python setup.py
 install`` command automatically sets permissions.)
 
 I get the error message "bash: gls: No such file or directory" on the terminal?
-----------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The environment variable ``GRAPHTERM_DIR`` contains the directory
 where ``gls`` and other commands are located. GraphTerm tries to set
@@ -29,7 +30,7 @@ shell initialization files to include ``$GRAPHTERM_DIR`` in ``$PATH``.
 situation.)
 
 When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?
--------------------------------------------------------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is normal behavior. Many GraphTerm features only work on the
 computer that the ``gtermhost`` program is running on. By default, SSH is treated
@@ -40,7 +41,7 @@ to restore some, but not all, of GraphTerm features.
 
  
 How do I paste text?
-----------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For certain browsers (e.g., desktop Chrome/Safari),
 the usual *Command-V* or *Control-V* key sequence should directly
@@ -61,10 +62,10 @@ text into a temporary location as plain text (such as in a plain text
 editor), and then copy/paste it from there to GraphTerm.
 
 Server
-======================================================
+----------------------------------------------------------------------------------------------------
 
 I'm running the GraphTerm server on a remote computer, but I'm unable to access it using my browser?
-----------------------------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Ensure that you have included the port number in the URL, e.g., ``http//example.com:8900``
 Also, ensure that any firewall on the server allows incoming
@@ -72,7 +73,7 @@ connections to the default port 8900 .
 
 
 Can I run the GraphTerm server on port 80 (or 443)?
--------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You would need run the server as the root user, which is not recommended
 at this stage of GraphTerm development. A better way to achieve this is
@@ -84,10 +85,10 @@ can be achieved by executing a single command (as root)::
 
 
 Using GraphTerm on Windows
-======================================================
+----------------------------------------------------------------------------------------------------
 
 Does GraphTerm work on Windows?
--------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The GraphTerm client should work on a Windows browser that supports Websockets,
 like the  latest versions of Chrome/Firefox/Safari or IE10. The
@@ -97,7 +98,7 @@ pseudo-terminal device that is only supported on Unix/Linux.)
 
 
 GraphTerm fails to load properly on Windows?
------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Ensure that you are using a browser that supports Websockets, like the
 latest versions of Chrome/Firefox/Safari or IE10.
@@ -108,10 +109,10 @@ server is running.
 
 
 Using GraphTerm on the iPad
-======================================================
+-------------------------------------------------------------------------------
 
 How do I access the virtual keyboard on the iPad?
--------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *Tap the cursor* access the virtual keyboard on the iPad. If the
 command line ends up behind the keyboard, retract the keyboard

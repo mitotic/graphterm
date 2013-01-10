@@ -7,7 +7,7 @@ Documentation contents
    :maxdepth: 1
 
    README
-   usage
+   start
    troubleshooting
    implementation
    screenshots

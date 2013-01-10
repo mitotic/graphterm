@@ -1,9 +1,10 @@
-GraphTerm Implementation
-*********************************************************************************
-.. sectnum::
-.. contents::
+.. _implementation:
 
+Implementation
+==================================================================
 
+.. index:: implementation
+ 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-architecture.png
    :align: center
    :width: 90%

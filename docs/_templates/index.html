@@ -3,12 +3,6 @@
 {% block body %}
 
 
-  <iframe allowtransparency="true" frameborder="0" scrolling="no"
-  src="https://platform.twitter.com/widgets/tweet_button.html?url=http://code.mindmeldr.com/graphterm&via=graphterm&text=GraphTerm,%20A%20Graphical%20Terminal%20Interface&count=none"
-  style="width:80px; height:27px;"></iframe>
-
-  <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fcode.mindmeldr.com%2Fgraphterm&amp;send=false&amp;layout=standard&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:53px; height:30px;" allowTransparency="true"></iframe>
-
 <br>
 <em>Updates:</em>
 <ol>
@@ -38,73 +32,25 @@ project along these lines is
 </p>
 
 <p>
-You can find more information on installing and using GraphTerm in the
-<a href="README.html#installation">README</a> file.
+You can find more information in the
+<a href="README.html">README</a> file and in
+<a href="start.html">Getting started with GraphTerm</a>.
 Images of GraphTerm in action can be found in
 <a href="screenshots.html">screenshots </a>
 and in the
 <a href="videos.html">demo videos</a>.
 </p>
 
-<hr>
-
 <p>
-A GraphTerm terminal window is just a web page served from the
-GraphTerm server program. Multiple users can connect
-simultaneously to the web server to share terminal sessions.
-Multiple hosts can also connect to the server (on a different port),
-allowing a single user to access all of them via the browser.
-The GraphTerm server acts as a <em>router</em>, sending input from browser
-windows for different users to the appropriate terminal (pseudo-tty)
-sessions running on different hosts, and transmitting the
-terminal output back to the browser windows.
-</p>
-
-<p>
-This flexible, networked implementation allows for several possible
-applications for GraphTerm, such as:
-</p>
-
-<ul> 
-  <li>an <b>enhanced terminal</b> that combines the command line with basic
-   GUI operations like navigating folders, file drag-and-drop,
-   displaying images etc.
-  </li>
-
-  <li>a web-based <b>remote desktop</b> that supports a simple GUI
-   without the need for installing VNC or X-windows on the remote host
-  </li>
-
-  <li>a <b>detachable terminal multiplexer</b>, sort of like GNU <tt>screen</tt> or
-   <tt>tmux</tt>
-  </li>
-
-  <li>an <b>inline data visualization tool</b> to view output from plotting
-   libraries like <tt>matplotlib</tt>
-  </li>
-
-  <li>a <b>collaborative terminal</b> that can be remotely accessed
-   by multiple users simultaneously, to run programs, edit files etc.
-  </li>
-
-  <li>a <b>simple presentation tool</b> for webcasting images as slideshows
-   (and receiving live feedback)
-  </li>
-
-  <li>a <b>management console</b> for a cluster of real or virtual hosts,
-   with wildcard access to hosts/sessions (e.g., to manage a virtual
-   computer lab using cloud instances),
-  </li>
-</ul>  
-
-<p>
-The interface is designed to be touch-friendly for use with tablets,
-relying upon command re-use to minimize the need for a keyboard.
-It preserves history for all commands, whether entered by typing,
-clicking, or tapping. It is also themable using CSS.
-</p>
-
-<p>
+GraphTerm can be used as
+a <em>collaborative graphical terminal</em>,
+as a <em>detachable terminal multiplexer</em> (like GNU <tt>screen</tt> or
+<tt>tmux</tt>),
+or as an <em>inline data visualization tool</em>
+(sort of like <a href="http://ipython.org/ipython-doc/dev/interactive/htmlnotebook.html">iPython
+Notebook</a>,
+but at the shell level).
+With tappable links, GraphTerm is designed to be touch-friendly for use with tablets.
 Here is a sample screenshot illustrating graphical <tt>gls</tt> and <tt>cat</tt> command
 output using a 3D perspective theme (captured on OS X Lion, using Google Chrome).
 </p>
