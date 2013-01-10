@@ -74,6 +74,7 @@ output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome
    :width: 90%
    :figwidth: 70%
 
+.. _installation:
 
 Installation
 ----------------------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ Installation
 To install ``GraphTerm``, you need to have Python 2.6+ and the Bash
 shell on your Mac/Linux/Unix computer. For a quick install, if the python
 ``setuptools`` module is already installed on your system,
-use the following commands::
+use the following two commands::
 
    sudo easy_install graphterm
    sudo gterm_setup
@@ -114,10 +115,10 @@ Documentation and Support
 ----------------------------------------------------------------------------------------------
 
 Usage info and other documentation can be found on the project home page,
-`code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_,
-which also has some
-`tutorials and talks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
-for using GraphTerm.
+`code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_.
+Begin with `Getting started with GraphTerm <http://code.mindmeldr.com/graphterm/start.html>`_,
+and see the `Tutorials and Talks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
+page for more advanced usage.
 
 You can also use the following command::
 
