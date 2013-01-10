@@ -1,0 +1,22 @@
+{% if version.endswith('(hg)') %}
+<p>This documentation is for version <b>{{ version }}</b>, which is
+  not released yet.</p>
+{% else %}
+<p>Current version: <b>{{ version }}</b></p>
+{% endif %}
+
+  <iframe allowtransparency="true" frameborder="0" scrolling="no"
+  src="https://platform.twitter.com/widgets/follow_button.html?screen_name=graphterm&count=none"
+  style="width:130px; height:20px;"></iframe><p>
+
+<h3>Questions? Suggestions?</h3>
+
+<p>Join the <a href="http://groups.google.com/group/graphterm">Google group</a>:</p>
+<form action="http://groups.google.com/group/graphterm/boxsubscribe"
+      style="padding-left: 1em">
+  <input type="text" name="email" value="your@email"/>
+  <input type="submit" name="sub" value="Subscribe" />
+</form>
+
+<p>You can also open an issue at the
+  <a href="https://github.com/mitotic/graphterm/issues/">tracker</a>.</p>

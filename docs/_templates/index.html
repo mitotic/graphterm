@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+{% set title = 'Overview' %}
+{% block body %}
+
+
+  <iframe allowtransparency="true" frameborder="0" scrolling="no"
+  src="https://platform.twitter.com/widgets/tweet_button.html?url=http://code.mindmeldr.com/graphterm&via=graphterm&text=GraphTerm,%20A%20Graphical%20Terminal%20Interface&count=none"
+  style="width:80px; height:27px;"></iframe>
+
+  <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fcode.mindmeldr.com%2Fgraphterm&amp;send=false&amp;layout=standard&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:53px; height:30px;" allowTransparency="true"></iframe>
+
+<br>
+<em>Updates:</em>
+<ol>
+    <li>You can join the Google Groups
+   <a href="https://groups.google.com/group/graphterm">mailing list</a>
+   or follow <a href="https://twitter.com/intent/user?screen_name=graphterm">@graphterm</a>
+   on Twitter for updates.</li>
+   <li>The latest version is <a href="http://pypi.python.org/pypi/graphterm">0.34.0</a>
+   released January 6, 2013. See the
+   <a href="release-notes.html">Release Notes</a>
+   </li>
+</ol>
+
+<p>
+<tt>GraphTerm</tt> is a browser-based graphical terminal interface, that
+aims to seamlessly blend the command line and graphical user
+interfaces. The goal is to provide a fully backwards-compatible terminal
+emulator for <tt>xterm</tt>.  You should be able to use it just like a regular terminal
+interface, accessing additional graphical features only as needed. GraphTerm builds
+upon two earlier projects, 
+<a href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm </a>
+which implemented a terminal using the Mozilla framework and
+<a href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm </a>
+which is an AJAX/Python terminal implementation. (Another recent
+project along these lines is 
+<a href="http://acko.net/blog/on-termkit/">TermKit</a>.)
+</p>
+
+<p>
+You can find more information on installing and using GraphTerm in the
+<a href="README.html#installation">README</a> file.
+Images of GraphTerm in action can be found in
+<a href="screenshots.html">screenshots </a>
+and in the
+<a href="videos.html">demo videos</a>.
+</p>
+
+<hr>
+
+<p>
+A GraphTerm terminal window is just a web page served from the
+GraphTerm server program. Multiple users can connect
+simultaneously to the web server to share terminal sessions.
+Multiple hosts can also connect to the server (on a different port),
+allowing a single user to access all of them via the browser.
+The GraphTerm server acts as a <em>router</em>, sending input from browser
+windows for different users to the appropriate terminal (pseudo-tty)
+sessions running on different hosts, and transmitting the
+terminal output back to the browser windows.
+</p>
+
+<p>
+This flexible, networked implementation allows for several possible
+applications for GraphTerm, such as:
+</p>
+
+<ul> 
+  <li>an <b>enhanced terminal</b> that combines the command line with basic
+   GUI operations like navigating folders, file drag-and-drop,
+   displaying images etc.
+  </li>
+
+  <li>a web-based <b>remote desktop</b> that supports a simple GUI
+   without the need for installing VNC or X-windows on the remote host
+  </li>
+
+  <li>a <b>detachable terminal multiplexer</b>, sort of like GNU <tt>screen</tt> or
+   <tt>tmux</tt>
+  </li>
+
+  <li>an <b>inline data visualization tool</b> to view output from plotting
+   libraries like <tt>matplotlib</tt>
+  </li>
+
+  <li>a <b>collaborative terminal</b> that can be remotely accessed
+   by multiple users simultaneously, to run programs, edit files etc.
+  </li>
+
+  <li>a <b>simple presentation tool</b> for webcasting images as slideshows
+   (and receiving live feedback)
+  </li>
+
+  <li>a <b>management console</b> for a cluster of real or virtual hosts,
+   with wildcard access to hosts/sessions (e.g., to manage a virtual
+   computer lab using cloud instances),
+  </li>
+</ul>  
+
+<p>
+The interface is designed to be touch-friendly for use with tablets,
+relying upon command re-use to minimize the need for a keyboard.
+It preserves history for all commands, whether entered by typing,
+clicking, or tapping. It is also themable using CSS.
+</p>
+
+<p>
+Here is a sample screenshot illustrating graphical <tt>gls</tt> and <tt>cat</tt> command
+output using a 3D perspective theme (captured on OS X Lion, using Google Chrome).
+</p>
+
+<img width="95%" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png"></img>
+
+<!--
+  <h2>Documentation</h2>
+
+  <table class="contentstable" align="center" style="margin-left: 30px"><tr>
+    <td width="50%">
+      <p class="biglink"><a class="biglink" href="{{ pathto("tutorial") }}">First steps with Sphinx</a><br/>
+         <span class="linkdescr">overview of basic tasks</span></p>
+      <p class="biglink"><a class="biglink" href="{{ pathto("contents") }}">Contents</a><br/>
+         <span class="linkdescr">for a complete overview</span></p>
+    </td><td width="50%">
+      <p class="biglink"><a class="biglink" href="{{ pathto("search") }}">Search page</a><br/>
+         <span class="linkdescr">search the documentation</span></p>
+      <p class="biglink"><a class="biglink" href="{{ pathto("genindex") }}">General Index</a><br/>
+         <span class="linkdescr">all functions, classes, terms</span></p>
+    </td></tr>
+  </table>
+-->
+
+{% endblock %}

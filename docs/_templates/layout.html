@@ -1,43 +1,78 @@
 {% extends "!layout.html" %}
 
-{% block header %}
-    <div class="header-wrapper">
-      <div class="header">
-        {%- if logo %}
-          <p class="logo"><a href="{{ pathto(master_doc) }}">
-            <img class="logo" src="{{ pathto('_static/' + logo, 1) }}" alt="Logo"/>
-          </a></p>
-        {%- endif %}
-        {%- block headertitle %}
-        <div class="headertitle">
-          <a href="http://code.mindmeldr.com">code.mindmeldr.com</a>/<a href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a>
-        </div>
-        {%- endblock %}
-        <div class="rel">
-          {%- for rellink in rellinks|reverse %}
-          <a href="{{ pathto(rellink[0]) }}" title="{{ rellink[1]|striptags|e }}"
-             {{ accesskey(rellink[2]) }}>{{ rellink[3] }}</a>
-          {%- if not loop.last %}{{ reldelim2 }}{% endif %}
-          {%- endfor %}
-        </div>
-      </div>
-    </div>
-{% endblock %}
-
-{%- block extrahead %}
+{% block extrahead %}
 {{ super() }}
+{%- if not embedded %}
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
 <script type="text/javascript">
+// Google Analytics setup
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-35342722-1']);
   _gaq.push(['_trackPageview']);
+
+function goApp() {
+   if (window.navigator.standalone) {
+      // Go home
+      location.href = "/";
+   } else {
+      // Go to top level domain
+      var url = location.protocol + "//" + location.hostname.split(".").slice(-2).join(".");
+      if (location.port)
+        url += ":" + location.port;
+      location.href = url;
+   }
+}
+
+// Prevent internal links in iOS standalone web apps from opening in browser
+(function(document,navigator,standalone) {
+            // prevents links from apps from oppening in mobile safari
+            // this javascript must be the first script in your <head>
+            if ((standalone in navigator) && navigator[standalone]) {
+                var curnode, location=document.location, stop=/^(a|html)$/i;
+                document.addEventListener('click', function(e) {
+                    curnode=e.target;
+                    while (!(stop).test(curnode.nodeName)) {
+                        curnode=curnode.parentNode;
+                    }
+                    // Conditions to do this only on links to your own app
+                    if ('href' in curnode) {
+                        e.preventDefault();
+                        location.href = curnode.href;
+                    }
+                },false);
+            }
+        })(document,window.navigator,'standalone');
+
 </script>
+{%- endif %}
+{% endblock %}
+
+{% block rootrellink %}
+        <li><a href="{{ pathto('index') }}">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="{{ pathto('contents') }}">Contents</a>
+          &raquo;</li>
+{% endblock %}
+
+{% block header %}
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<h1>
+<a href="/"> 
+code.mindmeldr.com
+<!--
+<img height="60" src="{{ 'http://doc.mindmeldr.com/_static/mmrbanner-transp1.png' if builder == 'html' else pathto("_static/mmrbanner-transp1.png", 1) }}" alt="Mindmeldr banner" />
+-->
+</a>/<a href="/graphterm">graphterm</a>
+</h1>
+</div>
 {% endblock %}
 
 {% block footer %}
 {{ super() }}
-<div class="footer">This page uses <a href="http://analytics.google.com/">
-Google Analytics</a> to collect statistics. You can disable it by blocking
-the JavaScript coming from www.google-analytics.com.
+<div class="footer">
 <script type="text/javascript">
   (function() {
     var ga = document.createElement('script');
