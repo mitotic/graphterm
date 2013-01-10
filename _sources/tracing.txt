@@ -2,6 +2,7 @@
  Using GraphTerm with OTrace
 *********************************************************************************
 
+.. index:: debugging, otrace, tracing
 
 GraphTerm was originally developed as a graphical front-end for
 `otrace <http://code.mindmeldr.com/otrace>`_,

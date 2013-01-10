@@ -2,6 +2,7 @@
  GraphTerm in the cloud
 *********************************************************************************
 
+.. index:: cloud computing, cloud instance, Amazon EC2
 
 The GraphTerm distribution includes the scripts ``ec2launch, ec2list, ec2scp,``
 and ``ec2ssh`` to launch and monitor Amazon Web Services EC2

@@ -10,6 +10,20 @@ Troubleshooting
 Terminal
 ----------------------------------------------------------------------------------------------
 
+.. index:: control c, frozen screen, hung terminal, unresponsive terminal
+
+My terminal is unresponsive?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If your terminal appears to hang, do what you would normally do in a
+terminal, type ``Control-C``. If you are in the fullscreen graphics
+mode (e.g., using ``giframe``), you may need to click on the top of
+the terminal portion of the window to get the input focus out of the
+``iframe`` and then type ``Control-C``. Finally, *refreshing the browser*
+may also fix the problem.
+
+.. index:: permission denied
+ 
 I get the error message "bash: ... gls: Permission denied" on the terminal?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -18,6 +32,8 @@ commands like ``gls``. You need to execute the command ``sudo gterm_setup``
 after installation to set the permissions. (The ``python setup.py
 install`` command automatically sets permissions.)
 
+.. index:: no such file or directory
+ 
 I get the error message "bash: gls: No such file or directory" on the terminal?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -29,6 +45,8 @@ shell initialization files to include ``$GRAPHTERM_DIR`` in ``$PATH``.
 (The menu command *Actions-.Export environment* may also help in this
 situation.)
 
+.. index:: remote login, ssh
+ 
 When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -39,6 +57,8 @@ input/output. However, you can use the *Actions-.Export environment*
 menu command to set shell environment variables on the remote computer
 to restore some, but not all, of GraphTerm features.
 
+ 
+.. index:: copy/paste, paste
  
 How do I paste text?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,6 +81,7 @@ A final workaround is to paste the
 text into a temporary location as plain text (such as in a plain text
 editor), and then copy/paste it from there to GraphTerm.
 
+
 Server
 ----------------------------------------------------------------------------------------------------
 
@@ -71,6 +92,7 @@ Ensure that you have included the port number in the URL, e.g., ``http//example.
 Also, ensure that any firewall on the server allows incoming
 connections to the default port 8900 .
 
+.. index:: server port
 
 Can I run the GraphTerm server on port 80 (or 443)?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,9 +106,12 @@ can be achieved by executing a single command (as root)::
 
 
 
+.. index:: Windows
+ 
 Using GraphTerm on Windows
 ----------------------------------------------------------------------------------------------------
 
+ 
 Does GraphTerm work on Windows?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -106,7 +131,7 @@ Some Anti-virus programs block Websockets on the browser. You may need to
 turn them off, or allow access to the domain where the GraphTerm
 server is running.
 
-
+.. index:: ipad, virtual keyboard
 
 Using GraphTerm on the iPad
 -------------------------------------------------------------------------------

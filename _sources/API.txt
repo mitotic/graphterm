@@ -2,6 +2,7 @@
  API for writing GraphTerm-aware programs
 *********************************************************************************
 
+.. index:: API, graphterm-aware commands
 
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 writes to to the standard output in a format similar to a HTTP
@@ -23,6 +24,8 @@ The opening escape sequence is followed by a *dictionary* of header
 names and values, using JSON format. This is followed by a blank line,
 and then any data (such as the HTML fragment to be displayed).
 
+.. index:: helloworld.sh
+ 
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 can be written in any language, much like a CGI script.
 The program `helloworld.sh <https://github.com/mitotic/graphterm/blob/master/helloworld.sh>`_

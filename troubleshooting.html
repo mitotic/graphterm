@@ -115,6 +115,7 @@ code.mindmeldr.com
   <ul>
 <li><a class="reference internal" href="#">Troubleshooting</a><ul>
 <li><a class="reference internal" href="#terminal">Terminal</a><ul>
+<li><a class="reference internal" href="#my-terminal-is-unresponsive">My terminal is unresponsive?</a></li>
 <li><a class="reference internal" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a></li>
 <li><a class="reference internal" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a></li>
 <li><a class="reference internal" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a></li>
@@ -178,24 +179,25 @@ code.mindmeldr.com
 <ul class="simple">
 <li><a class="reference internal" href="#troubleshooting" id="id2">Troubleshooting</a><ul>
 <li><a class="reference internal" href="#terminal" id="id3">Terminal</a><ul>
-<li><a class="reference internal" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" id="id4">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a></li>
-<li><a class="reference internal" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" id="id5">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a></li>
-<li><a class="reference internal" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" id="id6">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a></li>
-<li><a class="reference internal" href="#how-do-i-paste-text" id="id7">How do I paste text?</a></li>
+<li><a class="reference internal" href="#my-terminal-is-unresponsive" id="id4">My terminal is unresponsive?</a></li>
+<li><a class="reference internal" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" id="id5">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a></li>
+<li><a class="reference internal" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" id="id6">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a></li>
+<li><a class="reference internal" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" id="id7">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a></li>
+<li><a class="reference internal" href="#how-do-i-paste-text" id="id8">How do I paste text?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#server" id="id8">Server</a><ul>
-<li><a class="reference internal" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" id="id9">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a></li>
-<li><a class="reference internal" href="#can-i-run-the-graphterm-server-on-port-80-or-443" id="id10">Can I run the GraphTerm server on port 80 (or 443)?</a></li>
+<li><a class="reference internal" href="#server" id="id9">Server</a><ul>
+<li><a class="reference internal" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" id="id10">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a></li>
+<li><a class="reference internal" href="#can-i-run-the-graphterm-server-on-port-80-or-443" id="id11">Can I run the GraphTerm server on port 80 (or 443)?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-graphterm-on-windows" id="id11">Using GraphTerm on Windows</a><ul>
-<li><a class="reference internal" href="#does-graphterm-work-on-windows" id="id12">Does GraphTerm work on Windows?</a></li>
-<li><a class="reference internal" href="#graphterm-fails-to-load-properly-on-windows" id="id13">GraphTerm fails to load properly on Windows?</a></li>
+<li><a class="reference internal" href="#using-graphterm-on-windows" id="id12">Using GraphTerm on Windows</a><ul>
+<li><a class="reference internal" href="#does-graphterm-work-on-windows" id="id13">Does GraphTerm work on Windows?</a></li>
+<li><a class="reference internal" href="#graphterm-fails-to-load-properly-on-windows" id="id14">GraphTerm fails to load properly on Windows?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-graphterm-on-the-ipad" id="id14">Using GraphTerm on the iPad</a><ul>
-<li><a class="reference internal" href="#how-do-i-access-the-virtual-keyboard-on-the-ipad" id="id15">How do I access the virtual keyboard on the iPad?</a></li>
+<li><a class="reference internal" href="#using-graphterm-on-the-ipad" id="id15">Using GraphTerm on the iPad</a><ul>
+<li><a class="reference internal" href="#how-do-i-access-the-virtual-keyboard-on-the-ipad" id="id16">How do I access the virtual keyboard on the iPad?</a></li>
 </ul>
 </li>
 </ul>
@@ -204,15 +206,24 @@ code.mindmeldr.com
 </div>
 <div class="section" id="terminal">
 <h2><a class="toc-backref" href="#id3">Terminal</a><a class="headerlink" href="#terminal" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="my-terminal-is-unresponsive">
+<span id="index-1"></span><h3><a class="toc-backref" href="#id4">My terminal is unresponsive?</a><a class="headerlink" href="#my-terminal-is-unresponsive" title="Permalink to this headline">¶</a></h3>
+<p>If your terminal appears to hang, do what you would normally do in a
+terminal, type <tt class="docutils literal"><span class="pre">Control-C</span></tt>. If you are in the fullscreen graphics
+mode (e.g., using <tt class="docutils literal"><span class="pre">giframe</span></tt>), you may need to click on the top of
+the terminal portion of the window to get the input focus out of the
+<tt class="docutils literal"><span class="pre">iframe</span></tt> and then type <tt class="docutils literal"><span class="pre">Control-C</span></tt>. Finally, <em>refreshing the browser</em>
+may also fix the problem.</p>
+</div>
 <div class="section" id="i-get-the-error-message-bash-gls-permission-denied-on-the-terminal">
-<h3><a class="toc-backref" href="#id4">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" title="Permalink to this headline">¶</a></h3>
+<span id="index-2"></span><h3><a class="toc-backref" href="#id5">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" title="Permalink to this headline">¶</a></h3>
 <p>The <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">easy_install</span> <span class="pre">...</span></tt> command does not set the execute permission for
 commands like <tt class="docutils literal"><span class="pre">gls</span></tt>. You need to execute the command <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt>
 after installation to set the permissions. (The <tt class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span>
 <span class="pre">install</span></tt> command automatically sets permissions.)</p>
 </div>
 <div class="section" id="i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal">
-<h3><a class="toc-backref" href="#id5">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" title="Permalink to this headline">¶</a></h3>
+<span id="index-3"></span><h3><a class="toc-backref" href="#id6">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" title="Permalink to this headline">¶</a></h3>
 <p>The environment variable <tt class="docutils literal"><span class="pre">GRAPHTERM_DIR</span></tt> contains the directory
 where <tt class="docutils literal"><span class="pre">gls</span></tt> and other commands are located. GraphTerm tries to set
 the <tt class="docutils literal"><span class="pre">PATH</span></tt> variable to automatically include this directory. But
@@ -222,7 +233,7 @@ shell initialization files to include <tt class="docutils literal"><span class="
 situation.)</p>
 </div>
 <div class="section" id="when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work">
-<h3><a class="toc-backref" href="#id6">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a><a class="headerlink" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" title="Permalink to this headline">¶</a></h3>
+<span id="index-4"></span><h3><a class="toc-backref" href="#id7">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a><a class="headerlink" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" title="Permalink to this headline">¶</a></h3>
 <p>This is normal behavior. Many GraphTerm features only work on the
 computer that the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> program is running on. By default, SSH is treated
 like any other program that accesses the terminal for
@@ -231,7 +242,7 @@ menu command to set shell environment variables on the remote computer
 to restore some, but not all, of GraphTerm features.</p>
 </div>
 <div class="section" id="how-do-i-paste-text">
-<h3><a class="toc-backref" href="#id7">How do I paste text?</a><a class="headerlink" href="#how-do-i-paste-text" title="Permalink to this headline">¶</a></h3>
+<span id="index-5"></span><h3><a class="toc-backref" href="#id8">How do I paste text?</a><a class="headerlink" href="#how-do-i-paste-text" title="Permalink to this headline">¶</a></h3>
 <p>For certain browsers (e.g., desktop Chrome/Safari),
 the usual <em>Command-V</em> or <em>Control-V</em> key sequence should directly
 paste text from the clipboard. If that doesn&#8217;t work there are a couple
@@ -252,15 +263,15 @@ editor), and then copy/paste it from there to GraphTerm.</p>
 </div>
 </div>
 <div class="section" id="server">
-<h2><a class="toc-backref" href="#id8">Server</a><a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">Server</a><a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser">
-<h3><a class="toc-backref" href="#id9">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a><a class="headerlink" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id10">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a><a class="headerlink" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" title="Permalink to this headline">¶</a></h3>
 <p>Ensure that you have included the port number in the URL, e.g., <tt class="docutils literal"><span class="pre">http//example.com:8900</span></tt>
 Also, ensure that any firewall on the server allows incoming
 connections to the default port 8900 .</p>
 </div>
 <div class="section" id="can-i-run-the-graphterm-server-on-port-80-or-443">
-<h3><a class="toc-backref" href="#id10">Can I run the GraphTerm server on port 80 (or 443)?</a><a class="headerlink" href="#can-i-run-the-graphterm-server-on-port-80-or-443" title="Permalink to this headline">¶</a></h3>
+<span id="index-6"></span><h3><a class="toc-backref" href="#id11">Can I run the GraphTerm server on port 80 (or 443)?</a><a class="headerlink" href="#can-i-run-the-graphterm-server-on-port-80-or-443" title="Permalink to this headline">¶</a></h3>
 <p>You would need run the server as the root user, which is not recommended
 at this stage of GraphTerm development. A better way to achieve this is
 to redirect traffic from port 80 to port 8900. On a Linux server, this
@@ -270,9 +281,9 @@ can be achieved by executing a single command (as root):</p>
 </div>
 </div>
 <div class="section" id="using-graphterm-on-windows">
-<h2><a class="toc-backref" href="#id11">Using GraphTerm on Windows</a><a class="headerlink" href="#using-graphterm-on-windows" title="Permalink to this headline">¶</a></h2>
+<span id="index-7"></span><h2><a class="toc-backref" href="#id12">Using GraphTerm on Windows</a><a class="headerlink" href="#using-graphterm-on-windows" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="does-graphterm-work-on-windows">
-<h3><a class="toc-backref" href="#id12">Does GraphTerm work on Windows?</a><a class="headerlink" href="#does-graphterm-work-on-windows" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id13">Does GraphTerm work on Windows?</a><a class="headerlink" href="#does-graphterm-work-on-windows" title="Permalink to this headline">¶</a></h3>
 <p>The GraphTerm client should work on a Windows browser that supports Websockets,
 like the  latest versions of Chrome/Firefox/Safari or IE10. The
 GraphTerm server is currently not supported on Windows. (Although the
@@ -280,7 +291,7 @@ server is written in pure python, it needs access to the
 pseudo-terminal device that is only supported on Unix/Linux.)</p>
 </div>
 <div class="section" id="graphterm-fails-to-load-properly-on-windows">
-<h3><a class="toc-backref" href="#id13">GraphTerm fails to load properly on Windows?</a><a class="headerlink" href="#graphterm-fails-to-load-properly-on-windows" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id14">GraphTerm fails to load properly on Windows?</a><a class="headerlink" href="#graphterm-fails-to-load-properly-on-windows" title="Permalink to this headline">¶</a></h3>
 <p>Ensure that you are using a browser that supports Websockets, like the
 latest versions of Chrome/Firefox/Safari or IE10.
 Some Anti-virus programs block Websockets on the browser. You may need to
@@ -289,9 +300,9 @@ server is running.</p>
 </div>
 </div>
 <div class="section" id="using-graphterm-on-the-ipad">
-<h2><a class="toc-backref" href="#id14">Using GraphTerm on the iPad</a><a class="headerlink" href="#using-graphterm-on-the-ipad" title="Permalink to this headline">¶</a></h2>
+<span id="index-8"></span><h2><a class="toc-backref" href="#id15">Using GraphTerm on the iPad</a><a class="headerlink" href="#using-graphterm-on-the-ipad" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="how-do-i-access-the-virtual-keyboard-on-the-ipad">
-<h3><a class="toc-backref" href="#id15">How do I access the virtual keyboard on the iPad?</a><a class="headerlink" href="#how-do-i-access-the-virtual-keyboard-on-the-ipad" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id16">How do I access the virtual keyboard on the iPad?</a><a class="headerlink" href="#how-do-i-access-the-virtual-keyboard-on-the-ipad" title="Permalink to this headline">¶</a></h3>
 <p><em>Tap the cursor</em> access the virtual keyboard on the iPad. If the
 command line ends up behind the keyboard, retract the keyboard
 and tap the cursor again.</p>
