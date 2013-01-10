@@ -271,7 +271,7 @@ Webcasting
 If you enable the *Webcast* in the top menu, anyone can use the
 session URL to view the session, without the need for
 authentication, but will not be able to steal it. *Use this feature
-with caution to avoid exposing exposing sensitive data.*
+with caution to avoid exposing sensitive data.*
 
 Slideshows
 ================================================================
