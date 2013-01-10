@@ -6,6 +6,7 @@ Documentation contents
 .. toctree::
    :maxdepth: 1
 
+   contact
    README
    start
    troubleshooting
@@ -13,7 +14,6 @@ Documentation contents
    screenshots
    tutorials
    videos
-   contact
    advanced
    release-notes
    PyPI Package Index (for downloading and installing) <http://pypi.python.org/pypi/graphterm>
