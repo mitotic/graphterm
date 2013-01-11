@@ -1545,9 +1545,11 @@ function gtermMenuClickHandler(event) {
 	break;
     case "collapse":
 	$("#session-bufscreen .oldentry").addClass("gterm-hideoutput");
+	ScrollScreen();
 	break;
     case "expand":
 	$("#session-bufscreen .oldentry").removeClass("gterm-hideoutput");
+	ScrollScreen();
 	break;
     case "up":
 	if (HandleArrowKeys(38))
