@@ -1524,12 +1524,6 @@ function gtermMenuClickHandler(event) {
     case "help":
 	GTermHelp()
 	break;
-    case "collapse":
-	$("#session-bufscreen .oldentry").addClass("gterm-hideoutput");
-	break;
-    case "expand":
-	$("#session-bufscreen .oldentry").removeClass("gterm-hideoutput");
-	break;
     case "clear":
 	GTClearTerminal();
 	if (gWebSocket && gWebSocket.terminal)
@@ -1548,6 +1542,12 @@ function gtermMenuClickHandler(event) {
 	break;
     case "top":
 	ScrollTop(0);
+	break;
+    case "collapse":
+	$("#session-bufscreen .oldentry").addClass("gterm-hideoutput");
+	break;
+    case "expand":
+	$("#session-bufscreen .oldentry").removeClass("gterm-hideoutput");
 	break;
     case "up":
 	if (HandleArrowKeys(38))
