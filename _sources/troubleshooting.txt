@@ -116,7 +116,7 @@ Does GraphTerm work on Windows?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The GraphTerm client should work on a Windows browser that supports Websockets,
-like the  latest versions of Chrome/Firefox/Safari or IE10. The
+like the  latest versions of Chrome/Firefox/Safari or possibly IE10. The
 GraphTerm server is currently not supported on Windows. (Although the
 server is written in pure python, it needs access to the
 pseudo-terminal device that is only supported on Unix/Linux.)
@@ -126,7 +126,7 @@ GraphTerm fails to load properly on Windows?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Ensure that you are using a browser that supports Websockets, like the
-latest versions of Chrome/Firefox/Safari or IE10.
+latest versions of Chrome/Firefox/Safari or possibly IE10.
 Some Anti-virus programs block Websockets on the browser. You may need to
 turn them off, or allow access to the domain where the GraphTerm
 server is running.
