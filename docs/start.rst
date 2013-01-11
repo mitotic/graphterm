@@ -43,6 +43,9 @@ Firefox, or Safari (Chrome works best), and enter the following URL::
 Once within the ``graphterm`` browser page, select the host you
 wish to connect to and create a new terminal session on the host.
 
+
+.. index:: graphterm-aware commands
+
 Once you have a terminal, try out the following commands::
 
   gls <directory>
@@ -80,6 +83,7 @@ for other commands, which include:
 (There is also a sample ``gcowsay`` command which can be downloaded
 separately from its `Github repository <https://github.com/mitotic/gcowsay>`_)
 
+.. index:: visual cues
 
 Visual cues
 ================================================================
@@ -93,6 +97,7 @@ menu*. Clicking on other prompts toggles display of the command
 output (unless the Control modifier is used, in which case the
 entire command line is copied and pasted.)
 
+.. index:: folders, opening files, navigating folders
 
 Navigating folders/opening files
 ================================================================
@@ -109,12 +114,15 @@ pasted into the command line, without any
 command being executed. You can edit the pasted text, then press the
 Enter key to execute it.
 
+.. index:: icon display
+
 Icon display
 ================================================================
 
 Select ``icons`` in the top menu to activate icon display for commands like
 ``gls``.
 
+.. index:: themes
 
 Themes
 ================================================================
@@ -123,6 +131,7 @@ Themes
 Themes, selected using the top menu, are a work in progress, especially the 3-D perspective theme
 (which only works on Chrome/Safari).
 
+.. index:: copy/paste, paste
 
 Copy/paste
 ================================================================
@@ -142,6 +151,7 @@ before beginning the paste operation and then paste the text directly.
 This second technique may not always work well for text copied from non-plain
 text sources, such as a web page.
 
+.. index:: drag and drop
 
 Drag and drop
 ================================================================
@@ -153,6 +163,8 @@ host, the file will be moved to the destination folder. For windows
 on two different hosts, the file will be copied.
 (Graphical feedback for this operation is not properly implemented at
 this time. Look at the command line for the feedback.)
+
+.. index:: command history
 
 Command recall
 ================================================================
@@ -168,6 +180,8 @@ complete the recalled command (for editing) or use the *Enter* key
 to execute it. Typing any other key, including the *left arrow*,
 will cancel the command recall process. 
 
+.. index:: ipad
+
 iPad usage
 ================================================================
 
@@ -175,6 +189,8 @@ iPad usage
 Click on the cursor to display virtual keyboard on the iPad. The
 *Bottom menu*, exposed by clicking on the lowermost prompt, can be
 quite useful on the iPad.
+
+.. index:: terminal type
 
 Choosing the terminal type
 ================================================================
@@ -187,6 +203,7 @@ You can use the ``--term_type`` option when running the server to set
 the default terminal type, or use the ``export TERM=screen`` command.
 (Fully supporting these terminal types is a work in progress.)
 
+.. index:: multiple hosts
 
 Multiple hosts
 ================================================================
@@ -212,6 +229,7 @@ on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a "host", allowing it to
 be dynamically introspected and debugged using `otrace <http://code.mindmeldr.com/otrace>`_.)
 
+.. index:: sessions, screensharing
 
 Sessions and "screensharing"
 ================================================================
@@ -237,6 +255,7 @@ NOTE: Although GraphTerm supports multiple users, it currently
 assumes a cooperative environment, where everyone trusts everyone
 else. (This may change in the future.)
 
+.. index:: multiplexing, wildcard sessions
 
 Wildcard sessions and multiplexing
 ================================================================
@@ -264,6 +283,8 @@ See the *otrace* integration section for more information.
 NOTE: Multiplexed input/output display cannot be easily implemented for
 regular shell terminals.
 
+.. index:: webcasting
+
 Webcasting
 ================================================================
 
@@ -271,14 +292,16 @@ Webcasting
 If you enable the *Webcast* in the top menu, anyone can use the
 session URL to view the session, without the need for
 authentication, but will not be able to steal it. *Use this feature
-with caution to avoid exposing exposing sensitive data.*
+with caution to avoid exposing sensitive data.*
+
+.. index:: slides, slideshows
 
 Slideshows
 ================================================================
 
 
 The ``glandslide`` command, which is a slightly modified version of the
-web-based slide slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
+web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
 can be used to create a slideshow from Markdown (.md) or reStructured
 Text (.rst) files. A few sample ``.md`` files are provided in the
 ``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
@@ -297,6 +320,9 @@ that has the images for a slideshow, and type::
 
 To select a subset of images in the directory, you can use a wildcard
 pattern. For publicly webcasting a slideshow, use the ``-b`` option.
+
+
+.. index:: execution tracing, online python tutor, python tutor
 
 Command-line version of pythontutor.com
 ================================================================
@@ -326,6 +352,8 @@ presentation file, with the ``src`` attribute set to a graphterm
 URL, such as ``http://localhost:8900/local/tutorial``. This will open
 up a graphterm window where you can either run ``gtutor`` interactively or
 use ``giframe -f`` to display an HTML file created previously using ``gtutor``.
+
+.. index:: sockets, widgets
 
  
 Widgets, sockets, and interactivity
@@ -367,6 +395,7 @@ To display a live twitter feed as an overlay on a presentation, you can use the 
    gtweet -f -s topic > $GRAPHTERM_SOCKET &
    gimage -f
 
+.. index:: security
 
 Security
 ================================================================
@@ -385,6 +414,7 @@ the use of SSL certificates and server/client authentication.
 (SSL/https support is already built in. Feel free to experiment with
 it, although it is not yet ready for everyday use.)
 
+.. index:: ssh, port forwarding
 
 SSH and port forwarding
 ================================================================

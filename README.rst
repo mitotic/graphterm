@@ -4,7 +4,9 @@ README
 ==================================================================
  
 .. contents::
- 
+
+.. index:: introduction
+
 Introduction
 ----------------------------------------------------------------------------------------------
 
@@ -74,6 +76,8 @@ output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome
    :width: 90%
    :figwidth: 70%
 
+.. index:: installation
+
 .. _installation:
 
 Installation
@@ -110,6 +114,7 @@ in your system (or in the ``graphterm`` subdirectory).
 You can browse the ``GraphTerm`` source code, and download the development
 version, at `Github <https://github.com/mitotic/graphterm>`_.
 
+.. index:: documentation, support
 
 Documentation and Support
 ----------------------------------------------------------------------------------------------
@@ -134,7 +139,7 @@ GraphTerm etc. You can also follow `@graphterm <https://twitter.com/intent/user?
 
 To report bugs and other issues, use the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
 
-
+.. index:: caveats, limitations
 
 Caveats and Limitations
 ----------------------------------------------------------------------------------------------
@@ -148,6 +153,8 @@ Caveats and Limitations
           * Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.
           * At the moment, you cannot customize the shell prompt. (You
             should be able to so in the future.)
+
+.. index:: credits
 
 Credits
 ----------------------------------------------------------------------------------------------
@@ -175,6 +182,7 @@ presentation program and portions of the Online Python Tutorial from
 
 ``GraphTerm`` was developed as part of the `Mindmeldr <http://mindmeldr.com>`_ project, which is aimed at improving classroom interaction.
 
+.. index:: license
 
 License
 ----------------------------------------------------------------------------------------------

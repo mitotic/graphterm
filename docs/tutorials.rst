@@ -1,6 +1,8 @@
 Tutorials and talks
 ===================================
 
+.. index:: talks, tutorials
+
 .. toctree::
    :maxdepth: 1
 

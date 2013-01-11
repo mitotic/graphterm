@@ -3,6 +3,8 @@ GraphTerm Screenshots
 .. sectnum::
 .. contents::
 
+.. index:: screenshots
+
 ls vs. gls
 ==================================================
 
