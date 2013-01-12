@@ -46,8 +46,7 @@ applications for GraphTerm, such as:
    ``tmux``
 
  - an **inline data visualization tool** to view output from plotting
-   libraries like ``matplotlib`` (like
-   `iPython  Notebook <http://ipython.org/ipython-doc/dev/interactive/htmlnotebook.html>`_,
+   libraries like ``matplotlib`` (like the *Mathematica* or *iPython* Notebook interface,
    but at the shell level).
 
  - a **collaborative terminal** that can be remotely accessed
