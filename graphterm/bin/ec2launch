@@ -122,6 +122,7 @@ if options.auth_code.strip() or options.connect_to_gterm:
 
 if options.pylab:
     startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific libnetcdf-dev netcdf-bin"]
+    startup_commands += ["easy_install pil qrcode"]
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
 if options.oshell:
