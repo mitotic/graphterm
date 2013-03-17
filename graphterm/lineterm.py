@@ -720,8 +720,9 @@ class Terminal(object):
                         # TODO: if prompts not specified, search buffer to use current prompt ABC
                         self.scroll_screen(self.active_rows)
                         self.update()
-                        self.resize(self.width, self.height, force=True)
+                        self.resize(self.height, self.width, force=True)
                         self.scroll_bot = 0
+                        self.note_screen_buf.clear_buf()
                         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
                         self.note_prompts = prompts
                         self.select_cell(new_cell_type="code")
@@ -730,7 +731,7 @@ class Terminal(object):
                         self.note_cells["curIndex"] = 0
                         self.note_cells = None
                         self.scroll_bot = self.height-1
-                        self.resize(self.width, self.height, force=True)
+                        self.resize(self.height, self.width, force=True)
                         self.zero_screen()
                         self.screen_callback(self.term_name, "", "note_switch_cell", [0])
 
@@ -772,7 +773,13 @@ class Terminal(object):
                 if len(self.note_input) > 1 and not self.note_input[-1]:
                         self.note_input = self.note_input[:-1]
 
-                os.write(self.fd, self.note_input.pop(0)+"\n")
+                self.note_screen_buf.clear_buf()
+                self.zero_screen()
+                self.cursor_x = 0
+
+                # Send a blank line to clear any indentation level and trigger a prompt
+                os.write(self.fd, "\n")
+
                 if not self.note_prompts:
                         # No prompt; transmit all input data
                         while self.note_input:
@@ -860,7 +867,7 @@ class Terminal(object):
                                               self.width, self.height,
                                               self.cursor_x, self.cursor_y, pre_offset,
                                               update_rows, update_scroll])
-                        if not self.note_cells and not reconnecting and not response_id and (update_rows or update_scroll):
+                        if not self.note_cells and not reconnecting and (update_rows or update_scroll):
                             self.gterm_output_buf = []
 
                 if self.note_cells:
@@ -876,7 +883,7 @@ class Terminal(object):
                                                                                          self.main_screen,
                                                                                          alt_screen=False,
                                                                                          prompt=[],
-                                                                                         reconnecting=reconnecting)
+                                                                                         reconnecting=True)
                         logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
                         self.screen_callback(self.term_name, response_id, "note_row_update",
                                              [False, full_update, self.active_rows,

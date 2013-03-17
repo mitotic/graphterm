@@ -1027,11 +1027,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		} else if (cmd_type == "note_switch_cell") {
 		    var cellIndex = cmd_arg[0];
 		    console.log("ABCnote_switch_cell", cellIndex);
+		    gNotebook.switchCell(cellIndex);
 
 		} else if (cmd_type == "note_row_update") {
 		    var update_rows = cmd_arg[8];
 		    var update_scroll = cmd_arg[9];
 		    console.log("ABCnote_row_update", update_rows, update_scroll);
+		    gNotebook.output(update_rows, update_scroll);
 
 		} else if (cmd_type == "row_update") {
                     var alt_mode    = cmd_arg[0];
@@ -1252,7 +1254,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	return;
 
     } catch(err) {
-	console.log("GTWebSocket.onmessage", err);
+	console.log("GTWebSocket.onmessage", err, err.stack);
 	this.write([["errmsg", ""+err]]);
 	this.close();
     }
@@ -2615,6 +2617,12 @@ function GTActivateNotebook() {
     }
 }
 
+function GTCloseNotebook() {
+    if (gWebSocket && gParams.controller) {
+	gWebSocket.write([["notebook", false, []]]);
+    }
+}
+
 function GTNotebook(fullwindow) {
     if (gNotebookId[0] != gPromptIndex)
 	gNotebookId = [gPromptIndex, 0]
@@ -2633,8 +2641,19 @@ function GTNotebook(fullwindow) {
     this.curIndex = 0;
 }
 
+GTNotebook.prototype.close = function() {
+    gNotebook = null;
+}
+
 GTNotebook.prototype.getCellId = function(cellIndex) {
     return this.notebookId+"-cell"+cellIndex;
+}
+
+GTNotebook.prototype.switchCell = function(cellIndex) {
+    if (!cellIndex) {
+	this.close();
+	return
+    }
 }
 
 GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
@@ -2676,6 +2695,26 @@ GTNotebook.prototype.execute = function() {
     }
 }
 
+GTNotebook.prototype.output = function(update_rows, update_scroll) {
+    var out_html = []
+    for (var j=0; j<update_scroll.length; j++) {
+	var markup = update_scroll[j][JMARKUP];
+	var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE]) : markup;
+	out_html.push('<pre class="gterm-notecell-output">'+row_escaped+'\n</pre>');
+    }
+
+    for (var j=0; j<update_rows.length; j++) {
+	var row_span = update_rows[j][JLINE];
+	var row_line = "";
+	for (var k=0; k<row_span.length; k++)
+	    row_line += row_span[k][1];
+	out_html.push('<pre class="gterm-notecell-output">'+GTEscape(row_line)+'\n</pre>');
+    }
+
+    var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
+    outElem.html(out_html.join(""));
+}
+
 GTNotebook.prototype.select = function(cell_index, new_cell_type, before_cell_index) {
     if (gWebSocket && gParams.controller)
 	gWebSocket.write([["select_cell", cell_index||0, new_cell_type||"", before_cell_index||0]]);
@@ -2700,29 +2739,6 @@ GTNotebook.prototype.receive = function(fromUser, toUser, frameName, msg) {
     } catch(err) {
 	console.log("GTNotebook.receive: "+err);
     }
-}
-
-GTNotebook.prototype.close = function(frameName, save) {
-    console.log("GTNotebook.close", frameName, save);
-    if (!(frameName in this.notebookCells))
-	return;
-
-    var props = this.notebookCells[frameName].props;
-    if (frameName == "editor") {
-	if (!save && !window.confirm("Discard changes?"))
-	    return;
-	var newContent = save ? this.notebookCells[frameName].controller.getContent() : null;
-	GTEndEdit(newContent, props.content, props.params, save);
-
-	if (props.controller && props.params.action != "buffer") {
-	    this.send("*", "editor", ["end", ""]);
-	}
-    }
-    
-    delete this.notebookCells[frameName];
-    if (gWebSocket && gParams.controller)
-	gWebSocket.term_input("\x03");
-    EndFullpage();
 }
 
 
