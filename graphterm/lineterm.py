@@ -718,12 +718,15 @@ class Terminal(object):
                 logging.warning("ABCnotebook: %s prompts=%s", activate, prompts)
                 if activate:
                         # TODO: if prompts not specified, search buffer to use current prompt ABC
-                        self.note_cells = {"cellIndex": 0, "curIndex": 0, "cells": OrderedDict()}
+                        self.scroll_screen(self.active_rows)
+                        self.update()
+                        self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
                         self.note_prompts = prompts
                         self.select_cell(new_cell_type="code")
                 else:
                         # TODO: copy all cellInput and cellOutput to scroll buffer ABC
                         self.note_cells["curIndex"] = 0
+                        self.note_cells = None
                         self.screen_callback(self.term_name, "", "note_switch_cell", [0])
 
                 self.resize(self.width, self.height, force=True)
@@ -739,10 +742,11 @@ class Terminal(object):
 
                 if new_cell_type:
                         # New cell
-                        self.note_cells["cellIndex"] += 1
-                        cell_index = self.note_cells["cellIndex"]
+                        self.note_cells["maxIndex"] += 1
+                        cell_index = self.note_cells["maxIndex"]
                         next_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
                         self.note_cells["cells"][cell_index] = next_cell
+                        self.note_cells["curIndex"] = cell_index
                         self.screen_callback(self.term_name, "", "note_add_cell",
                                              [cell_index, new_cell_type, before_cell_index])
                 else:
@@ -764,7 +768,9 @@ class Terminal(object):
                 if len(self.note_input) > 1 and not self.note_input[-1]:
                         self.note_input = self.note_input[:-1]
 
+                os.write(self.fd, self.note_input.pop(0)+"\n")
                 if not self.note_prompts:
+                        # No prompt; transmit all input data
                         while self.note_input:
                                 os.write(self.fd, self.note_input.pop(0)+"\n")
 
@@ -855,7 +861,7 @@ class Terminal(object):
 
                 if self.note_cells:
                         if reconnecting:
-                                for cell in self.note_cells["cells"]:
+                                for cell in self.note_cells["cells"].itervalues():
                                         logging.warning("ABCnote_add_cell: %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellInput"], cell["cellOutput"])
                                         self.screen_callback(self.term_name, response_id, "note_add_cell",
                                                              [cell["cellIndex"], cell["cellType"], 0,

@@ -2671,7 +2671,6 @@ GTNotebook.prototype.execute = function() {
     var textElem = $("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code");
     if (textElem.length) {
 	var text = textElem.val();
-        alert("ABC"+text)
 	if (gWebSocket && gParams.controller)
 	    gWebSocket.write([["exec_cell", this.curIndex, text]]);
     }
