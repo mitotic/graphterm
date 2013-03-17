@@ -720,6 +720,8 @@ class Terminal(object):
                         # TODO: if prompts not specified, search buffer to use current prompt ABC
                         self.scroll_screen(self.active_rows)
                         self.update()
+                        self.resize(self.width, self.height, force=True)
+                        self.scroll_bot = 0
                         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
                         self.note_prompts = prompts
                         self.select_cell(new_cell_type="code")
@@ -727,9 +729,11 @@ class Terminal(object):
                         # TODO: copy all cellInput and cellOutput to scroll buffer ABC
                         self.note_cells["curIndex"] = 0
                         self.note_cells = None
+                        self.scroll_bot = self.height-1
+                        self.resize(self.width, self.height, force=True)
+                        self.zero_screen()
                         self.screen_callback(self.term_name, "", "note_switch_cell", [0])
 
-                self.resize(self.width, self.height, force=True)
 
         def select_cell(self, cell_index=0, new_cell_type="", before_cell_index=0):
                 logging.warning("ABCselect_cell: %s %s %s", cell_index, new_cell_type, before_cell_index)
@@ -905,13 +909,15 @@ class Terminal(object):
                         self.active_rows = max(y+1, self.active_rows)
 
         def scroll_up(self, y1, y2):
-                self.poke(y1, 0, self.peek(y1+1, 0, y2, self.width))
-                self.screen.meta[y1:y2] = self.screen.meta[y1+1:y2+1] 
+                if y2 > y1:
+                        self.poke(y1, 0, self.peek(y1+1, 0, y2, self.width))
+                        self.screen.meta[y1:y2] = self.screen.meta[y1+1:y2+1] 
                 self.zero_lines(y2, y2)
 
         def scroll_down(self, y1, y2):
-                self.poke(y1+1, 0, self.peek(y1, 0, y2-1, self.width))
-                self.screen.meta[y1+1:y2+1] = self.screen.meta[y1:y2] 
+                if y2 > y1:
+                        self.poke(y1+1, 0, self.peek(y1, 0, y2-1, self.width))
+                        self.screen.meta[y1+1:y2+1] = self.screen.meta[y1:y2] 
                 self.zero_lines(y1, y1)
 
         def scroll_right(self, y, x):
