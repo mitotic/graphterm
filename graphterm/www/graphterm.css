@@ -5,6 +5,10 @@
     display: none;
 }
 
+html, body {
+    height: 100%;
+}
+
 /* Default styles */
 body {
     background-color: #FFFFFF;
