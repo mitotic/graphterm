@@ -89,6 +89,9 @@ var gScrollTop = false;
 
 var gControlActive = false;
 
+var gNotebook = null;
+var gNotebookId = [0, 0];
+
 var gParams = {};
 
 var GTPrompt = "&gt; ";
@@ -938,7 +941,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    console.log("ERROR in pagelet_json:", err, content);
 			}
 
-		    } else if (!response_type || response_type == "pagelet") {
+		    } else if (!response_type || response_type == "pagelet" || response_type == "iframe") {
 			var pagelet_display = response_params.display || "block";
 			var pageletSelector = "#session-bufscreen .pagelet."+entry_class;
 			if (pagelet_display.substr(0,4) == "full") {
@@ -1008,6 +1011,28 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
 			}
 		    }
+
+		} else if (cmd_type == "note_add_cell") {
+		    var cellIndex = cmd_arg[0];
+		    var cellType = cmd_arg[1];
+		    var beforeCellIndex = cmd_arg[2];
+		    var cellInput = cmd_arg[3];
+		    var cellOutput = cmd_arg[4];
+		    console.log("ABCnote_add_cell", cellIndex, cellType, beforeCellIndex, cellInput, cellOutput);
+		    if (!gNotebook) {
+			gNotebook = new GTNotebook(newElem, gPromptIndex)
+		    }
+		    gNotebook.addCell(cellIndex, cellType, beforeCellIndex);
+
+		} else if (cmd_type == "note_switch_cell") {
+		    var cellIndex = cmd_arg[0];
+		    console.log("ABCnote_switch_cell", cellIndex);
+
+		} else if (cmd_type == "note_row_update") {
+		    var update_rows = cmd_arg[8];
+		    var update_scroll = cmd_arg[9];
+		    console.log("ABCnote_row_update", update_rows, update_scroll);
+
 		} else if (cmd_type == "row_update") {
                     var alt_mode    = cmd_arg[0];
                     var reset       = cmd_arg[1];
@@ -2103,7 +2128,11 @@ function AjaxKeypress(evt) {
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress2", kc, k, k.charCodeAt(0), k.length);
 
-    if (gForm && k == String.fromCharCode(3)) {
+    if (gNotebook && k == String.fromCharCode(14)) {
+	// Ctrl-L execute notebook cell
+	gNotebook.execute()
+	return false;
+    } else if (gForm && k == String.fromCharCode(3)) {
 	// Ctrl-C exit from form
 	GTEndForm("", true);
     } else if (gPopupType && k == String.fromCharCode(3)) {
@@ -2282,7 +2311,7 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
 }
 
 function GTCaptureInput() {
-    return gForm || (gTextEditing && gParams.controller) || gPopupType;
+    return gNotebook || gForm || (gTextEditing && gParams.controller) || gPopupType;
 }
 
 function GTClearCKEditor() {
@@ -2579,6 +2608,124 @@ GTFrameDispatcher.prototype.close = function(frameName, save) {
 }
 
 var gFrameDispatcher = new GTFrameDispatcher();
+
+function GTActivateNotebook() {
+    if (gWebSocket && gParams.controller) {
+	gWebSocket.write([["notebook", true, [">>> ", "... "]]]);
+    }
+}
+
+function GTNotebook(fullwindow) {
+    if (gNotebookId[0] != gPromptIndex)
+	gNotebookId = [gPromptIndex, 0]
+    gNotebookId[1] += 1;
+    this.notebookId = "gterm-notebook"+gNotebookId[0]+"-"+gNotebookId[1];
+
+    var entry_class = "entry"+gPromptIndex;
+    var classes = "entry"+gPromptIndex;
+    if (fullwindow)
+	classes += " gterm-fullwindow";
+
+    this.pagelet = $('<div id="'+this.notebookId+'" class="pagelet pagelet-notebook entry '+classes+'" data-gtermcurrentdir="" data-gtermpromptindex="'+gPromptIndex+'"></div>\n').appendTo("#session-bufscreen");
+
+    this.cellParams = {};
+    this.cellList = []
+    this.curIndex = 0;
+}
+
+GTNotebook.prototype.getCellId = function(cellIndex) {
+    return this.notebookId+"-cell"+cellIndex;
+}
+
+GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
+    var cellId = this.getCellId(cellIndex);
+    var cellParams = { cellType: cellType, cellIndex: cellIndex, cellId: cellId };
+    this.cellParams[cellIndex] = cellParams;
+    if (cellType == "code") {
+	var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea class="gterm-notecell-code"></textarea><div class="gterm-notecell-output"></div></div>';
+    }
+    var newElem;
+    if (!beforeCellIndex) {
+	this.cellList.push(this.CellIndex);
+	newElem = $(cellHtml).appendTo(this.pagelet);
+    } else {
+	var prevList = this.CellList;
+	this.cellList = null;
+	var k = 0;
+	for (var j=0; j<this.cellList.length; j++) {
+	    if (this.cellList[j] == beforeCellIndex) {
+		k = j+1;
+		break;
+	    }
+	}
+	if (!k)
+	    throw "No such cell "+beforeCellIndex;
+	this.cellList = this.cellList.slice(0,k-1).concat([cellIndex]).concat(this.cellList.slice(k-1));
+	newElem = $(cellHtml).insertBefore("#"+this.getCellId(beforeCellIndex));
+    }
+
+    this.curIndex = cellIndex;
+}
+
+GTNotebook.prototype.execute = function() {
+    var textElem = $("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code");
+    if (textElem.length) {
+	var text = textElem.val();
+        alert("ABC"+text)
+	if (gWebSocket && gParams.controller)
+	    gWebSocket.write([["exec_cell", this.curIndex, text]]);
+    }
+}
+
+GTNotebook.prototype.select = function(cell_index, new_cell_type, before_cell_index) {
+    if (gWebSocket && gParams.controller)
+	gWebSocket.write([["select_cell", cell_index||0, new_cell_type||"", before_cell_index||0]]);
+}
+
+GTNotebook.prototype.send = function(toUser, toFrame, msg) {
+    if (gWebSocket && gParams.controller)
+	gWebSocket.write([["send_msg", toUser, toFrame, msg]]);
+}
+
+GTNotebook.prototype.write = function(text) {
+    if (gWebSocket && gParams.controller)
+	gWebSocket.term_input(text);
+}
+
+GTNotebook.prototype.receive = function(fromUser, toUser, frameName, msg) {
+    if (!(frameName in this.notebookCells))
+	return;
+
+    try {
+	this.notebookCells[frameName].controller.receive(fromUser, toUser, msg);
+    } catch(err) {
+	console.log("GTNotebook.receive: "+err);
+    }
+}
+
+GTNotebook.prototype.close = function(frameName, save) {
+    console.log("GTNotebook.close", frameName, save);
+    if (!(frameName in this.notebookCells))
+	return;
+
+    var props = this.notebookCells[frameName].props;
+    if (frameName == "editor") {
+	if (!save && !window.confirm("Discard changes?"))
+	    return;
+	var newContent = save ? this.notebookCells[frameName].controller.getContent() : null;
+	GTEndEdit(newContent, props.content, props.params, save);
+
+	if (props.controller && props.params.action != "buffer") {
+	    this.send("*", "editor", ["end", ""]);
+	}
+    }
+    
+    delete this.notebookCells[frameName];
+    if (gWebSocket && gParams.controller)
+	gWebSocket.term_input("\x03");
+    EndFullpage();
+}
+
 
 function EndFullpage() {
     //console.log("EndFullpage");

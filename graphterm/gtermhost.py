@@ -243,6 +243,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           paste_command <text>
           get_finder <kind> <directory>
           save_file <filepath> <filedata>
+          notebook <activate> <prompts>
+          select_cell <cell_index> <new_cell_type> <before_cell_index>
+          exec_cell <cellIndex> <input_data>
 
         Output commands:
           completed_input <line>
@@ -299,6 +302,21 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if self.lineterm:
                         paste_text = self.lineterm.click_paste(term_name, cmd[0], cmd[1], cmd[2])
                         self.paste_command(term_name, paste_text)
+
+                elif action == "notebook":
+                    # notebook <activate> <prompts>
+                    if self.lineterm:
+                        self.lineterm.notebook(term_name, cmd[0], cmd[1])
+
+                elif action == "select_cell":
+                    # select_cell <cell_index> <new_cell_type> <before_cell_index>
+                    if self.lineterm:
+                        self.lineterm.select_cell(term_name, cmd[0], cmd[1], cmd[2])
+
+                elif action == "exec_cell":
+                    # exec_cell <cellIndex> <input_data>
+                    if self.lineterm:
+                        self.lineterm.exec_cell(term_name, cmd[0], cmd[1])
 
                 elif action == "paste_command":
                     # paste_command: command_line

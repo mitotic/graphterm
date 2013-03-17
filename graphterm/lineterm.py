@@ -15,6 +15,11 @@ import array, cgi, copy, fcntl, glob, logging, mimetypes, optparse, os, pty
 import re, signal, select, socket, sys, threading, time, termios, tty, struct, pwd
 
 try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+
+try:
     import ujson as json
 except ImportError:
     import json
@@ -44,7 +49,7 @@ TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow k
 NO_COPY_ENV = set(["GRAPHTERM_EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
-GRAPHTERM_SCREEN_CODES = (1150, 1155)
+GRAPHTERM_SCREEN_CODES = (1150, 1155)     # (prompt_escape, pagelet_escape)
 
 FILE_EXTENSIONS = {"css": "css", "htm": "html", "html": "html", "js": "javascript", "py": "python",
                    "xml": "xml"}
@@ -115,8 +120,10 @@ def uclean(ustr, trim=False, encoded=False):
 
 def prompt_offset(line, prompt, meta=None):
         """Return offset at end of prompt (not including trailing space), or zero"""
+        if not prompt:
+                return 0
         offset = 0
-        if (meta and not meta[JCONTINUATION]) or (prompt and prompt[0] and line.startswith(prompt[0])):
+        if (meta and not meta[JCONTINUATION]) or (prompt[0] and line.startswith(prompt[0])):
                 end_offset = line.find(prompt[2])
                 if end_offset >= 0:
                         offset = end_offset + len(prompt[2])
@@ -578,6 +585,11 @@ class Terminal(object):
                 self.logfile = logfile
                 self.screen_buf = ScreenBuf(prompt)
 
+                self.note_screen_buf = ScreenBuf("")
+                self.note_cells = None
+                self.note_input = []
+                self.note_prompts = []
+
                 self.init()
                 self.reset()
                 self.output_time = time.time()
@@ -677,8 +689,8 @@ class Terminal(object):
                 self.gterm_validated = False
                 self.gterm_output_buf = []
 
-        def resize(self, height, width):
-                reset_flag = (self.width != width or self.height != height)
+        def resize(self, height, width, force=False):
+                reset_flag = force or (self.width != width or self.height != height)
                 if reset_flag:
                         self.scroll_screen()
                         min_width = min(self.width, width)
@@ -702,6 +714,60 @@ class Terminal(object):
                 self.screen = self.alt_screen if self.alt_mode else self.main_screen
                 self.needs_updating = True
 
+        def notebook(self, activate, prompts=[">>> ", "... "]):
+                logging.warning("ABCnotebook: %s prompts=%s", activate, prompts)
+                if activate:
+                        # TODO: if prompts not specified, search buffer to use current prompt ABC
+                        self.note_cells = {"cellIndex": 0, "curIndex": 0, "cells": OrderedDict()}
+                        self.note_prompts = prompts
+                        self.select_cell(new_cell_type="code")
+                else:
+                        # TODO: copy all cellInput and cellOutput to scroll buffer ABC
+                        self.note_cells["curIndex"] = 0
+                        self.screen_callback(self.term_name, "", "note_switch_cell", [0])
+
+                self.resize(self.width, self.height, force=True)
+
+        def select_cell(self, cell_index=0, new_cell_type="", before_cell_index=0):
+                logging.warning("ABCselect_cell: %s %s %s", cell_index, new_cell_type, before_cell_index)
+                cur_index = self.note_cells["curIndex"]
+                if cur_index:
+                        cur_cell = self.note_cells["cells"][cur_index]
+                        # Move all screen lines to scroll buffer
+                        self.scroll_screen(self.active_rows)
+                        cur_cell["cellOutput"] = self.note_screen_buf.scroll_lines[:]
+
+                if new_cell_type:
+                        # New cell
+                        self.note_cells["cellIndex"] += 1
+                        cell_index = self.note_cells["cellIndex"]
+                        next_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
+                        self.note_cells["cells"][cell_index] = next_cell
+                        self.screen_callback(self.term_name, "", "note_add_cell",
+                                             [cell_index, new_cell_type, before_cell_index])
+                else:
+                        assert cell_index and cell_index in self.note_cells
+                        self.note_cells["curIndex"] = cell_index
+                        next_cell = self.note_cells["cells"][cur_index]
+                        next_cell["cellOutput"] = []
+                        self.screen_callback(self.term_name, "", "note_switch_cell", [cell_index])
+
+
+        def exec_cell(self, cell_index, input_data):
+                cur_index = self.note_cells["curIndex"]
+                if not cur_index:
+                        return
+                logging.warning("ABCexec_cell: %s %s '%s'", cur_index, cell_index, input_data)
+                assert cell_index == cur_index
+                cur_cell = self.note_cells["cells"][cur_index]
+                self.note_input = input_data.replace("\r\n","\n").replace("\r","\n").split("\n")
+                if len(self.note_input) > 1 and not self.note_input[-1]:
+                        self.note_input = self.note_input[:-1]
+
+                if not self.note_prompts:
+                        while self.note_input:
+                                os.write(self.fd, self.note_input.pop(0)+"\n")
+
         def clear(self):
                 self.screen_buf.clear_buf()
                 self.needs_updating = True
@@ -714,11 +780,12 @@ class Terminal(object):
                 self.screen_buf.clear_last_entry(last_entry_index=last_entry_index)
 
         def scroll_screen(self, scroll_rows=None):
+                prompt = [] if self.note_cells else self.prompt
                 if scroll_rows == None:
                         scroll_rows = 0
                         for j in range(self.active_rows-1,-1,-1):
                                 line = dump(self.main_screen.data[self.width*j:self.width*(j+1)])
-                                if prompt_offset(line, self.prompt, self.main_screen.meta[j]):
+                                if prompt_offset(line, prompt, self.main_screen.meta[j]):
                                         # Move rows before last prompt to buffer
                                         scroll_rows = j
                                         break
@@ -730,13 +797,16 @@ class Terminal(object):
                 while cursor_y < scroll_rows:
                         row = self.main_screen.data[self.width*cursor_y:self.width*cursor_y+self.width]
                         meta = self.main_screen.meta[cursor_y]
-                        offset = prompt_offset(dump(row), self.prompt, meta)
+                        offset = prompt_offset(dump(row), prompt, meta)
                         if meta:
                                 # Concatenate rows for multiline command
                                 while cursor_y < scroll_rows-1 and self.main_screen.meta[cursor_y+1] and self.main_screen.meta[cursor_y+1][JCONTINUATION]:
                                         cursor_y += 1
                                         row += self.main_screen.data[self.width*cursor_y:self.width*cursor_y+self.width]
-                        self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta, offset=offset)
+                        if self.note_cells:
+                            self.note_screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta, offset=offset)
+                        else:
+                            self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta, offset=offset)
                         cursor_y += 1
 
                 # Scroll and zero rest of screen
@@ -761,21 +831,50 @@ class Terminal(object):
                 self.update_callback()
 
         def update_callback(self, response_id=""):
-                alt_screen = self.alt_screen if self.alt_mode else None
-                full_update, update_rows, update_scroll = self.screen_buf.update(self.active_rows, self.width, self.height,
-                                                                                 self.cursor_x, self.cursor_y,
-                                                                                 self.main_screen,
-                                                                                 alt_screen=alt_screen,
-                                                                                 prompt=self.prompt,
-                                                                                 reconnecting=bool(response_id))
-                pre_offset = len(self.prompt[0]) if self.prompt else 0
-                self.screen_callback(self.term_name, response_id, "row_update",
-                                     [self.alt_mode, full_update, self.active_rows,
-                                      self.width, self.height,
-                                      self.cursor_x, self.cursor_y, pre_offset,
-                                      update_rows, update_scroll])
-                if not response_id and (update_rows or update_scroll):
-                    self.gterm_output_buf = []
+                reconnecting = bool(response_id)
+                if not self.note_cells or self.screen_buf.full_update or reconnecting:
+                        alt_screen = self.alt_screen if self.alt_mode else None
+                        if self.note_cells:
+                                active_rows, cursor_x, cursor_y = 0, 0, 0
+                        else:
+                                active_rows, cursor_x, cursor_y = self.active_rows, self.cursor_x, self.cursor_y
+                        full_update, update_rows, update_scroll = self.screen_buf.update(active_rows, self.width, self.height,
+                                                                                         cursor_x, cursor_y,
+                                                                                         self.main_screen,
+                                                                                         alt_screen=alt_screen,
+                                                                                         prompt=self.prompt,
+                                                                                         reconnecting=reconnecting)
+                        pre_offset = len(self.prompt[0]) if self.prompt else 0
+                        self.screen_callback(self.term_name, response_id, "row_update",
+                                             [self.alt_mode, full_update, self.active_rows,
+                                              self.width, self.height,
+                                              self.cursor_x, self.cursor_y, pre_offset,
+                                              update_rows, update_scroll])
+                        if not self.note_cells and not reconnecting and not response_id and (update_rows or update_scroll):
+                            self.gterm_output_buf = []
+
+                if self.note_cells:
+                        if reconnecting:
+                                for cell in self.note_cells["cells"]:
+                                        logging.warning("ABCnote_add_cell: %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellInput"], cell["cellOutput"])
+                                        self.screen_callback(self.term_name, response_id, "note_add_cell",
+                                                             [cell["cellIndex"], cell["cellType"], 0,
+                                                              cell["cellInput"], cell["cellOutput"]])
+                                        
+                        full_update, update_rows, update_scroll = self.note_screen_buf.update(self.active_rows, self.width, self.height,
+                                                                                         self.cursor_x, self.cursor_y,
+                                                                                         self.main_screen,
+                                                                                         alt_screen=False,
+                                                                                         prompt=[],
+                                                                                         reconnecting=reconnecting)
+                        logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
+                        self.screen_callback(self.term_name, response_id, "note_row_update",
+                                             [False, full_update, self.active_rows,
+                                              self.width, self.height,
+                                              self.cursor_x, self.cursor_y, 0,
+                                              update_rows, update_scroll])
+                        if not reconnecting and (update_rows or update_scroll):
+                            self.gterm_output_buf = []
 
         def zero(self, y1, x1, y2, x2, screen=None):
                 if screen is None: screen = self.screen
@@ -818,7 +917,12 @@ class Terminal(object):
                         self.cursor_eol = 0
                         q, r = divmod(self.cursor_y+1, self.scroll_bot+1)
                         if q:
-                                if not self.alt_mode:
+                                if self.note_cells:
+                                        row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
+                                        self.note_screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
+                                                                      self.screen.meta[self.scroll_top],
+                                                        offset=prompt_offset(dump(row), self.prompt, self.screen.meta[self.scroll_top]))
+                                elif not self.alt_mode:
                                         row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
                                         self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
                                                                       self.screen.meta[self.scroll_top],
@@ -1506,6 +1610,27 @@ class Terminal(object):
                         self.enter()
                 os.write(self.fd, data)
 
+        def pty_read(self, data):
+                if self.trim_first_prompt:
+                        self.trim_first_prompt = False
+                        # Fix for the very first prompt not being set
+                        if data.startswith("> "):
+                                data = data[2:]
+                        elif data.startswith("\r\x1b[K> "):
+                                data = data[6:]
+                elif self.note_input:
+                        for prompt in self.note_prompts:
+                                if data.startswith(prompt):
+                                        # Prompt found; transmit buffered notebook cell line
+                                        os.write(self.fd, self.note_input.pop(0)+"\n")
+                                        break
+
+                self.write(data)
+                reply = self.read()
+                if reply:
+                        # Send terminal response
+                        os.write(self.fd, reply)
+        
                 
 class Multiplex(object):
         def __init__(self, screen_callback, command=None, shared_secret="",
@@ -1722,18 +1847,7 @@ class Multiplex(object):
                                         self.term_update(term_name)
                                         self.kill_term(term_name)
                                         return
-                                if term.trim_first_prompt:
-                                        term.trim_first_prompt = False
-                                        # Fix for the very first prompt not being set
-                                        if data.startswith("> "):
-                                                data = data[2:]
-                                        elif data.startswith("\r\x1b[K> "):
-                                                data = data[6:]
-                                                
-                                term.write(data)
-                                reply = term.read()
-                                if reply:
-                                        os.write(term.fd, reply)
+                                term.pty_read(data)
                         except (KeyError, IOError, OSError):
                                 print >> sys.stderr, "lineterm: Error in reading from %s; closing it" % term_name
                                 self.kill_term(term_name)
@@ -1785,6 +1899,27 @@ class Multiplex(object):
                         if not term:
                                 return ""
                         return term.click_paste(text, file_url=file_url, options=options)
+
+        def notebook(self, term_name, activate, prompts):
+                with self.lock:
+                        term = self.proc.get(term_name)
+                        if not term:
+                                return ""
+                        return term.notebook(activate, prompts)
+
+        def select_cell(self, term_name, cell_index, new_cell_type, before_cell_index):
+                with self.lock:
+                        term = self.proc.get(term_name)
+                        if not term:
+                                return ""
+                        return term.select_cell(cell_index, new_cell_type, before_cell_index)
+
+        def exec_cell(self, term_name, cur_index, input_data):
+                with self.lock:
+                        term = self.proc.get(term_name)
+                        if not term:
+                                return ""
+                        return term.exec_cell(cur_index, input_data)
 
         def reconnect(self, term_name, response_id=""):
                 with self.lock:
