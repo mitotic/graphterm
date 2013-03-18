@@ -448,21 +448,20 @@ class ScreenBuf(object):
                 if self.last_scroll_count > self.current_scroll_count:
                         self.last_scroll_count = self.current_scroll_count
 
-        def scroll_buf_up(self, line, meta, offset=0):
+        def scroll_buf_up(self, line, meta, offset=0, row_type="scroll", markup=None):
                 current_dir = ""
-                current_markup = None
                 if offset:
                         # Prompt line (i.e., command line)
                         self.entry_index += 1
                         current_dir = meta[JCURDIR] if meta else ""
-                        current_markup = command_markup(self.entry_index, current_dir, self.pre_offset, offset, line)
+                        markup = command_markup(self.entry_index, current_dir, self.pre_offset, offset, line)
                         if not self.cleared_last:
                                 self.cleared_current_dir = None
                         self.cleared_last = False
                 self.current_scroll_count += 1
-                self.scroll_lines.append([self.entry_index, offset, current_dir, "scroll", line, current_markup])
+                self.scroll_lines.append([self.entry_index, offset, current_dir, row_type, line, markup])
                 if len(self.scroll_lines) > MAX_SCROLL_LINES:
-                        entry_index, offset, dir, markup, line = self.scroll_lines.pop(0)
+                        entry_index, offset, dir, tem_markup, line = self.scroll_lines.pop(0)
                         while self.scroll_lines and self.scroll_lines[0][JINDEX] == entry_index:
                                 self.scroll_lines.pop(0)
 
@@ -1374,8 +1373,27 @@ class Terminal(object):
                         headers, content = parse_headers(gterm_output)
                         response_type = headers["x_gterm_response"]
                         response_params = headers["x_gterm_parameters"]
-                        plain_text = False
-                        if self.gterm_validated:
+                        screen_buf = self.note_screen_buf if self.note_cells else self.screen_buf
+                        if not self.gterm_validated:
+                                # Unvalidated markup; plain-text or escaped HTML content for security
+                                try:
+                                        import lxml.html
+                                        content = lxml.html.fromstring(content).text_content()
+                                        headers["content_type"] = "text/plain"
+                                except Exception:
+                                        content = cgi.escape(content)
+
+                                if response_type:
+                                        headers["x_gterm_response"] = "pagelet"
+                                        headers["x_gterm_parameters"] = {}
+                                        headers["content_length"] = len(content)
+                                        params = {"validated": self.gterm_validated, "headers": headers}
+                                        self.graphterm_output(params, content)
+                                else:
+                                        content = content.replace("\r\n","\n").replace("\r","\n").split("\n")
+                                        screen_buf.scroll_buf_up(content[0]+"...", None)
+                        else:
+                                # Validated data
                                 if response_type == "edit_file":
                                         filepath = response_params.get("filepath", "")
                                         try:
@@ -1395,37 +1413,29 @@ class Terminal(object):
                                                 headers["x_gterm_response"] = "error_message"
                                                 headers["x_gterm_parameters"] = {}
                                                 headers["content_type"] = "text/plain"
-                        elif response_type == "pagelet":
-                                # Display non-validated pagelet as plain text
-                                plain_text = True
-                                headers["x_gterm_response"] = "pagelet"
-                                headers["x_gterm_parameters"] = {}
-                                try:
-                                        import lxml.html
-                                        content = lxml.html.fromstring(content).text_content()
-                                        headers["content_type"] = "text/plain"
-                                except Exception:
-                                        content = cgi.escape(content)
 
-                        if self.gterm_validated and response_type == "create_blob":
-                                del headers["x_gterm_response"]
-                                del headers["x_gterm_parameters"]
-                                blob_id = response_params.get("blob_id")
-                                if not blob_id:
-                                    logging.warning("No blob_id for create_blob")
-                                elif "content_length" not in headers:
-                                    logging.warning("No content_length specified for create_blob")
+                                if not response_type:
+                                        # Raw html display
+                                        screen_buf.scroll_buf_up("", None, row_type="html", markup=content)
+                                elif response_type == "create_blob":
+                                        del headers["x_gterm_response"]
+                                        del headers["x_gterm_parameters"]
+                                        blob_id = response_params.get("blob_id")
+                                        if not blob_id:
+                                            logging.warning("No blob_id for create_blob")
+                                        elif "content_length" not in headers:
+                                            logging.warning("No content_length specified for create_blob")
+                                        else:
+                                            # Note: blob content should be Base64 encoded
+                                            self.screen_callback(self.term_name, "", "create_blob",
+                                                                 [blob_id, headers, content])
+                                elif response_type == "frame_msg":
+                                        self.screen_callback(self.term_name, "", "frame_msg",
+                                         [response_params.get("user",""), response_params.get("frame",""), content])
                                 else:
-                                    # Note: blob content should be Base64 encoded
-                                    self.screen_callback(self.term_name, "", "create_blob",
-                                                         [blob_id, headers, content])
-                        elif self.gterm_validated and response_type == "frame_msg":
-                            self.screen_callback(self.term_name, "", "frame_msg",
-                                 [response_params.get("user",""), response_params.get("frame",""), content])
-                        elif self.gterm_validated or plain_text:
-                                headers["content_length"] = len(content)
-                                params = {"validated": self.gterm_validated, "headers": headers}
-                                self.graphterm_output(params, content)
+                                        headers["content_length"] = len(content)
+                                        params = {"validated": self.gterm_validated, "headers": headers}
+                                        self.graphterm_output(params, content)
                 self.gterm_code = None
                 self.gterm_buf = None
                 self.gterm_buf_size = 0

@@ -11,7 +11,7 @@ echo -n "${esc}[?${graphterm_code};${GRAPHTERM_COOKIE}h"
 echo '<b>Hello</b> <em style="color: red;">World!</em><p>'
 
 # Display inline image
-echo '<a href="https://github.com/mitotic/gcowsay">'
+echo '<a href="https://github.com/mitotic/graphterm" target="_blank">'
 echo '<img width="400" height="200" src="'$imgurl'"></img>'
 echo '</a>'
 

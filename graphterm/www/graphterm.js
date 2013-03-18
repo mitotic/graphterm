@@ -1194,8 +1194,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    var prompt_id = "prompt"+newPromptIndex;
 			    var prompt_offset = update_scroll[j][JOFFSET];
 			    var entry_class = entry_id;
+			    var id_attr = "";
 			    if (prompt_offset) {
 				entry_class += " promptrow";
+				id_attr = 'id="'+entry_id+'"'
 				if (gPromptIndex == newPromptIndex) {
 				    // Repeat entry; remove any previous versions of same entry
 				    $("."+"entry"+newPromptIndex).remove();
@@ -1213,11 +1215,17 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				}
 			    }
 			    gPromptIndex = newPromptIndex;
+			    var rowType = update_scroll[j][JTYPE];
 			    var markup = update_scroll[j][JMARKUP];
-			    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
-			    var row_html = '<pre id="'+entry_id+'" class="row entry '+entry_class+'">'+row_escaped+"\n</pre>";
+			    var row_html;
+			    if (rowType == "html") {
+				row_html = '<div class="row entry '+entry_class+'">'+markup+'</div>\n';
+			    } else {
+				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
+				row_html = '<pre '+id_attr+' class="row entry '+entry_class+'">'+row_escaped+"\n</pre>";
+			    }
 			    $(row_html).appendTo("#session-bufscreen");
-			    $("#"+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
+			    $("#session-bufscreen ."+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
 			}
 		    }
 
@@ -2699,8 +2707,15 @@ GTNotebook.prototype.execute = function() {
 GTNotebook.prototype.output = function(update_rows, update_scroll) {
     var out_html = []
     for (var j=0; j<update_scroll.length; j++) {
+	var rowType = update_scroll[j][JTYPE];
 	var markup = update_scroll[j][JMARKUP];
-	var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE]) : markup;
+	var row_html;
+	if (rowType == "html") {
+	    row_html = '<div class="gterm-notecell-output">'+markup+'</div>\n';
+	} else {
+	    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
+	    row_html = '<pre class="gterm-notecell-output">'+row_escaped+"\n</pre>";
+	}
 	out_html.push('<pre class="gterm-notecell-output">'+row_escaped+'\n</pre>');
     }
 
