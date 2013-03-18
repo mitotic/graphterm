@@ -1716,14 +1716,14 @@ function gtermLinkClickHandler(event) {
 	cmd_output.toggleClass("gterm-hideoutput");
 	$(this).parent().toggleClass("gterm-hideoutput");
 
-    } if ($(this).hasClass("gterm-cmd-text")) {
+    } else if ($(this).hasClass("gterm-cmd-text")) {
 	gtermClickPaste($(this).text(), file_url, options);
 
-    } if ($(this).hasClass("gterm-cmd-path")) {
+    } else if ($(this).hasClass("gterm-cmd-path")) {
 	file_url = makeFileURL($(this).attr("href"));
 	gtermClickPaste("", file_url, options);
 
-    } if ($(this).hasClass("gterm-blockseqlink")) {
+    } else if ($(this).hasClass("gterm-blockseqlink")) {
 	$(this).parent(".gterm-blockseqtoggle").toggleClass("gterm-blockseqhide");
     }
 
@@ -2051,18 +2051,32 @@ function AjaxKeypress(evt) {
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress1", gControlActive, kc, evt.ctrlKey, evt);
 
-    if (kc == 13 && gScriptBuffer.length && (evt.ctrlKey || gControlActive)) {
-	// Scripted command
-	var scriptText = gScriptBuffer.shift();
-	if (scriptText.length)
-	    gWebSocket.term_input(scriptText+"\n", null, true);
-	return false;
-    }
+    if (kc == 13) {  // Enter key
+	if (gScriptBuffer.length && (evt.ctrlKey || gControlActive)) {
+	    // Scripted command
+	    var scriptText = gScriptBuffer.shift();
+	    if (scriptText.length)
+		gWebSocket.term_input(scriptText+"\n", null, true);
+	    return false;
+	}
 
-    var formSubmitter = ".pagelet.entry"+gPromptIndex+" .gterm-form-command";
-    if (kc == 13 && gForm && gParams.controller && $(formSubmitter).length == 1) {
-	$(formSubmitter).click();
-	return false;
+	var formSubmitter = ".pagelet.entry"+gPromptIndex+" .gterm-form-command";
+	if (gForm && gParams.controller && $(formSubmitter).length == 1) {
+	    $(formSubmitter).click();
+	    return false;
+	}
+
+	if (!gNotebook && evt.ctrlKey) {
+	    GTActivateNotebook();
+	}
+
+	if (gNotebook && evt.ctrlKey) {
+	    gNotebook.execute();
+	}
+
+	if (gNotebook && evt.shiftKey) {
+	    gNotebook.execute(true);
+	}
     }
 
     if (!evt.ctrlKey && !gControlActive && GTCaptureInput()) {
@@ -2139,9 +2153,9 @@ function AjaxKeypress(evt) {
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress2", kc, k, k.charCodeAt(0), k.length);
 
-    if (gNotebook && k == String.fromCharCode(14)) {
-	// Ctrl-L execute notebook cell
-	gNotebook.execute()
+    if (gNotebook && k == String.fromCharCode(26) && window.confirm("Exit notebook mode?")) {
+	// Ctrl-Z: close notebook
+	GTCloseNotebook();
 	return false;
     } else if (gForm && k == String.fromCharCode(3)) {
 	// Ctrl-C exit from form
@@ -2652,6 +2666,8 @@ function GTNotebook(fullwindow) {
 
 GTNotebook.prototype.close = function() {
     gNotebook = null;
+    if (gWebSocket && gParams.controller)
+	gWebSocket.term_input("\n");
 }
 
 GTNotebook.prototype.getCellId = function(cellIndex) {
@@ -2693,9 +2709,10 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
     }
 
     this.curIndex = cellIndex;
+    $("#"+this.getCellId(cellIndex)+" textarea.gterm-notecell-code").focus();
 }
 
-GTNotebook.prototype.execute = function() {
+GTNotebook.prototype.execute = function(openNext) {
     var textElem = $("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code");
     if (textElem.length) {
 	var text = textElem.val();
@@ -2713,7 +2730,7 @@ GTNotebook.prototype.output = function(update_rows, update_scroll) {
 	if (rowClass == "gterm-html") {
 	    row_html = '<div class="gterm-notecell-output">'+markup+'</div>\n';
 	} else {
-	    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
+	    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE]) : markup;
 	    row_html = '<pre class="gterm-notecell-output">'+row_escaped+"\n</pre>";
 	}
 	out_html.push('<pre class="gterm-notecell-output">'+row_escaped+'\n</pre>');

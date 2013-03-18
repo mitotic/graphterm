@@ -885,6 +885,35 @@ class Terminal(object):
                                                                                          prompt=[],
                                                                                          reconnecting=True)
                         logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
+
+                        # Hide entries starting with prompt
+                        trunc_scroll = []
+                        block_scroll = []
+                        prev_prompt_entry = None
+                        for entry in update_scroll:
+                                line = entry[JLINE]
+                                has_prompt = False
+                                for prompt in self.note_prompts:
+                                        if line.startswith(prompt):
+                                                # Entry starts with prompt
+                                                has_prompt = True
+                                                break
+                                if has_prompt:
+                                        # Prompt entry saved temporarily
+                                        trunc_scroll += block_scroll
+                                        block_scroll = []
+                                        prev_prompt_entry = entry
+                                else:
+                                        # Retain all non-prompt entries
+                                        block_scroll.append(entry)
+                                        if "error" in line.lower():
+                                                if prev_prompt_entry is not None:
+                                                        # Include previous prompt entry because of error
+                                                        block_scroll = [prev_prompt_entry] + block_scroll
+                                                        prev_prompt_entry = None
+
+                        update_scroll = trunc_scroll + block_scroll
+
                         self.screen_callback(self.term_name, response_id, "note_row_update",
                                              [False, full_update, self.active_rows,
                                               self.width, self.height,
