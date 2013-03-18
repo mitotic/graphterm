@@ -448,7 +448,7 @@ class ScreenBuf(object):
                 if self.last_scroll_count > self.current_scroll_count:
                         self.last_scroll_count = self.current_scroll_count
 
-        def scroll_buf_up(self, line, meta, offset=0, row_class="gterm-row", markup=None):
+        def scroll_buf_up(self, line, meta, offset=0, row_class="row", markup=None):
                 current_dir = ""
                 if offset:
                         # Prompt line (i.e., command line)
