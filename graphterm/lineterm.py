@@ -62,7 +62,7 @@ COMMAND_DELIMITERS = "<>;"
 JINDEX = 0
 JOFFSET = 1
 JDIR = 2
-JTYPE = 3
+JCLASS = 3
 JLINE = 4
 JMARKUP = 5
 
@@ -432,7 +432,7 @@ class ScreenBuf(object):
                 if not self.scroll_lines or self.entry_index <= 0:
                         return
                 n = len(self.scroll_lines)-1
-                entry_index, offset, dir, row_type, line, markup = self.scroll_lines[n]
+                entry_index, offset, dir, row_class, line, markup = self.scroll_lines[n]
                 if self.entry_index != entry_index:
                         return
                 if last_entry_index and last_entry_index != entry_index:
@@ -448,7 +448,7 @@ class ScreenBuf(object):
                 if self.last_scroll_count > self.current_scroll_count:
                         self.last_scroll_count = self.current_scroll_count
 
-        def scroll_buf_up(self, line, meta, offset=0, row_type="scroll", markup=None):
+        def scroll_buf_up(self, line, meta, offset=0, row_class="gterm-row", markup=None):
                 current_dir = ""
                 if offset:
                         # Prompt line (i.e., command line)
@@ -459,10 +459,10 @@ class ScreenBuf(object):
                                 self.cleared_current_dir = None
                         self.cleared_last = False
                 self.current_scroll_count += 1
-                self.scroll_lines.append([self.entry_index, offset, current_dir, row_type, line, markup])
+                self.scroll_lines.append([self.entry_index, offset, current_dir, row_class, line, markup])
                 if len(self.scroll_lines) > MAX_SCROLL_LINES:
-                        entry_index, offset, dir, tem_markup, line = self.scroll_lines.pop(0)
-                        while self.scroll_lines and self.scroll_lines[0][JINDEX] == entry_index:
+                        tem_entry_index, tem_offset, tem_dir, tem_class, tem_line, tem_markup = self.scroll_lines.pop(0)
+                        while self.scroll_lines and self.scroll_lines[0][JINDEX] == tem_entry_index:
                                 self.scroll_lines.pop(0)
 
         def update(self, active_rows, width, height, cursorx, cursory, main_screen,
@@ -1416,7 +1416,7 @@ class Terminal(object):
 
                                 if not response_type:
                                         # Raw html display
-                                        screen_buf.scroll_buf_up("", None, row_type="html", markup=content)
+                                        screen_buf.scroll_buf_up("", None, row_class="gterm-html", markup=content)
                                 elif response_type == "create_blob":
                                         del headers["x_gterm_response"]
                                         del headers["x_gterm_parameters"]
@@ -2029,7 +2029,7 @@ if __name__ == "__main__":
         def screen_callback(term_name, response_id, command, arg):
                 if command == "row_update":
                         alt_mode, reset, active_rows, width, height, cursorx, cursory, pre_offset, update_rows, update_scroll = arg
-                        for row_num, row_offset, row_dir, row_type, row_span, row_markup in update_rows:
+                        for row_num, row_offset, row_dir, row_class, row_span, row_markup in update_rows:
                                 row_str = "".join(x[1] for x in row_span)
                                 sys.stdout.write("\x1b[%d;%dH%s" % (row_num+1, 0, row_str))
                                 sys.stdout.write("\x1b[%d;%dH" % (row_num+1, len(row_str)+1))

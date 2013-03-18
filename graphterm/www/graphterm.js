@@ -101,7 +101,7 @@ var GTCurDirURI = "";
 var JINDEX = 0
 var JOFFSET = 1
 var JDIR = 2
-var JTYPE = 3
+var JCLASS = 3
 var JLINE = 4
 var JMARKUP = 5
 
@@ -1215,10 +1215,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				}
 			    }
 			    gPromptIndex = newPromptIndex;
-			    var rowType = update_scroll[j][JTYPE];
+			    var rowClass = update_scroll[j][JCLASS];
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_html;
-			    if (rowType == "html") {
+			    if (rowClass == "gterm-html") {
 				row_html = '<div class="row entry '+entry_class+'">'+markup+'</div>\n';
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
@@ -2707,10 +2707,10 @@ GTNotebook.prototype.execute = function() {
 GTNotebook.prototype.output = function(update_rows, update_scroll) {
     var out_html = []
     for (var j=0; j<update_scroll.length; j++) {
-	var rowType = update_scroll[j][JTYPE];
+	var rowClass = update_scroll[j][JCLASS];
 	var markup = update_scroll[j][JMARKUP];
 	var row_html;
-	if (rowType == "html") {
+	if (rowClass == "gterm-html") {
 	    row_html = '<div class="gterm-notecell-output">'+markup+'</div>\n';
 	} else {
 	    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
