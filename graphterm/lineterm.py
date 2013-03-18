@@ -62,8 +62,9 @@ COMMAND_DELIMITERS = "<>;"
 JINDEX = 0
 JOFFSET = 1
 JDIR = 2
-JMARKUP = 3
+JTYPE = 3
 JLINE = 4
+JMARKUP = 5
 
 Log_ignored = False
 MAX_LOG_CHARS = 8
@@ -431,7 +432,7 @@ class ScreenBuf(object):
                 if not self.scroll_lines or self.entry_index <= 0:
                         return
                 n = len(self.scroll_lines)-1
-                entry_index, offset, dir, markup, line = self.scroll_lines[n]
+                entry_index, offset, dir, row_type, line, markup = self.scroll_lines[n]
                 if self.entry_index != entry_index:
                         return
                 if last_entry_index and last_entry_index != entry_index:
@@ -459,7 +460,7 @@ class ScreenBuf(object):
                                 self.cleared_current_dir = None
                         self.cleared_last = False
                 self.current_scroll_count += 1
-                self.scroll_lines.append([self.entry_index, offset, current_dir, current_markup, line])
+                self.scroll_lines.append([self.entry_index, offset, current_dir, "scroll", line, current_markup])
                 if len(self.scroll_lines) > MAX_SCROLL_LINES:
                         entry_index, offset, dir, markup, line = self.scroll_lines.pop(0)
                         while self.scroll_lines and self.scroll_lines[0][JINDEX] == entry_index:
@@ -499,7 +500,7 @@ class ScreenBuf(object):
                                 row_update = (new_row != old_screen.data[width*j:width*(j+1)])
                         if row_update or (cursor_moved and (cursory == j or self.cursory == j)):
                                 offset = prompt_offset(dump(new_row), prompt, screen.meta[j])
-                                update_rows.append([j, offset, "", None, self.dumprichtext(new_row, trim=True)])
+                                update_rows.append([j, offset, "", "row", self.dumprichtext(new_row, trim=True), None])
 
                 if reconnecting:
                         update_scroll = self.scroll_lines[:]
@@ -2018,7 +2019,7 @@ if __name__ == "__main__":
         def screen_callback(term_name, response_id, command, arg):
                 if command == "row_update":
                         alt_mode, reset, active_rows, width, height, cursorx, cursory, pre_offset, update_rows, update_scroll = arg
-                        for row_num, row_offset, row_dir, row_markup, row_span in update_rows:
+                        for row_num, row_offset, row_dir, row_type, row_span, row_markup in update_rows:
                                 row_str = "".join(x[1] for x in row_span)
                                 sys.stdout.write("\x1b[%d;%dH%s" % (row_num+1, 0, row_str))
                                 sys.stdout.write("\x1b[%d;%dH" % (row_num+1, len(row_str)+1))

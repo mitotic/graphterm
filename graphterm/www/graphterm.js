@@ -101,8 +101,9 @@ var GTCurDirURI = "";
 var JINDEX = 0
 var JOFFSET = 1
 var JDIR = 2
-var JMARKUP = 3
+var JTYPE = 3
 var JLINE = 4
+var JMARKUP = 5
 
 function bind_method(obj, method) {
   return function() {
