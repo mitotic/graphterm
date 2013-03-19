@@ -2068,14 +2068,17 @@ function AjaxKeypress(evt) {
 
 	if (!gNotebook && evt.ctrlKey) {
 	    GTActivateNotebook();
+	    return false;
 	}
 
 	if (gNotebook && evt.ctrlKey) {
 	    gNotebook.execute();
+	    return false;
 	}
 
 	if (gNotebook && evt.shiftKey) {
 	    gNotebook.execute(true);
+	    return false;
 	}
     }
 
@@ -2636,7 +2639,7 @@ var gFrameDispatcher = new GTFrameDispatcher();
 
 function GTActivateNotebook() {
     if (gWebSocket && gParams.controller) {
-	gWebSocket.write([["notebook", true, [">>> ", "... "]]]);
+	gWebSocket.write([["notebook", true, []]]);
     }
 }
 
@@ -2709,6 +2712,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
     }
 
     this.curIndex = cellIndex;
+    $("#"+this.getCellId(cellIndex)+" textarea.gterm-notecell-code").autoResize();
     $("#"+this.getCellId(cellIndex)+" textarea.gterm-notecell-code").focus();
 }
 

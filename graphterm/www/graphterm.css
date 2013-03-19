@@ -310,6 +310,12 @@ input.gterm-input-arg[type=text] {
     display: none;
 }
 
+/* Notebook */
+
+textarea.gterm-notecell-code {
+    width: 90%;
+}
+
 /* Screens */
 #session-term:not(.split-screen) .session-screen, .session-altscreen {
     margin-bottom: 1.0em;

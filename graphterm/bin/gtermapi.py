@@ -365,8 +365,8 @@ class FormParser(object):
         input_html = self.create_input_html(id_suffix)
         return Form_template % (id_suffix, self.title, input_html, id_suffix, opt_names) 
         
-    def parse_args(self):
-        if len(sys.argv) < 2:
+    def parse_args(self, args=None):
+        if args is None and len(sys.argv) < 2:
             if sys.stdout.isatty() and Lterm_cookie:
                 assert self.command
                 write_form(self.create_form(), command=self.command)
@@ -375,7 +375,7 @@ class FormParser(object):
             sys.exit(1)
 
         if self.parser:
-            return self.parser.parse_args()
+            return self.parser.parse_args(args=args)
         else:
             return None, None
 

@@ -12,7 +12,7 @@ The contents of this file remain in the public-domain.
 from __future__ import with_statement
 
 import array, cgi, copy, fcntl, glob, logging, mimetypes, optparse, os, pty
-import re, signal, select, socket, sys, threading, time, termios, tty, struct, pwd
+import re, shlex, signal, select, socket, sys, threading, time, termios, tty, struct, pwd
 
 try:
     from collections import OrderedDict
@@ -57,6 +57,8 @@ FILE_EXTENSIONS = {"css": "css", "htm": "html", "html": "html", "js": "javascrip
 FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gcp", "gimages", "gls", "gopen", "gvi"])
 REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
+
+PYTHON_PROMPTS = [">>> ", "... "]
 
 # Scroll lines array components
 JINDEX = 0
@@ -598,6 +600,7 @@ class Terminal(object):
                 self.screen = self.main_screen
                 self.trim_first_prompt = bool(prompt)
                 self.logchars = 0
+                self.command_path = ""
 
         def init(self):
                 self.esc_seq={
@@ -714,10 +717,27 @@ class Terminal(object):
                 self.screen = self.alt_screen if self.alt_mode else self.main_screen
                 self.needs_updating = True
 
-        def notebook(self, activate, prompts=[">>> ", "... "]):
-                logging.warning("ABCnotebook: %s prompts=%s", activate, prompts)
+        def notebook(self, activate, prompts=[]):
                 if activate:
-                        # TODO: if prompts not specified, search buffer to use current prompt ABC
+                        if not prompts and self.command_path:
+                                basename = os.path.basename(self.command_path)
+                                if basename == "python":
+                                        prompts = PYTHON_PROMPTS
+                        if not prompts:
+                                # Search buffer to use current prompt
+                                try:
+                                        line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
+                                        comps = line.split()
+                                        if comps and comps[0]:
+                                                prompts = [comps[0]]
+                                                if not prompts[0].endswith(" "):
+                                                        prompts[0] += " "
+                                                if prompts[0] == PYTHON_PROMPTS[0]:
+                                                        prompts += PYTHON_PROMPTS[1:]
+                                except Exception:
+                                        raise
+                        logging.warning("ABCnotebook: %s prompts=%s", activate, prompts)
+
                         self.scroll_screen(self.active_rows)
                         self.update()
                         self.resize(self.height, self.width, force=True)
@@ -745,6 +765,7 @@ class Terminal(object):
                         self.scroll_screen(self.active_rows)
                         cur_cell["cellOutput"] = self.note_screen_buf.scroll_lines[:]
 
+                self.note_input = []
                 if new_cell_type:
                         # New cell
                         self.note_cells["maxIndex"] += 1
@@ -784,6 +805,8 @@ class Terminal(object):
                         # No prompt; transmit all input data
                         while self.note_input:
                                 os.write(self.fd, self.note_input.pop(0)+"\n")
+
+                os.fsync(self.fd)
 
         def clear(self):
                 self.screen_buf.clear_buf()
@@ -960,9 +983,21 @@ class Terminal(object):
                 self.poke(y, x+1, self.peek(y, x, y, self.width-1))
                 self.zero(y, x, y, x)
 
+        def parse_command(self):
+                if not self.alt_mode and self.current_meta and not self.current_meta[1]:
+                        # Parse command line
+                        try:
+                                line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
+                                offset = prompt_offset(line, self.prompt, self.current_meta)
+                                args = shlex.split(line[offset:])
+                                self.command_path = args[0]
+                        except Exception:
+                                pass
+                
         def cursor_down(self):
                 if self.cursor_y >= self.scroll_top and self.cursor_y <= self.scroll_bot:
                         self.cursor_eol = 0
+                        self.parse_command()
                         q, r = divmod(self.cursor_y+1, self.scroll_bot+1)
                         if q:
                                 if self.note_cells:
@@ -1000,6 +1035,7 @@ class Terminal(object):
         
         def enter(self):
                 """Called when CR or LF is received from the user to indicate possible end of command"""
+                self.parse_command()
                 self.current_meta = None   # Command entry is completed
                 
         def echo(self, char):
@@ -1679,9 +1715,10 @@ class Terminal(object):
                                 data = data[6:]
                 elif self.note_input:
                         for prompt in self.note_prompts:
-                                if data.startswith(prompt):
+                                if data.startswith(prompt) or data.endswith(prompt):
                                         # Prompt found; transmit buffered notebook cell line
                                         os.write(self.fd, self.note_input.pop(0)+"\n")
+                                        os.fsync(self.fd)
                                         break
 
                 self.write(data)
