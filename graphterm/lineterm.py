@@ -59,6 +59,7 @@ REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
 PYTHON_PROMPTS = [">>> ", "... "]
+IPYTHON_PROMPTS = ["In ", "   ...: "]
 
 # Scroll lines array components
 JINDEX = 0
@@ -729,11 +730,11 @@ class Terminal(object):
                                         line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
                                         comps = line.split()
                                         if comps and comps[0]:
-                                                prompts = [comps[0]]
-                                                if not prompts[0].endswith(" "):
-                                                        prompts[0] += " "
+                                                prompts = [comps[0]+" "]
                                                 if prompts[0] == PYTHON_PROMPTS[0]:
                                                         prompts += PYTHON_PROMPTS[1:]
+                                                elif prompts[0] == IPYTHON_PROMPTS[0]:
+                                                        prompts += IPYTHON_PROMPTS[1:]
                                 except Exception:
                                         raise
                         logging.warning("ABCnotebook: %s prompts=%s", activate, prompts)
@@ -1713,20 +1714,19 @@ class Terminal(object):
                                 data = data[2:]
                         elif data.startswith("\r\x1b[K> "):
                                 data = data[6:]
-                elif self.note_input:
-                        for prompt in self.note_prompts:
-                                if data.startswith(prompt) or data.endswith(prompt):
-                                        # Prompt found; transmit buffered notebook cell line
-                                        os.write(self.fd, self.note_input.pop(0)+"\n")
-                                        os.fsync(self.fd)
-                                        break
-
                 self.write(data)
                 reply = self.read()
                 if reply:
                         # Send terminal response
                         os.write(self.fd, reply)
-        
+                if self.note_input:
+                        line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
+                        for prompt in self.note_prompts:
+                                if line.startswith(prompt):
+                                        # Prompt found; transmit buffered notebook cell line
+                                        os.write(self.fd, self.note_input.pop(0)+"\n")
+                                        os.fsync(self.fd)
+                                        break        
                 
 class Multiplex(object):
         def __init__(self, screen_callback, command=None, shared_secret="",
