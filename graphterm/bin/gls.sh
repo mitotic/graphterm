@@ -36,6 +36,8 @@ echocmd2="echo"
 rowimg=""
 rowtxt=""
 
+gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
+
 if [ -z $GRAPHTERM_PROMPT ]; then
    glscmd="~/meldr-hg/xmlterm/bin/gls"
    gvicmd="~/meldr-hg/xmlterm/bin/gvi"
@@ -111,8 +113,8 @@ headers='{"content_type": "text/html", "x_gterm_response": "pagelet", "x_gterm_p
 
 esc=`printf "\033"`
 nl=`printf "\012"`
-graphterm_code="1155"
-$echocmd1 "${esc}[?${graphterm_code};${GRAPHTERM_COOKIE}h"
+gterm_code="1155"
+$echocmd1 "${esc}[?${gterm_code};${gterm_cookie}h"
 
 $echocmd1 "$headers"
 $echocmd2 ""
@@ -123,5 +125,5 @@ $echocmd2 "<colgroup colspan=$ncols width=1*>"
 
 $echocmd2 $output
 $echocmd2 '</table>'
-$echocmd1 "${esc}[?${graphterm_code}l"
+$echocmd1 "${esc}[?${gterm_code}l"
 echo

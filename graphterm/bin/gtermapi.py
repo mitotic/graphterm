@@ -26,7 +26,7 @@ import uuid
 
 from optparse import OptionParser
 
-API_VERSION = "0.32.0"
+API_VERSION = "0.34.0"
 API_MIN_VERSION = "0.31"
 
 HEX_DIGITS = 16
@@ -34,8 +34,8 @@ HEX_DIGITS = 16
 
 Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/")
 
+Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOKIE", "")
 Export_host = os.getenv("GRAPHTERM_EXPORT", "")
-Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "")
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
 Path = os.getenv("GRAPHTERM_PATH", "")
 URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")

@@ -12,13 +12,14 @@ echoerrlf() { echo "$@" 1>&2; }
 headers='{"x_gterm_response": "capture_feedback", "x_gterm_parameters": {"cookie": "'"${GRAPHTERM_COOKIE}"'"}}'
 
 esc=`printf "\033"`
-graphterm_code="1155"
-echoerr "${esc}[?${graphterm_code};${GRAPHTERM_COOKIE}h"
+gterm_code="1155"
+gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
+echoerr "${esc}[?${gterm_code};${gterm_cookie}h"
 
 echoerr "$headers"
 echoerrlf ""
 echoerrlf ""
-echoerr "${esc}[?${graphterm_code}l"
+echoerr "${esc}[?${gterm_code}l"
 
 while true; do
     read INPUT

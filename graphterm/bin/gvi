@@ -43,11 +43,12 @@ headers='{"content_type": "text/html", "x_gterm_response": "edit_file", "x_gterm
 esc=`printf "\033"`
 nl=`printf "\012"`
 cr=`printf "\015"`
-graphterm_code="1155"
-$echocmd1 "${esc}[?${graphterm_code};${GRAPHTERM_COOKIE}h"
+gterm_code="1155"
+gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
+$echocmd1 "${esc}[?${gterm_code};${gterm_cookie}h"
 
 $echocmd1 "$headers"
 $echocmd2 ""
 $echocmd2 ""
-$echocmd1 "${esc}[?${graphterm_code}l"
+$echocmd1 "${esc}[?${gterm_code}l"
 echo
