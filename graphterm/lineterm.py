@@ -47,6 +47,7 @@ UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
 NO_COPY_ENV = set(["GRAPHTERM_EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
+LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_PROMPT", "PROMPT_COMMAND"]
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)     # (prompt_escape, pagelet_escape)
@@ -1731,7 +1732,7 @@ class Terminal(object):
 class Multiplex(object):
         def __init__(self, screen_callback, command=None, shared_secret="",
                      host="", server_url="", prompt=[], term_type="linux", api_version="",
-                     widget_port=0, logfile="", app_name="graphterm"):
+                     widget_port=0, lc_export=False, logfile="", app_name="graphterm"):
                 """ prompt = [prefix, format, suffix]
                 """
                 ##signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -1744,6 +1745,7 @@ class Multiplex(object):
                 self.term_type = term_type
                 self.api_version = api_version
                 self.widget_port = widget_port
+                self.lc_export = lc_export
                 self.logfile = logfile
                 self.app_name = app_name
                 self.proc = {}
@@ -1857,6 +1859,13 @@ class Multiplex(object):
                         env.append( ("PROMPT_COMMAND", cmd_fmt % (GRAPHTERM_SCREEN_CODES[0], GRAPHTERM_SCREEN_CODES[0]) ) )
 
                 env.append( ("GRAPHTERM_DIR", File_dir) )
+
+                if self.lc_export:
+                    # Export some environment variables as LC_* (hack to enable SSH forwarding)
+                    env_dict = dict(env)
+                    for name in LC_EXPORT_ENV:
+                        if name in env_dict:
+                            env.append( ("LC_"+name, env_dict[name]) )
                 return env
                 
         def export_environment(self, term_name):

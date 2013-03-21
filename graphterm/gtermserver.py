@@ -1080,6 +1080,7 @@ def run_server(options, args):
                                                                      "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
                                                                      "key_secret": options.server_secret or None,
+                                                                     "lc_export": options.lc_export,
                                                                      "lterm_logfile": options.lterm_logfile,
                                                                      "widget_port":
                                                                        (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
@@ -1185,6 +1186,8 @@ def main():
                       help="Use https for internal connections")
     parser.add_option("", "--server_auth", dest="server_auth", action="store_true",
                       help="Enable server authentication by gterm clients")
+    parser.add_option("", "--lc_export", dest="lc_export", action="store_true",
+                      help="Export environment as locale (ssh hack)")
     parser.add_option("", "--client_cert", dest="client_cert", default="",
                       help="Path to client CA cert (or '.')")
     parser.add_option("", "--term_type", dest="term_type", default="",
