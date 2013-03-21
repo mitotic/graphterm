@@ -35,9 +35,9 @@ HEX_DIGITS = 16
 Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/")
 
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOKIE", "")
+Path = os.getenv("GRAPHTERM_PATH", "") or os.getenv("LC_GRAPHTERM_PATH", "")
 Export_host = os.getenv("GRAPHTERM_EXPORT", "")
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
-Path = os.getenv("GRAPHTERM_PATH", "")
 URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
 
 Host, Session = Path.split("/") if Path else ("", "") 
