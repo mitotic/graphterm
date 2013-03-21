@@ -294,6 +294,10 @@ input.gterm-input-arg[type=text] {
     width: 75%;
 }
 
+#terminal {
+    padding-bottom: 3px;
+}
+
 #terminal:not(.webcast) .webcast-alert {
     display: none;
 }
