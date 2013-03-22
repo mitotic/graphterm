@@ -2156,8 +2156,8 @@ function AjaxKeypress(evt) {
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress2", kc, k, k.charCodeAt(0), k.length);
 
-    if (gNotebook && k == String.fromCharCode(4) && window.confirm("Exit notebook mode?")) {
-	// Ctrl-D: close notebook
+    if (gNotebook && k == String.fromCharCode(12) && window.confirm("Exit notebook mode?")) {
+	// Ctrl-L: close notebook
 	GTCloseNotebook();
 	return false;
     } else if (gForm && k == String.fromCharCode(3)) {
