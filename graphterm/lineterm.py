@@ -12,7 +12,7 @@ The contents of this file remain in the public-domain.
 from __future__ import with_statement
 
 import array, cgi, copy, fcntl, glob, logging, mimetypes, optparse, os, pty
-import re, shlex, signal, select, socket, sys, threading, time, termios, tty, struct, pwd
+import re, signal, select, socket, sys, threading, time, termios, tty, struct, pwd
 
 try:
     from collections import OrderedDict
@@ -33,10 +33,13 @@ except NotImplementedError:
 import base64
 import hashlib
 import hmac
+import pipes
 import Queue
 import shlex
 import subprocess
 import traceback
+
+from bin import gtermapi
 
 MAX_SCROLL_LINES = 500
 
@@ -122,6 +125,21 @@ def uclean(ustr, trim=False, encoded=False):
         ustr = ustr.replace(u"\x00", u" ").replace(u"\x7f", u"?")
 
         return ustr.encode(ENCODING, "replace") if encoded else ustr
+
+def shlex_split_str(line):
+        # Avoid NULs introduced by shlex.split when splitting unicode
+        return shlex.split(line if isinstance(line, str) else line.encode("utf-8", "replace"))
+
+def shell_quote(token):
+        ##return pipes.quote(token)
+        # Use simplified quoting to more easily recognize file URLs etc.
+        return token.replace("'", "\\'").replace(" ", "\\ ").replace(";", "\\;").replace("&", "\\&")
+
+def shell_unquote(token):
+        try:
+                return shlex_split_str(token)[0]
+        except Exception:
+                return token
 
 def prompt_offset(line, prompt, meta=None):
         """Return offset at end of prompt (not including trailing space), or zero"""
@@ -235,7 +253,7 @@ def shplit(line, delimiters=COMMAND_DELIMITERS, final_delim="&", index=None):
         """
         if not line:
                 return []
-        comps = shlex.split(line)
+        comps = shlex_split_str(line)
         indices = []
         buf = line
         offset = 0
@@ -248,7 +266,7 @@ def shplit(line, delimiters=COMMAND_DELIMITERS, final_delim="&", index=None):
                 ncomp = len(comp)
                 while True:
                         try:
-                                temcomp = shlex.split(buf[:ncomp])[0]
+                                temcomp = shlex_split_str(buf[:ncomp])[0]
                         except Exception:
                                 temcomp = None
                         if temcomp == comp:
@@ -293,8 +311,6 @@ JFILENAME = 2
 JFILEPATH = 3
 JQUERY = 4
 
-HEX_DIGITS = 16
-
 def create_file_uri(url_comps):
         return FILE_URI_PREFIX + url_comps[JHOST] + url_comps[JFILEPATH] + url_comps[JQUERY]
 
@@ -327,18 +343,14 @@ def split_file_url(url, check_host_secret=None):
                         return []
                 host_path = url_path[len(FILE_PREFIX):]
 
-        j = host_path.find("?")
-        if j >= 0:
-                query = host_path[j:]
-                host_path = host_path[:j]
-        else:
-                query = ""
+        host_path, sep, tail = host_path.partition("?")
+        query = sep + tail
         comps = host_path.split("/")
         hostname = comps[0]
         filepath = "/"+"/".join(comps[1:])
         filename = comps[-1]
         if check_host_secret:
-                filehmac = "?hmac="+hmac.new(str(check_host_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+                filehmac = "?hmac="+gtermapi.file_hmac(filepath, check_host_secret)
                 if query.lower() == filehmac.lower():
                         hostname = ""
         return [server_port, hostname, filename, filepath, query]
@@ -991,7 +1003,7 @@ class Terminal(object):
                         try:
                                 line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
                                 offset = prompt_offset(line, self.prompt, self.current_meta)
-                                args = shlex.split(line[offset:])
+                                args = shlex_split_str(line[offset:])
                                 self.command_path = args[0]
                         except Exception:
                                 pass
@@ -1636,9 +1648,20 @@ class Terminal(object):
                                         expect_filename = True
                                 elif text:
                                         # Use text as command
-                                        if not pre_line and not which(text, add_path=[Exec_path]):
+                                        cmd_text = shell_unquote(text)
+                                        validated = False
+                                        if cmd_text.startswith("file://"):
+                                                cmd_text, sep, tail = cmd_text[len("file://"):].partition("?")
+                                                if cmd_text.startswith("local/"):
+                                                        cmd_text = cmd_text[len("local"):]
+                                                elif not cmd_text.startswith("/"):
+                                                        raise Exception("Command '%s' not valid" % text)
+                                                validated = tail and tail == ("hmac="+gtermapi.file_hmac(cmd_text, self.shared_secret))
+                                        if not pre_line and not validated and not which(cmd_text, add_path=[Exec_path]):
+                                                # Check for command in path only if no text in line
+                                                # NOTE: Can use blank space in command line to disable this check
                                                 raise Exception("Command '%s' not found" % text)
-                                        command_prefix = text.replace(" ", "\\ ")
+                                        command_prefix = shell_quote(cmd_text)
                                         text = ""
                                 if command_prefix and command_prefix[-1] != " ":
                                         command_prefix += " "
@@ -1658,7 +1681,7 @@ class Terminal(object):
                                         text = normpath
 
                 if text or command_prefix:
-                        text = text.replace(" ", "\\ ")
+                        text = shell_quote(text)
                         if expect_filename and command_prefix.find("%(path)") >= 0:
                                 paste_text = command_prefix.replace("%(path)", text)
                         else:
@@ -1862,6 +1885,7 @@ class Multiplex(object):
 
                 if self.lc_export:
                     # Export some environment variables as LC_* (hack to enable SSH forwarding)
+                    env.append( ("LC_GRAPHTERM_EXPORT", socket.getfqdn() or "unknown") )
                     env_dict = dict(env)
                     for name in LC_EXPORT_ENV:
                         if name in env_dict:

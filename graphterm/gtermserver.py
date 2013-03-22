@@ -15,7 +15,6 @@ import logging
 import os
 import Queue
 import re
-import shlex
 import ssl
 import stat
 import subprocess
@@ -180,14 +179,14 @@ def ssl_cert_gen(hostname="localhost", clientname="gterm-local", cwd=None, new=F
               "clientpassword": "password",}
     cmd_list = server_cert_gen_cmds if new else server_cert_gen_cmds[-1:]
     for cmd in cmd_list:
-        cmd_args = shlex.split(cmd % params)
+        cmd_args = lineterm.shlex_split_str(cmd % params)
         std_out, std_err = gtermapi.command_output(cmd_args, cwd=cwd, timeout=15)
         if std_err:
             logging.warning("gtermserver: SSL keygen %s %s", std_out, std_err)
     fingerprint = std_out
     if new:
         for cmd in client_cert_gen_cmds:
-            cmd_args = shlex.split(cmd % params)
+            cmd_args = lineterm.shlex_split_str(cmd % params)
             std_out, std_err = gtermapi.command_output(cmd_args, cwd=cwd, timeout=15)
             if std_err:
                 logging.warning("gtermserver: SSL client keygen %s %s", std_out, std_err)
@@ -850,7 +849,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
                 if not expect_secret or expect_secret != shared_secret:
                     raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
-            fpath_hmac = hmac.new(str(host_secret), self.file_path, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+            fpath_hmac = gtermapi.file_hmac(self.file_path, host_secret)
             if fpath_hmac != self.get_argument("hmac", ""):
                 raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 

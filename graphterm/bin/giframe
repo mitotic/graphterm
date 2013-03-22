@@ -64,7 +64,7 @@ IFRAMEFORMAT = '<iframe id="'+frameId+'" class="gterm-iframe" src="%s" width="10
 if not options.nofooter:
     IFRAMEFORMAT = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span>' + IFRAMEFORMAT
 
-gtermapi.write_html(IFRAMEFORMAT % iframe_url, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
+gtermapi.write_pagelet(IFRAMEFORMAT % iframe_url, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
 
 try:
     while options.fullscreen:

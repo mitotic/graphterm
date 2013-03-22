@@ -260,7 +260,7 @@ if options.text:
 while status == "pending":
     timesec = int(time.time() - start_time)
     if not options.text:
-        gtermapi.write_html(Status_template % (instance_tag, status, timesec), display="fullpage")
+        gtermapi.write_pagelet(Status_template % (instance_tag, status, timesec), display="fullpage")
     time.sleep(3)
     status = instance.update()
 

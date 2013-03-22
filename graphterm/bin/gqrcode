@@ -61,6 +61,6 @@ else:
     data_uri = "data:image/gif;base64,"+img_data.encode("base64")
     IMGFORMAT = '<div><img class="gterm-fullimg" src="%s"></img><h1><code>%s</code></h1></div>' if options.fullscreen else '<center><img class="gterm-blockimg" src="%s"></img></center><center><h1><code>%s</code></h1></center>' 
 
-    gtermapi.write_html(IMGFORMAT % (data_uri, text), display=("fullscreen" if options.fullscreen else "block"))
+    gtermapi.write_pagelet(IMGFORMAT % (data_uri, text), display=("fullscreen" if options.fullscreen else "block"))
 
     

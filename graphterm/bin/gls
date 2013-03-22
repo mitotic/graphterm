@@ -18,8 +18,8 @@ SPECIAL_FILES = set(["..", ".", "~"])
 gbrowsecmd = os.getenv("GRAPHTERM_BROWSE_CMD", "") or "gbrowse"
 gimagecmd = os.getenv("GRAPHTERM_IMAGE_CMD", "") or "gimage"
 glscmd = os.getenv("GRAPHTERM_LS_CMD", "") or "gls"
-gopencmd = os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
-gvicmd = os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
+gopencmd = gbrowsecmd if gtermapi.Export_host else os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
+gvicmd = gbrowsecmd if gtermapi.Export_host else os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
 
 FILE_TYPES = {"directory": ("/static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
               "executable": ("/static/images/tango-application-x-executable.png", ""),
@@ -173,5 +173,5 @@ Table_list.append('</table>')
 
 html = "\n".join(Table_list) + "\n"
 
-gtermapi.write_html(html, display=("fullpage" if options.fullpage else "block"), dir=work_dir)
+gtermapi.write_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=work_dir)
 

@@ -7,43 +7,77 @@ gbrowse: Open files and file/http URLs in browser
 
 import mimetypes
 import os
+import random
 import sys
-import tty
-import termios
+import time
 
 from optparse import OptionParser
 
 import gtermapi
 
-Work_dir = os.getcwd()
-
-usage = "usage: %prog [-f] <URL/file> ..."
+usage = "usage: %prog [-l] [file|URL] ..."
 parser = OptionParser(usage=usage)
+
+parser.add_option("-l", "--link", action="store_true", dest="link", default=False,
+                  help="Display link only")
 
 (options, args) = parser.parse_args()
 
+if not args:
+    try:
+        content = sys.stdin.read()
+    except (EOFError, KeyboardInterrupt):
+        content = None
+
+    if not content:
+        print >> sys.stderr, "Error in reading from stdin"
+        sys.exit(1)
+
+    args = [ gtermapi.create_blob(content, content_type="text/html") ]
+
+url_list = []
 for arg in args:
     if arg.startswith("http://") or arg.startswith("https://"):
+        # Display URL
         url = arg
+        label = arg if options.link else ""
     else:
-        if not arg.startswith("file://"):
-            # Assume it is a filename; create file URL
-            fullname = os.path.expanduser(arg)
-            filepath = os.path.normcase(os.path.abspath(fullname))
-            if not os.path.exists(filepath):
-                print >> sys.stderr, "File %s not found" % filepath
-                continue
+        # Display file
+        if arg.startswith("file://"):
+            filepath, sep, dummy = arg[len("file://"):].partition("?")
+            if filepath.startswith("local/"):
+                filepath = filepath[len("local"):]
+            elif not filepath.startswith("/"):
+                print >> sys.stderr, "Nonlocal file %s" % arg
+                sys.exit(1)
+        else:
+            filepath = arg
 
-            if not os.path.isfile(filepath):
-                print >> sys.stderr, "%s not a plain file" % filepath
-                continue
+        if gtermapi.Export_host:
+            # Exported environment
+            url = gtermapi.create_blob(from_file=filepath)
+        else:
+            url = gtermapi.get_file_url(filepath, relative=True, exists=True, plain=True)
 
-            arg = gtermapi.get_file_url(filepath)
+        if not url:
+            print >> sys.stderr, "File %s not found" % arg
+            sys.exit(1)
 
-        host_path = arg[len("file://"):]
-        if host_path.startswith("/"):
-            host_path = "local" + host_path
-        url = "/file/" + host_path
+        label = os.path.basename(filepath)
+        if not options.link:
+            try:
+                mime_type, encoding = mimetypes.guess_type(filepath)
+                if mime_type and (mime_type.startswith("text/") or mime_type.startswith("image/") or mime_type.endswith("pdf")):
+                    # Auto open text/image/pdf files
+                    label = ""
+            except Exception:
+                pass
 
-    gtermapi.open_url(url)
+    url_list.append( (url, label) )
 
+for url, label in url_list:
+    if label:
+        html = '<a href="%s" target="_blank">Click to browse/download %s</a><br>\n' % (url, label)
+        gtermapi.write_html(html)
+    else:
+        gtermapi.open_url(url)

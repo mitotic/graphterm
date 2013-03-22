@@ -36,7 +36,7 @@ Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/"
 
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOKIE", "")
 Path = os.getenv("GRAPHTERM_PATH", "") or os.getenv("LC_GRAPHTERM_PATH", "")
-Export_host = os.getenv("GRAPHTERM_EXPORT", "")
+Export_host = os.getenv("GRAPHTERM_EXPORT", "") or os.getenv("LC_GRAPHTERM_EXPORT", "")
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
 URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
 
@@ -72,7 +72,12 @@ def wrap_write(content, headers={}):
     """Wrap content, with headers, and write to stdout"""
     write(wrap(content, headers=headers))
 
-def write_html(html, display="block", dir="", add_headers={}):
+def write_html(html):
+    """Write raw html to stdout"""
+    html_headers = {"content_type": "text/html"}
+    wrap_write(html, headers=html_headers)
+
+def write_pagelet(html, display="block", dir="", add_headers={}):
     """Write html pagelet to stdout"""
     params = {"display": display,
               "scroll": "top",
@@ -116,7 +121,10 @@ def open_url(url, target="_blank"):
                    }
     wrap_write("", headers=url_headers)
 
-def get_file_url(filepath, relative=False, exists=False):
+def file_hmac(filepath, host_secret):
+        return hmac.new(str(host_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+
+def get_file_url(filepath, relative=False, exists=False, plain=False):
     """Construct file URL by expanding/normalizing filepath, with hmac cookie suffix.
     If relative, return '/file/host/path'
     """
@@ -126,7 +134,10 @@ def get_file_url(filepath, relative=False, exists=False):
     if exists and not os.path.exists(filepath):
         return None
 
-    filehmac = "?hmac="+hmac.new(str(Shared_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
+    if plain and not os.path.isfile(filepath):
+        return None
+
+    filehmac = "?hmac="+file_hmac(filepath, Shared_secret)
     if relative:
         return "/file/" + Host + filepath + filehmac
     else:
