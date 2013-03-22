@@ -50,7 +50,7 @@ UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
 NO_COPY_ENV = set(["GRAPHTERM_EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
-LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_PATH", "GRAPHTERM_PROMPT", "PROMPT_COMMAND"]
+LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_PATH"]
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)     # (prompt_escape, pagelet_escape)
@@ -141,15 +141,15 @@ def shell_unquote(token):
         except Exception:
                 return token
 
-def prompt_offset(line, prompt, meta=None):
+def prompt_offset(line, pdelim, meta=None):
         """Return offset at end of prompt (not including trailing space), or zero"""
-        if not prompt:
+        if not pdelim:
                 return 0
         offset = 0
-        if (meta and not meta[JCONTINUATION]) or (prompt[0] and line.startswith(prompt[0])):
-                end_offset = line.find(prompt[2])
+        if (meta and not meta[JCONTINUATION]) or (pdelim[0] and line.startswith(pdelim[0])):
+                end_offset = line.find(pdelim[1])
                 if end_offset >= 0:
-                        offset = end_offset + len(prompt[2])
+                        offset = end_offset + len(pdelim[1])
         return offset
 
 def command_output(command_args, **kwargs):
@@ -415,9 +415,9 @@ def command_markup(entry_index, current_dir, pre_offset, offset, line):
                         
 
 class ScreenBuf(object):
-        def __init__(self, prompt, fg_color=0, bg_color=7):
-                self.prompt = prompt
-                self.pre_offset = len(prompt[0]) if prompt else 0
+        def __init__(self, pdelim, fg_color=0, bg_color=7):
+                self.pdelim = pdelim
+                self.pre_offset = len(pdelim[0]) if pdelim else 0
                 self.width = None
                 self.height = None
                 self.cursorx = None
@@ -482,7 +482,7 @@ class ScreenBuf(object):
                                 self.scroll_lines.pop(0)
 
         def update(self, active_rows, width, height, cursorx, cursory, main_screen,
-                   alt_screen=None, prompt=[], reconnecting=False):
+                   alt_screen=None, pdelim=[], reconnecting=False):
                 """ Returns full_update, update_rows, update_scroll
                 """
                 full_update = self.full_update or reconnecting
@@ -514,7 +514,7 @@ class ScreenBuf(object):
                         else:
                                 row_update = (new_row != old_screen.data[width*j:width*(j+1)])
                         if row_update or (cursor_moved and (cursory == j or self.cursory == j)):
-                                offset = prompt_offset(dump(new_row), prompt, screen.meta[j])
+                                offset = prompt_offset(dump(new_row), pdelim, screen.meta[j])
                                 update_rows.append([j, offset, "", "row", self.dumprichtext(new_row, trim=True), None])
 
                 if reconnecting:
@@ -587,7 +587,7 @@ class Screen(object):
 
 class Terminal(object):
         def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, cookie=0,
-                     shared_secret="", host="", prompt=[], logfile=""):
+                     shared_secret="", host="", pdelim=[], logfile=""):
                 self.term_name = term_name
                 self.fd = fd
                 self.pid = pid
@@ -597,9 +597,9 @@ class Terminal(object):
                 self.cookie = cookie
                 self.shared_secret = shared_secret
                 self.host = host
-                self.prompt = prompt
+                self.pdelim = pdelim
                 self.logfile = logfile
-                self.screen_buf = ScreenBuf(prompt)
+                self.screen_buf = ScreenBuf(pdelim)
 
                 self.note_screen_buf = ScreenBuf("")
                 self.note_cells = None
@@ -612,7 +612,7 @@ class Terminal(object):
                 self.buf = ""
                 self.alt_mode = False
                 self.screen = self.main_screen
-                self.trim_first_prompt = bool(prompt)
+                self.trim_first_prompt = bool(pdelim)
                 self.logchars = 0
                 self.command_path = ""
 
@@ -715,7 +715,7 @@ class Terminal(object):
                         if self.active_rows:
                                 # Check first active line for prompt
                                 line = dump(self.main_screen.data[:min_width])
-                                if prompt_offset(line, self.prompt, self.main_screen.meta[0]):
+                                if prompt_offset(line, self.pdelim, self.main_screen.meta[0]):
                                         saved_line = [len(line.rstrip(u'\x00')), self.main_screen.meta[0], self.main_screen.data[:min_width]]
                         self.width = width
                         self.height = height
@@ -834,12 +834,12 @@ class Terminal(object):
                 self.screen_buf.clear_last_entry(last_entry_index=last_entry_index)
 
         def scroll_screen(self, scroll_rows=None):
-                prompt = [] if self.note_cells else self.prompt
+                pdelim = [] if self.note_cells else self.pdelim
                 if scroll_rows == None:
                         scroll_rows = 0
                         for j in range(self.active_rows-1,-1,-1):
                                 line = dump(self.main_screen.data[self.width*j:self.width*(j+1)])
-                                if prompt_offset(line, prompt, self.main_screen.meta[j]):
+                                if prompt_offset(line, pdelim, self.main_screen.meta[j]):
                                         # Move rows before last prompt to buffer
                                         scroll_rows = j
                                         break
@@ -851,7 +851,7 @@ class Terminal(object):
                 while cursor_y < scroll_rows:
                         row = self.main_screen.data[self.width*cursor_y:self.width*cursor_y+self.width]
                         meta = self.main_screen.meta[cursor_y]
-                        offset = prompt_offset(dump(row), prompt, meta)
+                        offset = prompt_offset(dump(row), pdelim, meta)
                         if meta:
                                 # Concatenate rows for multiline command
                                 while cursor_y < scroll_rows-1 and self.main_screen.meta[cursor_y+1] and self.main_screen.meta[cursor_y+1][JCONTINUATION]:
@@ -896,9 +896,9 @@ class Terminal(object):
                                                                                          cursor_x, cursor_y,
                                                                                          self.main_screen,
                                                                                          alt_screen=alt_screen,
-                                                                                         prompt=self.prompt,
+                                                                                         pdelim=self.pdelim,
                                                                                          reconnecting=reconnecting)
-                        pre_offset = len(self.prompt[0]) if self.prompt else 0
+                        pre_offset = len(self.pdelim[0]) if self.pdelim else 0
                         self.screen_callback(self.term_name, response_id, "row_update",
                                              [self.alt_mode, full_update, self.active_rows,
                                               self.width, self.height,
@@ -919,7 +919,7 @@ class Terminal(object):
                                                                                          self.cursor_x, self.cursor_y,
                                                                                          self.main_screen,
                                                                                          alt_screen=False,
-                                                                                         prompt=[],
+                                                                                         pdelim=[],
                                                                                          reconnecting=True)
                         logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
 
@@ -1002,7 +1002,7 @@ class Terminal(object):
                         # Parse command line
                         try:
                                 line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
-                                offset = prompt_offset(line, self.prompt, self.current_meta)
+                                offset = prompt_offset(line, self.pdelim, self.current_meta)
                                 args = shlex_split_str(line[offset:])
                                 self.command_path = args[0]
                         except Exception:
@@ -1018,12 +1018,12 @@ class Terminal(object):
                                         row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
                                         self.note_screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
                                                                       self.screen.meta[self.scroll_top],
-                                                        offset=prompt_offset(dump(row), self.prompt, self.screen.meta[self.scroll_top]))
+                                                        offset=prompt_offset(dump(row), self.pdelim, self.screen.meta[self.scroll_top]))
                                 elif not self.alt_mode:
                                         row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
                                         self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
                                                                       self.screen.meta[self.scroll_top],
-                                                        offset=prompt_offset(dump(row), self.prompt, self.screen.meta[self.scroll_top]))
+                                                        offset=prompt_offset(dump(row), self.pdelim, self.screen.meta[self.scroll_top]))
                                 self.scroll_up(self.scroll_top, self.scroll_bot)
                                 self.cursor_y = self.scroll_bot
                         else:
@@ -1591,7 +1591,7 @@ class Terminal(object):
                 line = dump(self.peek(self.active_rows-1, 0, self.active_rows-1, self.width), trim=True)
                 meta = self.screen.meta[self.active_rows-1]
                 cwd = meta[JCURDIR] if meta else getcwd(self.pid)
-                offset = prompt_offset(line, self.prompt, (cwd, 0))
+                offset = prompt_offset(line, self.pdelim, (cwd, 0))
 
                 try:
                         clear_last = int(clear_last) if clear_last else 0
@@ -1754,9 +1754,9 @@ class Terminal(object):
                 
 class Multiplex(object):
         def __init__(self, screen_callback, command=None, shared_secret="",
-                     host="", server_url="", prompt=[], term_type="linux", api_version="",
-                     widget_port=0, lc_export=False, logfile="", app_name="graphterm"):
-                """ prompt = [prefix, format, suffix]
+                     host="", server_url="", term_type="linux", api_version="",
+                     widget_port=0, prompt_list=[], lc_export=False, logfile="", app_name="graphterm"):
+                """ prompt_list = [prefix, suffix, format, remote_format]
                 """
                 ##signal.signal(signal.SIGCHLD, signal.SIG_IGN)
                 self.screen_callback = screen_callback
@@ -1764,7 +1764,8 @@ class Multiplex(object):
                 self.shared_secret = shared_secret
                 self.host = host
                 self.server_url = server_url
-                self.prompt = prompt
+                self.prompt_list = prompt_list
+                self.pdelim = prompt_list[:2] if len(prompt_list) >= 2 else []
                 self.term_type = term_type
                 self.api_version = api_version
                 self.widget_port = widget_port
@@ -1852,7 +1853,7 @@ class Multiplex(object):
                                                                 height=height, width=width,
                                                                 cookie=cookie, host=self.host,
                                                                 shared_secret=self.shared_secret,
-                                                                prompt=self.prompt, logfile=self.logfile)
+                                                                pdelim=self.pdelim, logfile=self.logfile)
                                 self.set_size(term_name, height, width)
                                 if not is_executable(Gls_path) and not Exec_errmsg:
                                         Exec_errmsg = True
@@ -1874,22 +1875,30 @@ class Multiplex(object):
                 if self.widget_port:
                         env.append( ("GRAPHTERM_SOCKET", "/dev/tcp/localhost/%d" % self.widget_port) )
 
-                if self.prompt:
-                        env.append( ("GRAPHTERM_PROMPT", "".join(self.prompt) + " ") )
+                prompt_fmt, export_prompt_fmt = "", ""
+                if self.prompt_list:
+                        prompt_fmt = self.prompt_list[0]+self.prompt_list[2]+self.prompt_list[1]+" "
+                        if len(self.prompt_list) >= 4:
+                                export_prompt_fmt = self.prompt_list[0]+self.prompt_list[3]+self.prompt_list[1]+" "
+                        else:
+                                export_prompt_fmt = prompt_fmt
+                        env.append( ("GRAPHTERM_PROMPT", export_prompt_fmt if export else prompt_fmt) )
                         ##env.append( ("PROMPT_COMMAND", "export PS1=$GRAPHTERM_PROMPT; unset PROMPT_COMMAND") )
                         cmd_fmt = EXPT_PROMPT_CMD if export else BASH_PROMPT_CMD
-
                         env.append( ("PROMPT_COMMAND", cmd_fmt % (GRAPHTERM_SCREEN_CODES[0], GRAPHTERM_SCREEN_CODES[0]) ) )
 
                 env.append( ("GRAPHTERM_DIR", File_dir) )
 
                 if self.lc_export:
-                    # Export some environment variables as LC_* (hack to enable SSH forwarding)
-                    env.append( ("LC_GRAPHTERM_EXPORT", socket.getfqdn() or "unknown") )
-                    env_dict = dict(env)
-                    for name in LC_EXPORT_ENV:
-                        if name in env_dict:
-                            env.append( ("LC_"+name, env_dict[name]) )
+                        # Export some environment variables as LC_* (hack to enable SSH forwarding)
+                        env_dict = dict(env)
+                        env.append( ("LC_GRAPHTERM_EXPORT", socket.getfqdn() or "unknown") )
+                        if export_prompt_fmt:
+                                env.append( ("LC_GRAPHTERM_PROMPT", export_prompt_fmt) )
+                                env.append( ("LC_PROMPT_COMMAND", env_dict["PROMPT_COMMAND"]) )
+                        for name in LC_EXPORT_ENV:
+                                if name in env_dict:
+                                        env.append( ("LC_"+name, env_dict[name]) )
                 return env
                 
         def export_environment(self, term_name):

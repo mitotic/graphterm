@@ -93,6 +93,10 @@ PROTOCOL = "http"
 SUPER_USERS = set(["root"])
 LOCAL_HOST = "local"
 
+# Short prompt (long prompt with directory metadata fills most of row):
+#    unique prompt prefix (maybe null), unique prompt suffix (non-null), prompt body, remote prompt body
+DEFAULT_PROMPTS = ["", "$", "\W", "\h:\W"]
+
 RSS_FEED_URL = "http://code.mindmeldr.com/graphterm/graphterm-announce/posts.xml"
 
 def cgi_escape(s):
@@ -1072,6 +1076,7 @@ def run_server(options, args):
         Local_client, Host_secret, Trace_shell = None, None, None
     else:
         oshell_globals = globals() if otrace and options.oshell else None
+        prompt_list = options.prompts.split(",") if options.prompts else DEFAULT_PROMPTS
         Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST, internal_host,
                                                          server_port=internal_port,
                                                          connect_kw={"ssl_options": internal_client_ssl,
@@ -1079,6 +1084,7 @@ def run_server(options, args):
                                                                      "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
                                                                      "key_secret": options.server_secret or None,
+                                                                     "prompt_list": prompt_list,
                                                                      "lc_export": options.lc_export,
                                                                      "lterm_logfile": options.lterm_logfile,
                                                                      "widget_port":
@@ -1185,6 +1191,8 @@ def main():
                       help="Use https for internal connections")
     parser.add_option("", "--server_auth", dest="server_auth", action="store_true",
                       help="Enable server authentication by gterm clients")
+    parser.add_option("", "--prompts", dest="prompts", default="",
+                      help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
     parser.add_option("", "--lc_export", dest="lc_export", action="store_true",
                       help="Export environment as locale (ssh hack)")
     parser.add_option("", "--client_cert", dest="client_cert", default="",

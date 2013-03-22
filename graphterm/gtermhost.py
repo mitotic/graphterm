@@ -50,12 +50,6 @@ OSHELL_NAME = "osh"
 ##SHELL_CMD = "bash -l"
 SHELL_CMD = "/bin/bash"
 
-# Short prompt (long prompt with directory metadata fills most of row)
-##PROMPT_PREFIX = '<gtprompt/>'    # Unique prompt prefix
-PROMPT_PREFIX = ''              # No unique prefix necessary for bash (using PROMPT_COMMAND)
-PROMPT_SUFFIX = '$'
-SHELL_PROMPT = [PROMPT_PREFIX, '\W', PROMPT_SUFFIX]
-
 HTML_ESCAPES = ["\x1b[?1155;", "h",
                 "\x1b[?1155l"]
 
@@ -128,7 +122,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
     all_cookies = {}
     def __init__(self, host, port, host_secret="", oshell=False, io_loop=None, ssl_options={},
-                 command="", term_type="", term_encoding="utf-8", widget_port=0, lc_export=False, lterm_logfile="", key_secret=None, key_version=None):
+                 command="", term_type="", term_encoding="utf-8", widget_port=0, prompt_list=[], lc_export=False, lterm_logfile="", key_secret=None, key_version=None):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
                                              reconnect_sec=RETRY_SEC, server_type="frame",
@@ -140,6 +134,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.term_type = term_type
         self.term_encoding = term_encoding
         self.widget_port = widget_port
+        self.prompt_list = prompt_list
         self.lc_export = lc_export
         self.lterm_logfile = lterm_logfile
 
@@ -201,9 +196,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 version_str += "/" + gtermapi.API_MIN_VERSION
             self.lineterm = lineterm.Multiplex(self.screen_callback, command=(command or self.command),
                                                shared_secret=self.host_secret, host=self.connection_id,
-                                               server_url=self.server_url, prompt=SHELL_PROMPT, term_type=self.term_type,
+                                               server_url=self.server_url, term_type=self.term_type,
                                                api_version=version_str, widget_port=self.widget_port,
-                                               lc_export=self.lc_export, logfile=self.lterm_logfile)
+                                               prompt_list=self.prompt_list, lc_export=self.lc_export,
+                                               logfile=self.lterm_logfile)
         term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width)
         self.add_term(term_name, lterm_cookie)
         return term_name
