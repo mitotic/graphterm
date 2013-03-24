@@ -771,7 +771,6 @@ class Terminal(object):
                         self.select_cell(new_cell_type="code")
                 else:
                         # TODO: copy all cellInput and cellOutput to scroll buffer ABC
-                        self.note_cells["curIndex"] = 0
                         self.note_cells = None
                         self.scroll_bot = self.height-1
                         self.resize(self.height, self.width, force=True)

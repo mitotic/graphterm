@@ -2691,7 +2691,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
     var cellParams = { cellType: cellType, cellIndex: cellIndex, cellId: cellId };
     this.cellParams[cellIndex] = cellParams;
     if (cellType == "code") {
-	var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea class="gterm-notecell-code"></textarea><div class="gterm-notecell-output"></div></div>';
+	var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-code"></textarea><div class="gterm-notecell-output"></div></div>';
     }
     var newElem;
     if (!beforeCellIndex) {
@@ -2714,22 +2714,29 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
     }
 
     this.curIndex = cellIndex;
-    $("#"+this.getCellId(cellIndex)+" textarea.gterm-notecell-code").autoResize();
+    $("#"+this.getCellId(cellIndex)+"-textarea").autoResize();
     this.cellFocus(true);
 }
 
 GTNotebook.prototype.cellFocus = function(focus) {
+    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     if (focus) {
-	$("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code").focus();
+	textElem.focus();
 	this.passthru_stdin = false;
+	setTimeout(bind_method(this, this.cellScroll), 200);
     } else {
-	$("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code").blur();
+	textElem.blur();
 	this.passthru_stdin = true;
     }
 }
 
+GTNotebook.prototype.cellScroll = function() {
+    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+    $(window).scrollTop(textElem.offset().top);
+}
+
 GTNotebook.prototype.execute = function(openNext) {
-    var textElem = $("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code");
+    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     if (textElem.length) {
 	var text = textElem.val();
 	this.cellFocus(false);
@@ -2766,8 +2773,13 @@ GTNotebook.prototype.output = function(update_rows, update_scroll) {
 
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
     outElem.html(out_html.join(""));
-    if (noteprompt)
+    if (noteprompt) {
 	this.cellFocus(true);
+    } else {
+	var bot_offset = $("#session-term").offset().top + $("#session-term").height();
+	$(window).scrollTop(bot_offset - $(window).height());
+    }
+
 }
 
 GTNotebook.prototype.select = function(cell_index, new_cell_type, before_cell_index) {
