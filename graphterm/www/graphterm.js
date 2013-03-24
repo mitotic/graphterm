@@ -1460,7 +1460,7 @@ function pasteHandler(evt) {
 
 function GTAltPasteHandler() {
     console.log("GTAltPasteHandler:");
-    if (gPopupActive || gForm)
+    if ((gNotebook && !gNotebook.passthru_stdin) || gForm || gPopupActive)
 	return true;
 
     setTimeout(GTAltPasteHandlerAux, 100);
