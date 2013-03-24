@@ -482,7 +482,7 @@ class ScreenBuf(object):
                                 self.scroll_lines.pop(0)
 
         def update(self, active_rows, width, height, cursorx, cursory, main_screen,
-                   alt_screen=None, pdelim=[], reconnecting=False):
+                   alt_screen=None, pdelim=[], note_prompts=[], reconnecting=False):
                 """ Returns full_update, update_rows, update_scroll
                 """
                 full_update = self.full_update or reconnecting
@@ -514,8 +514,17 @@ class ScreenBuf(object):
                         else:
                                 row_update = (new_row != old_screen.data[width*j:width*(j+1)])
                         if row_update or (cursor_moved and (cursory == j or self.cursory == j)):
-                                offset = prompt_offset(dump(new_row), pdelim, screen.meta[j])
-                                update_rows.append([j, offset, "", "row", self.dumprichtext(new_row, trim=True), None])
+                                new_row_str = dump(new_row)
+                                row_class = "row"
+                                offset = prompt_offset(new_row_str, pdelim, screen.meta[j])
+                                if not offset and note_prompts:
+                                        for prompt in note_prompts:
+                                                if new_row_str.startswith(prompt):
+                                                        # Entry starts with prompt
+                                                        row_class += " noteprompt"
+                                                        break
+
+                                update_rows.append([j, offset, "", row_class, self.dumprichtext(new_row, trim=True), None])
 
                 if reconnecting:
                         update_scroll = self.scroll_lines[:]
@@ -920,6 +929,7 @@ class Terminal(object):
                                                                                          self.main_screen,
                                                                                          alt_screen=False,
                                                                                          pdelim=[],
+                                                                                         note_prompts=self.note_prompts,
                                                                                          reconnecting=True)
                         logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
 

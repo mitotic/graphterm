@@ -2339,7 +2339,7 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
 }
 
 function GTCaptureInput() {
-    return gNotebook || gForm || (gTextEditing && gParams.controller) || gPopupType;
+    return (gNotebook && !gNotebook.passthru_stdin) || gForm || (gTextEditing && gParams.controller) || gPopupType;
 }
 
 function GTClearCKEditor() {
@@ -2665,6 +2665,8 @@ function GTNotebook(fullwindow) {
     this.cellParams = {};
     this.cellList = []
     this.curIndex = 0;
+
+    this.passthru_stdin = false;
 }
 
 GTNotebook.prototype.close = function() {
@@ -2713,13 +2715,24 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
 
     this.curIndex = cellIndex;
     $("#"+this.getCellId(cellIndex)+" textarea.gterm-notecell-code").autoResize();
-    $("#"+this.getCellId(cellIndex)+" textarea.gterm-notecell-code").focus();
+    this.cellFocus(true);
+}
+
+GTNotebook.prototype.cellFocus = function(focus) {
+    if (focus) {
+	$("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code").focus();
+	this.passthru_stdin = false;
+    } else {
+	$("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code").blur();
+	this.passthru_stdin = true;
+    }
 }
 
 GTNotebook.prototype.execute = function(openNext) {
     var textElem = $("#"+this.getCellId(this.curIndex)+" textarea.gterm-notecell-code");
     if (textElem.length) {
 	var text = textElem.val();
+	this.cellFocus(false);
 	if (gWebSocket && gParams.controller)
 	    gWebSocket.write([["exec_cell", this.curIndex, text]]);
     }
@@ -2727,6 +2740,7 @@ GTNotebook.prototype.execute = function(openNext) {
 
 GTNotebook.prototype.output = function(update_rows, update_scroll) {
     var out_html = []
+    var noteprompt = false;
     for (var j=0; j<update_scroll.length; j++) {
 	var rowClass = update_scroll[j][JCLASS];
 	var markup = update_scroll[j][JMARKUP];
@@ -2742,6 +2756,8 @@ GTNotebook.prototype.output = function(update_rows, update_scroll) {
 
     for (var j=0; j<update_rows.length; j++) {
 	var row_span = update_rows[j][JLINE];
+	var rowClass = update_rows[j][JCLASS];
+	noteprompt = (rowClass.indexOf("noteprompt") >= 0);
 	var row_line = "";
 	for (var k=0; k<row_span.length; k++)
 	    row_line += row_span[k][1];
@@ -2750,6 +2766,8 @@ GTNotebook.prototype.output = function(update_rows, update_scroll) {
 
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
     outElem.html(out_html.join(""));
+    if (noteprompt)
+	this.cellFocus(true);
 }
 
 GTNotebook.prototype.select = function(cell_index, new_cell_type, before_cell_index) {
