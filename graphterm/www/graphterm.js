@@ -496,6 +496,7 @@ function GTUpdateController() {
 	window.name = gParams.host+"/"+gParams.term;
     else
 	window.name = "";
+
     if (gParams.controller)
 	handle_resize();
 }
@@ -805,8 +806,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "receive_msg") {
 		var fromUser = command[1];
 		var toUser = command[2];
-		var frameName = command[3];
-		gFrameDispatcher.receive(fromUser, toUser, frameName, command[4]);
+		var target = command[3];
+		if (target == "frame") {
+		    if (gFrameDispatcher)
+			gFrameDispatcher.receive(fromUser, toUser, command[4], command[5]);
+		} else if (target == "notebook") {
+		    if (gNotebook)
+			gNotebook.receive(fromUser, toUser, command[4], command[5]);
+		}
 
             } else if (action == "updates_response") {
 		feed_list = command[1];
@@ -2641,7 +2648,7 @@ GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
 
 GTFrameDispatcher.prototype.send = function(toUser, toFrame, msg) {
     if (gWebSocket && gParams.controller)
-	gWebSocket.write([["send_msg", toUser, toFrame, msg]]);
+	gWebSocket.write([["send_msg", toUser, "frame", toFrame, msg]]);
 }
 
 GTFrameDispatcher.prototype.write = function(text) {
@@ -2767,10 +2774,18 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
 	newElem = $(cellHtml).insertBefore("#"+this.getCellId(beforeCellIndex));
     }
     this.curIndex = cellIndex;
-    var textElem = $("#"+this.getCellId(cellIndex)+"-textarea");
-    textElem.val(inputData);
-    textElem.autoResize();
+    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+    if (!gParams.controller)
+	textElem.attr("disabled", "disabled");
+    this.cellValue(inputData);
     this.cellFocus(true);
+}
+
+GTNotebook.prototype.cellValue = function(inputData, resize) {
+    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+    textElem.val(inputData || "");
+    if (resize)
+	textElem.autoResize();
 }
 
 GTNotebook.prototype.cellFocus = function(focus, fullScroll) {
@@ -2792,15 +2807,16 @@ GTNotebook.prototype.cellScroll = function() {
 
 GTNotebook.prototype.execute = function(openNext) {
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
-    if (textElem.length) {
-	var text = textElem.val();
-	this.cellFocus(false);
-	if (gWebSocket && gParams.controller)
-	    gWebSocket.write([["exec_cell", this.curIndex, text]]);
+    var text = textElem.val();
+    this.cellFocus(false);
+    if (gWebSocket && gParams.controller) {
+	gWebSocket.write([["exec_cell", this.curIndex, text]]);
+	this.send("*", this.curIndex, ["cell_input", text]);
     }
 }
 
 GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
+    console.log("ABCGTNotebook.output: ", reset, update_rows, update_scroll);
     var noteprompt = false;
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
     if (reset)
@@ -2841,9 +2857,9 @@ GTNotebook.prototype.select = function(cell_index, new_cell_type, before_cell_in
 	gWebSocket.write([["select_cell", cell_index||0, new_cell_type||"", before_cell_index||0]]);
 }
 
-GTNotebook.prototype.send = function(toUser, toFrame, msg) {
+GTNotebook.prototype.send = function(toUser, cellIndex, msg) {
     if (gWebSocket && gParams.controller)
-	gWebSocket.write([["send_msg", toUser, toFrame, msg]]);
+	gWebSocket.write([["send_msg", toUser, "notebook", cellIndex, msg]]);
 }
 
 GTNotebook.prototype.write = function(text) {
@@ -2851,12 +2867,13 @@ GTNotebook.prototype.write = function(text) {
 	gWebSocket.term_input(text);
 }
 
-GTNotebook.prototype.receive = function(fromUser, toUser, frameName, msg) {
-    if (!(frameName in this.notebookCells))
-	return;
-
+GTNotebook.prototype.receive = function(fromUser, toUser, cellIndex, msg) {
+    console.log("ABCGTNotebook.receive: ", fromUser, toUser, cellIndex, msg);
     try {
-	this.notebookCells[frameName].controller.receive(fromUser, toUser, msg);
+	if (msg[0] == "cell_input") {
+	    if (cellIndex == this.curIndex)
+		this.cellValue(msg[1]);
+	}
     } catch(err) {
 	console.log("GTNotebook.receive: "+err);
     }

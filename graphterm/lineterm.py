@@ -662,6 +662,7 @@ class Terminal(object):
                 self.note_cells = None
                 self.note_input = []
                 self.note_prompts = []
+                self.note_shell = False
 
                 self.init()
                 self.reset()
@@ -740,12 +741,13 @@ class Terminal(object):
                                 self.csi_seq[i] = (getattr(self,'csi_'+i),[1])
 
         def reset(self, s=""):
+                # Reset screen buffers
                 self.update_time = 0
                 self.needs_updating = True
                 self.main_screen = Screen(self.width, self.height)
                 self.alt_screen  = Screen(self.width, self.height)
                 self.scroll_top = 0
-                self.scroll_bot = self.height-1
+                self.scroll_bot = 0 if self.note_cells else self.height-1
                 self.cursor_x_bak = self.cursor_x = 0
                 self.cursor_y_bak = self.cursor_y = 0
                 self.cursor_eol = 0
@@ -756,7 +758,6 @@ class Terminal(object):
                 self.last_html = ""
                 self.active_rows = 0
                 self.current_meta = None
-                self.shell_prompt = False
                 self.gterm_code = None
                 self.gterm_buf = None
                 self.gterm_buf_size = 0
@@ -821,8 +822,8 @@ class Terminal(object):
                         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
                         self.note_prompts = prompts
 
-                        self.shell_prompt = at_shell
-                        self.screen_callback(self.term_name, "", "note_activate", [True, self.shell_prompt])
+                        self.note_shell = at_shell
+                        self.screen_callback(self.term_name, "", "note_activate", [True, self.note_shell])
                         self.select_cell(new_cell_type="code")
                 else:
                         self.select_cell(0)
@@ -839,7 +840,7 @@ class Terminal(object):
                         self.scroll_bot = self.height-1
                         self.resize(self.height, self.width, force=True)
                         self.zero_screen()
-                        self.screen_callback(self.term_name, "", "note_activate", [False, self.shell_prompt])
+                        self.screen_callback(self.term_name, "", "note_activate", [False, self.note_shell])
                         self.update()
 
 
@@ -984,7 +985,7 @@ class Terminal(object):
 
                 if self.note_cells:
                         if reconnecting:
-                                self.screen_callback(self.term_name, response_id, "note_activate", [True, self.shell_prompt])
+                                self.screen_callback(self.term_name, response_id, "note_activate", [True, self.note_shell])
                                 for cell in self.note_cells["cells"].itervalues():
                                         logging.warning("ABCnote_add_cell: %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellInput"], cell["cellOutput"])
                                         self.screen_callback(self.term_name, response_id, "note_add_cell",
