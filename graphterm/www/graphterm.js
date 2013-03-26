@@ -42,6 +42,8 @@ var OSH_ECHO = true;
 
 var ELLIPSIS = "...";
 
+var OVERWRITE_PREFIX = '<!--gterm-html-overwrite-->';
+
 var gRowHeight = 16;
 var gColWidth  = 8;
 var gBottomMargin = 14;
@@ -500,6 +502,41 @@ function GTUpdateController() {
 
 function GTClearTerminal() {
     $("#session-bufscreen").children().remove();
+}
+
+function GTAppendDiv(parentElem, classes, markup) {
+    var overwrite = markup.indexOf(OVERWRITE_PREFIX) == 0;
+    var rowHtml = '<div class="'+classes+'">'+markup+'</div>\n';
+    var rowElem = $(rowHtml);
+    var innerElem = rowElem.children(".gterm-blockhtml");
+    if (innerElem.length != 1) {
+	return rowElem.appendTo(parentElem);
+    }
+
+    var prevElem = parentElem.find(".gterm-blockhtml:not(.gterm-blockclosed)");
+    console.log("ABCappenddiv", overwrite, OVERWRITE_PREFIX, markup, prevElem.length);
+
+    if (prevElem.length != 1) {
+	// Remove any previous elements and append new element
+	prevElem.remove();
+	return rowElem.appendTo(parentElem);
+    }
+
+    if (!overwrite) {
+	// Append new block element
+	prevElem.addClass("gterm-blockclosed");
+	return rowElem.appendTo(parentElem);
+    }
+
+    // Overwite single previous element
+    if (prevElem.find(".gterm-blockimg").length == 1 && innerElem.find(".gterm-blockimg").length == 1) {
+	// Replace IMG src attribute
+	prevElem.find(".gterm-blockimg").attr("src", innerElem.find(".gterm-blockimg").attr("src"));
+    } else {
+	// Replace previous element
+	prevElem.replaceWith(innerElem);
+    }
+    return prevElem;
 }
 
 function GTPreloadImages(urls) {
@@ -975,7 +1012,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			try {
 			    var newElem = $(pagelet_html);
 			    if (newElem.hasClass("gterm-blockseq")) {
-				var prevBlock = $("#session-bufscreen .pagelet.gterm-blockseq:not(.gterm-blockseqtoggle)");
+				var prevBlock = $("#session-bufscreen .pagelet.gterm-blockseq:not(.gterm-toggleblock)");
 				if (response_params.block && response_params.block == "overwrite" && prevBlock.length == 1 && prevBlock.is($("#session-bufscreen :last-child")) ) {
 				    // Overwrite previous blockseq element
 				    if (prevBlock.find(".gterm-blockimg").length == 1 && newElem.find(".gterm-blockimg").length == 1) {
@@ -988,7 +1025,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				    newElem = null;
 				} else {
 				    // Hide previous blockseq element
-				    prevBlock.addClass("gterm-blockseqtoggle").addClass("gterm-blockseqhide");
+				    prevBlock.addClass("gterm-toggleblock").addClass("gterm-togglehide");
 				}
 			    }
 
@@ -1005,12 +1042,22 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    }
 			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
-			    $(pageletSelector+' .gterm-blockseqlink').bindclick(gtermLinkClickHandler);
+			    $(pageletSelector+' .gterm-togglelink').bindclick(gtermLinkClickHandler);
 			    $(pageletSelector+' .gterm-iframeclose').bindclick(gtermInterruptHandler);
 			    GTDropBindings($(pageletSelector+' .droppable'));
 			} catch(err) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
 			}
+		    }
+
+		} else if (cmd_type == "note_activate") {
+		    var activate = cmd_arg[0];
+		    var shell_prompt = cmd_arg[1];
+		    console.log("ABCnote_activate", activate, shell_prompt);
+		    if (activate) {
+			gNotebook = new GTNotebook(!shell_prompt);
+		    } else if (gNotebook) {
+			gNotebook.close();
 		    }
 
 		} else if (cmd_type == "note_add_cell") {
@@ -1020,21 +1067,22 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var cellInput = cmd_arg[3];
 		    var cellOutput = cmd_arg[4];
 		    console.log("ABCnote_add_cell", cellIndex, cellType, beforeCellIndex, cellInput, cellOutput);
-		    if (!gNotebook) {
-			gNotebook = new GTNotebook(newElem, gPromptIndex)
-		    }
-		    gNotebook.addCell(cellIndex, cellType, beforeCellIndex);
+		    if (gNotebook)
+			gNotebook.addCell(cellIndex, cellType, beforeCellIndex, cellInput.join("\n"));
 
 		} else if (cmd_type == "note_switch_cell") {
 		    var cellIndex = cmd_arg[0];
 		    console.log("ABCnote_switch_cell", cellIndex);
-		    gNotebook.switchCell(cellIndex);
+		    if (gNotebook)
+			gNotebook.switchCell(cellIndex);
 
 		} else if (cmd_type == "note_row_update") {
+                    var reset       = cmd_arg[1];
 		    var update_rows = cmd_arg[8];
 		    var update_scroll = cmd_arg[9];
 		    console.log("ABCnote_row_update", update_rows, update_scroll);
-		    gNotebook.output(update_rows, update_scroll);
+		    if (gNotebook)
+			gNotebook.output(reset, update_rows, update_scroll);
 
 		} else if (cmd_type == "row_update") {
                     var alt_mode    = cmd_arg[0];
@@ -1218,13 +1266,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    var rowClass = update_scroll[j][JCLASS];
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_html;
-			    if (rowClass == "gterm-html") {
-				row_html = '<div class="row entry '+entry_class+'">'+markup+'</div>\n';
+			    if (rowClass.indexOf("gterm-html") >= 0) {
+				GTAppendDiv($("#session-bufscreen"), "row entry "+entry_class, markup);
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
-				row_html = '<pre '+id_attr+' class="row entry '+entry_class+'">'+row_escaped+"\n</pre>";
+				row_html = '<pre '+id_attr+' class="'+rowClass+' entry '+entry_class+'">'+row_escaped+"\n</pre>";
+				$(row_html).appendTo("#session-bufscreen");
 			    }
-			    $(row_html).appendTo("#session-bufscreen");
 			    $("#session-bufscreen ."+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
 			}
 		    }
@@ -1723,8 +1771,8 @@ function gtermLinkClickHandler(event) {
 	file_url = makeFileURL($(this).attr("href"));
 	gtermClickPaste("", file_url, options);
 
-    } else if ($(this).hasClass("gterm-blockseqlink")) {
-	$(this).parent(".gterm-blockseqtoggle").toggleClass("gterm-blockseqhide");
+    } else if ($(this).hasClass("gterm-togglelink")) {
+	$(this).parent(".gterm-toggleblock").toggleClass("gterm-togglehide");
     }
 
     if (contextMenu) {
@@ -2649,7 +2697,9 @@ function GTCloseNotebook() {
     }
 }
 
-function GTNotebook(fullwindow) {
+function GTNotebook(fullpage) {
+    this.fullpage = fullpage;
+
     if (gNotebookId[0] != gPromptIndex)
 	gNotebookId = [gPromptIndex, 0]
     gNotebookId[1] += 1;
@@ -2657,10 +2707,13 @@ function GTNotebook(fullwindow) {
 
     var entry_class = "entry"+gPromptIndex;
     var classes = "entry"+gPromptIndex;
-    if (fullwindow)
-	classes += " gterm-fullwindow";
 
     this.pagelet = $('<div id="'+this.notebookId+'" class="pagelet pagelet-notebook entry '+classes+'" data-gtermcurrentdir="" data-gtermpromptindex="'+gPromptIndex+'"></div>\n').appendTo("#session-bufscreen");
+
+    if (this.fullpage) {
+	StartFullpage("fullpage", false);
+	$("#session-bufellipsis").show();
+    }
 
     this.cellParams = {};
     this.cellList = []
@@ -2670,6 +2723,11 @@ function GTNotebook(fullwindow) {
 }
 
 GTNotebook.prototype.close = function() {
+    if (this.fullpage)
+	EndFullpage();
+
+    $("#"+this.notebookId).remove();
+
     gNotebook = null;
     if (gWebSocket && gParams.controller)
 	gWebSocket.term_input("\n");
@@ -2680,18 +2738,14 @@ GTNotebook.prototype.getCellId = function(cellIndex) {
 }
 
 GTNotebook.prototype.switchCell = function(cellIndex) {
-    if (!cellIndex) {
-	this.close();
-	return
-    }
 }
 
-GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
+GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, inputData) {
     var cellId = this.getCellId(cellIndex);
     var cellParams = { cellType: cellType, cellIndex: cellIndex, cellId: cellId };
     this.cellParams[cellIndex] = cellParams;
     if (cellType == "code") {
-	var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-code"></textarea><div class="gterm-notecell-output"></div></div>';
+	var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-code"></textarea><div class="gterm-notecell-output"></div><div class="gterm-notecell-screen"></div></div>';
     }
     var newElem;
     if (!beforeCellIndex) {
@@ -2712,18 +2766,19 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex) {
 	this.cellList = this.cellList.slice(0,k-1).concat([cellIndex]).concat(this.cellList.slice(k-1));
 	newElem = $(cellHtml).insertBefore("#"+this.getCellId(beforeCellIndex));
     }
-
     this.curIndex = cellIndex;
-    $("#"+this.getCellId(cellIndex)+"-textarea").autoResize();
+    var textElem = $("#"+this.getCellId(cellIndex)+"-textarea");
+    textElem.val(inputData);
+    textElem.autoResize();
     this.cellFocus(true);
 }
 
-GTNotebook.prototype.cellFocus = function(focus) {
+GTNotebook.prototype.cellFocus = function(focus, fullScroll) {
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     if (focus) {
 	textElem.focus();
 	this.passthru_stdin = false;
-	setTimeout(bind_method(this, this.cellScroll), 200);
+	setTimeout(fullScroll ? ScrollTerm : bind_method(this, this.cellScroll), 200);
     } else {
 	textElem.blur();
 	this.passthru_stdin = true;
@@ -2745,20 +2800,22 @@ GTNotebook.prototype.execute = function(openNext) {
     }
 }
 
-GTNotebook.prototype.output = function(update_rows, update_scroll) {
-    var out_html = []
+GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     var noteprompt = false;
+    var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
+    if (reset)
+	outElem.html("");
+
     for (var j=0; j<update_scroll.length; j++) {
 	var rowClass = update_scroll[j][JCLASS];
 	var markup = update_scroll[j][JMARKUP];
 	var row_html;
-	if (rowClass == "gterm-html") {
-	    row_html = '<div class="gterm-notecell-output">'+markup+'</div>\n';
+	if (rowClass.indexOf("gterm-html") >= 0) {
+	    GTAppendDiv(outElem, "gterm-notecell-scroll", markup);
 	} else {
 	    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE]) : markup;
-	    row_html = '<pre class="gterm-notecell-output">'+row_escaped+"\n</pre>";
+	    $('<pre class="gterm-notecell-scroll">'+row_escaped+'\n</pre>').appendTo(outElem);
 	}
-	out_html.push('<pre class="gterm-notecell-output">'+row_escaped+'\n</pre>');
     }
 
     for (var j=0; j<update_rows.length; j++) {
@@ -2768,16 +2825,13 @@ GTNotebook.prototype.output = function(update_rows, update_scroll) {
 	var row_line = "";
 	for (var k=0; k<row_span.length; k++)
 	    row_line += row_span[k][1];
-	out_html.push('<pre class="gterm-notecell-output">'+GTEscape(row_line)+'\n</pre>');
+	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-screen").html('<pre class="row">'+GTEscape(row_line)+(noteprompt?'':GTCursorSpan(' '))+'\n</pre>');
     }
 
-    var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
-    outElem.html(out_html.join(""));
     if (noteprompt) {
-	this.cellFocus(true);
+	this.cellFocus(true, true);
     } else {
-	var bot_offset = $("#session-term").offset().top + $("#session-term").height();
-	$(window).scrollTop(bot_offset - $(window).height());
+	setTimeout(ScrollTerm, 200);
     }
 
 }
@@ -3030,6 +3084,12 @@ function ScrollTop(offset) {
 	$(window).scrollTop(offset);
 }
 
+function ScrollTerm() {
+    // Scroll to bottom of terminal
+    var bot_offset = $("#session-term").offset().top + $("#session-term").height();
+    $(window).scrollTop(bot_offset - $(window).height());
+}
+
 function GTShowSplash(animate) {
     if ($("#gtermsplash").hasClass("hidesplash"))
 	return;
@@ -3054,10 +3114,14 @@ function ScrollScreen(alt_mode) {
     if (gTestBatchedScroll && !gManualScroll)
 	return;
     var screen_id = alt_mode ? "#session-altscreen" : "#session-screencontainer";
+    if (!$(screen_id).height())
+	screen_id = "#session-term";
+
     var bot_offset = $(screen_id).offset().top + $(screen_id).height();
     var winHeight = $(window).height();
     if (gMobileBrowser && winHeight != window.innerHeight)
 	winHeight = Math.min($(window).height(), window.innerHeight) - (window.orientation?50:25);
+
     if (bot_offset > winHeight)
 	ScrollTop(bot_offset - winHeight + gBottomMargin);
     else

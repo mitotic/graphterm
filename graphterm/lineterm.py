@@ -152,6 +152,35 @@ def prompt_offset(line, pdelim, meta=None):
                         offset = end_offset + len(pdelim[1])
         return offset
 
+def strip_prompt_lines(update_scroll, note_prompts):
+        """Strip scroll entries starting with notebook prompt"""
+        trunc_scroll = []
+        block_scroll = []
+        prev_prompt_entry = None
+        for entry in update_scroll:
+                line = entry[JLINE]
+                has_prompt = False
+                for prompt in note_prompts:
+                        if line.startswith(prompt):
+                                # Entry starts with prompt
+                                has_prompt = True
+                                break
+                if has_prompt:
+                        # Prompt entry saved temporarily
+                        trunc_scroll += block_scroll
+                        block_scroll = []
+                        prev_prompt_entry = entry
+                else:
+                        # Retain all non-prompt entries
+                        block_scroll.append(entry)
+                        if "error" in line.lower():
+                                if prev_prompt_entry is not None:
+                                        # Include previous prompt entry because of error
+                                        block_scroll = [prev_prompt_entry] + block_scroll
+                                        prev_prompt_entry = None
+
+        return trunc_scroll + block_scroll
+
 def command_output(command_args, **kwargs):
         """ Executes a command and returns the string tuple (stdout, stderr)
         keyword argument timeout can be specified to time out command (defaults to 15 sec)
@@ -466,6 +495,7 @@ class ScreenBuf(object):
 
         def scroll_buf_up(self, line, meta, offset=0, row_class="row", markup=None):
                 current_dir = ""
+                overwrite = False
                 if offset:
                         # Prompt line (i.e., command line)
                         self.entry_index += 1
@@ -474,12 +504,30 @@ class ScreenBuf(object):
                         if not self.cleared_last:
                                 self.cleared_current_dir = None
                         self.cleared_last = False
-                self.current_scroll_count += 1
-                self.scroll_lines.append([self.entry_index, offset, current_dir, row_class, line, markup])
-                if len(self.scroll_lines) > MAX_SCROLL_LINES:
-                        tem_entry_index, tem_offset, tem_dir, tem_class, tem_line, tem_markup = self.scroll_lines.pop(0)
-                        while self.scroll_lines and self.scroll_lines[0][JINDEX] == tem_entry_index:
-                                self.scroll_lines.pop(0)
+                elif row_class == "gterm-html":
+                    if markup.startswith(gtermapi.OVERWRITE_PREFIX):
+                        overwrite = True
+                    logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
+
+                if overwrite and self.scroll_lines and self.scroll_lines[-1][JCLASS].startswith("gterm-html"):
+                    # Overwrite previous HTML scroll entry
+                    self.scroll_lines[-1][JDIR] = current_dir
+                    self.scroll_lines[-1][JLINE] = line
+                    self.scroll_lines[-1][JMARKUP] = markup
+                    if self.current_scroll_count > 0 and self.last_scroll_count >= self.current_scroll_count:
+                        self.last_scroll_count = self.current_scroll_count - 1
+                else:
+                    # New scroll entry
+                    self.current_scroll_count += 1
+                    self.scroll_lines.append([self.entry_index, offset, current_dir, row_class, line, markup])
+                    if len(self.scroll_lines) > MAX_SCROLL_LINES:
+                            tem_entry_index, tem_offset, tem_dir, tem_class, tem_line, tem_markup = self.scroll_lines.pop(0)
+                            while self.scroll_lines and self.scroll_lines[0][JINDEX] == tem_entry_index:
+                                    self.scroll_lines.pop(0)
+
+        def append_scroll(self, scroll_lines):
+                self.current_scroll_count += len(scroll_lines)
+                self.scroll_lines += scroll_lines
 
         def update(self, active_rows, width, height, cursorx, cursory, main_screen,
                    alt_screen=None, pdelim=[], note_prompts=[], reconnecting=False):
@@ -708,6 +756,7 @@ class Terminal(object):
                 self.last_html = ""
                 self.active_rows = 0
                 self.current_meta = None
+                self.shell_prompt = False
                 self.gterm_code = None
                 self.gterm_buf = None
                 self.gterm_buf_size = 0
@@ -742,6 +791,7 @@ class Terminal(object):
 
         def notebook(self, activate, prompts=[]):
                 if activate:
+                        at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
                         if not prompts and self.command_path:
                                 basename = os.path.basename(self.command_path)
                                 if basename == "python":
@@ -757,9 +807,11 @@ class Terminal(object):
                                                         prompts += PYTHON_PROMPTS[1:]
                                                 elif prompts[0] == IPYTHON_PROMPTS[0]:
                                                         prompts += IPYTHON_PROMPTS[1:]
+                                                elif at_shell:
+                                                        prompts += ["> "]
                                 except Exception:
                                         raise
-                        logging.warning("ABCnotebook: %s prompts=%s", activate, prompts)
+                        logging.warning("ABCnotebook: %s shell=%s, prompts=%s", activate, at_shell, prompts)
 
                         self.scroll_screen(self.active_rows)
                         self.update()
@@ -768,14 +820,27 @@ class Terminal(object):
                         self.note_screen_buf.clear_buf()
                         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
                         self.note_prompts = prompts
+
+                        self.shell_prompt = at_shell
+                        self.screen_callback(self.term_name, "", "note_activate", [True, self.shell_prompt])
                         self.select_cell(new_cell_type="code")
                 else:
-                        # TODO: copy all cellInput and cellOutput to scroll buffer ABC
+                        self.select_cell(0)
+                        note_cells = self.note_cells
+                        prompt = self.note_prompts[0]
                         self.note_cells = None
+                        self.note_prompts = []
+                        for cell in note_cells["cells"].itervalues():
+                                # Copy all cellInput and cellOutput to scroll buffer
+                                for line in cell["cellInput"]:
+                                        self.screen_buf.scroll_buf_up(line, "", row_class="row gterm-cell-input")
+                                self.screen_buf.scroll_buf_up(prompt, "")
+                                self.screen_buf.append_scroll(cell["cellOutput"])
                         self.scroll_bot = self.height-1
                         self.resize(self.height, self.width, force=True)
                         self.zero_screen()
-                        self.screen_callback(self.term_name, "", "note_switch_cell", [0])
+                        self.screen_callback(self.term_name, "", "note_activate", [False, self.shell_prompt])
+                        self.update()
 
 
         def select_cell(self, cell_index=0, new_cell_type="", before_cell_index=0):
@@ -785,7 +850,7 @@ class Terminal(object):
                         cur_cell = self.note_cells["cells"][cur_index]
                         # Move all screen lines to scroll buffer
                         self.scroll_screen(self.active_rows)
-                        cur_cell["cellOutput"] = self.note_screen_buf.scroll_lines[:]
+                        cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
 
                 self.note_input = []
                 if new_cell_type:
@@ -796,9 +861,9 @@ class Terminal(object):
                         self.note_cells["cells"][cell_index] = next_cell
                         self.note_cells["curIndex"] = cell_index
                         self.screen_callback(self.term_name, "", "note_add_cell",
-                                             [cell_index, new_cell_type, before_cell_index])
-                else:
-                        assert cell_index and cell_index in self.note_cells
+                                             [cell_index, new_cell_type, before_cell_index, [], []])
+                elif cell_index:
+                        assert cell_index in self.note_cells
                         self.note_cells["curIndex"] = cell_index
                         next_cell = self.note_cells["cells"][cur_index]
                         next_cell["cellOutput"] = []
@@ -815,6 +880,8 @@ class Terminal(object):
                 self.note_input = input_data.replace("\r\n","\n").replace("\r","\n").split("\n")
                 if len(self.note_input) > 1 and not self.note_input[-1]:
                         self.note_input = self.note_input[:-1]
+
+                cur_cell["cellInput"] = self.note_input[:]
 
                 self.note_screen_buf.clear_buf()
                 self.zero_screen()
@@ -917,6 +984,7 @@ class Terminal(object):
 
                 if self.note_cells:
                         if reconnecting:
+                                self.screen_callback(self.term_name, response_id, "note_activate", [True, self.shell_prompt])
                                 for cell in self.note_cells["cells"].itervalues():
                                         logging.warning("ABCnote_add_cell: %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellInput"], cell["cellOutput"])
                                         self.screen_callback(self.term_name, response_id, "note_add_cell",
@@ -929,37 +997,11 @@ class Terminal(object):
                                                                                          alt_screen=False,
                                                                                          pdelim=[],
                                                                                          note_prompts=self.note_prompts,
-                                                                                         reconnecting=True)
+                                                                                         reconnecting=reconnecting)
+
+                        update_scroll = strip_prompt_lines(update_scroll, self.note_prompts)
+
                         logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
-
-                        # Hide entries starting with prompt
-                        trunc_scroll = []
-                        block_scroll = []
-                        prev_prompt_entry = None
-                        for entry in update_scroll:
-                                line = entry[JLINE]
-                                has_prompt = False
-                                for prompt in self.note_prompts:
-                                        if line.startswith(prompt):
-                                                # Entry starts with prompt
-                                                has_prompt = True
-                                                break
-                                if has_prompt:
-                                        # Prompt entry saved temporarily
-                                        trunc_scroll += block_scroll
-                                        block_scroll = []
-                                        prev_prompt_entry = entry
-                                else:
-                                        # Retain all non-prompt entries
-                                        block_scroll.append(entry)
-                                        if "error" in line.lower():
-                                                if prev_prompt_entry is not None:
-                                                        # Include previous prompt entry because of error
-                                                        block_scroll = [prev_prompt_entry] + block_scroll
-                                                        prev_prompt_entry = None
-
-                        update_scroll = trunc_scroll + block_scroll
-
                         self.screen_callback(self.term_name, response_id, "note_row_update",
                                              [False, full_update, self.active_rows,
                                               self.width, self.height,

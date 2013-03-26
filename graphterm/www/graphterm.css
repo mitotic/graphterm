@@ -100,7 +100,7 @@ hr {
     font-weight: bold;
 }
 
-.row .inverse {
+.row .inverse, .row.gterm-cell-input {
     background-color: lightgray;
 }
 
@@ -268,15 +268,15 @@ img.gterm-blockimg {
     max-height: 100%;
 }
 
-.gterm-blockseq:not(.gterm-blockseqhide) span.gterm-blockseqlink {
+.gterm-toggleblock:not(.gterm-togglehide) span.gterm-togglelink {
     display: none;
 }
 
-.gterm-blockseq.gterm-blockseqhide img, .gterm-blockseq.gterm-blockseqhide div {
+.gterm-toggleblock.gterm-togglehide img, .gterm-toggleblock.gterm-togglehide div {
     display: none;
 }
 
-span.gterm-link, a.gterm-link, span.gterm-help-link, span.gterm-blockseqlink {
+span.gterm-link, a.gterm-link, span.gterm-help-link, span.gterm-togglelink {
     color: blue;
     cursor: pointer;
     text-decoration: none;

@@ -31,6 +31,7 @@ API_MIN_VERSION = "0.31"
 
 HEX_DIGITS = 16
 
+OVERWRITE_PREFIX = '<!--gterm-html-overwrite-->'
 
 Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/")
 
@@ -100,7 +101,7 @@ def write_form(html, command="", dir=""):
 
 def write_blank(display="fullpage"):
     """Write blank pagelet to stdout"""
-    write_html("", display=display)
+    write_pagelet("", display=display)
 
 def display_blockimg(url, overwrite=False, alt=""):
     """Display block image in a sequence.
@@ -108,11 +109,23 @@ def display_blockimg(url, overwrite=False, alt=""):
     Display of hidden images can be toggled by clicking.
     """
     alt_attr = ' alt="'+alt+'"' if alt else ''
-    IMGFORMAT = '<span class="gterm-blockseqlink"><em>&lt;'+(alt or 'image')+'&gt;</em></span><img class="gterm-blockimg gterm-blockseqlink" src="%s"'+alt_attr+'><br>'
-    add_headers={"classes": "gterm-blockseq"}
+    IMGFORMAT = '<span class="gterm-togglelink"><em>&lt;'+(alt or 'image')+'&gt;</em></span><img class="gterm-blockimg gterm-togglelink" src="%s"'+alt_attr+'><br>'
+    add_headers = {"classes": "gterm-blockseq"}
     if overwrite:
         add_headers["block"] = "overwrite"
-    write_html(IMGFORMAT % url, add_headers=add_headers)
+    write_pagelet(IMGFORMAT % url, add_headers=add_headers)
+
+def display_blockhtml(url, overwrite=False, toggle=False, alt=""):
+    """Display HTML block, overwriting previous block, if desired.
+    """
+    toggleblock_class = 'gterm-toggleblock' if toggle else ''
+    togglelink_class = 'gterm-togglelink' if toggle else ''
+    alt_attr = ' alt="'+alt+'"' if alt else ''
+    UNIQUEIMGFORMAT = '<div class="gterm-blockhtml '+toggleblock_class+'"><span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span><img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
+    html = UNIQUEIMGFORMAT % url
+    if overwrite:
+        html = OVERWRITE_PREFIX + html
+    write_html(html)
 
 def open_url(url, target="_blank"):
     """Open url in new window"""

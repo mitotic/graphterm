@@ -20,7 +20,8 @@ def gplot_savefig(format="png", overwrite=False, title=""):
     outbuf = gtermapi.BlobStringIO(content_type)
     plt.savefig(outbuf, format=format)
     blob_url = outbuf.close()
-    gtermapi.display_blockimg(blob_url, overwrite=overwrite, alt=title)
+    ##gtermapi.display_blockimg(blob_url, overwrite=overwrite, alt=title)
+    gtermapi.display_blockhtml(blob_url, overwrite=overwrite, alt=title)
     
 def demo():
     """gterm-aware matplotlib demo"""
