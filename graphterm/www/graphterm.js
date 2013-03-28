@@ -286,7 +286,7 @@ function handle_resize() {
     gRows = Math.floor($(window).height() / gRowHeight) - 1;
     gCols = Math.floor($(window).width() / gColWidth) - 1;
     if (gWebSocket && gParams.controller)
-	gWebSocket.write([["set_size", [gRows, gCols]]]);
+	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width()]]]);
 }
 
 function openTerminal() {
@@ -529,7 +529,7 @@ function GTAppendDiv(parentElem, classes, markup) {
 	return rowElem.appendTo(parentElem);
     }
 
-    // Overwite single previous element
+    // Overwrite single previous element
     if (prevElem.find(".gterm-blockimg").length == 1 && innerElem.find(".gterm-blockimg").length == 1) {
 	// Replace IMG src attribute
 	prevElem.find(".gterm-blockimg").attr("src", innerElem.find(".gterm-blockimg").attr("src"));
@@ -1103,6 +1103,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var update_rows = cmd_arg[8];
 		    var update_scroll = cmd_arg[9];
 
+		    var delayed_scroll = false;
 		    if (alt_mode && !this.alt_mode) {
 			this.alt_mode = true;
 			if (gSplitScreen)
@@ -1275,23 +1276,29 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    var row_html;
 			    if (rowClass.indexOf("gterm-html") >= 0) {
 				GTAppendDiv($("#session-bufscreen"), "row entry "+entry_class, markup);
+				delayed_scroll = true;
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
 				row_html = '<pre '+id_attr+' class="'+rowClass+' entry '+entry_class+'">'+row_escaped+"\n</pre>";
 				$(row_html).appendTo("#session-bufscreen");
 			    }
-			    $("#session-bufscreen ."+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
+			    $("#session-bufscreen ."+entry_class+" .gterm-toggleblock .gterm-togglelink").bindclick(gtermLinkClickHandler);
 			}
 		    }
 
 		    if (gScrollTop) {
 			gScrollTop = false;
 			ScrollTop(0);
-		    } else if (!$("body").hasClass("three-d")) {
+		    } else if ($("body").hasClass("three-d")) {
+			// 3D theme
+			$("#session-term").scrollTop($("#session-term")[0].scrollHeight - $("#session-term").height())
+		    } else if (delayed_scroll) {
+			// Delayed scroll (usually to allow image to render)
+			setTimeout(ScrollScreen, 200);
+		    } else {
+			// Scroll to bottom of screen, if not split
 			if (!gSplitScreen)
 			    ScrollScreen(alt_mode);
-		    } else {
-			$("#session-term").scrollTop($("#session-term")[0].scrollHeight - $("#session-term").height())
 		    }
 		}
 
@@ -2775,17 +2782,16 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     }
     this.curIndex = cellIndex;
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+    textElem.autoResize();
     if (!gParams.controller)
 	textElem.attr("disabled", "disabled");
     this.cellValue(inputData);
     this.cellFocus(true);
 }
 
-GTNotebook.prototype.cellValue = function(inputData, resize) {
+GTNotebook.prototype.cellValue = function(inputData) {
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     textElem.val(inputData || "");
-    if (resize)
-	textElem.autoResize();
 }
 
 GTNotebook.prototype.cellFocus = function(focus, fullScroll) {

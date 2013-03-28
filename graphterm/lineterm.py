@@ -50,7 +50,7 @@ UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
 NO_COPY_ENV = set(["GRAPHTERM_EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
-LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_PATH"]
+LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_DIMENSIONS", "GRAPHTERM_PATH"]
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)     # (prompt_escape, pagelet_escape)
@@ -495,6 +495,7 @@ class ScreenBuf(object):
 
         def scroll_buf_up(self, line, meta, offset=0, row_class="row", markup=None):
                 current_dir = ""
+                prev_html = bool(self.scroll_lines and self.scroll_lines[-1][JCLASS].startswith("gterm-html"))
                 overwrite = False
                 if offset:
                         # Prompt line (i.e., command line)
@@ -506,10 +507,15 @@ class ScreenBuf(object):
                         self.cleared_last = False
                 elif row_class == "gterm-html":
                     if markup.startswith(gtermapi.OVERWRITE_PREFIX):
-                        overwrite = True
-                    logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
+                        if prev_html:
+                            # Overwrite previous html
+                            overwrite = True
+                        else:
+                            # No overwrite (but browser rendering may still ovewrite image)
+                            pass
+                    ##logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
 
-                if overwrite and self.scroll_lines and self.scroll_lines[-1][JCLASS].startswith("gterm-html"):
+                if overwrite:
                     # Overwrite previous HTML scroll entry
                     self.scroll_lines[-1][JDIR] = current_dir
                     self.scroll_lines[-1][JLINE] = line
@@ -643,14 +649,16 @@ class Screen(object):
                 return Screen(self.width, self.height, data=copy.copy(self.data), meta=copy.copy(self.meta))
 
 class Terminal(object):
-        def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, cookie=0,
-                     shared_secret="", host="", pdelim=[], logfile=""):
+        def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, winheight=0, winwidth=0,
+                     cookie=0, shared_secret="", host="", pdelim=[], logfile=""):
                 self.term_name = term_name
                 self.fd = fd
                 self.pid = pid
                 self.screen_callback = screen_callback
                 self.width = width
                 self.height = height
+                self.winwidth = winwidth
+                self.winheight = winheight
                 self.cookie = cookie
                 self.shared_secret = shared_secret
                 self.host = host
@@ -765,8 +773,10 @@ class Terminal(object):
                 self.gterm_validated = False
                 self.gterm_output_buf = []
 
-        def resize(self, height, width, force=False):
+        def resize(self, height, width, winheight=0, winwidth=0, force=False):
                 reset_flag = force or (self.width != width or self.height != height)
+                self.winwidth = winwidth
+                self.winheight = winheight
                 if reset_flag:
                         self.scroll_screen()
                         min_width = min(self.width, width)
@@ -816,7 +826,7 @@ class Terminal(object):
 
                         self.scroll_screen(self.active_rows)
                         self.update()
-                        self.resize(self.height, self.width, force=True)
+                        self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
                         self.scroll_bot = 0
                         self.note_screen_buf.clear_buf()
                         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
@@ -838,7 +848,7 @@ class Terminal(object):
                                 self.screen_buf.scroll_buf_up(prompt, "")
                                 self.screen_buf.append_scroll(cell["cellOutput"])
                         self.scroll_bot = self.height-1
-                        self.resize(self.height, self.width, force=True)
+                        self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
                         self.zero_screen()
                         self.screen_callback(self.term_name, "", "note_activate", [False, self.note_shell])
                         self.update()
@@ -1832,14 +1842,14 @@ class Multiplex(object):
                 self.name_count = 0
                 self.thread.start()
 
-        def terminal(self, term_name=None, command="", height=25, width=80):
+        def terminal(self, term_name=None, command="", height=25, width=80, winheight=0, winwidth=0):
                 """Return (tty_name, cookie) for existing or newly created pty"""
                 command = command or self.command
                 with self.lock:
                         if term_name:
                                 term = self.proc.get(term_name)
                                 if term:
-                                        self.set_size(term_name, height, width)
+                                        self.set_size(term_name, height, width, winheight, winwidth)
                                         return (term_name, term.cookie)
 
                         else:
@@ -1893,7 +1903,7 @@ class Multiplex(object):
                                                         env[var] = Exec_path + ":" + env[var]
                                 env["COLUMNS"] = str(width)
                                 env["LINES"] = str(height)
-                                env.update( dict(self.term_env(term_name, cookie)) )
+                                env.update( dict(self.term_env(term_name, cookie, height, width, winheight, winwidth)) )
 
                                 # cd to HOME
                                 os.chdir(os.path.expanduser("~"))
@@ -1903,21 +1913,27 @@ class Multiplex(object):
                                 fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
                                 self.proc[term_name] = Terminal(term_name, fd, pid, self.screen_callback,
                                                                 height=height, width=width,
+                                                                winheight=winheight, winwidth=winwidth,
                                                                 cookie=cookie, host=self.host,
                                                                 shared_secret=self.shared_secret,
                                                                 pdelim=self.pdelim, logfile=self.logfile)
-                                self.set_size(term_name, height, width)
+                                self.set_size(term_name, height, width, winheight, winwidth)
                                 if not is_executable(Gls_path) and not Exec_errmsg:
                                         Exec_errmsg = True
                                         self.screen_callback(term_name, "", "alert", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
                                 return term_name, cookie
 
-        def term_env(self, term_name, cookie, export=False):
+        def term_env(self, term_name, cookie, height, width, winheight, winwidth, export=False):
                 env = []
                 env.append( ("TERM", self.term_type or TERM_TYPE) )
                 env.append( ("GRAPHTERM_COOKIE", str(cookie)) )
                 env.append( ("GRAPHTERM_SHARED_SECRET", self.shared_secret) )
                 env.append( ("GRAPHTERM_PATH", "%s/%s" % (self.host, term_name)) )
+                dimensions = "%dx%d" % (width, height)
+                if winwidth or winheight:
+                    dimensions += ";%dx%d" % (winwidth, winheight)
+                env.append( ("GRAPHTERM_DIMENSIONS", dimensions) )
+
                 if self.server_url:
                         env.append( ("GRAPHTERM_URL", self.server_url) )
 
@@ -1957,7 +1973,8 @@ class Multiplex(object):
                 term = self.proc.get(term_name)
                 if term:
                     term.pty_write('[ "$GRAPHTERM_COOKIE" ] || export GRAPHTERM_EXPORT="%s"\n' % (socket.getfqdn() or "unknown",))
-                    for name, value in self.term_env(term_name, term.cookie, export=True):
+                    for name, value in self.term_env(term_name, term.cookie, term.height, term.width,
+                                                     term.winheight, term.winwidth, export=True):
                         try:
                             if name in ("GRAPHTERM_DIR",):
                                 term.pty_write( ('[ "$%s" ] || ' % name) + ("export %s='%s'\n" % (name, value)) )
@@ -1968,11 +1985,11 @@ class Multiplex(object):
                             break
                     term.pty_write('[[ "$PATH" != */graphterm/* ]] && [ -d "$GRAPHTERM_DIR" ] && export PATH="$GRAPHTERM_DIR/%s:$PATH"\n' % BINDIR)
 
-        def set_size(self, term_name, height, width):
+        def set_size(self, term_name, height, width, winheight=0, winwidth=0):
                 # python bug http://python.org/sf/1112949 on amd64
                 term = self.proc.get(term_name)
                 if term:
-                        term.resize(height, width)
+                        term.resize(height, width, winheight=winheight, winwidth=winwidth)
                         fcntl.ioctl(term.fd, struct.unpack('i',struct.pack('I',termios.TIOCSWINSZ))[0],
                                     struct.pack("HHHH",height,width,0,0))
 

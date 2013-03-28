@@ -38,6 +38,7 @@ Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/"
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOKIE", "")
 Path = os.getenv("GRAPHTERM_PATH", "") or os.getenv("LC_GRAPHTERM_PATH", "")
 Export_host = os.getenv("GRAPHTERM_EXPORT", "") or os.getenv("LC_GRAPHTERM_EXPORT", "")
+Dimensions = os.getenv("GRAPHTERM_DIMENSIONS", "") or os.getenv("LC_GRAPHTERM_DIMENSIONS", "") # colsxrows[;widthxheight]
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
 URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
 
@@ -116,12 +117,13 @@ def display_blockimg(url, overwrite=False, alt=""):
     write_pagelet(IMGFORMAT % url, add_headers=add_headers)
 
 def display_blockhtml(url, overwrite=False, toggle=False, alt=""):
-    """Display HTML block, overwriting previous block, if desired.
+    """Display image from url, overwriting previous image, if desired.
     """
     toggleblock_class = 'gterm-toggleblock' if toggle else ''
     togglelink_class = 'gterm-togglelink' if toggle else ''
+    togglespan = '<span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span>' if toggle else ''
     alt_attr = ' alt="'+alt+'"' if alt else ''
-    UNIQUEIMGFORMAT = '<div class="gterm-blockhtml '+toggleblock_class+'"><span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span><img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
+    UNIQUEIMGFORMAT = '<div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
     html = UNIQUEIMGFORMAT % url
     if overwrite:
         html = OVERWRITE_PREFIX + html
