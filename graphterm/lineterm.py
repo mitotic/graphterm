@@ -63,7 +63,8 @@ REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
 PYTHON_PROMPTS = [">>> ", "... "]
-IPYTHON_PROMPTS = ["In ", "   ...: "]
+IPYTHON_PROMPTS = ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "] # Works up to 10,000 prompts
+NODE_PROMPTS = ["> ", "... "]
 
 # Scroll lines array components
 JINDEX = 0
@@ -572,9 +573,11 @@ class ScreenBuf(object):
                                 row_class = "row"
                                 offset = prompt_offset(new_row_str, pdelim, screen.meta[j])
                                 if not offset and note_prompts:
-                                        for prompt in note_prompts:
+                                        # Assume everything after the first prompt is a continuation prompt and ignore
+                                        # NOTE: This may need to be re-evaluated
+                                        for prompt in note_prompts[:1]:
                                                 if new_row_str.startswith(prompt):
-                                                        # Entry starts with prompt
+                                                        # Entry starts with non-continuation prompt
                                                         row_class += " noteprompt"
                                                         break
 
@@ -807,6 +810,8 @@ class Terminal(object):
                                 basename = os.path.basename(self.command_path)
                                 if basename == "python":
                                         prompts = PYTHON_PROMPTS
+                                if basename == "node":
+                                        prompts = NODE_PROMPTS
                         if not prompts:
                                 # Search buffer to use current prompt
                                 try:
@@ -820,6 +825,9 @@ class Terminal(object):
                                                         prompts += IPYTHON_PROMPTS[1:]
                                                 elif at_shell:
                                                         prompts += ["> "]
+                                                elif prompts[-1] == "> ":
+                                                        # Handles node REPL shell
+                                                        prompts += ["... "]
                                 except Exception:
                                         raise
                         logging.warning("ABCnotebook: %s shell=%s, prompts=%s", activate, at_shell, prompts)
@@ -889,10 +897,12 @@ class Terminal(object):
                 assert cell_index == cur_index
                 cur_cell = self.note_cells["cells"][cur_index]
                 self.note_input = input_data.replace("\r\n","\n").replace("\r","\n").split("\n")
-                if len(self.note_input) > 1 and not self.note_input[-1]:
-                        self.note_input = self.note_input[:-1]
 
                 cur_cell["cellInput"] = self.note_input[:]
+
+                if self.note_input[-1]:
+                    # Add blank line to clear any indentation level
+                    self.note_input.append("")
 
                 self.note_screen_buf.clear_buf()
                 self.zero_screen()

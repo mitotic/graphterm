@@ -1282,6 +1282,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				row_html = '<pre '+id_attr+' class="'+rowClass+' entry '+entry_class+'">'+row_escaped+"\n</pre>";
 				$(row_html).appendTo("#session-bufscreen");
 			    }
+			    $("#"+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
 			    $("#session-bufscreen ."+entry_class+" .gterm-toggleblock .gterm-togglelink").bindclick(gtermLinkClickHandler);
 			}
 		    }
