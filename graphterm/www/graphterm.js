@@ -42,8 +42,6 @@ var OSH_ECHO = true;
 
 var ELLIPSIS = "...";
 
-var OVERWRITE_PREFIX = '<!--gterm-html-overwrite-->';
-
 var gRowHeight = 16;
 var gColWidth  = 8;
 var gBottomMargin = 14;
@@ -99,13 +97,13 @@ var gParams = {};
 var GTPrompt = "&gt; ";
 var GTCurDirURI = "";
 
-// Scroll line array components
-var JINDEX = 0
-var JOFFSET = 1
-var JDIR = 2
-var JCLASS = 3
-var JLINE = 4
-var JMARKUP = 5
+// Screen/scroll line array components
+var JINDEX = 0;
+var JOFFSET = 1;
+var JDIR = 2;
+var JOPTS = 3;
+var JLINE = 4;
+var JMARKUP = 5;
 
 function bind_method(obj, method) {
   return function() {
@@ -505,8 +503,8 @@ function GTClearTerminal() {
     $("#session-bufscreen").children().remove();
 }
 
-function GTAppendDiv(parentElem, classes, markup) {
-    var overwrite = markup.indexOf(OVERWRITE_PREFIX) == 0;
+function GTAppendDiv(parentElem, row_opts, classes, markup) {
+    var overwrite = !!row_opts.overwrite;
     var rowHtml = '<div class="'+classes+'">'+markup+'</div>\n';
     var rowElem = $(rowHtml);
     var innerElem = rowElem.children(".gterm-blockhtml");
@@ -515,7 +513,7 @@ function GTAppendDiv(parentElem, classes, markup) {
     }
 
     var prevElem = parentElem.find(".gterm-blockhtml:not(.gterm-blockclosed)");
-    console.log("ABCappenddiv", overwrite, OVERWRITE_PREFIX, markup, prevElem.length);
+    console.log("ABCappenddiv", row_opts, markup, prevElem.length);
 
     if (prevElem.length != 1) {
 	// Remove any previous elements and append new element
@@ -1271,15 +1269,16 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				}
 			    }
 			    gPromptIndex = newPromptIndex;
-			    var rowClass = update_scroll[j][JCLASS];
+			    var row_opts = update_scroll[j][JOPTS];
+			    var row_class = row_opts.row_class;
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_html;
-			    if (rowClass.indexOf("gterm-html") >= 0) {
-				GTAppendDiv($("#session-bufscreen"), "row entry "+entry_class, markup);
+			    if (row_class.indexOf("gterm-html") >= 0) {
+				GTAppendDiv($("#session-bufscreen"), row_opts, "row entry "+entry_class, markup);
 				delayed_scroll = true;
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
-				row_html = '<pre '+id_attr+' class="'+rowClass+' entry '+entry_class+'">'+row_escaped+"\n</pre>";
+				row_html = '<pre '+id_attr+' class="'+row_class+' entry '+entry_class+'">'+row_escaped+"\n</pre>";
 				$(row_html).appendTo("#session-bufscreen");
 			    }
 			    $("#"+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
@@ -2830,11 +2829,12 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 	outElem.html("");
 
     for (var j=0; j<update_scroll.length; j++) {
-	var rowClass = update_scroll[j][JCLASS];
+	var row_opts = update_scroll[j][JOPTS];
+	var row_class = row_opts.row_class;
 	var markup = update_scroll[j][JMARKUP];
 	var row_html;
-	if (rowClass.indexOf("gterm-html") >= 0) {
-	    GTAppendDiv(outElem, "gterm-notecell-scroll", markup);
+	if (row_class.indexOf("gterm-html") >= 0) {
+	    GTAppendDiv(outElem, row_opts, "gterm-notecell-scroll", markup);
 	} else {
 	    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE]) : markup;
 	    $('<pre class="gterm-notecell-scroll">'+row_escaped+'\n</pre>').appendTo(outElem);
@@ -2842,9 +2842,10 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     }
 
     for (var j=0; j<update_rows.length; j++) {
+	var row_opts = update_rows[j][JOPTS];
+	var row_class = row_opts.row_class;
 	var row_span = update_rows[j][JLINE];
-	var rowClass = update_rows[j][JCLASS];
-	noteprompt = (rowClass.indexOf("noteprompt") >= 0);
+	noteprompt = (row_class.indexOf("noteprompt") >= 0);
 	var row_line = "";
 	for (var k=0; k<row_span.length; k++)
 	    row_line += row_span[k][1];

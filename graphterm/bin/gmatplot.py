@@ -154,15 +154,14 @@ def demo():
 
     fmt = "png" # or "pdf"
 
-    plt.plot([1,2,3,2,3,0])
-    show(format=fmt, title="Simple plot")
-
-    time.sleep(2)
+    ##plt.plot([1,2,3,2,3,0])
+    ##show(overwrite=False, format=fmt, title="Simple plot")
+    ##time.sleep(2)
 
     plt.plot([1,2,3,2,3,1])
-    show(format=fmt, title="Simple animation")
+    show(overwrite=False, format=fmt, title="Simple animation")
 
-    n = 20
+    n = 10
     dx = 5.0/n
     for j in range(1,n):
         time.sleep(0.5)

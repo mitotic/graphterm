@@ -62,6 +62,8 @@ FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gcp", "gimages", "gls", "gopen", "
 REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
+GTERM_DIRECTIVE_RE = re.compile(r"^\s*<!--gterm-(\w+)\s(.*)-->")
+
 PYTHON_PROMPTS = [">>> ", "... "]
 IPYTHON_PROMPTS = ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "] # Works up to 10,000 prompts
 NODE_PROMPTS = ["> ", "... "]
@@ -70,7 +72,7 @@ NODE_PROMPTS = ["> ", "... "]
 JINDEX = 0
 JOFFSET = 1
 JDIR = 2
-JCLASS = 3
+JOPTS = 3
 JLINE = 4
 JMARKUP = 5
 
@@ -472,13 +474,15 @@ class ScreenBuf(object):
         def clear_buf(self):
                 self.last_scroll_count = self.current_scroll_count
                 self.scroll_lines = []
+                self.last_blob_id = ""
+                self.delete_blob_ids = []
                 self.full_update = True
 
         def clear_last_entry(self, last_entry_index=None):
                 if not self.scroll_lines or self.entry_index <= 0:
                         return
                 n = len(self.scroll_lines)-1
-                entry_index, offset, dir, row_class, line, markup = self.scroll_lines[n]
+                entry_index, offset, dir, row_opts, line, markup = self.scroll_lines[n]
                 if self.entry_index != entry_index:
                         return
                 if last_entry_index and last_entry_index != entry_index:
@@ -490,14 +494,20 @@ class ScreenBuf(object):
                 self.cleared_last = True
                 if self.cleared_current_dir is None:
                         self.cleared_current_dir = self.scroll_lines[n][JDIR]
+
+                for scroll_line in self.scroll_lines[n:]:
+                        blob_id = scroll_line[JOPTS].get("blob_id")
+                        if blob_id:
+                                self.delete_blob_ids.append(blob_id)
+                        
                 self.scroll_lines[n:] = []
                 if self.last_scroll_count > self.current_scroll_count:
                         self.last_scroll_count = self.current_scroll_count
 
         def scroll_buf_up(self, line, meta, offset=0, row_class="row", markup=None):
                 current_dir = ""
-                prev_html = bool(self.scroll_lines and self.scroll_lines[-1][JCLASS].startswith("gterm-html"))
                 overwrite = False
+                new_blob_id = ""
                 if offset:
                         # Prompt line (i.e., command line)
                         self.entry_index += 1
@@ -507,30 +517,55 @@ class ScreenBuf(object):
                                 self.cleared_current_dir = None
                         self.cleared_last = False
                 elif row_class == "gterm-html":
-                    if markup.startswith(gtermapi.OVERWRITE_PREFIX):
-                        if prev_html:
-                            # Overwrite previous html
-                            overwrite = True
-                        else:
-                            # No overwrite (but browser rendering may still ovewrite image)
-                            pass
-                    ##logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
+                        match = GTERM_DIRECTIVE_RE.match(markup)
+                        if match and match.group(1) == "html":
+                                # gterm html directive
+                                dir_comps = match.group(2).strip().split()
+                                while dir_comps:
+                                        # Parse options
+                                        dir_comp = dir_comps.pop(0)
+                                        opt_name, sep, opt_value = dir_comp.partition("=")
+                                        if opt_name == "overwrite":
+                                                overwrite = (opt_value == "yes")
+                                        elif opt_name == "blob":
+                                                new_blob_id = opt_value
+                                if overwrite and self.last_blob_id:
+                                        # Delete previous blob
+                                        self.delete_blob_ids.append(self.last_blob_id)
+                                self.last_blob_id = new_blob_id
+                        ##logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
 
-                if overwrite:
-                    # Overwrite previous HTML scroll entry
-                    self.scroll_lines[-1][JDIR] = current_dir
-                    self.scroll_lines[-1][JLINE] = line
-                    self.scroll_lines[-1][JMARKUP] = markup
-                    if self.current_scroll_count > 0 and self.last_scroll_count >= self.current_scroll_count:
-                        self.last_scroll_count = self.current_scroll_count - 1
+                prev_html = bool(self.scroll_lines and self.scroll_lines[-1][JOPTS]["row_class"].startswith("gterm-html"))
+                if overwrite and prev_html:
+                        # Overwrite previous HTML scroll entry
+                        self.scroll_lines[-1][JDIR] = current_dir
+                        self.scroll_lines[-1][JOPTS]["overwrite"] = True
+                        if "blob_id" in self.scroll_lines[-1][JOPTS] or new_blob_id:
+                                self.scroll_lines[-1][JOPTS]["blob_id"] = new_blob_id
+                        self.scroll_lines[-1][JLINE] = line
+                        self.scroll_lines[-1][JMARKUP] = markup
+                        if self.current_scroll_count > 0 and self.last_scroll_count >= self.current_scroll_count:
+                                self.last_scroll_count = self.current_scroll_count - 1
                 else:
                     # New scroll entry
                     self.current_scroll_count += 1
-                    self.scroll_lines.append([self.entry_index, offset, current_dir, row_class, line, markup])
+                    row_opts = {"row_class": row_class}    # Option always present
+                    if overwrite:
+                            row_opts["overwrite"] = overwrite
+                    if new_blob_id:
+                            row_opts["blob_id"] = new_blob_id
+                    self.scroll_lines.append([self.entry_index, offset, current_dir, row_opts, line, markup])
                     if len(self.scroll_lines) > MAX_SCROLL_LINES:
-                            tem_entry_index, tem_offset, tem_dir, tem_class, tem_line, tem_markup = self.scroll_lines.pop(0)
-                            while self.scroll_lines and self.scroll_lines[0][JINDEX] == tem_entry_index:
+                            old_entry_index, old_offset, old_dir, old_opts, old_line, old_markup = self.scroll_lines.pop(0)
+                            old_blob_id = old_opts.get("blob_id")
+                            if old_blob_id:
+                                    self.delete_blob_ids.append(old_blob_id)
+                            while self.scroll_lines and self.scroll_lines[0][JINDEX] == old_entry_index:
                                     self.scroll_lines.pop(0)
+                                    tem_entry_index, tem_offset, tem_dir, tem_opts, tem_line, tem_markup = self.scroll_lines.pop(0)
+                                    tem_blob_id = tem_opts.get("blob_id")
+                                    if tem_blob_id:
+                                            self.delete_blob_ids.append(tem_blob_id)
 
         def append_scroll(self, scroll_lines):
                 self.current_scroll_count += len(scroll_lines)
@@ -581,7 +616,7 @@ class ScreenBuf(object):
                                                         row_class += " noteprompt"
                                                         break
 
-                                update_rows.append([j, offset, "", row_class, self.dumprichtext(new_row, trim=True), None])
+                                update_rows.append([j, offset, "", {"row_class": row_class}, self.dumprichtext(new_row, trim=True), None])
 
                 if reconnecting:
                         update_scroll = self.scroll_lines[:]
@@ -982,6 +1017,10 @@ class Terminal(object):
 
         def update_callback(self, response_id=""):
                 reconnecting = bool(response_id)
+                if not self.note_cells and self.screen_buf.delete_blob_ids:
+                        for blob_id in self.screen_buf.delete_blob_ids:
+                                self.screen_callback(self.term_name, "", "delete_blob", [blob_id])
+                        self.screen_buf.delete_blob_ids = []
                 if not self.note_cells or self.screen_buf.full_update or reconnecting:
                         alt_screen = self.alt_screen if self.alt_mode else None
                         if self.note_cells:
@@ -1004,6 +1043,11 @@ class Terminal(object):
                             self.gterm_output_buf = []
 
                 if self.note_cells:
+                        if not self.note_screen_buf.delete_blob_ids:
+                                for blob_id in self.note_screen_buf.delete_blob_ids:
+                                        self.screen_callback(self.term_name, "", "delete_blob", [blob_id])
+                                self.note_screen_buf.delete_blob_ids = []
+
                         if reconnecting:
                                 self.screen_callback(self.term_name, response_id, "note_activate", [True, self.note_shell])
                                 for cell in self.note_cells["cells"].itervalues():
@@ -2216,7 +2260,7 @@ if __name__ == "__main__":
         def screen_callback(term_name, response_id, command, arg):
                 if command == "row_update":
                         alt_mode, reset, active_rows, width, height, cursorx, cursory, pre_offset, update_rows, update_scroll = arg
-                        for row_num, row_offset, row_dir, row_class, row_span, row_markup in update_rows:
+                        for row_num, row_offset, row_dir, row_opts, row_span, row_markup in update_rows:
                                 row_str = "".join(x[1] for x in row_span)
                                 sys.stdout.write("\x1b[%d;%dH%s" % (row_num+1, 0, row_str))
                                 sys.stdout.write("\x1b[%d;%dH" % (row_num+1, len(row_str)+1))

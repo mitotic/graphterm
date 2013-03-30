@@ -105,9 +105,9 @@ class BlobCache(object):
         return self.cache.get(blob_id) or (None, None, None)
 
     def add_blob(self, blob_id, headers, content):
+        """Add blob, refreshing cache, if need be"""
         if blob_id in self.cache:
-            btime, bheaders, bcontent = self.cache.pop(blob_id)
-            self.cache_size -= len(bcontent)
+            self.delete_blob(blob_id)
 
         self.cache_size += len(content)
         cur_time = time.time()
@@ -117,6 +117,11 @@ class BlobCache(object):
                 self.cache.pop(bid)
                 self.cache_size -= len(bcontent)
         self.cache[blob_id] = (cur_time, headers, content)
+
+    def delete_blob(self, blob_id):
+        if blob_id in self.cache:
+            btime, bheaders, bcontent = self.cache.pop(blob_id)
+            self.cache_size -= len(bcontent)
 
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
@@ -169,15 +174,17 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     def add_term(self, term_name, lterm_cookie):
         if term_name not in self.terms:
             self.send_request_threadsafe("terminal_update", term_name, True)
-        self.terms[term_name] = lterm_cookie
+        self.terms[term_name] = (lterm_cookie, {})
         self.all_cookies[lterm_cookie] = (self, term_name)
 
     def remove_term(self, term_name):
         try:
-            lterm_cookie = self.terms.get(term_name)
+            lterm_cookie, blobs = self.terms.get(term_name, [None, None])
             if lterm_cookie:
                 del self.terms[term_name]
                 del self.all_cookies[lterm_cookie]
+                for blob_id in blobs:
+                    self.blob_cache.delete_blob(blob_id)
         except Exception:
             pass
         self.send_request_threadsafe("terminal_update", term_name, False)
@@ -221,8 +228,16 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
     def screen_callback(self, term_name, response_id, command, arg):
         # Invoked in lineterm thread; schedule callback in ioloop
+        lterm_cookie, blobs = self.terms.get(term_name, [None, None])
+        assert lterm_cookie
         if command == "create_blob":
-            self.blob_cache.add_blob(*arg)
+            blob_id, headers, content = arg
+            self.blob_cache.add_blob(blob_id, headers, content)
+            blobs[blob_id] = 1
+        elif command == "delete_blob":
+            blob_id = arg[0]
+            self.blob_cache.delete_blob(blob_id)
+            blobs.pop(blob_id, None)
         else:
             self.send_request_threadsafe("response", term_name, response_id, [["terminal", command, arg]])
 
@@ -253,7 +268,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           stderr <str>
         """
         try:
-            lterm_cookie = self.terms.get(term_name)
+            lterm_cookie, blobs = self.terms.get(term_name, [None, None])
             resp_list = []
             for cmd in req_list:
                 action = cmd.pop(0)

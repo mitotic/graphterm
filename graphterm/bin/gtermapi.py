@@ -31,8 +31,6 @@ API_MIN_VERSION = "0.31"
 
 HEX_DIGITS = 16
 
-OVERWRITE_PREFIX = '<!--gterm-html-overwrite-->'
-
 Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/")
 
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOKIE", "")
@@ -119,14 +117,20 @@ def display_blockimg(url, overwrite=False, alt=""):
 def display_blockhtml(url, overwrite=False, toggle=False, alt=""):
     """Display image from url, overwriting previous image, if desired.
     """
+    blob_id = get_blob_id(url)
+    opts = ""
+    if overwrite:
+        opts += " overwrite=yes"
+    if blob_id:
+        opts += " blob=" + blob_id
+
     toggleblock_class = 'gterm-toggleblock' if toggle else ''
     togglelink_class = 'gterm-togglelink' if toggle else ''
     togglespan = '<span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span>' if toggle else ''
     alt_attr = ' alt="'+alt+'"' if alt else ''
-    UNIQUEIMGFORMAT = '<div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
-    html = UNIQUEIMGFORMAT % url
-    if overwrite:
-        html = OVERWRITE_PREFIX + html
+    UNIQUEIMGFORMAT = '<!--gterm-html%s--><div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
+    html = UNIQUEIMGFORMAT % (opts, url)
+        
     write_html(html)
 
 def open_url(url, target="_blank"):
@@ -161,6 +165,12 @@ def get_file_url(filepath, relative=False, exists=False, plain=False):
 def make_blob_url(blob_id=""):
     blob_id = blob_id or str(uuid.uuid4())
     return (blob_id, "/blob/"+Host+"/"+blob_id)
+
+def get_blob_id(blob_url):
+    if blob_url.startswith("/blob/"):
+        return blob_url.split("/")[3]
+    else:
+        return ""
 
 def create_blob(content=None, from_file="", content_type="", blob_id=""):
     """Create blob and returns URL to blob"""
