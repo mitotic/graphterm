@@ -229,7 +229,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     def screen_callback(self, term_name, response_id, command, arg):
         # Invoked in lineterm thread; schedule callback in ioloop
         lterm_cookie, blobs = self.terms.get(term_name, [None, None])
-        assert lterm_cookie
+        if not lterm_cookie:
+            logging.warning("gtermhost: Error in screen_callback: terminal %s not found for command %s", term_name, command)
+            return
         if command == "create_blob":
             blob_id, headers, content = arg
             self.blob_cache.add_blob(blob_id, headers, content)
@@ -258,6 +260,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           save_file <filepath> <filedata>
           notebook <activate> <prompts>
           select_cell <cell_index> <new_cell_type> <before_cell_index>
+          complete_cell <incomplete_line>
           exec_cell <cellIndex> <input_data>
 
         Output commands:
@@ -325,6 +328,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     # select_cell <cell_index> <new_cell_type> <before_cell_index>
                     if self.lineterm:
                         self.lineterm.select_cell(term_name, cmd[0], cmd[1], cmd[2])
+
+                elif action == "complete_cell":
+                    # complete_cell <incomplete_line>
+                    if self.lineterm:
+                        self.lineterm.complete_cell(term_name, cmd[0])
 
                 elif action == "exec_cell":
                     # exec_cell <cellIndex> <input_data>

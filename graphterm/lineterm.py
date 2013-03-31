@@ -923,6 +923,24 @@ class Terminal(object):
             next_cell["cellOutput"] = []
             self.screen_callback(self.term_name, "", "note_switch_cell", [cell_index])
 
+    def complete_cell(self, incomplete):
+        if incomplete:
+            self.note_screen_buf.clear_buf()
+        self.zero_screen()
+        self.cursor_x = 0
+
+        if incomplete == "\x09":
+            # Repeat TAB
+            data = "\x09"
+        else:
+            data = "\x01\x0b"    # Ctrl-A Ctrl-K
+            if incomplete:
+                # TAB completion requested
+                data += incomplete + "\x09"
+        try:
+            os.write(self.fd, data)
+        except Exception, excp:
+            pass
 
     def exec_cell(self, cell_index, input_data):
         cur_index = self.note_cells["curIndex"]
@@ -2174,6 +2192,13 @@ class Multiplex(object):
             if not term:
                 return ""
             return term.select_cell(cell_index, new_cell_type, before_cell_index)
+
+    def complete_cell(self, term_name, incomplete):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.complete_cell(incomplete)
 
     def exec_cell(self, term_name, cur_index, input_data):
         with self.lock:

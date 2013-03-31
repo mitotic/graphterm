@@ -1942,6 +1942,44 @@ function keydownHandler(evt) {
     var activeType = "";
     var activeElem = $(document.activeElement);
 
+    if (gNotebook && !gNotebook.passthru_stdin && (evt.which == 9 || evt.which == 8 || evt.which == 127)) {
+	// Notebook mode: TAB/BSP/DEL
+	if (gNotebook.handling_tab) {
+	    if (evt.which == 9) {
+		// Note: BSP/DEL is handled normally if handling TAB
+		gWebSocket.write([["complete_cell", "\x09"]]);
+		return false;
+	    }
+	} else {
+	    // Not handling TAB yet
+	    var textElem = $("#"+gNotebook.getCellId(gNotebook.curIndex)+"-textarea");
+	    var caretPos = textElem.prop("selectionStart");
+	    if (caretPos == textElem.prop("selectionEnd")) {
+		var textVal = textElem.val();
+		var lines = textVal.substr(0,caretPos).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+		var lastLine = lines[lines.length-1];
+		var prefix = $.trim(lastLine);
+		if (!prefix) {
+		    var tabOffset = lastLine.length % 4;
+		    if (evt.which == 9) {
+			// TAB: insert 4-space tab
+			textElem.val( textVal.substr(0,caretPos)+"    ".substr(0,4-tabOffset)+textVal.substr(caretPos) );
+		    } else if (lastLine) {
+			// BSP/DEL: delete to previous tab
+			tabOffset = tabOffset ?  tabOffset : 4;
+			textElem.val( textVal.substr(0,caretPos-tabOffset)+textVal.substr(caretPos) );
+		    }
+		    return false;
+		} else if (evt.which == 9 && gWebSocket) {
+		    // TAB: completion
+		    gNotebook.handling_tab = [caretPos, prefix];
+		    gWebSocket.write([["complete_cell", prefix]]);
+		    return false;
+		}
+	    }
+	}
+    }
+
     if (GTCaptureInput())
 	return true;
 
@@ -2145,7 +2183,9 @@ function AjaxKeypress(evt) {
     }
 
     if (!evt.ctrlKey && !gControlActive && GTCaptureInput()) {
-	// Not Ctrl character; editing/processing form
+	// Not Ctrl character; editing/processing form/notebook
+	if (gNotebook && gNotebook.handling_tab)
+	    gNotebook.cancelCompletion();
 	return true;
     }
 
@@ -2734,6 +2774,7 @@ function GTNotebook(fullpage) {
     this.curIndex = 0;
 
     this.passthru_stdin = false;
+    this.handling_tab = null;
 }
 
 GTNotebook.prototype.close = function() {
@@ -2831,13 +2872,15 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     for (var j=0; j<update_scroll.length; j++) {
 	var row_opts = update_scroll[j][JOPTS];
 	var row_class = row_opts.row_class;
+	var row_line = update_scroll[j][JLINE];
 	var markup = update_scroll[j][JMARKUP];
 	var row_html;
 	if (row_class.indexOf("gterm-html") >= 0) {
 	    GTAppendDiv(outElem, row_opts, "gterm-notecell-scroll", markup);
 	} else {
-	    var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE]) : markup;
-	    $('<pre class="gterm-notecell-scroll">'+row_escaped+'\n</pre>').appendTo(outElem);
+	    var row_escaped = (markup == null) ? GTEscape(row_line) : markup;
+	    if (!this.handling_tab || row_line != this.handling_tab[1])
+		$('<pre class="gterm-notecell-scroll">'+row_escaped+'\n</pre>').appendTo(outElem);
 	}
     }
 
@@ -2849,7 +2892,26 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 	var row_line = "";
 	for (var k=0; k<row_span.length; k++)
 	    row_line += row_span[k][1];
-	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-screen").html('<pre class="row">'+GTEscape(row_line)+(noteprompt?'':GTCursorSpan(' '))+'\n</pre>');
+
+	if (this.handling_tab) {
+	    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+	    var caretPos = textElem.prop("selectionStart");
+	    if (caretPos == this.handling_tab[0]) {
+		var insOffset = row_line.indexOf(this.handling_tab[1]);
+		if (insOffset >= 0) {
+		    var textVal = textElem.val();
+		    var appendVal = row_line.substr(insOffset+this.handling_tab[1].length);
+		    if (appendVal) {
+			textElem.val( textVal.substr(0,caretPos)+appendVal+textVal.substr(caretPos) );
+			this.cancelCompletion();
+		    }
+		}
+	    } else {
+		this.cancelCompletion();
+	    }
+	} else {
+	    $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-screen").html('<pre class="row">'+GTEscape(row_line)+((noteprompt||!this.passthru_stdin)?'':GTCursorSpan(' '))+'\n</pre>');
+	}
     }
 
     if (noteprompt) {
@@ -2858,6 +2920,12 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 	setTimeout(ScrollTerm, 200);
     }
 
+}
+
+GTNotebook.prototype.cancelCompletion = function() {
+    this.handling_tab = null;
+    if (gWebSocket)
+	gWebSocket.write([["complete_cell", null]]);
 }
 
 GTNotebook.prototype.select = function(cell_index, new_cell_type, before_cell_index) {
