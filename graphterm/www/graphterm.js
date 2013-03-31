@@ -1964,12 +1964,15 @@ function keydownHandler(evt) {
 		    if (evt.which == 9) {
 			// TAB: insert 4-space tab
 			textElem.val( textVal.substr(0,caretPos)+"    ".substr(0,4-tabOffset)+textVal.substr(caretPos) );
+			textElem.caret(caretPos+4-tabOffset);
+			return false;
 		    } else if (lastLine) {
 			// BSP/DEL: delete to previous tab
 			tabOffset = tabOffset ?  tabOffset : 4;
 			textElem.val( textVal.substr(0,caretPos-tabOffset)+textVal.substr(caretPos) );
+			textElem.caret(caretPos-tabOffset);
+			return false;
 		    }
-		    return false;
 		} else if (evt.which == 9 && gWebSocket) {
 		    // TAB: completion
 		    gNotebook.handling_tab = [caretPos, prefix];
@@ -2822,11 +2825,11 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
 	newElem = $(cellHtml).insertBefore("#"+this.getCellId(beforeCellIndex));
     }
     this.curIndex = cellIndex;
+    this.cellValue(inputData);
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     textElem.autoResize();
     if (!gParams.controller)
 	textElem.attr("disabled", "disabled");
-    this.cellValue(inputData);
     this.cellFocus(true);
 }
 
@@ -2903,6 +2906,7 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 		    var appendVal = row_line.substr(insOffset+this.handling_tab[1].length);
 		    if (appendVal) {
 			textElem.val( textVal.substr(0,caretPos)+appendVal+textVal.substr(caretPos) );
+			textElem.caret(caretPos+appendVal.length);
 			this.cancelCompletion();
 		    }
 		}
