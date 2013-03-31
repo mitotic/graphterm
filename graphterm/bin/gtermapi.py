@@ -118,18 +118,18 @@ def display_blockhtml(url, overwrite=False, toggle=False, alt=""):
     """Display image from url, overwriting previous image, if desired.
     """
     blob_id = get_blob_id(url)
-    opts = ""
+    params = ""
     if overwrite:
-        opts += " overwrite=yes"
+        params += " overwrite=yes"
     if blob_id:
-        opts += " blob=" + blob_id
+        params += " blob=" + blob_id
 
     toggleblock_class = 'gterm-toggleblock' if toggle else ''
     togglelink_class = 'gterm-togglelink' if toggle else ''
     togglespan = '<span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span>' if toggle else ''
     alt_attr = ' alt="'+alt+'"' if alt else ''
     UNIQUEIMGFORMAT = '<!--gterm-html%s--><div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
-    html = UNIQUEIMGFORMAT % (opts, url)
+    html = UNIQUEIMGFORMAT % (params, url)
         
     write_html(html)
 

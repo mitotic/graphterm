@@ -101,7 +101,7 @@ var GTCurDirURI = "";
 var JINDEX = 0;
 var JOFFSET = 1;
 var JDIR = 2;
-var JOPTS = 3;
+var JPARAMS = 3;
 var JLINE = 4;
 var JMARKUP = 5;
 
@@ -503,8 +503,8 @@ function GTClearTerminal() {
     $("#session-bufscreen").children().remove();
 }
 
-function GTAppendDiv(parentElem, row_opts, classes, markup) {
-    var overwrite = !!row_opts.overwrite;
+function GTAppendDiv(parentElem, row_params, classes, markup) {
+    var overwrite = !!row_params.overwrite;
     var rowHtml = '<div class="'+classes+'">'+markup+'</div>\n';
     var rowElem = $(rowHtml);
     var innerElem = rowElem.children(".gterm-blockhtml");
@@ -513,7 +513,7 @@ function GTAppendDiv(parentElem, row_opts, classes, markup) {
     }
 
     var prevElem = parentElem.find(".gterm-blockhtml:not(.gterm-blockclosed)");
-    console.log("ABCappenddiv", row_opts, markup, prevElem.length);
+    console.log("ABCappenddiv", row_params, markup, prevElem.length);
 
     if (prevElem.length != 1) {
 	// Remove any previous elements and append new element
@@ -1269,12 +1269,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				}
 			    }
 			    gPromptIndex = newPromptIndex;
-			    var row_opts = update_scroll[j][JOPTS];
-			    var row_class = row_opts.row_class;
+			    var row_params = update_scroll[j][JPARAMS];
+			    var row_class = row_params.row_class;
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_html;
 			    if (row_class.indexOf("gterm-html") >= 0) {
-				GTAppendDiv($("#session-bufscreen"), row_opts, "row entry "+entry_class, markup);
+				GTAppendDiv($("#session-bufscreen"), row_params, "row entry "+entry_class, markup);
 				delayed_scroll = true;
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
@@ -2873,13 +2873,13 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 	outElem.html("");
 
     for (var j=0; j<update_scroll.length; j++) {
-	var row_opts = update_scroll[j][JOPTS];
-	var row_class = row_opts.row_class;
+	var row_params = update_scroll[j][JPARAMS];
+	var row_class = row_params.row_class;
 	var row_line = update_scroll[j][JLINE];
 	var markup = update_scroll[j][JMARKUP];
 	var row_html;
 	if (row_class.indexOf("gterm-html") >= 0) {
-	    GTAppendDiv(outElem, row_opts, "gterm-notecell-scroll", markup);
+	    GTAppendDiv(outElem, row_params, "gterm-notecell-scroll", markup);
 	} else {
 	    var row_escaped = (markup == null) ? GTEscape(row_line) : markup;
 	    if (!this.handling_tab || row_line != this.handling_tab[1])
@@ -2888,8 +2888,8 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     }
 
     for (var j=0; j<update_rows.length; j++) {
-	var row_opts = update_rows[j][JOPTS];
-	var row_class = row_opts.row_class;
+	var row_params = update_rows[j][JPARAMS];
+	var row_class = row_params.row_class;
 	var row_span = update_rows[j][JLINE];
 	noteprompt = (row_class.indexOf("noteprompt") >= 0);
 	var row_line = "";
