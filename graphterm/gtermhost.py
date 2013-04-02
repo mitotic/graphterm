@@ -259,7 +259,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           get_finder <kind> <directory>
           save_file <filepath> <filedata>
           notebook <activate> <prompts>
-          select_cell <cell_index> <new_cell_type> <before_cell_index>
+          add_cell <new_cell_type> <before_cell_index>
+          switch_cell <cell_index> <move_up>
+          delete_cell
           complete_cell <incomplete_line>
           exec_cell <cellIndex> <input_data>
 
@@ -324,10 +326,20 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if self.lineterm:
                         self.lineterm.notebook(term_name, cmd[0], cmd[1])
 
-                elif action == "select_cell":
-                    # select_cell <cell_index> <new_cell_type> <before_cell_index>
+                elif action == "add_cell":
+                    # add_cell <new_cell_type> <before_cell_index>
                     if self.lineterm:
-                        self.lineterm.select_cell(term_name, cmd[0], cmd[1], cmd[2])
+                        self.lineterm.add_cell(term_name, cmd[0], cmd[1])
+
+                elif action == "switch_cell":
+                    # switch_cell <new_cell_type> <before_cell_index>
+                    if self.lineterm:
+                        self.lineterm.switch_cell(term_name, cmd[0], cmd[1])
+
+                elif action == "delete_cell":
+                    # delete_cell
+                    if self.lineterm:
+                        self.lineterm.delete_cell(term_name)
 
                 elif action == "complete_cell":
                     # complete_cell <incomplete_line>

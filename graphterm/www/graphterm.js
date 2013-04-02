@@ -142,6 +142,12 @@ var JFILENAME = 2;
 var JFILEPATH = 3;
 var JQUERY = 4;
 
+var HEX_DIGITS = 16;
+
+function compute_hmac(key, message) {
+    return CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, key).finalize(message).toString().substr(0,HEX_DIGITS);
+}
+
 function utf8_to_b64(utf8str) {
     return $.base64.encode(unescape(encodeURIComponent(utf8str)));
 }
@@ -616,6 +622,20 @@ function GTBufferScript(content) {
     } else {
 	gScriptBuffer = [];
     }
+}
+
+function GTGetLocalFile(filepath, current_dir, callback) {
+    if (!filepath)
+	return;
+    if (filepath.charAt(0) != "/")
+	filepath = current_dir + "/" + filepath;
+    var url =  window.location.protocol+"/"+"/"+window.location.host + "/file/local" + filepath;
+    url += "?hmac="+compute_hmac(getCookie("GRAPHTERM_HOST_LOCAL"), filepath);
+    $.get(url, function(data, textStatus, jqXHR) {
+	           callback(""+data) })
+        .error(function(jqXHR, textStatus, errorThrown) {
+            alert("Failed to load local file: "+filepath+": "+errorThrown);
+        });
 }
 
 function GTWebSocket(auth_user, auth_code) {
@@ -1115,10 +1135,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 		} else if (cmd_type == "note_activate") {
 		    var activate = cmd_arg[0];
-		    var shell_prompt = cmd_arg[1];
-		    console.log("ABCnote_activate", activate, shell_prompt);
+		    var note_dir = cmd_arg[1];
+		    var shell_prompt = cmd_arg[2];
+		    console.log("ABCnote_activate", activate, note_dir, shell_prompt);
 		    if (activate) {
-			gNotebook = new GTNotebook(!shell_prompt);
+			gNotebook = new GTNotebook(note_dir, !shell_prompt);
 		    } else if (gNotebook) {
 			gNotebook.close();
 		    }
@@ -1138,6 +1159,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    console.log("ABCnote_switch_cell", cellIndex);
 		    if (gNotebook)
 			gNotebook.switchCell(cellIndex);
+
+		} else if (cmd_type == "note_delete_cell") {
+		    var deleteIndex = cmd_arg[0];
+		    var switchIndex = cmd_arg[1];
+		    console.log("ABCnote_delete_cell", deleteIndex, switchIndex);
+		    if (gNotebook)
+			gNotebook.deleteCell(deleteIndex, switchIndex);
 
 		} else if (cmd_type == "note_row_update") {
                     var reset       = cmd_arg[1];
@@ -2000,6 +2028,11 @@ function keydownHandler(evt) {
     var activeType = "";
     var activeElem = $(document.activeElement);
 
+    if (gNotebook && !gNotebook.passthru_stdin && !gNotebook.handling_tab && !gNotebook.prefix_key && evt.which == 77 && evt.ctrlKey) {
+	gNotebook.prefix_key = true;
+	return false;
+    }
+
     if (gNotebook && !gNotebook.passthru_stdin && (evt.which == 9 || evt.which == 8 || evt.which == 127)) {
 	// Notebook mode: TAB/BSP/DEL
 	if (gNotebook.handling_tab) {
@@ -2319,6 +2352,12 @@ function AjaxKeypress(evt) {
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress2", kc, k, k.charCodeAt(0), k.length);
 
+    if (gNotebook && !gNotebook.passthru_stdin && gNotebook.prefix_key) {
+	gNotebook.prefix_key = false;
+	gNotebook.handleCommand(k);
+	return false;
+    }
+	    
     if (gNotebook && !gNotebook.passthru_stdin && k == String.fromCharCode(3) && window.confirm("Exit notebook mode?")) {
 	// Ctrl-C: close notebook
 	GTCloseNotebook();
@@ -2502,7 +2541,7 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
 }
 
 function GTCaptureInput() {
-    return (gNotebook && !gNotebook.passthru_stdin) || gForm || (gTextEditing && gParams.controller) || gPopupType;
+    return (gNotebook && !gNotebook.passthru_stdin && !gNotebook.prefix_key) || gForm || (gTextEditing && gParams.controller) || gPopupType;
 }
 
 function GTClearCKEditor() {
@@ -2812,7 +2851,8 @@ function GTCloseNotebook() {
     }
 }
 
-function GTNotebook(fullpage) {
+function GTNotebook(note_dir, fullpage) {
+    this.note_dir = note_dir;
     this.fullpage = fullpage;
 
     if (gNotebookId[0] != gPromptIndex)
@@ -2829,6 +2869,8 @@ function GTNotebook(fullpage) {
 	StartFullpage("fullpage", false);
 	$("#session-bufellipsis").show();
     }
+
+    this.prefix_key = false;
 
     this.cellParams = {};
     this.cellList = []
@@ -2849,11 +2891,27 @@ GTNotebook.prototype.close = function() {
 	gWebSocket.term_input("\n");
 }
 
-GTNotebook.prototype.getCellId = function(cellIndex) {
-    return this.notebookId+"-cell"+cellIndex;
+GTNotebook.prototype.handleCommand = function(ch) {
+    console.log("GTNotebook.handleCommand: ", ch);
+    if (!gWebSocket || !gParams.controller)
+	return;
+    if (ch == "b") {
+	gWebSocket.write([["add_cell", "code", 0]]);
+    } else if (ch == "d") {
+	gWebSocket.write([["delete_cell"]]);
+    } else if (ch == "p") {
+	gWebSocket.write([["switch_cell", 0, true]]);
+    } else if (ch == "n") {
+	gWebSocket.write([["switch_cell", 0, false]]);
+    } else if (ch == "f") {
+	var filepath = window.prompt("Insert file: ", "");
+	if (filepath)
+	    GTGetLocalFile(filepath,  this.note_dir, bind_method(this, this.cellValue));
+    }
 }
 
-GTNotebook.prototype.switchCell = function(cellIndex) {
+GTNotebook.prototype.getCellId = function(cellIndex) {
+    return this.notebookId+"-cell"+cellIndex;
 }
 
 GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, inputData) {
@@ -2869,7 +2927,6 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
 	newElem = $(cellHtml).appendTo(this.pagelet);
     } else {
 	var prevList = this.CellList;
-	this.cellList = null;
 	var k = 0;
 	for (var j=0; j<this.cellList.length; j++) {
 	    if (this.cellList[j] == beforeCellIndex) {
@@ -2889,6 +2946,16 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     if (!gParams.controller)
 	textElem.attr("disabled", "disabled");
     this.cellFocus(true);
+}
+
+GTNotebook.prototype.switchCell = function(cellIndex) {
+    this.curIndex = cellIndex;
+    this.cellFocus(true);
+}
+
+GTNotebook.prototype.deleteCell = function(deleteIndex, switchIndex) {
+    $("#"+this.getCellId(deleteIndex)).remove();
+    this.switchCell(switchIndex);
 }
 
 GTNotebook.prototype.cellValue = function(inputData) {

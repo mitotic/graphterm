@@ -512,7 +512,20 @@ class ScreenBuf(object):
         if self.last_scroll_count > self.current_scroll_count:
             self.last_scroll_count = self.current_scroll_count
 
+    def blank_last_entry(self):
+        """Replace previous entry (usually edit or form) with blank pagelet"""
+        if not self.scroll_lines:
+            return
+        assert not self.scroll_lines[-1][JOFFSET]
+        self.scroll_lines[-1][JPARAMS] = ["pagelet", {"add_class": "",
+                                                      "pagelet_id": "%d-%d" % (self.buf_note, self.current_scroll_count)} ]
+        self.scroll_lines[-1][JLINE] = ""
+        self.scroll_lines[-1][JMARKUP] = ""
+        if self.current_scroll_count > 0 and self.last_scroll_count >= self.current_scroll_count:
+            self.last_scroll_count = self.current_scroll_count - 1
+
     def scroll_buf_up(self, line, meta, offset=0, add_class="", row_params=["", {}], markup=None):
+        row_params = [row_params[JTYPE], dict(row_params[JOPTS])]
         current_dir = ""
         overwrite = False
         new_blob_id = ""
@@ -535,10 +548,11 @@ class ScreenBuf(object):
             ##logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
 
         cur_pagelet_id = "%d-%d" % (self.buf_note, self.current_scroll_count)
-        prev_pagelet = bool(self.scroll_lines and self.scroll_lines[-1][JPARAMS][0] == "pagelet" and self.scroll_lines[-1][JPARAMS][1]["pagelet_id"] == cur_pagelet_id)
+        prev_pagelet_opts = self.scroll_lines[-1][JPARAMS][JOPTS] if self.scroll_lines and self.scroll_lines[-1][JPARAMS][JTYPE] == "pagelet" else {}
+        prev_edit_file = self.scroll_lines and self.scroll_lines[-1][JPARAMS][JTYPE] == "edit_file"
 
         row_params[JOPTS]["add_class"] = add_class
-        if overwrite and prev_pagelet:
+        if overwrite and prev_pagelet_opts and prev_pagelet_opts["pagelet_id"] == cur_pagelet_id:
             # Overwrite previous pagelet entry
             row_params[JOPTS]["pagelet_id"] = cur_pagelet_id
             self.scroll_lines[-1][JDIR] = current_dir
@@ -549,18 +563,20 @@ class ScreenBuf(object):
                 self.last_scroll_count = self.current_scroll_count - 1
         else:
             # New scroll entry
+            if prev_edit_file or prev_pagelet_opts.get("form_input"):
+                self.blank_last_entry()
             self.current_scroll_count += 1
             row_params[JOPTS]["pagelet_id"] = "%d-%d" % (self.buf_note, self.current_scroll_count)
             self.scroll_lines.append([self.entry_index, offset, current_dir, row_params, line, markup])
             if len(self.scroll_lines) > MAX_SCROLL_LINES:
                 old_entry_index, old_offset, old_dir, old_params, old_line, old_markup = self.scroll_lines.pop(0)
-                old_blob_id = old_params[1].get("blob")
+                old_blob_id = old_params[JOPTS].get("blob")
                 if old_blob_id:
                     self.delete_blob_ids.append(old_blob_id)
                 while self.scroll_lines and self.scroll_lines[0][JINDEX] == old_entry_index:
                     self.scroll_lines.pop(0)
                     tem_entry_index, tem_offset, tem_dir, tem_params, tem_line, tem_markup = self.scroll_lines.pop(0)
-                    tem_blob_id = tem_params[1].get("blob")
+                    tem_blob_id = tem_params[JOPTS].get("blob")
                     if tem_blob_id:
                         self.delete_blob_ids.append(tem_blob_id)
 
@@ -602,16 +618,19 @@ class ScreenBuf(object):
                 row_update = (new_row != old_screen.data[width*j:width*(j+1)])
             if row_update or (cursor_moved and (cursory == j or self.cursory == j)):
                 new_row_str = dump(new_row)
-                opts = {"add_class": ""}
                 offset = prompt_offset(new_row_str, pdelim, screen.meta[j])
-                if not offset and note_prompts:
-                    # Assume everything after the first prompt is a continuation prompt and ignore
-                    # NOTE: This may need to be re-evaluated
-                    for prompt in note_prompts[:1]:
-                        if new_row_str.startswith(prompt):
-                            # Entry starts with non-continuation prompt
-                            opts["note_prompt"] = "yes"
-                            break
+                opts = {"add_class": ""}
+                if note_prompts:
+                    ##if offset:
+                    ##    opts["note_prompt"] = "yes"
+                    if not offset:
+                        # Assume everything after the first prompt is a continuation prompt and ignore
+                        # NOTE: This may need to be re-evaluated
+                        for prompt in note_prompts[:1]:
+                            if new_row_str.startswith(prompt):
+                                # Entry starts with non-continuation prompt
+                                opts["note_prompt"] = "yes"
+                                break
 
                 update_rows.append([j, offset, "", ["", opts], self.dumprichtext(new_row, trim=True), None])
 
@@ -801,6 +820,7 @@ class Terminal(object):
         self.outbuf = ""
         self.last_html = ""
         self.active_rows = 0
+        self.current_dir = ""
         self.current_meta = None
         self.gterm_code = None
         self.gterm_buf = None
@@ -840,6 +860,7 @@ class Terminal(object):
         if activate:
             self.note_count += 1
             at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
+            cur_dir = self.current_dir
             if not prompts and self.command_path:
                 basename = os.path.basename(self.command_path)
                 if basename == "python":
@@ -864,7 +885,7 @@ class Terminal(object):
                             prompts += ["... "]
                 except Exception:
                     raise
-            logging.warning("ABCnotebook: %s shell=%s, prompts=%s", activate, at_shell, prompts)
+            logging.warning("ABCnotebook: %s dir=%s, shell=%s, prompts=%s", activate, cur_dir, at_shell, prompts)
 
             self.scroll_screen(self.active_rows)
             self.update()
@@ -872,14 +893,14 @@ class Terminal(object):
             self.scroll_bot = 0
             self.note_screen_buf.clear_buf()
             self.note_screen_buf.set_buf_note(self.note_count)
-            self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
+            self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
             self.note_prompts = prompts
 
             self.note_shell = at_shell
-            self.screen_callback(self.term_name, "", "note_activate", [True, self.note_shell])
-            self.select_cell(new_cell_type="code")
+            self.screen_callback(self.term_name, "", "note_activate", [True, cur_dir, self.note_shell])
+            self.add_cell(new_cell_type="code")
         else:
-            self.select_cell(0)
+            self.leave_cell()
             note_cells = self.note_cells
             prompt = self.note_prompts[0]
             self.note_cells = None
@@ -894,35 +915,80 @@ class Terminal(object):
             self.scroll_bot = self.height-1
             self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
             self.zero_screen()
-            self.screen_callback(self.term_name, "", "note_activate", [False, self.note_shell])
+            self.screen_callback(self.term_name, "", "note_activate", [False, self.current_dir, self.note_shell])
             self.update()
 
+    def add_cell(self, new_cell_type="code", before_cell_number=0):
+        # New cell
+        logging.warning("ABCadd_cell: %s %s", new_cell_type, before_cell_number)
+        self.leave_cell()
+        self.note_cells["maxIndex"] += 1
+        cell_index = self.note_cells["maxIndex"]
+        next_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
+        self.note_cells["cells"][cell_index] = next_cell
+        self.note_cells["curIndex"] = cell_index
+        if not before_cell_number or before_cell_number > len(self.note_cells["cellIndices"]):
+            before_cell_index = 0
+            self.note_cells["cellIndices"].append(cell_index)
+        else:
+            before_cell_index = self.note_cells["cellIndices"][before_cell_number-1]
+            self.note_cells["cellIndices"].insert(before_cell_number-1, cell_index)
 
-    def select_cell(self, cell_index=0, new_cell_type="", before_cell_index=0):
-        logging.warning("ABCselect_cell: %s %s %s", cell_index, new_cell_type, before_cell_index)
+        self.screen_callback(self.term_name, "", "note_add_cell",
+                             [cell_index, new_cell_type, before_cell_index, [], []])
+
+    def leave_cell(self, delete=False, move_up=False):
+        """Leave current cell, deleting it if requested. Return index of new cell, or 0"""
         cur_index = self.note_cells["curIndex"]
-        if cur_index:
-            cur_cell = self.note_cells["cells"][cur_index]
-            # Move all screen lines to scroll buffer
-            self.scroll_screen(self.active_rows)
-            cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+        if not cur_index:
+            return
+        # Move all screen lines to scroll buffer
+        cur_cell = self.note_cells["cells"][cur_index]
+        self.scroll_screen(self.active_rows)
+        cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+        self.note_cells["curIndex"] = 0
+        cur_location = self.note_cells["cellIndices"].index(cur_index)
+        
+        if move_up and cur_location > 0:
+            switch_cell_index = self.note_cells["cellIndices"][cur_location-1]
+        elif cur_location < len(self.note_cells["cellIndices"])-1:
+            switch_cell_index = self.note_cells["cellIndices"][cur_location+1]
+        elif cur_location > 0:
+            switch_cell_index = self.note_cells["cellIndices"][0]
+        else:
+            switch_cell_index = 0
+            
+        if delete:
+            assert len(self.note_cells["cells"]) > 1
+            del self.note_cells["cells"][cur_index]
+            self.note_cells["cellIndices"].remove(cur_index)
 
+        logging.warning("ABCleave_cell: %s %s", cur_index, switch_cell_index)
+        return switch_cell_index
+
+    def select_cell(self, cell_index=0, delete=False, move_up=False):
+        """Select cell with cell_index (if zero, move up/down one cell)"""
+        logging.warning("ABCselect_cell: %s delete=%s up=%s", cell_index, delete, move_up)
+        next_cell_index = self.leave_cell(delete=delete, move_up=move_up)
+        if not cell_index:
+            cell_index = next_cell_index
         self.note_input = []
-        if new_cell_type:
-            # New cell
-            self.note_cells["maxIndex"] += 1
-            cell_index = self.note_cells["maxIndex"]
-            next_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
-            self.note_cells["cells"][cell_index] = next_cell
-            self.note_cells["curIndex"] = cell_index
-            self.screen_callback(self.term_name, "", "note_add_cell",
-                                 [cell_index, new_cell_type, before_cell_index, [], []])
-        elif cell_index:
-            assert cell_index in self.note_cells
-            self.note_cells["curIndex"] = cell_index
-            next_cell = self.note_cells["cells"][cur_index]
-            next_cell["cellOutput"] = []
-            self.screen_callback(self.term_name, "", "note_switch_cell", [cell_index])
+        assert cell_index in self.note_cells["cells"]
+        self.note_cells["curIndex"] = cell_index
+        next_cell = self.note_cells["cells"][cell_index]
+        next_cell["cellOutput"] = []
+        return cell_index
+
+    def switch_cell(self, cell_index=0, move_up=False):
+        cur_index = self.note_cells["curIndex"]
+        switch_cell_index = self.select_cell(cell_index, move_up=move_up)
+        if cur_index != switch_cell_index:
+            self.screen_callback(self.term_name, "", "note_switch_cell", [switch_cell_index])
+
+    def delete_cell(self):
+        cur_index = self.note_cells["curIndex"]
+        switch_cell_index = self.select_cell(delete=True)
+        self.screen_callback(self.term_name, "", "note_delete_cell", [cur_index, switch_cell_index])
 
     def complete_cell(self, incomplete):
         if incomplete:
@@ -1068,8 +1134,9 @@ class Terminal(object):
                 self.note_screen_buf.delete_blob_ids = []
 
             if reconnecting:
-                self.screen_callback(self.term_name, response_id, "note_activate", [True, self.note_shell])
-                for cell in self.note_cells["cells"].itervalues():
+                self.screen_callback(self.term_name, response_id, "note_activate", [True, self.current_dir, self.note_shell])
+                for cell_index in self.note_cells["cellIndices"]:
+                    cell = self.note_cells["cells"][cell_index]
                     logging.warning("ABCnote_add_cell: %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellInput"], cell["cellOutput"])
                     self.screen_callback(self.term_name, response_id, "note_add_cell",
                                          [cell["cellIndex"], cell["cellType"], 0,
@@ -1178,6 +1245,7 @@ class Terminal(object):
             self.cursor_x = r
 
     def expect_prompt(self, current_directory):
+        self.current_dir = current_directory
         if not self.active_rows or self.cursor_y+1 == self.active_rows:
             self.current_meta = (current_directory, 0)
             self.screen.meta[self.cursor_y] = self.current_meta
@@ -1895,12 +1963,17 @@ class Terminal(object):
             os.write(self.fd, reply)
         if self.note_input:
             line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
-            for prompt in self.note_prompts:
-                if line.startswith(prompt):
-                    # Prompt found; transmit buffered notebook cell line
-                    os.write(self.fd, self.note_input.pop(0)+"\n")
-                    os.fsync(self.fd)
-                    break
+            if self.note_shell and prompt_offset(line, self.pdelim, self.main_screen.meta[0]):
+                # Prompt found; transmit buffered notebook cell line
+                os.write(self.fd, self.note_input.pop(0)+"\n")
+                os.fsync(self.fd)
+            else:
+                for prompt in self.note_prompts:
+                    if line.startswith(prompt):
+                        # Prompt found; transmit buffered notebook cell line
+                        os.write(self.fd, self.note_input.pop(0)+"\n")
+                        os.fsync(self.fd)
+                        break
 
 class Multiplex(object):
     def __init__(self, screen_callback, command=None, shared_secret="",
@@ -2202,12 +2275,26 @@ class Multiplex(object):
                 return ""
             return term.notebook(activate, prompts)
 
-    def select_cell(self, term_name, cell_index, new_cell_type, before_cell_index):
+    def add_cell(self, term_name, new_cell_type, before_cell_number):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.select_cell(cell_index, new_cell_type, before_cell_index)
+            return term.add_cell(new_cell_type, before_cell_number)
+
+    def switch_cell(self, term_name, cell_index, move_up):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.switch_cell(cell_index, move_up)
+
+    def delete_cell(self, term_name):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.delete_cell()
 
     def complete_cell(self, term_name, incomplete):
         with self.lock:
