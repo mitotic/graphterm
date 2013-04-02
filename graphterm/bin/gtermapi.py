@@ -22,6 +22,7 @@ import sys
 import termios
 import threading
 import tty
+import urllib
 import uuid
 
 from optparse import OptionParser
@@ -34,8 +35,8 @@ HEX_DIGITS = 16
 Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/")
 
 Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOKIE", "")
+Export_host = os.getenv("GRAPHTERM_EXPORT", "") or (not os.getenv("GRAPHTERM_COOKIE", "") and os.getenv("LC_GRAPHTERM_EXPORT", ""))
 Path = os.getenv("GRAPHTERM_PATH", "") or os.getenv("LC_GRAPHTERM_PATH", "")
-Export_host = os.getenv("GRAPHTERM_EXPORT", "") or os.getenv("LC_GRAPHTERM_EXPORT", "")
 Dimensions = os.getenv("GRAPHTERM_DIMENSIONS", "") or os.getenv("LC_GRAPHTERM_DIMENSIONS", "") # colsxrows[;widthxheight]
 Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
 URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
@@ -89,6 +90,20 @@ def write_pagelet(html, display="block", dir="", add_headers={}):
                     }
     wrap_write(html, headers=html_headers)
 
+def write_scroll_pagelet(html, display="block", dir="", add_headers={}):
+    """Write scrollable html pagelet to stdout"""
+    params = "scroll=top"
+    if display:
+        params += " display=" + urllib.quote(display)
+    if dir:
+        params += " current_dir=" + urllib.quote(dir)
+    for header, value in add_headers.iteritems():
+        params += " " + header + "=" + urllib.quote(value)
+
+    PAGELETFORMAT = '<!--gterm pagelet %s-->'
+    prefix = PAGELETFORMAT % (params,)
+    write_html(prefix+html)
+
 def write_form(html, command="", dir=""):
     """Write form pagelet to stdout"""
     html_headers = {"content_type": "text/html",
@@ -114,7 +129,7 @@ def display_blockimg(url, overwrite=False, alt=""):
         add_headers["block"] = "overwrite"
     write_pagelet(IMGFORMAT % url, add_headers=add_headers)
 
-def display_blockhtml(url, overwrite=False, toggle=False, alt=""):
+def display_blockhtml_img(url, overwrite=False, toggle=False, alt=""):
     """Display image from url, overwriting previous image, if desired.
     """
     blob_id = get_blob_id(url)
@@ -122,14 +137,14 @@ def display_blockhtml(url, overwrite=False, toggle=False, alt=""):
     if overwrite:
         params += " overwrite=yes"
     if blob_id:
-        params += " blob=" + blob_id
+        params += " blob=" + urllib.quote(blob_id)
 
     toggleblock_class = 'gterm-toggleblock' if toggle else ''
     togglelink_class = 'gterm-togglelink' if toggle else ''
     togglespan = '<span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span>' if toggle else ''
     alt_attr = ' alt="'+alt+'"' if alt else ''
-    UNIQUEIMGFORMAT = '<!--gterm-html%s--><div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
-    html = UNIQUEIMGFORMAT % (params, url)
+    BLOCKIMGFORMAT = '<!--gterm pagelet %s--><div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
+    html = BLOCKIMGFORMAT % (params, url)
         
     write_html(html)
 
@@ -198,7 +213,7 @@ def create_blob(content=None, from_file="", content_type="", blob_id=""):
     content_type = content_type or "text/html"
     params = {}
     blob_id, blob_url = make_blob_url(blob_id)
-    params["blob_id"] = blob_id
+    params["blob"] = blob_id
     headers = {"x_gterm_response": "create_blob",
                "x_gterm_parameters": params,
                "content_type": content_type,

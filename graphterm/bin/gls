@@ -18,13 +18,13 @@ SPECIAL_FILES = set(["..", ".", "~"])
 gbrowsecmd = os.getenv("GRAPHTERM_BROWSE_CMD", "") or "gbrowse"
 gimagecmd = os.getenv("GRAPHTERM_IMAGE_CMD", "") or "gimage"
 glscmd = os.getenv("GRAPHTERM_LS_CMD", "") or "gls"
-gopencmd = gbrowsecmd if gtermapi.Export_host else os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
+gopencmd = os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
 gvicmd = gbrowsecmd if gtermapi.Export_host else os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
 
 FILE_TYPES = {"directory": ("/static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
               "executable": ("/static/images/tango-application-x-executable.png", ""),
               "audiofile": ("/static/images/tango-audio-x-generic.png", gbrowsecmd),
-              "htmlfile": ("/static/images/tango-text-html.png", gvicmd),
+              "htmlfile": ("/static/images/tango-text-html.png", gopencmd),
               "imagefile": ("/static/images/tango-image-x-generic.png", gimagecmd),
               "pdffile": ("/static/images/tango-text-x-generic-template.png", gbrowsecmd),
               "plainfile": ("/static/images/tango-text-x-generic-template.png", gopencmd),
@@ -66,7 +66,7 @@ def file2html(filepath, filename, filemode=0):
     classes = "droppable" if filetype in ("directory", "executable") else ""
     fileicon, filecmd = FILE_TYPES[filetype]
 
-    fileurl = gtermapi.get_file_url(filepath, relative=True)
+    fileurl = gtermapi.get_file_url(filepath, relative=(filetype != "htmlfile"))
     if options.images and mimetype and mimetype.startswith("image/"):
         fileicon = fileurl
 
@@ -173,5 +173,5 @@ Table_list.append('</table>')
 
 html = "\n".join(Table_list) + "\n"
 
-gtermapi.write_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=work_dir)
+gtermapi.write_scroll_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=work_dir)
 

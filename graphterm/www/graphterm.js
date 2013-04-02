@@ -105,6 +105,9 @@ var JPARAMS = 3;
 var JLINE = 4;
 var JMARKUP = 5;
 
+var JTYPE = 0;
+var JOPTS = 1;
+
 function bind_method(obj, method) {
   return function() {
     return method.apply(obj, arguments);
@@ -503,39 +506,94 @@ function GTClearTerminal() {
     $("#session-bufscreen").children().remove();
 }
 
-function GTAppendDiv(parentElem, row_params, classes, markup) {
-    var overwrite = !!row_params.overwrite;
-    var rowHtml = '<div class="'+classes+'">'+markup+'</div>\n';
-    var rowElem = $(rowHtml);
-    var innerElem = rowElem.children(".gterm-blockhtml");
-    if (innerElem.length != 1) {
-	return rowElem.appendTo(parentElem);
-    }
+function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
+    var row_opts = row_params[JOPTS];
+    var overwrite = !!row_opts.overwrite;
+    var pagelet_id = row_opts.pagelet_id || "";
+    var scroll = row_opts.scroll || "";
+    var current_dir = row_opts.current_dir|| "";
+    var pagelet_display = row_opts.display || "";
+    var scrollElemId = "gterm-scroll"+pagelet_id;
+    var attrs = ' data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'" ';
 
-    var prevElem = parentElem.find(".gterm-blockhtml:not(.gterm-blockclosed)");
-    console.log("ABCappenddiv", row_params, markup, prevElem.length);
-
-    if (prevElem.length != 1) {
-	// Remove any previous elements and append new element
-	prevElem.remove();
-	return rowElem.appendTo(parentElem);
-    }
-
-    if (!overwrite) {
-	// Append new block element
-	prevElem.addClass("gterm-blockclosed");
-	return rowElem.appendTo(parentElem);
-    }
-
-    // Overwrite single previous element
-    if (prevElem.find(".gterm-blockimg").length == 1 && innerElem.find(".gterm-blockimg").length == 1) {
-	// Replace IMG src attribute
-	prevElem.find(".gterm-blockimg").attr("src", innerElem.find(".gterm-blockimg").attr("src"));
+    if (pagelet_display.substr(0,4) == "full") {
+	// Hide previous entries
+	classes += " gterm-full";
+	if (pagelet_display == "fullwindow" || pagelet_display == "fullscreen") {
+	    classes += " gterm-fullwindow";
+	}
+	if (row_opts.form_input) {
+	    StartFullpage(pagelet_display, false);
+	    GTStartForm(row_opts, gPromptIndex);
+	} else {
+	    StartFullpage(pagelet_display, true);
+	}
+	var prevFullElem = parentElem.children("."+entry_class+" .gterm-full");
+	if (prevFullElem.length != 1 || prevFullElem.attr("id") != scrollElemId) {
+	    // Remove any previous full pagelets for this entry
+	    prevFullElem.remove();
+	}
+	if ("scroll" in row_opts && row_opts.scroll != "down")
+	    gScrollTop = true;
     } else {
-	// Replace previous element
-	prevElem.replaceWith(innerElem);
+	// Non-full pagelet entry; show previous entries
+	    EndFullpage();
     }
-    return prevElem;
+    if (row_opts.iframe) {
+	markup = gFrameDispatcher.createFrame(row_opts, markup, row_opts.url, "gterm-iframe"+pagelet_id);
+    }
+    var rowHtml = '<div class="'+classes+'" '+attrs+'>'+markup+'</div>\n';
+    var rowElem = $(rowHtml);
+    var innerBlockElem = rowElem.children(".gterm-blockhtml");
+    // Look for previous element with same id
+    var scrollElem = $("#"+scrollElemId);
+    console.log("ABCappenddiv1", row_params, markup, scrollElem.length);
+    if (scrollElem.length) {
+	// Found element with same id; overwrite
+	if (scrollElem.find(".gterm-blockimg").length == 1 && innerBlockElem.length == 1 && innerBlockElem.find(".gterm-blockimg").length == 1) {
+	    // Replace IMG src attribute of block element and return
+	    scrollElem.find(".gterm-blockimg").attr("src", innerBlockElem.find(".gterm-blockimg").attr("src"));
+	    return scrollElem;
+	}
+	// Replace entire element
+	scrollElem.html(markup);
+
+    } else {
+	// Element with same id does not exist
+	var prevBlockElem = parentElem.find(".gterm-blockhtml:not(.gterm-blockclosed)");
+
+	if (overwrite && innerBlockElem.length == 1 && prevBlockElem.length == 1) {
+	    // Modify single previous element
+	    scrollElem = prevBlockElem.parent();
+	    if (prevBlockElem.find(".gterm-blockimg").length == 1 && innerBlockElem.find(".gterm-blockimg").length == 1) {
+		// Replace IMG src attribute
+		prevBlockElem.find(".gterm-blockimg").attr("src", innerBlockElem.find(".gterm-blockimg").attr("src"));
+	    } else {
+		// Replace previous block element
+		prevBlockElem.replaceWith(innerBlockElem);
+	    }
+	} else {
+	    // Append new element (closing any previous elements)
+	    prevBlockElem.addClass("gterm-blockclosed");
+	    scrollElem = rowElem.appendTo(parentElem);
+	}
+    }
+    console.log("ABCappenddiv2", row_params, markup, scrollElem);
+
+    if (row_opts.form_input) {
+	scrollElem.find(".gterm-form-button").bindclick(GTFormSubmit);
+	scrollElem.find(".gterm-help-link").bindclick(GTHelpLink);
+    }
+
+    if (row_opts.autosize)
+	GTAutosizeIFrame(scrollElem);
+
+    scrollElem.find('td .gterm-link').bindclick(gtermPageletClickHandler);
+    scrollElem.find('td img').bind("dragstart", function(evt) {evt.preventDefault();});
+    scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
+    scrollElem.find('.gterm-iframeclose').bindclick(gtermInterruptHandler);
+    GTDropBindings(scrollElem.find(' .droppable'));
+    return scrollElem;
 }
 
 function GTPreloadImages(urls) {
@@ -1270,15 +1328,15 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    }
 			    gPromptIndex = newPromptIndex;
 			    var row_params = update_scroll[j][JPARAMS];
-			    var row_class = row_params.row_class;
+			    var add_class = row_params[JOPTS].add_class;
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_html;
-			    if (row_class.indexOf("gterm-html") >= 0) {
-				GTAppendDiv($("#session-bufscreen"), row_params, "row entry "+entry_class, markup);
+			    if (row_params[JTYPE] == "pagelet") {
+				GTAppendPagelet($("#session-bufscreen"), row_params, entry_class, "pagelet entry "+entry_class+' '+add_class, markup);
 				delayed_scroll = true;
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
-				row_html = '<pre '+id_attr+' class="'+row_class+' entry '+entry_class+'">'+row_escaped+"\n</pre>";
+				row_html = '<pre '+id_attr+' class="row entry '+entry_class+' '+add_class+'">'+row_escaped+"\n</pre>";
 				$(row_html).appendTo("#session-bufscreen");
 			    }
 			    $("#"+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
@@ -2867,19 +2925,19 @@ GTNotebook.prototype.execute = function(openNext) {
 
 GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     console.log("ABCGTNotebook.output: ", reset, update_rows, update_scroll);
-    var noteprompt = false;
+    var note_prompt = false;
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
     if (reset)
 	outElem.html("");
 
     for (var j=0; j<update_scroll.length; j++) {
 	var row_params = update_scroll[j][JPARAMS];
-	var row_class = row_params.row_class;
 	var row_line = update_scroll[j][JLINE];
 	var markup = update_scroll[j][JMARKUP];
 	var row_html;
-	if (row_class.indexOf("gterm-html") >= 0) {
-	    GTAppendDiv(outElem, row_params, "gterm-notecell-scroll", markup);
+	if (row_params[JTYPE] == "pagelet") {
+	    var entry_class = this.notebookId + "-cell" + this.curIndex;
+	    GTAppendPagelet(outElem, row_params, entry_class, "pagelet gterm-notecell-scroll "+entry_class, markup);
 	} else {
 	    var row_escaped = (markup == null) ? GTEscape(row_line) : markup;
 	    if (!this.handling_tab || row_line != this.handling_tab[1])
@@ -2889,9 +2947,9 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 
     for (var j=0; j<update_rows.length; j++) {
 	var row_params = update_rows[j][JPARAMS];
-	var row_class = row_params.row_class;
+	var add_class = row_params[JOPTS].add_class;
 	var row_span = update_rows[j][JLINE];
-	noteprompt = (row_class.indexOf("noteprompt") >= 0);
+	note_prompt = !!row_params[JOPTS].note_prompt;
 	var row_line = "";
 	for (var k=0; k<row_span.length; k++)
 	    row_line += row_span[k][1];
@@ -2914,11 +2972,11 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 		this.cancelCompletion();
 	    }
 	} else {
-	    $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-screen").html('<pre class="row">'+GTEscape(row_line)+((noteprompt||!this.passthru_stdin)?'':GTCursorSpan(' '))+'\n</pre>');
+	    $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-screen").html('<pre class="row '+add_class+'">'+GTEscape(row_line)+((note_prompt||!this.passthru_stdin)?'':GTCursorSpan(' '))+'\n</pre>');
 	}
     }
 
-    if (noteprompt) {
+    if (note_prompt) {
 	this.cellFocus(true, true);
     } else {
 	setTimeout(ScrollTerm, 200);

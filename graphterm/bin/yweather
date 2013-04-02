@@ -171,10 +171,11 @@ for fcst in weather_dict["yweather:forecast"]:
 
 html += "<br>\n"
 
+prefix = '<!--gterm pagelet display=%s scroll=top-->' % (params["display"],)
 if not Lterm_cookie or options.text:
     sys.stdout.write("".join(weather_dict["description"]))
 else:
-    sys.stdout.write(wrap(json.dumps(headers)+"\n\n"+html))
+    sys.stdout.write(wrap(prefix+html))
 
 sys.stdout.flush()
 

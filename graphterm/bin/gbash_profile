@@ -7,6 +7,10 @@ if [[ -z "$GRAPHTERM_COOKIE" ]] && [[ -n "$LC_GRAPHTERM_COOKIE" ]]; then
    export GRAPHTERM_COOKIE="$LC_GRAPHTERM_COOKIE"
 fi
 
+if [[ -z "$GRAPHTERM_EXPORT" ]] && [[ -n "$LC_GRAPHTERM_EXPORT" ]]; then
+   export GRAPHTERM_EXPORT="$LC_GRAPHTERM_EXPORT"
+fi
+
 if [[ -z "$PROMPT_COMMAND" ]] && [[ -n "$LC_PROMPT_COMMAND" ]] && [[ -n "$LC_GRAPHTERM_PROMPT" ]]; then
    # Set prompt command
    export GRAPHTERM_PROMPT="$LC_GRAPHTERM_PROMPT"

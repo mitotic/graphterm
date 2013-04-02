@@ -38,6 +38,7 @@ import Queue
 import shlex
 import subprocess
 import traceback
+import urllib
 
 from bin import gtermapi
 
@@ -62,7 +63,7 @@ FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gcp", "gimages", "gls", "gopen", "
 REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
-GTERM_DIRECTIVE_RE = re.compile(r"^\s*<!--gterm-(\w+)\s(.*)-->")
+GTERM_DIRECTIVE_RE = re.compile(r"^\s*<!--gterm\s+(\w+)(\s.*)?-->")
 
 PYTHON_PROMPTS = [">>> ", "... "]
 IPYTHON_PROMPTS = ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "] # Works up to 10,000 prompts
@@ -75,6 +76,9 @@ JDIR = 2
 JPARAMS = 3
 JLINE = 4
 JMARKUP = 5
+
+JTYPE = 0
+JOPTS = 1
 
 Log_ignored = False
 MAX_LOG_CHARS = 8
@@ -470,6 +474,10 @@ class ScreenBuf(object):
         self.bold_style = 0x08
 
         self.default_nul = self.default_style << UNI24
+        self.buf_note = 0
+
+    def set_buf_note(self, buf_note):
+        self.buf_note = buf_note
 
     def clear_buf(self):
         self.last_scroll_count = self.current_scroll_count
@@ -496,7 +504,7 @@ class ScreenBuf(object):
             self.cleared_current_dir = self.scroll_lines[n][JDIR]
 
         for scroll_line in self.scroll_lines[n:]:
-            blob_id = scroll_line[JPARAMS].get("blob_id")
+            blob_id = scroll_line[JPARAMS][JOPTS].get("blob")
             if blob_id:
                 self.delete_blob_ids.append(blob_id)
 
@@ -504,7 +512,7 @@ class ScreenBuf(object):
         if self.last_scroll_count > self.current_scroll_count:
             self.last_scroll_count = self.current_scroll_count
 
-    def scroll_buf_up(self, line, meta, offset=0, row_class="row", markup=None):
+    def scroll_buf_up(self, line, meta, offset=0, add_class="", row_params=["", {}], markup=None):
         current_dir = ""
         overwrite = False
         new_blob_id = ""
@@ -516,32 +524,25 @@ class ScreenBuf(object):
             if not self.cleared_last:
                 self.cleared_current_dir = None
             self.cleared_last = False
-        elif row_class == "gterm-html":
-            match = GTERM_DIRECTIVE_RE.match(markup)
-            if match and match.group(1) == "html":
-                # gterm html directive
-                dir_comps = match.group(2).strip().split()
-                while dir_comps:
-                    # Parse options
-                    dir_comp = dir_comps.pop(0)
-                    opt_name, sep, opt_value = dir_comp.partition("=")
-                    if opt_name == "overwrite":
-                        overwrite = (opt_value == "yes")
-                    elif opt_name == "blob":
-                        new_blob_id = opt_value
-                if overwrite and self.last_blob_id:
-                    # Delete previous blob
-                    self.delete_blob_ids.append(self.last_blob_id)
-                self.last_blob_id = new_blob_id
+        elif row_params[JTYPE]:
+            # Non-plain text scrolling
+            overwrite = bool(row_params[JOPTS].get("overwrite"))
+            new_blob_id = row_params[JOPTS].get("blob") or ""
+            if overwrite and self.last_blob_id:
+                # Delete previous blob
+                self.delete_blob_ids.append(self.last_blob_id)
+            self.last_blob_id = new_blob_id
             ##logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
 
-        prev_html = bool(self.scroll_lines and self.scroll_lines[-1][JPARAMS]["row_class"].startswith("gterm-html"))
-        if overwrite and prev_html:
-            # Overwrite previous HTML scroll entry
+        cur_pagelet_id = "%d-%d" % (self.buf_note, self.current_scroll_count)
+        prev_pagelet = bool(self.scroll_lines and self.scroll_lines[-1][JPARAMS][0] == "pagelet" and self.scroll_lines[-1][JPARAMS][1]["pagelet_id"] == cur_pagelet_id)
+
+        row_params[JOPTS]["add_class"] = add_class
+        if overwrite and prev_pagelet:
+            # Overwrite previous pagelet entry
+            row_params[JOPTS]["pagelet_id"] = cur_pagelet_id
             self.scroll_lines[-1][JDIR] = current_dir
-            self.scroll_lines[-1][JPARAMS]["overwrite"] = True
-            if "blob_id" in self.scroll_lines[-1][JPARAMS] or new_blob_id:
-                self.scroll_lines[-1][JPARAMS]["blob_id"] = new_blob_id
+            self.scroll_lines[-1][JPARAMS] = row_params
             self.scroll_lines[-1][JLINE] = line
             self.scroll_lines[-1][JMARKUP] = markup
             if self.current_scroll_count > 0 and self.last_scroll_count >= self.current_scroll_count:
@@ -549,21 +550,17 @@ class ScreenBuf(object):
         else:
             # New scroll entry
             self.current_scroll_count += 1
-            row_params = {"row_class": row_class}    # Option always present
-            if overwrite:
-                row_params["overwrite"] = overwrite
-            if new_blob_id:
-                row_params["blob_id"] = new_blob_id
+            row_params[JOPTS]["pagelet_id"] = "%d-%d" % (self.buf_note, self.current_scroll_count)
             self.scroll_lines.append([self.entry_index, offset, current_dir, row_params, line, markup])
             if len(self.scroll_lines) > MAX_SCROLL_LINES:
                 old_entry_index, old_offset, old_dir, old_params, old_line, old_markup = self.scroll_lines.pop(0)
-                old_blob_id = old_params.get("blob_id")
+                old_blob_id = old_params[1].get("blob")
                 if old_blob_id:
                     self.delete_blob_ids.append(old_blob_id)
                 while self.scroll_lines and self.scroll_lines[0][JINDEX] == old_entry_index:
                     self.scroll_lines.pop(0)
                     tem_entry_index, tem_offset, tem_dir, tem_params, tem_line, tem_markup = self.scroll_lines.pop(0)
-                    tem_blob_id = tem_params.get("blob_id")
+                    tem_blob_id = tem_params[1].get("blob")
                     if tem_blob_id:
                         self.delete_blob_ids.append(tem_blob_id)
 
@@ -605,7 +602,7 @@ class ScreenBuf(object):
                 row_update = (new_row != old_screen.data[width*j:width*(j+1)])
             if row_update or (cursor_moved and (cursory == j or self.cursory == j)):
                 new_row_str = dump(new_row)
-                row_class = "row"
+                opts = {"add_class": ""}
                 offset = prompt_offset(new_row_str, pdelim, screen.meta[j])
                 if not offset and note_prompts:
                     # Assume everything after the first prompt is a continuation prompt and ignore
@@ -613,10 +610,10 @@ class ScreenBuf(object):
                     for prompt in note_prompts[:1]:
                         if new_row_str.startswith(prompt):
                             # Entry starts with non-continuation prompt
-                            row_class += " noteprompt"
+                            opts["note_prompt"] = "yes"
                             break
 
-                update_rows.append([j, offset, "", {"row_class": row_class}, self.dumprichtext(new_row, trim=True), None])
+                update_rows.append([j, offset, "", ["", opts], self.dumprichtext(new_row, trim=True), None])
 
         if reconnecting:
             update_scroll = self.scroll_lines[:]
@@ -704,6 +701,7 @@ class Terminal(object):
         self.logfile = logfile
         self.screen_buf = ScreenBuf(pdelim)
 
+        self.note_count = 0
         self.note_screen_buf = ScreenBuf("")
         self.note_cells = None
         self.note_input = []
@@ -840,6 +838,7 @@ class Terminal(object):
 
     def notebook(self, activate, prompts=[]):
         if activate:
+            self.note_count += 1
             at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
             if not prompts and self.command_path:
                 basename = os.path.basename(self.command_path)
@@ -872,6 +871,7 @@ class Terminal(object):
             self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
             self.scroll_bot = 0
             self.note_screen_buf.clear_buf()
+            self.note_screen_buf.set_buf_note(self.note_count)
             self.note_cells = {"maxIndex": 0, "curIndex": 0, "cells": OrderedDict()}
             self.note_prompts = prompts
 
@@ -883,11 +883,12 @@ class Terminal(object):
             note_cells = self.note_cells
             prompt = self.note_prompts[0]
             self.note_cells = None
+            self.note_screen_buf.clear_buf()
             self.note_prompts = []
             for cell in note_cells["cells"].itervalues():
                 # Copy all cellInput and cellOutput to scroll buffer
                 for line in cell["cellInput"]:
-                    self.screen_buf.scroll_buf_up(line, "", row_class="row gterm-cell-input")
+                    self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
                 self.screen_buf.scroll_buf_up(prompt, "")
                 self.screen_buf.append_scroll(cell["cellOutput"])
             self.scroll_bot = self.height-1
@@ -1629,11 +1630,26 @@ class Terminal(object):
 
                 if not response_type:
                     # Raw html display
-                    screen_buf.scroll_buf_up("", None, row_class="gterm-html", markup=content)
+                    match = GTERM_DIRECTIVE_RE.match(content)
+                    if match:
+                        # gterm comment directive
+                        content = content[len(match.group(0)):]
+                        opts = match.group(2) or ""
+                        opt_comps = opts.strip().split()
+                        opt_dict = {}
+                        while opt_comps:
+                            # Parse options
+                            opt_comp = opt_comps.pop(0)
+                            opt_name, sep, opt_value = opt_comp.partition("=")
+                            opt_dict[opt_name] = urllib.unquote(opt_value)
+                        row_params = [match.group(1), opt_dict]
+                    else:
+                        row_params = ["pagelet", {}]
+                    screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                 elif response_type == "create_blob":
                     del headers["x_gterm_response"]
                     del headers["x_gterm_parameters"]
-                    blob_id = response_params.get("blob_id")
+                    blob_id = response_params.get("blob")
                     if not blob_id:
                         logging.warning("No blob_id for create_blob")
                     elif "content_length" not in headers:

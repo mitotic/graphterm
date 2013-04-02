@@ -21,6 +21,9 @@ parser = OptionParser(usage=usage)
 parser.add_option("-l", "--link", action="store_true", dest="link", default=False,
                   help="Display link only")
 
+parser.add_option("", "--unsafe", action="store_true", dest="unsafe", default=False,
+                  help="Display html files (unsafe)")
+
 (options, args) = parser.parse_args()
 
 if not args:
@@ -33,47 +36,53 @@ if not args:
         print >> sys.stderr, "Error in reading from stdin"
         sys.exit(1)
 
-    args = [ gtermapi.create_blob(content, content_type="text/html") ]
+    url_list = [ (gtermapi.create_blob(content, content_type="text/html"), "file" if options.link else "") ]
 
-url_list = []
-for arg in args:
-    if arg.startswith("http://") or arg.startswith("https://"):
-        # Display URL
-        url = arg
-        label = arg if options.link else ""
-    else:
-        # Display file
-        if arg.startswith("file://"):
-            filepath, sep, dummy = arg[len("file://"):].partition("?")
-            if filepath.startswith("local/"):
-                filepath = filepath[len("local"):]
-            elif not filepath.startswith("/"):
-                print >> sys.stderr, "Nonlocal file %s" % arg
+else:
+    url_list = []
+    for arg in args:
+        if arg.startswith("http://") or arg.startswith("https://"):
+            # Display URL
+            url = arg
+            label = arg if options.link else ""
+        else:
+            # Display file
+            if arg.startswith("file://"):
+                filepath, sep, dummy = arg[len("file://"):].partition("?")
+                if filepath.startswith("local/"):
+                    filepath = filepath[len("local"):]
+                elif not filepath.startswith("/"):
+                    print >> sys.stderr, "Nonlocal file %s" % arg
+                    sys.exit(1)
+            else:
+                filepath = arg
+
+            label = os.path.basename(filepath)
+            mime_type = ""
+            htmlfile = False
+            if not options.link:
+                try:
+                    mime_type, encoding = mimetypes.guess_type(filepath)
+                    if mime_type and (mime_type.startswith("text/") or mime_type.startswith("image/") or mime_type.endswith("pdf")):
+                        htmlfile = mime_type.startswith("text/html")
+                        if not htmlfile or options.unsafe:
+                            # Auto open text/image/pdf files
+                            label = ""
+                except Exception:
+                    pass
+
+            direct_display = (not htmlfile or options.unsafe)
+            if gtermapi.Export_host and direct_display:
+                # Exported environment: create blobs (excluding HTML files, for security reasons)
+                url = gtermapi.create_blob(from_file=filepath)
+            else:
+                url = gtermapi.get_file_url(filepath, relative=direct_display, exists=True, plain=True)
+
+            if not url:
+                print >> sys.stderr, "File %s not found" % arg
                 sys.exit(1)
-        else:
-            filepath = arg
 
-        if gtermapi.Export_host:
-            # Exported environment
-            url = gtermapi.create_blob(from_file=filepath)
-        else:
-            url = gtermapi.get_file_url(filepath, relative=True, exists=True, plain=True)
-
-        if not url:
-            print >> sys.stderr, "File %s not found" % arg
-            sys.exit(1)
-
-        label = os.path.basename(filepath)
-        if not options.link:
-            try:
-                mime_type, encoding = mimetypes.guess_type(filepath)
-                if mime_type and (mime_type.startswith("text/") or mime_type.startswith("image/") or mime_type.endswith("pdf")):
-                    # Auto open text/image/pdf files
-                    label = ""
-            except Exception:
-                pass
-
-    url_list.append( (url, label) )
+        url_list.append( (url, label) )
 
 for url, label in url_list:
     if label:
