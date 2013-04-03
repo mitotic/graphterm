@@ -2260,8 +2260,14 @@ function AjaxKeypress(evt) {
 	    return false;
 	}
 
-	if (!gNotebook && evt.ctrlKey) {
+	if (!gNotebook && evt.shiftKey) {
 	    GTActivateNotebook();
+	    return false;
+	}
+
+	if (!gNotebook && evt.ctrlKey) {
+	    var prompts = $.trim(window.prompt("Shell prompts: "));
+	    GTActivateNotebook(prompts ? prompts.split(/\s+/) : []);
 	    return false;
 	}
 
@@ -2839,9 +2845,9 @@ GTFrameDispatcher.prototype.close = function(frameName, save) {
 
 var gFrameDispatcher = new GTFrameDispatcher();
 
-function GTActivateNotebook() {
+function GTActivateNotebook(prompts) {
     if (gWebSocket && gParams.controller) {
-	gWebSocket.write([["notebook", true, []]]);
+	gWebSocket.write([["notebook", true, prompts || []]]);
     }
 }
 
@@ -2875,6 +2881,7 @@ function GTNotebook(note_dir, fullpage) {
     this.cellParams = {};
     this.cellList = []
     this.curIndex = 0;
+    this.openNext = false;
 
     this.passthru_stdin = false;
     this.handling_tab = null;
@@ -2981,6 +2988,7 @@ GTNotebook.prototype.cellScroll = function() {
 }
 
 GTNotebook.prototype.execute = function(openNext) {
+    this.openNext = !!openNext;
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     var text = textElem.val();
     this.cellFocus(false);
@@ -3044,7 +3052,12 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     }
 
     if (note_prompt) {
-	this.cellFocus(true, true);
+	if (this.openNext) {
+	    this.openNext = false;
+	    gWebSocket.write([["add_cell", "code", 0]]);
+	} else {
+	    this.cellFocus(true, true);
+	}
     } else {
 	setTimeout(ScrollTerm, 200);
     }

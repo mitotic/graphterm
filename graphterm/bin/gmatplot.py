@@ -5,9 +5,12 @@ gmatplot: Convenience functions of gterm-aware matplotlib usage
 
 Usage:
 
+python -i gmsetup.py
+  OR
 import gmatplot as gm
 gm.setup()    # Sets up gmatplot and patches pylab/pyplot
 import pylab
+
 ...
 pylab.plot(...)
 

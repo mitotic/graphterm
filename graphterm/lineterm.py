@@ -885,7 +885,7 @@ class Terminal(object):
                             prompts += ["... "]
                 except Exception:
                     raise
-            logging.warning("ABCnotebook: %s dir=%s, shell=%s, prompts=%s", activate, cur_dir, at_shell, prompts)
+            logging.warning("ABCnotebook: activate=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", activate, self.command_path, cur_dir, at_shell, prompts)
 
             self.scroll_screen(self.active_rows)
             self.update()
@@ -908,9 +908,10 @@ class Terminal(object):
             self.note_prompts = []
             for cell in note_cells["cells"].itervalues():
                 # Copy all cellInput and cellOutput to scroll buffer
-                for line in cell["cellInput"]:
-                    self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
-                self.screen_buf.scroll_buf_up(prompt, "")
+                if cell["cellInput"]:
+                    for line in cell["cellInput"]:
+                        self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
+                    self.screen_buf.scroll_buf_up(prompt, "")
                 self.screen_buf.append_scroll(cell["cellOutput"])
             self.scroll_bot = self.height-1
             self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
@@ -919,15 +920,19 @@ class Terminal(object):
             self.update()
 
     def add_cell(self, new_cell_type="code", before_cell_number=0):
-        # New cell
+        # New cell after current cell, or before_cell_number
         logging.warning("ABCadd_cell: %s %s", new_cell_type, before_cell_number)
         self.leave_cell()
         self.note_cells["maxIndex"] += 1
+        prev_index = self.note_cells["curIndex"]
         cell_index = self.note_cells["maxIndex"]
         next_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
         self.note_cells["cells"][cell_index] = next_cell
         self.note_cells["curIndex"] = cell_index
-        if not before_cell_number or before_cell_number > len(self.note_cells["cellIndices"]):
+        if not before_cell_number:
+            before_cell_number = 2 + self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
+
+        if before_cell_number > len(self.note_cells["cellIndices"]):
             before_cell_index = 0
             self.note_cells["cellIndices"].append(cell_index)
         else:
@@ -946,6 +951,8 @@ class Terminal(object):
         cur_cell = self.note_cells["cells"][cur_index]
         self.scroll_screen(self.active_rows)
         cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+        self.note_screen_buf.clear_buf()
+
         self.note_cells["curIndex"] = 0
         cur_location = self.note_cells["cellIndices"].index(cur_index)
         
@@ -1245,6 +1252,7 @@ class Terminal(object):
             self.cursor_x = r
 
     def expect_prompt(self, current_directory):
+        self.command_path = ""
         self.current_dir = current_directory
         if not self.active_rows or self.cursor_y+1 == self.active_rows:
             self.current_meta = (current_directory, 0)
