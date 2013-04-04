@@ -258,12 +258,13 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           paste_command <text>
           get_finder <kind> <directory>
           save_file <filepath> <filedata>
-          notebook <activate> <prompts>
-          add_cell <new_cell_type> <before_cell_index>
+          notebook <activate> <filepath> <prompts>
+          save_notebook <filepath> <input_data>
+          add_cell <new_cell_type> <init_text> <before_cell_index>
           switch_cell <cell_index> <move_up>
           delete_cell
           complete_cell <incomplete_line>
-          exec_cell <cellIndex> <input_data>
+          update_cell <cellIndex> <execute> <input_data>
 
         Output commands:
           completed_input <line>
@@ -322,14 +323,19 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.paste_command(term_name, paste_text)
 
                 elif action == "notebook":
-                    # notebook <activate> <prompts>
+                    # notebook <activate> <filepath> <prompts>
                     if self.lineterm:
-                        self.lineterm.notebook(term_name, cmd[0], cmd[1])
+                        self.lineterm.notebook(term_name, cmd[0], cmd[1], cmd[2])
+
+                elif action == "save_notebook":
+                    # save_notebook <filepath> <input_data>
+                    if self.lineterm:
+                        self.lineterm.save_notebook(term_name, cmd[0], cmd[1])
 
                 elif action == "add_cell":
-                    # add_cell <new_cell_type> <before_cell_index>
+                    # add_cell <new_cell_type> <init_text> <before_cell_index>
                     if self.lineterm:
-                        self.lineterm.add_cell(term_name, cmd[0], cmd[1])
+                        self.lineterm.add_cell(term_name, cmd[0], cmd[1], cmd[2])
 
                 elif action == "switch_cell":
                     # switch_cell <new_cell_type> <before_cell_index>
@@ -346,10 +352,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if self.lineterm:
                         self.lineterm.complete_cell(term_name, cmd[0])
 
-                elif action == "exec_cell":
-                    # exec_cell <cellIndex> <input_data>
+                elif action == "update_cell":
+                    # update_cell <cellIndex> <execute> <input_data>
                     if self.lineterm:
-                        self.lineterm.exec_cell(term_name, cmd[0], cmd[1])
+                        self.lineterm.update_cell(term_name, cmd[0], cmd[1], cmd[2])
 
                 elif action == "paste_command":
                     # paste_command: command_line

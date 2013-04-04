@@ -39,6 +39,7 @@ import shlex
 import subprocess
 import traceback
 import urllib
+import uuid
 
 from bin import gtermapi
 
@@ -64,6 +65,10 @@ REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
 GTERM_DIRECTIVE_RE = re.compile(r"^\s*<!--gterm\s+(\w+)(\s.*)?-->")
+MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
+MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
+
+BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/blob/local/%s" alt="%s"></div>'
 
 PYTHON_PROMPTS = [">>> ", "... "]
 IPYTHON_PROMPTS = ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "] # Works up to 10,000 prompts
@@ -106,6 +111,9 @@ def make_lterm_cookie():
 # Meta info indices
 JCURDIR = 0
 JCONTINUATION = 1
+
+def split_lines(text):
+    return text.replace("\r\n","\n").replace("\r","\n").split("\n")
 
 def create_array(fill_value, count):
     """Return array of 32-bit values"""
@@ -474,17 +482,43 @@ class ScreenBuf(object):
         self.bold_style = 0x08
 
         self.default_nul = self.default_style << UNI24
-        self.buf_note = 0
+        self.cur_note = 0
+        self.blobs = {}
+        self.delete_blob_ids = []
 
-    def set_buf_note(self, buf_note):
-        self.buf_note = buf_note
+    def set_cur_note(self, cur_note):
+        self.cur_note = cur_note
+        if not cur_note:
+            self.blobs = {}
+
+    def prefill_buf(self, scroll_lines, redisplay=False):
+        self.scroll_lines = scroll_lines[:]
+        if redisplay:
+            self.last_scroll_count = self.current_scroll_count
+        self.current_scroll_count += len(scroll_lines)
+        if not redisplay:
+            self.last_scroll_count = self.current_scroll_count
 
     def clear_buf(self):
         self.last_scroll_count = self.current_scroll_count
         self.scroll_lines = []
         self.last_blob_id = ""
-        self.delete_blob_ids = []
         self.full_update = True
+
+    def add_blob(self, blob_id, content_type, content_b64):
+        self.blobs[blob_id] = (str(content_type), content_b64)
+
+    def get_blob_uri(self, blob_id):
+        if blob_id not in self.blobs:
+            return ""
+        return "data:%s;base64,%s" % self.blobs[blob_id]
+
+    def delete_blob(self, blob_id):
+        if not blob_id:
+            return
+        self.delete_blob_ids.append(blob_id)
+        if self.blobs and blob_id in self.blobs:
+            del self.blobs[blob_id]
 
     def clear_last_entry(self, last_entry_index=None):
         if not self.scroll_lines or self.entry_index <= 0:
@@ -504,9 +538,7 @@ class ScreenBuf(object):
             self.cleared_current_dir = self.scroll_lines[n][JDIR]
 
         for scroll_line in self.scroll_lines[n:]:
-            blob_id = scroll_line[JPARAMS][JOPTS].get("blob")
-            if blob_id:
-                self.delete_blob_ids.append(blob_id)
+            self.delete_blob(scroll_line[JPARAMS][JOPTS].get("blob"))
 
         self.scroll_lines[n:] = []
         if self.last_scroll_count > self.current_scroll_count:
@@ -518,7 +550,7 @@ class ScreenBuf(object):
             return
         assert not self.scroll_lines[-1][JOFFSET]
         self.scroll_lines[-1][JPARAMS] = ["pagelet", {"add_class": "",
-                                                      "pagelet_id": "%d-%d" % (self.buf_note, self.current_scroll_count)} ]
+                                                      "pagelet_id": "%d-%d" % (self.cur_note, self.current_scroll_count)} ]
         self.scroll_lines[-1][JLINE] = ""
         self.scroll_lines[-1][JMARKUP] = ""
         if self.current_scroll_count > 0 and self.last_scroll_count >= self.current_scroll_count:
@@ -543,11 +575,11 @@ class ScreenBuf(object):
             new_blob_id = row_params[JOPTS].get("blob") or ""
             if overwrite and self.last_blob_id:
                 # Delete previous blob
-                self.delete_blob_ids.append(self.last_blob_id)
+                self.delete_blob(self.last_blob_id)
             self.last_blob_id = new_blob_id
             ##logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
 
-        cur_pagelet_id = "%d-%d" % (self.buf_note, self.current_scroll_count)
+        cur_pagelet_id = "%d-%d" % (self.cur_note, self.current_scroll_count)
         prev_pagelet_opts = self.scroll_lines[-1][JPARAMS][JOPTS] if self.scroll_lines and self.scroll_lines[-1][JPARAMS][JTYPE] == "pagelet" else {}
         prev_edit_file = self.scroll_lines and self.scroll_lines[-1][JPARAMS][JTYPE] == "edit_file"
 
@@ -566,19 +598,15 @@ class ScreenBuf(object):
             if prev_edit_file or prev_pagelet_opts.get("form_input"):
                 self.blank_last_entry()
             self.current_scroll_count += 1
-            row_params[JOPTS]["pagelet_id"] = "%d-%d" % (self.buf_note, self.current_scroll_count)
+            row_params[JOPTS]["pagelet_id"] = "%d-%d" % (self.cur_note, self.current_scroll_count)
             self.scroll_lines.append([self.entry_index, offset, current_dir, row_params, line, markup])
             if len(self.scroll_lines) > MAX_SCROLL_LINES:
                 old_entry_index, old_offset, old_dir, old_params, old_line, old_markup = self.scroll_lines.pop(0)
-                old_blob_id = old_params[JOPTS].get("blob")
-                if old_blob_id:
-                    self.delete_blob_ids.append(old_blob_id)
+                self.delete_blob(old_params[JOPTS].get("blob"))
                 while self.scroll_lines and self.scroll_lines[0][JINDEX] == old_entry_index:
                     self.scroll_lines.pop(0)
                     tem_entry_index, tem_offset, tem_dir, tem_params, tem_line, tem_markup = self.scroll_lines.pop(0)
-                    tem_blob_id = tem_params[JOPTS].get("blob")
-                    if tem_blob_id:
-                        self.delete_blob_ids.append(tem_blob_id)
+                    self.delete_blob(tem_params[JOPTS].get("blob"))
 
     def append_scroll(self, scroll_lines):
         self.current_scroll_count += len(scroll_lines)
@@ -722,13 +750,12 @@ class Terminal(object):
 
         self.note_count = 0
         self.note_screen_buf = ScreenBuf("")
-        self.note_cells = None
-        self.note_input = []
-        self.note_prompts = []
-        self.note_shell = False
+        self.reset_note()
 
         self.init()
         self.reset()
+        self.current_dir = ""
+        self.current_meta = None
         self.output_time = time.time()
         self.buf = ""
         self.alt_mode = False
@@ -736,6 +763,13 @@ class Terminal(object):
         self.trim_first_prompt = bool(pdelim)
         self.logchars = 0
         self.command_path = ""
+
+    def reset_note(self):
+        self.note_prompts = []
+        self.note_cells = None
+        self.note_input = []
+        self.note_shell = False
+        self.note_dir = ""
 
     def init(self):
         self.esc_seq={
@@ -818,10 +852,7 @@ class Terminal(object):
         self.echobuf = ""
         self.echobuf_count = 0
         self.outbuf = ""
-        self.last_html = ""
         self.active_rows = 0
-        self.current_dir = ""
-        self.current_meta = None
         self.gterm_code = None
         self.gterm_buf = None
         self.gterm_buf_size = 0
@@ -856,11 +887,11 @@ class Terminal(object):
         self.screen = self.alt_screen if self.alt_mode else self.main_screen
         self.needs_updating = True
 
-    def notebook(self, activate, prompts=[]):
+    def notebook(self, activate, filepath, prompts=[]):
         if activate:
             self.note_count += 1
             at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
-            cur_dir = self.current_dir
+            self.note_dir = self.current_dir
             if not prompts and self.command_path:
                 basename = os.path.basename(self.command_path)
                 if basename == "python":
@@ -885,49 +916,214 @@ class Terminal(object):
                             prompts += ["... "]
                 except Exception:
                     raise
-            logging.warning("ABCnotebook: activate=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", activate, self.command_path, cur_dir, at_shell, prompts)
+            logging.warning("ABCnotebook: activate=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", activate, self.command_path, self.note_dir, at_shell, prompts)
 
             self.scroll_screen(self.active_rows)
             self.update()
             self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
             self.scroll_bot = 0
             self.note_screen_buf.clear_buf()
-            self.note_screen_buf.set_buf_note(self.note_count)
+            self.note_screen_buf.set_cur_note(self.note_count)
             self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
             self.note_prompts = prompts
 
             self.note_shell = at_shell
-            self.screen_callback(self.term_name, "", "note_activate", [True, cur_dir, self.note_shell])
-            self.add_cell(new_cell_type="code")
+            self.screen_callback(self.term_name, "", "note_activate", [True, self.note_dir, self.note_shell])
+            self.note_file = filepath
+            if filepath:
+                self.read_notebook(filepath)
+            if not self.note_cells["curIndex"]:
+                self.add_cell(new_cell_type="code")
         else:
             self.leave_cell()
-            note_cells = self.note_cells
             prompt = self.note_prompts[0]
-            self.note_cells = None
-            self.note_screen_buf.clear_buf()
-            self.note_prompts = []
-            for cell in note_cells["cells"].itervalues():
+            for cell in self.note_cells["cells"].itervalues():
                 # Copy all cellInput and cellOutput to scroll buffer
                 if cell["cellInput"]:
                     for line in cell["cellInput"]:
                         self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
                     self.screen_buf.scroll_buf_up(prompt, "")
                 self.screen_buf.append_scroll(cell["cellOutput"])
+            self.reset_note()
+            self.note_screen_buf.set_cur_note(0)
+            self.note_screen_buf.clear_buf()
             self.scroll_bot = self.height-1
             self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
             self.zero_screen()
             self.screen_callback(self.term_name, "", "note_activate", [False, self.current_dir, self.note_shell])
             self.update()
 
-    def add_cell(self, new_cell_type="code", before_cell_number=0):
+    def save_notebook(self, filepath, input_data):
+        fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
+        md_lines = []
+        ref_blobs = []
+        for cell in self.note_cells["cells"].itervalues():
+            if cell["cellIndex"] == self.note_cells["curIndex"]:
+                # Current cell; copy output
+                cell["cellInput"] = split_lines(input_data) if input_data else []
+                cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+
+            if cell["cellInput"]:
+                if cell["cellType"]:
+                    lang = "python" if self.command_path.endswith("python") else "code"
+                    md_lines.append("```"+lang)
+                for line in cell["cellInput"]:
+                    md_lines.append(line)
+                if cell["cellType"]:
+                    md_lines.append("```")
+                md_lines.append ("")
+
+            if cell["cellOutput"]:
+                out_lines = []
+                for scroll_line in cell["cellOutput"]:
+                    opts = scroll_line[JPARAMS][JOPTS]
+                    blob_id = opts.get("blob")
+                    if blob_id:
+                        if out_lines:
+                            md_lines += ["```"] + out_lines + ["```"] + [""]
+                            out_lines = []
+                        data_uri = self.note_screen_buf.get_blob_uri(blob_id)
+                        if data_uri:
+                            ref_blobs.append(data_uri)
+                            md_lines.append("![image][%d]" % len(ref_blobs))
+                            md_lines.append ("")
+                    else:
+                        out_lines.append(scroll_line[JLINE])
+                if out_lines:
+                    md_lines += ["```"] + out_lines + ["```"] + [""]
+
+        if ref_blobs:
+            for j, ref_blob in enumerate(ref_blobs):
+                md_lines.append("[%d]: %s" % (j+1, ref_blob))
+
+        filedata = "\n".join(md_lines) + "\n"
+        self.save_file(fullpath, filedata, base64=False)
+
+    def read_notebook(self, filepath):
+        fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
+        cur_cell = None
+        code_lines = None
+        raw_lines = []
+        leaving_block = False
+        blob_ids = {}
+        try:
+            with open(fullpath, "r") as f:
+                state = None
+                for line in f:
+                    line = line.rstrip("\r\n")
+                    if line.startswith("```"):
+                        lang = line[len("```"):].strip()
+                        if state is None:
+                            # Entering fenced block
+                            leaving_block = False
+                            if raw_lines:
+                                # Add raw cell
+                                if cur_cell:
+                                    self.update()
+                                    cur_cell = None
+                                self.add_cell("", init_text="\n".join(raw_lines))
+                                raw_lines = []
+                            state = lang
+                            if state:
+                                # New code block
+                                code_lines = []
+                            else:
+                                # New output block
+                                if not cur_cell:
+                                    # Treat orphan output block as raw text
+                                    raw_lines.append("")
+                        else:
+                            # Leaving fenced block
+                            leaving_block = True
+                            if state:
+                                # Leaving code block
+                                self.update()
+                                self.add_cell(state, init_text="\n".join(code_lines))
+                                code_lines = None
+                                cur_cell = self.note_cells["cells"][self.note_cells["curIndex"]]
+                            else:
+                                if not cur_cell:
+                                    # Treat orphan output block as raw text
+                                    raw_lines.append("")
+                            state = None
+                    elif state is not None:
+                        # Within fenced block
+                        if state:
+                            # Within code block
+                            code_lines.append(line)
+                        else:
+                            # Within output block
+                            if cur_cell:
+                                self.note_screen_buf.scroll_buf_up(line, None)
+                            else:
+                                # Treat orphan output line as raw code
+                                raw_lines.append("    "+line)
+
+                    elif MD_IMAGE_RE.match(line):
+                        # Inline image
+                        leaving_block = True
+                        match = MD_IMAGE_RE.match(line)
+                        alt = match.group(1).strip() or "image"
+                        ref_id = match.group(2).strip()
+                        blob_id = str(uuid.uuid4())
+                        blob_ids[ref_id] = blob_id
+                        if cur_cell:
+                            markup = BLOCKIMGFORMAT % (blob_id, blob_id, alt)
+                            self.note_screen_buf.scroll_buf_up("", None, markup=markup,
+                                                               row_params=["pagelet", {"blob": blob_id}])
+                        else:
+                            raw_lines.append("![%s](/blob/%s)" % (alt, blob_id))
+
+                    elif MD_REF_RE.match(line):
+                        # Reference list
+                        match = MD_REF_RE.match(line)
+                        ref_id = match.group(1).strip()
+                        if ref_id in blob_ids:
+                            blob_id = blob_ids[ref_id]
+                            tail = line[len(match.group(0)):]
+                            content_type, sep, tail2 = tail.partition(";")
+                            tem2, sep2, content_b64 = tail2.partition(",")
+                            content_length = len(base64.b64decode(content_b64))
+                            headers = {"content_type": content_type,
+                                       "content_length": content_length}
+                            self.note_screen_buf.add_blob(blob_id, content_type, content_b64)
+                            self.screen_callback(self.term_name, "", "create_blob",
+                                                 [blob_id, headers, content_b64])
+
+                    elif line or not leaving_block:
+                        # Non-blank line or not leaving block; handle raw line
+                        leaving_block = False
+                        if cur_cell:
+                            if line:
+                                # New raw block (if not blank line)
+                                self.update()
+                                cur_cell = None
+                                raw_lines = [line]
+                        elif line or raw_lines:
+                            raw_lines.append(line)
+                        
+                if raw_lines:
+                    # Add raw cell
+                    if cur_cell:
+                        self.update()
+                        cur_cell = None
+                    self.add_cell("", init_text="\n".join(raw_lines))
+                    raw_lines = []
+        except Exception, excp:
+            logging.warning("read_notebook: %s", excp)
+
+        self.update()
+
+    def add_cell(self, new_cell_type="code", init_text="", before_cell_number=0):
         # New cell after current cell, or before_cell_number
         logging.warning("ABCadd_cell: %s %s", new_cell_type, before_cell_number)
         self.leave_cell()
         self.note_cells["maxIndex"] += 1
         prev_index = self.note_cells["curIndex"]
         cell_index = self.note_cells["maxIndex"]
-        next_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
-        self.note_cells["cells"][cell_index] = next_cell
+        new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
+        new_cell["cellInput"] = split_lines(init_text) if init_text else []
+        self.note_cells["cells"][cell_index] = new_cell
         self.note_cells["curIndex"] = cell_index
         if not before_cell_number:
             before_cell_number = 2 + self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
@@ -940,7 +1136,7 @@ class Terminal(object):
             self.note_cells["cellIndices"].insert(before_cell_number-1, cell_index)
 
         self.screen_callback(self.term_name, "", "note_add_cell",
-                             [cell_index, new_cell_type, before_cell_index, [], []])
+                             [cell_index, new_cell_type, before_cell_index, new_cell["cellInput"]])
 
     def leave_cell(self, delete=False, move_up=False):
         """Leave current cell, deleting it if requested. Return index of new cell, or 0"""
@@ -983,6 +1179,7 @@ class Terminal(object):
         assert cell_index in self.note_cells["cells"]
         self.note_cells["curIndex"] = cell_index
         next_cell = self.note_cells["cells"][cell_index]
+        self.note_screen_buf.prefill_buf(next_cell["cellOutput"])
         next_cell["cellOutput"] = []
         return cell_index
 
@@ -1016,17 +1213,19 @@ class Terminal(object):
         except Exception, excp:
             pass
 
-    def exec_cell(self, cell_index, input_data):
+    def update_cell(self, cell_index, execute, input_data):
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return
-        logging.warning("ABCexec_cell: %s %s '%s'", cur_index, cell_index, input_data)
+        logging.warning("ABCupdate_cell: %s %s %s '%s'", cur_index, cell_index, execute, input_data)
         assert cell_index == cur_index
         cur_cell = self.note_cells["cells"][cur_index]
-        self.note_input = input_data.replace("\r\n","\n").replace("\r","\n").split("\n")
+        cur_cell["cellInput"] = split_lines(input_data)
 
-        cur_cell["cellInput"] = self.note_input[:]
+        if not execute:
+            return
 
+        self.note_input = cur_cell["cellInput"][:]   # Must be a copy
         if self.note_input[-1]:
             # Add blank line to clear any indentation level
             self.note_input.append("")
@@ -1105,14 +1304,15 @@ class Terminal(object):
         if not self.alt_mode:
             self.scroll_screen()
 
+        while self.screen_buf.delete_blob_ids:
+            self.screen_callback(self.term_name, "", "delete_blob", [self.screen_buf.delete_blob_ids.pop()])
+        while self.note_screen_buf.delete_blob_ids:
+            self.screen_callback(self.term_name, "", "delete_blob", [self.note_screen_buf.delete_blob_ids.pop()])
+
         self.update_callback()
 
     def update_callback(self, response_id=""):
         reconnecting = bool(response_id)
-        if not self.note_cells and self.screen_buf.delete_blob_ids:
-            for blob_id in self.screen_buf.delete_blob_ids:
-                self.screen_callback(self.term_name, "", "delete_blob", [blob_id])
-            self.screen_buf.delete_blob_ids = []
         if not self.note_cells or self.screen_buf.full_update or reconnecting:
             alt_screen = self.alt_screen if self.alt_mode else None
             if self.note_cells:
@@ -1135,11 +1335,6 @@ class Terminal(object):
                 self.gterm_output_buf = []
 
         if self.note_cells:
-            if not self.note_screen_buf.delete_blob_ids:
-                for blob_id in self.note_screen_buf.delete_blob_ids:
-                    self.screen_callback(self.term_name, "", "delete_blob", [blob_id])
-                self.note_screen_buf.delete_blob_ids = []
-
             if reconnecting:
                 self.screen_callback(self.term_name, response_id, "note_activate", [True, self.current_dir, self.note_shell])
                 for cell_index in self.note_cells["cellIndices"]:
@@ -1148,6 +1343,14 @@ class Terminal(object):
                     self.screen_callback(self.term_name, response_id, "note_add_cell",
                                          [cell["cellIndex"], cell["cellType"], 0,
                                           cell["cellInput"], cell["cellOutput"]])
+                    if cell["cellIndex"] != self.note_cells["curIndex"]:
+                        # Current cell will be updated later
+                        self.screen_callback(self.term_name, response_id, "note_row_update",
+                                             [False, True, self.active_rows,
+                                              self.width, self.height,
+                                              0, 0, 0,
+                                              [], cell["cellOutput"]])
+                self.screen_callback(self.term_name, "", "note_switch_cell", [self.note_cells["curIndex"]])
 
             full_update, update_rows, update_scroll = self.note_screen_buf.update(self.active_rows, self.width, self.height,
                                                                              self.cursor_x, self.cursor_y,
@@ -1680,8 +1883,8 @@ class Terminal(object):
                     params = {"validated": self.gterm_validated, "headers": headers}
                     self.graphterm_output(params, content)
                 else:
-                    content = content.replace("\r\n","\n").replace("\r","\n").split("\n")
-                    screen_buf.scroll_buf_up(content[0]+"...", None)
+                    content_lines = split_lines(content)
+                    screen_buf.scroll_buf_up(content_lines[0]+"...", None)
             else:
                 # Validated data
                 if response_type == "edit_file":
@@ -1732,6 +1935,10 @@ class Terminal(object):
                         logging.warning("No content_length specified for create_blob")
                     else:
                         # Note: blob content should be Base64 encoded
+                        if self.note_cells:
+                            content_type = headers.get("content_type", "")
+                            if content_type.startswith("image/"):
+                                self.note_screen_buf.add_blob(blob_id, content_type, content)
                         self.screen_callback(self.term_name, "", "create_blob",
                                              [blob_id, headers, content])
                 elif response_type == "frame_msg":
@@ -1755,11 +1962,11 @@ class Terminal(object):
             return
         self.screen_callback(self.term_name, response_id, "graphterm_output", self.gterm_output_buf)
 
-    def save_file(self, filepath, filedata):
+    def save_file(self, filepath, filedata, base64=True):
         status = ""
         try:
             with open(filepath, "w") as f:
-                f.write(base64.b64decode(filedata))
+                f.write(base64.b64decode(filedata) if base64 else filedata)
         except Exception, excp:
             status = str(excp)
         self.screen_callback(self.term_name, "", "save_status", [filepath, status])
@@ -2276,19 +2483,26 @@ class Multiplex(object):
                 return ""
             return term.click_paste(text, file_url=file_url, options=options)
 
-    def notebook(self, term_name, activate, prompts):
+    def notebook(self, term_name, activate, filepath, prompts):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.notebook(activate, prompts)
+            return term.notebook(activate, filepath, prompts)
 
-    def add_cell(self, term_name, new_cell_type, before_cell_number):
+    def save_notebook(self, term_name, filepath, input_data):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.add_cell(new_cell_type, before_cell_number)
+            return term.save_notebook(filepath, input_data)
+
+    def add_cell(self, term_name, new_cell_type, init_text, before_cell_number):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.add_cell(new_cell_type, init_text, before_cell_number)
 
     def switch_cell(self, term_name, cell_index, move_up):
         with self.lock:
@@ -2311,12 +2525,12 @@ class Multiplex(object):
                 return ""
             return term.complete_cell(incomplete)
 
-    def exec_cell(self, term_name, cur_index, input_data):
+    def update_cell(self, term_name, cur_index, execute, input_data):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.exec_cell(cur_index, input_data)
+            return term.update_cell(cur_index, execute, input_data)
 
     def reconnect(self, term_name, response_id=""):
         with self.lock:
