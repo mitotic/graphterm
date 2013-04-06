@@ -2366,8 +2366,9 @@ class Multiplex(object):
         term = self.proc.get(term_name)
         if term:
             term.resize(height, width, winheight=winheight, winwidth=winwidth)
-            fcntl.ioctl(term.fd, struct.unpack('i',struct.pack('I',termios.TIOCSWINSZ))[0],
-                        struct.pack("HHHH",height,width,0,0))
+            # Hack for buggy TIOCSWINSZ handling: treat large unsigned positive int32 values as negative (same bits)
+            winsz = termios.TIOCSWINSZ if termios.TIOCSWINSZ < 0 else struct.unpack('i',struct.pack('I',termios.TIOCSWINSZ))[0]
+            fcntl.ioctl(term.fd, winsz, struct.pack("HHHH",height,width,0,0))
 
     def term_names(self):
         with self.lock:
