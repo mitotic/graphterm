@@ -257,7 +257,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           click_paste <text> <file_url> {command:, clear_last:, normalize:, enter:}
           paste_command <text>
           get_finder <kind> <directory>
-          save_file <filepath> <filedata>
+          save_data <save_params> <filedata>
           notebook <activate> <filepath> <prompts>
           save_notebook <filepath> <input_data>
           add_cell <new_cell_type> <init_text> <before_cell_index>
@@ -312,9 +312,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if widget_stream:
                         widget_stream.send_packet(cmd[0].encode(self.term_encoding, "ignore"))
 
-                elif action == "save_file":
+                elif action == "save_data":
+                    # save_data <save_params> <filedata>
                     if self.lineterm:
-                        self.lineterm.save_file(term_name, cmd[0], cmd[1])
+                        self.lineterm.save_data(term_name, cmd[0], cmd[1])
 
                 elif action == "click_paste":
                     # click_paste: text, file_url, {command:, clear_last:, normalize:, enter:}

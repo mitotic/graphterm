@@ -60,6 +60,9 @@ var gScriptBuffer = [];
 var gForm = null;
 var gFormIndex = null;
 
+var gExpectUpload = null
+var gUploadFile = null;
+
 var gDebug = true;
 var gDebugKeys = false;
 var gDebugMessages = false;
@@ -278,12 +281,6 @@ function Connect(auth_user, auth_code) {
 function SignOut() {
     setCookie("GRAPHTERM_AUTH", null);
     $("body").html('Signed out.<p><a href="/">Sign in again</a>');
-}
-
-function bind_method(obj, method) {
-  return function() {
-    return method.apply(obj, arguments);
-  }
 }
 
 function setupTerminal() {
@@ -560,7 +557,6 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     var innerBlockElem = rowElem.children(".gterm-blockhtml");
     // Look for previous element with same id
     var scrollElem = $("#"+scrollElemId);
-    console.log("ABCappenddiv1", row_params, markup, scrollElem.length);
     if (scrollElem.length) {
 	// Found element with same id; overwrite
 	if (scrollElem.find(".gterm-blockimg").length == 1 && innerBlockElem.length == 1 && innerBlockElem.find(".gterm-blockimg").length == 1) {
@@ -591,7 +587,6 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
 	    scrollElem = rowElem.appendTo(parentElem);
 	}
     }
-    console.log("ABCappenddiv2", row_params, markup, scrollElem);
 
     if (row_opts.form_input) {
 	scrollElem.find(".gterm-form-button").bindclick(GTFormSubmit);
@@ -1045,7 +1040,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				commands.push( $(this).text().substr($(this).find(".gterm-cmd-prompt").text().length+1) );
 			    } );
 			    var cmdText = commands.join("\n") + "\n";
-			    gWebSocket.write([["save_file", response_params.filepath, utf8_to_b64(cmdText)]]);
+			    gWebSocket.write([["save_data", {x_gterm_filepath: response_params.filepath,
+							     x_gterm_popstatus: "alert",
+							     x_gterm_encoding: "base64"}, utf8_to_b64(cmdText)]]);
 
 			} else if (response_params.action == "buffer") {
 			    if (response_params.modify) {
@@ -1060,6 +1057,23 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    } else if (response_type == "edit_file") {
 			EndFullpage();
 			GTStartEdit(response_params, content);
+
+		    } else if (response_type == "upload_file") {
+			EndFullpage();
+			if (gUploadFile) {
+			    GTTransmitFile(gUploadFile[0], gUploadFile[1], gUploadFile[2]);
+			    gExpectUpload = null;
+			} else {
+			    var uploadContent = '<div> <b>Select file to upload:</b><input type="file" class="gterm-fileinput" name="gterm-fileinput"></input><div class="gterm-filedrop">or Drag and drop file here</div><input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input> </div>';
+			    var uploadHtml = '<div class="pagelet entry '+classes+'" data-gtermpromptindex="'+gPromptIndex+'">'+uploadContent+'</div>\n'
+			    gExpectUpload = {file_types: params.expect_type || "any", callback: null};
+			    var newElem = $(uploadHtml).appendTo("#session-bufscreen");
+			    newElem.find(".gterm-filedrop").rebind('dragover', GTFileDrag);
+			    newElem.find(".gterm-filedrop").rebind('dragleave', GTFileDrag);
+			    newElem.find(".gterm-filedrop").rebind('drop', GTDropHandler);
+			    newElem.find(".gterm-fileinput").rebind("change", GTFileBrowse);
+	                    newElem.find(".gterm-form-cancel").bindclick(GTUploadCancel);
+			}
 
  		    } else if (response_type == "pagelet_json") {
 			try {
@@ -2383,6 +2397,9 @@ function AjaxKeypress(evt) {
     } else if (gForm && k == String.fromCharCode(3)) {
 	// Ctrl-C exit from form
 	GTEndForm("", true);
+    } else if (gExpectUpload && k == String.fromCharCode(3)) {
+	// Ctrl-C exit from upload
+	GTUploadCancel(null);
     } else if (gPopupType && k == String.fromCharCode(3)) {
 	// Ctrl-C exit from popup
 	popupClose();
@@ -2579,6 +2596,7 @@ function GTResizeCKEditor() {
 }
 
 function GTStartEdit(params, content) {
+    var editor = params.editor ? params.editor : gDefaultEditor;
     console.log("GTStartEdit", editor, params);
     $("#terminal").hide();
     if (params.editor == "textarea") {
@@ -2586,7 +2604,6 @@ function GTStartEdit(params, content) {
 	$("#gterm-texteditarea-content").val(content);
 	popupShow("#gterm-texteditarea", "editarea");
     } else {
-	var editor = params.editor ? params.editor : gDefaultEditor;
 	var url = gParams.apps_url+"/"+editor+".html";
 	gFrameDispatcher.createFrame(params, content, url, "gterm-editframe");
 	$("#gterm-editframe").attr("src", url);
@@ -2612,7 +2629,9 @@ function GTEndEdit(newContent, oldContent, params, save) {
 	    if (params.command) {
 		gWebSocket.write([["input", params.command, utf8_to_b64(newContent)]]);
 	    } else {
-		gWebSocket.write([["save_file", params.filepath, utf8_to_b64(newContent)]]);
+		gWebSocket.write([["save_data", {x_gterm_filepath: params.filepath,
+						 x_gterm_popstatus: "alert",
+						 x_gterm_encoding: "base64"}, utf8_to_b64(newContent)]]);
 	    }
 	}
     }
@@ -2624,6 +2643,8 @@ function GTEndEdit(newContent, oldContent, params, save) {
     } else {
 	$("#gterm-editframe").attr("src", "");
 	$("#gterm-editframe").hide();
+	if (!save)
+	    GTPopAlert("File not saved");   // Seems to be needed to return focus to terminal. Why?
     }
     $("#terminal").show();
     ScrollScreen();
@@ -3287,13 +3308,27 @@ function GTDragOver(evt) {
 
 function GTDropHandler(evt) {
     console.log("GTDropHandler", this, evt);
+    var transfer = evt.originalEvent.dataTransfer;
     if (gtDragElement != this) {
 	try {
 	    var gterm_mime = $(this).attr("data-gtermmime") || "";
 	    var gterm_url = makeFileURL($(this).attr("href") || "");
-	    if (evt.originalEvent.dataTransfer.files.length) {
+	    if (transfer.files) {
+		// Handle dropped files
+		if (gExpectUpload) {
+		    GTFileDropHandler.call(transfer, evt.target);
+		} else if (gterm_mime == "x-graphterm/directory") {
+		    GTFileDropHandler.call(transfer, evt.target);
+		    var options = {};
+		    options.command = "gupload %(path); cd %(path); gls -f";
+		    //options.dest_url = gterm_url;
+		    options.enter = true;
+		    gtermClickPaste("", gterm_url, options);
+		} else {
+		    alert("Must drag-and-drop into directory");
+		}
 	    } else {
-		var text = evt.originalEvent.dataTransfer.getData("text/plain") || "";
+		var text = transfer.getData("text/plain") || "";
 		var file_url = "";
 		if (text) {
 		    var srcText = makeFileURL(text);
@@ -3323,6 +3358,71 @@ function GTDropHandler(evt) {
     }
 
     return GTPreventHandler(evt);
+}
+
+function GTFileDrag(evt) {
+    $(evt.target).toggleClass("hover", evt.type == "dragover");
+    return GTPreventHandler(evt);
+}
+
+function GTFileBrowse(evt) {
+    console.log("graphterm: GTFileBrowse: ", evt);
+    try {
+	var target = null;
+	if (evt.target) {
+	    var newTarget = $(evt.target).parent().find(".gterm-filedrop");
+	    if (newTarget.length)
+		target = newTarget[0];
+	}
+
+	GTFileDropHandler.call(this, target);
+	if (evt.target)
+	    $(evt.target).addClass("ui-disabled");
+    } catch (err) {
+	console.log("graphterm: GTFileBrowse: "+err);
+    }
+    return GTPreventHandler(evt);
+}
+
+function GTFileDropHandler(target) {
+    if (this.files.length != 1) {
+	alert("Please select a single file");
+	return;
+    }
+    var file = this.files[0];
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+	var dataUri = evt.target.result;
+	var offset = dataUri.indexOf("base64,");
+	var b64_data = dataUri.substr(offset+"base64,".length);
+	if (gExpectUpload) {
+	    gExpectUpload = null;
+	    GTTransmitFile(file.name, file.type, b64_data);
+	} else {
+	    gUploadFile = [file.name, file.type, b64_data];
+	}
+    };
+
+    reader.onerror = function(evt) {
+	alert("Failed to read file "+file.name+" (code="+evt.target.error.code+")");
+    };
+
+    reader.readAsDataURL(file);
+}
+
+function GTTransmitFile(filename, mimetype, b64_data) {
+    gExpectUpload = null;
+    gUploadFile = null;
+    console.log("GTTransmitFile:", filename, mimetype, b64_data.length);
+    if (gWebSocket && gParams.controller) {
+	gWebSocket.write([["save_data", {x_gterm_filename: filename, content_type: mimetype,
+					 x_gterm_encoding: "base64"}, b64_data]]);
+    }
+}
+
+function GTUploadCancel(evt) {
+    console.log("GTUploadCancel");
+    GTTransmitFile("", "none/none", "")
 }
 
 function ScrollEventHandler(event) {

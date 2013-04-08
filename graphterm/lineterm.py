@@ -31,6 +31,7 @@ except NotImplementedError:
     import random
 
 import base64
+import errno
 import hashlib
 import hmac
 import pipes
@@ -44,6 +45,8 @@ import uuid
 from bin import gtermapi
 
 MAX_SCROLL_LINES = 500
+
+CHUNK_BYTES = 4096            # Chunk size for receiving data in stdin
 
 MAX_PAGELET_BYTES = 1000000  # Max size for pagelet buffer
 
@@ -997,7 +1000,7 @@ class Terminal(object):
                 md_lines.append("[%d]: %s" % (j+1, ref_blob))
 
         filedata = "\n".join(md_lines) + "\n"
-        self.save_file(fullpath, filedata, base64=False)
+        self.save_data({"x_gterm_filepath": fullpath, "content_type": "text/x-markdown"}, filedata)
 
     def read_notebook(self, filepath):
         fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
@@ -1962,14 +1965,35 @@ class Terminal(object):
             return
         self.screen_callback(self.term_name, response_id, "graphterm_output", self.gterm_output_buf)
 
-    def save_file(self, filepath, filedata, base64=True):
+    def save_data(self, save_params, filedata):
+        params = save_params.copy()
         status = ""
-        try:
-            with open(filepath, "w") as f:
-                f.write(base64.b64decode(filedata) if base64 else filedata)
-        except Exception, excp:
-            status = str(excp)
-        self.screen_callback(self.term_name, "", "save_status", [filepath, status])
+        filepath = params.get("x_gterm_filepath", "")
+        encoded = params.get("x_gterm_encoding") == "base64"
+        if filepath:
+            try:
+                with open(filepath, "w") as f:
+                    f.write(base64.b64decode(filedata) if encoded else filedata)
+            except Exception, excp:
+                status = str(excp)
+
+            if params.get("x_gterm_popstatus"):
+                self.screen_callback(self.term_name, "", "save_status", [filepath, status])
+
+            if params.get("x_gterm_sendstatus"):
+                params["x_gterm_status"] = status
+                self.pty_write(json.dumps(params)+"\n\n")
+        else:
+            filename = params.get("x_gterm_filename", "")
+            params["x_gterm_encoded_length"] = len(filedata)
+            try:
+                self.pty_write(json.dumps(params)+"\n\n")
+                if filedata:
+                    self.pty_write(filedata)
+            except (IOError, OSError), excp:
+                print >> sys.stderr, "lineterm: Error in writing to %s (%s %s)" % (self.term_name, excp.__class__, excp)
+                self.screen_callback(self.term_name, "", "save_status", [filename, str(excp)])
+                
 
     def get_finder(self, kind, directory=""):
         test_finder_head = """<table frame=none border=0>
@@ -2161,7 +2185,27 @@ class Terminal(object):
         if "\x0d" in data or "\x0a" in data:
             # Data contains CR/LF
             self.enter()
-        os.write(self.fd, data)
+        nbytes = len(data)
+        offset = 0
+        while offset < nbytes:
+            # Need to break data up into chunks; otherwise it hangs the pty
+            count = min(CHUNK_BYTES, nbytes-offset)
+            retry = 50
+            while count > 0:
+                try:
+                    sent = os.write(self.fd, data[offset:offset+count])
+                    if not sent:
+                        raise Exception("Failed to write to terminal")
+                    offset += sent
+                    count -= sent
+                except OSError, excp:
+                    if excp.errno != errno.EAGAIN:
+                        raise excp
+                    retry -= 1
+                    if retry > 0:
+                        time.sleep(0.01)
+                    else:
+                        raise excp
 
     def pty_read(self, data):
         if self.trim_first_prompt:
@@ -2443,8 +2487,8 @@ class Multiplex(object):
                 return
             try:
                 term.pty_write(data)
-            except (IOError, OSError):
-                print >> sys.stderr, "lineterm: Error in writing to %s; closing it" % term_name
+            except (IOError, OSError), excp:
+                print >> sys.stderr, "lineterm: Error in writing to %s (%s %s); closing it" % (term_name, excp.__class__, excp)
                 self.kill_term(term_name)
 
     def term_update(self, term_name):
@@ -2463,12 +2507,12 @@ class Multiplex(object):
             except KeyError:
                 return "ERROR in dump"
 
-    def save_file(self, term_name, filepath, filedata):
+    def save_data(self, term_name, save_params, filedata):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return
-            term.save_file(filepath, filedata)
+            term.save_data(save_params, filedata)
 
     def get_finder(self, term_name, kind, directory=""):
         with self.lock:

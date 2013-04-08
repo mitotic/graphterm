@@ -1,0 +1,160 @@
+#!/usr/bin/env python
+#
+
+"""
+gupload: graphterm-aware upload
+
+To upload file:
+   gupload directory/filename
+
+To pipe uploaded data, use
+   gupload 3>&1 1>&2 2>&3- | cat > outfile
+"""
+
+import base64
+import json
+import os
+import sys
+import tty
+import termios
+
+from optparse import OptionParser
+
+import gtermapi
+
+CHUNK_BYTES = 4096
+
+Work_dir = os.getcwd()
+
+usage = "usage: %prog [-f] [<filepath/directory>]"
+parser = OptionParser(usage=usage)
+parser.add_option("-w", "--write",
+                  action="store_true", dest="write", default=False,
+                  help="Overwrite existing file")
+parser.add_option("-v", "--verbose",
+                  action="store_true", dest="verbose", default=False,
+                  help="Verbose")
+parser.add_option("", "--veryverbose",
+                  action="store_true", dest="veryverbose", default=False,
+                  help="Veryverbose")
+
+(options, args) = parser.parse_args()
+
+if len(args) > 1:
+    print >> sys.stderr, "To many arguments"
+    sys.exit(1)
+
+assert args or (not options.verbose and not options.veryverbose)
+
+to_dir = False
+if args:
+    filename = args[0]
+    fullname = os.path.expanduser(filename)
+    filepath = os.path.normcase(os.path.abspath(fullname))
+
+    if os.path.exists(filepath):
+        if os.path.isdir(filepath):
+            to_dir = True
+        elif not options.write:
+            print >> sys.stderr, "Specify -w option to overwrite file %s" % filepath
+            sys.exit(1)
+else:
+    filename = ""
+    filepath = ""
+
+params = {"display": "block", "current_directory": Work_dir}
+html_headers = {"x_gterm_response": "upload_file",
+                "x_gterm_parameters": params
+                }
+gtermapi.wrap_write("", headers=html_headers)
+
+Stdin_fd = sys.stdin.fileno()
+Saved_settings = termios.tcgetattr(Stdin_fd)
+Stderr_data = None
+
+try:
+    # Raw tty input without echo
+    tty.setraw(Stdin_fd)
+    line = ""
+    header_line = ""
+    while True:
+        ch = sys.stdin.read(1)
+        if ch == "\x03" or ch == "\x04": # ^C/^D
+            gtermapi.write_blank()
+            sys.exit(1)
+        if ch != "\n":
+            line += ch
+            continue
+        if line:
+            header_line = line
+            line = ""
+        else:
+            # Terminal null line
+            break
+
+    if options.veryverbose:
+        print >> sys.stderr, "header=%s\n" % (header_line,)
+
+    # Process headers
+    if not header_line:
+        gtermapi.write_blank()
+        sys.exit(1)
+
+    headers = json.loads(header_line)
+
+    if "x_gterm_filename" not in headers:
+        gtermapi.write_blank()
+        sys.exit(1)
+
+    content_type = headers["content_type"]
+    if content_type.startswith("none/"):
+        gtermapi.write_blank()
+        sys.exit(1)
+
+    filename = headers["x_gterm_filename"]
+    expect_length = headers["x_gterm_encoded_length"]
+    if options.veryverbose:
+        print >> sys.stderr, "file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length)
+
+    if expect_length:
+        count = expect_length
+        assert not (count % 4)
+        prefix = ""
+        content_list = []
+        while count > 0:
+            chunk = sys.stdin.read(min(count, CHUNK_BYTES))
+            assert chunk
+            count = count - len(chunk)
+            line = prefix + chunk
+            prefix = ""
+            offset = len(line) % 4
+            if offset:
+                prefix = line[-offset:]
+                line = line[:-offset]
+            if options.veryverbose:
+                print >> sys.stderr, "line(%d,%s)=%s" % (len(chunk), count, line,)
+            content_list.append(base64.b64decode(line))
+        assert not prefix
+        content = "".join(content_list)
+    else:
+        b64_content = ""
+        content = ""
+except KeyboardInterrupt:
+    sys.exit(1)
+finally:
+    termios.tcsetattr(Stdin_fd, termios.TCSADRAIN, Saved_settings)
+
+gtermapi.write_blank()
+
+if filepath:
+    if to_dir:
+        filepath = os.path.join(filepath, filename)
+    with open(filepath, "w") as f:
+        f.write(content)
+    if options.verbose or options.veryverbose:
+        print >> sys.stderr, "Wrote file "+filepath
+else:
+    Stderr_data = content
+
+if Stderr_data is not None:
+    sys.stderr.write(content)
