@@ -1054,6 +1054,18 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    }
 			}
 
+		    } else if (response_type == "eval_js") {
+			var output = "";
+			try {
+			    console.log(content);
+			    output = eval(content) || "";
+			} catch (err) {
+			    output = err+"";
+			}
+			console.log("> "+output);
+			gWebSocket.write([["keypress", output+"\n"]]);
+			gWebSocket.write([["keypress", String.fromCharCode(4)]]);
+
 		    } else if (response_type == "edit_file") {
 			EndFullpage();
 			GTStartEdit(response_params, content);
