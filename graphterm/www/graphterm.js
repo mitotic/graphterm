@@ -3313,15 +3313,21 @@ function GTDropHandler(evt) {
 	try {
 	    var gterm_mime = $(this).attr("data-gtermmime") || "";
 	    var gterm_url = makeFileURL($(this).attr("href") || "");
-	    if (transfer.files) {
+	    if (transfer.files && transfer.files.length) {
 		// Handle dropped files
+		if (transfer.files.length != 1) {
+		    alert("Please select a single file");
+		    return;
+		}
+		var filename = transfer.files[0].name;
+
 		if (gExpectUpload) {
 		    GTFileDropHandler.call(transfer, evt.target);
 		} else if (gterm_mime == "x-graphterm/directory") {
 		    GTFileDropHandler.call(transfer, evt.target);
 		    var options = {};
 		    options.command = "gupload %(path); cd %(path); gls -f";
-		    //options.dest_url = gterm_url;
+		    options.dest_url = filename;
 		    options.enter = true;
 		    gtermClickPaste("", gterm_url, options);
 		} else {

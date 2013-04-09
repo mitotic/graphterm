@@ -36,6 +36,15 @@ IMGFORMAT = '<td><a class="gterm-link gterm-imglink %(classes)s" href="%(fileurl
 
 TXTFORMAT = '<td><a class="gterm-link %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
 
+Home_dir = os.path.expanduser("~")
+Work_dir = os.getenv("PWD", "") or os.getcwd()
+Parent_dir, dir_name = os.path.split(Work_dir)
+
+Special_dirs = [(Parent_dir, ".."),
+                (Work_dir, "."),
+                (Home_dir, "~")]
+
+
 def file2html(filepath, filename, filemode=0):
     mimetype = None
     if filename in SPECIAL_FILES:
@@ -98,7 +107,7 @@ def files2html(file_list, ncols=4):
 
 def get_file_info(filename):
     filename = os.path.expanduser(filename)
-    filepath = os.path.normcase(os.path.abspath(filename))
+    filepath = os.path.normcase(os.path.normpath(os.path.join(Work_dir, filename)))
     if filename.startswith(".."):
         filename = filepath
     if os.path.exists(filepath):
@@ -130,16 +139,8 @@ parser.add_option("-t", "--time",
 
 (options, args) = parser.parse_args()
 
-home_dir = os.path.expanduser("~")
-work_dir = os.getcwd()
-parent_dir, dir_name = os.path.split(work_dir)
-
-special_dirs = [(parent_dir, ".."),
-                (work_dir, "."),
-                (home_dir, "~")]
-
 if not args:
-    args = os.listdir(work_dir)
+    args = os.listdir(Work_dir)
     if not options.all:
         args = [x for x in args if not x.startswith(".")]
 
@@ -166,12 +167,12 @@ Table_list = ['<table frame=none border=0>',
               '<colgroup colspan=%d width=1*>' % (ncols,),
               ]
 
-Table_list.append(files2html(special_dirs, ncols))
+Table_list.append(files2html(Special_dirs, ncols))
 Table_list.append(files2html(File_list, ncols))
 
 Table_list.append('</table>')
 
 html = "\n".join(Table_list) + "\n"
 
-gtermapi.write_scroll_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=work_dir)
+gtermapi.write_scroll_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=Work_dir)
 

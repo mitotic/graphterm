@@ -38,7 +38,7 @@ Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOK
 Export_host = os.getenv("GRAPHTERM_EXPORT", "") or (not os.getenv("GRAPHTERM_COOKIE", "") and os.getenv("LC_GRAPHTERM_EXPORT", ""))
 Path = os.getenv("GRAPHTERM_PATH", "") or os.getenv("LC_GRAPHTERM_PATH", "")
 Dimensions = os.getenv("GRAPHTERM_DIMENSIONS", "") or os.getenv("LC_GRAPHTERM_DIMENSIONS", "") # colsxrows[;widthxheight]
-Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "")
+Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "") or os.getenv("LC_GRAPHTERM_SHARED_SECRET", "")
 URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
 
 Host, Session = Path.split("/") if Path else ("", "") 

@@ -55,7 +55,7 @@ UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
 NO_COPY_ENV = set(["GRAPHTERM_EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
-LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_DIMENSIONS", "GRAPHTERM_PATH"]
+LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_DIMENSIONS", "GRAPHTERM_PATH", "GRAPHTERM_SHARED_SECRET"]
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)     # (prompt_escape, pagelet_escape)
@@ -240,7 +240,10 @@ def which(filepath, add_path=[]):
     return None
 
 def getcwd(pid):
-    """Return working directory of running process"""
+    """Return working directory of running process
+    Note: This will return os.path.realpath of current directory (eliminating symbolic links),
+    which may differ from the $PWD value
+    """
     if sys.platform.startswith("linux"):
         command_args = ["pwdx", str(pid)]
     else:
@@ -2072,11 +2075,12 @@ class Terminal(object):
 
         if dest_url:
             dest_comps = split_file_url(dest_url, check_host_secret=self.shared_secret)
-            if expect_url and dest_comps and dest_comps[JHOST]:
+            remote_dest = bool(dest_comps and dest_comps[JHOST])
+            if expect_url and remote_dest:
                 dest_paste = create_file_uri(dest_comps)
             else:
                 dest_paste = relative_file_url(dest_url, cwd)
-            if command == "gcp" and not file_url_comps[JHOST] and not dest_comps[JHOST]:
+            if command == "gcp" and not (file_url_comps and file_url_comps[JHOST]) and not remote_dest:
                 # Source and destination on this host; move instead of copying
                 command = "mv"
         else:
@@ -2146,7 +2150,7 @@ class Terminal(object):
             if dest_paste:
                 if paste_text and paste_text[-1] != " ":
                     paste_text += " "
-                paste_text += dest_paste
+                paste_text += shell_quote(dest_paste)
             if enter and offset and not pre_line and command:
                 # Empty command line with pasted command
                 paste_text += "\n"
