@@ -61,24 +61,28 @@ def wrap(html, headers={}):
     """Wrap html, with headers, between escape sequences"""
     return Html_escapes[0] + json.dumps(headers) + "\n\n" + html + Html_escapes[1]
 
-def write(data):
+def write(data, stderr=False):
     """Write data to stdout and flush"""
     if Api_version < Min_version:
         raise Exception("Obsolete API version %s (need %d.%d+)" % (API_VERSION, Min_version[0], Min_version[1]))
 
-    sys.stdout.write(data)
-    sys.stdout.flush()
+    if stderr:
+        sys.stderr.write(data)
+        sys.stderr.flush()
+    else:
+        sys.stdout.write(data)
+        sys.stdout.flush()
 
-def wrap_write(content, headers={}):
+def wrap_write(content, headers={}, stderr=False):
     """Wrap content, with headers, and write to stdout"""
-    write(wrap(content, headers=headers))
+    write(wrap(content, headers=headers), stderr=stderr)
 
-def write_html(html):
+def write_html(html, stderr=False):
     """Write raw html to stdout"""
     html_headers = {"content_type": "text/html"}
-    wrap_write(html, headers=html_headers)
+    wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_pagelet(html, display="block", dir="", add_headers={}):
+def write_pagelet(html, display="block", dir="", add_headers={}, stderr=False):
     """Write html pagelet to stdout"""
     params = {"display": display,
               "scroll": "top",
@@ -88,9 +92,9 @@ def write_pagelet(html, display="block", dir="", add_headers={}):
                     "x_gterm_response": "pagelet",
                     "x_gterm_parameters": params
                     }
-    wrap_write(html, headers=html_headers)
+    wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_scroll_pagelet(html, display="block", dir="", add_headers={}):
+def write_scroll_pagelet(html, display="block", dir="", add_headers={}, stderr=False):
     """Write scrollable html pagelet to stdout"""
     params = "scroll=top"
     if display:
@@ -102,22 +106,22 @@ def write_scroll_pagelet(html, display="block", dir="", add_headers={}):
 
     PAGELETFORMAT = '<!--gterm pagelet %s-->'
     prefix = PAGELETFORMAT % (params,)
-    write_html(prefix+html)
+    write_html(prefix+html, stderr=stderr)
 
-def write_form(html, command="", dir=""):
+def write_form(html, command="", dir="", stderr=False):
     """Write form pagelet to stdout"""
     html_headers = {"content_type": "text/html",
                     "x_gterm_response": "pagelet",
                     "x_gterm_parameters": {"display": "fullpage", "scroll": "top", "current_directory": dir,
                                            "form_input": True, "form_command": command}
                     }
-    wrap_write(html, headers=html_headers)
+    wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_blank(display="fullpage"):
+def write_blank(display="fullpage", stderr=False):
     """Write blank pagelet to stdout"""
-    write_pagelet("", display=display)
+    write_pagelet("", display=display, stderr=stderr)
 
-def display_blockimg(url, overwrite=False, alt=""):
+def display_blockimg(url, overwrite=False, alt="", stderr=False):
     """Display block image in a sequence.
     New image display causes previous images to be hidden.
     Display of hidden images can be toggled by clicking.
@@ -127,9 +131,9 @@ def display_blockimg(url, overwrite=False, alt=""):
     add_headers = {"classes": "gterm-blockseq"}
     if overwrite:
         add_headers["block"] = "overwrite"
-    write_pagelet(IMGFORMAT % url, add_headers=add_headers)
+    write_pagelet(IMGFORMAT % url, add_headers=add_headers, stderr=stderr)
 
-def display_blockhtml_img(url, overwrite=False, toggle=False, alt=""):
+def display_blockhtml_img(url, overwrite=False, toggle=False, alt="", stderr=False):
     """Display image from url, overwriting previous image, if desired.
     """
     blob_id = get_blob_id(url)
@@ -146,14 +150,14 @@ def display_blockhtml_img(url, overwrite=False, toggle=False, alt=""):
     BLOCKIMGFORMAT = '<!--gterm pagelet %s--><div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
     html = BLOCKIMGFORMAT % (params, url)
         
-    write_html(html)
+    write_html(html, stderr=stderr)
 
-def open_url(url, target="_blank"):
+def open_url(url, target="_blank", stderr=False):
     """Open url in new window"""
     url_headers = {"x_gterm_response": "open_url",
                    "x_gterm_parameters": {"url": url, "target": target}
                    }
-    wrap_write("", headers=url_headers)
+    wrap_write("", headers=url_headers, stderr=stderr)
 
 def file_hmac(filepath, host_secret):
         return hmac.new(str(host_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
@@ -187,7 +191,7 @@ def get_blob_id(blob_url):
     else:
         return ""
 
-def create_blob(content=None, from_file="", content_type="", blob_id=""):
+def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=False):
     """Create blob and returns URL to blob"""
     if content is None:
         if not from_file:
@@ -220,7 +224,7 @@ def create_blob(content=None, from_file="", content_type="", blob_id=""):
                "content_length": len(content)
                }
 
-    wrap_write(base64.b64encode(content), headers=headers)
+    wrap_write(base64.b64encode(content), headers=headers, stderr=stderr)
     return blob_url
     
 class BlobStringIO(StringIO.StringIO):
@@ -235,13 +239,13 @@ class BlobStringIO(StringIO.StringIO):
         assert blob_url == self.blob_url
         return blob_url
         
-def preload_images(urls):
+def preload_images(urls, stderr=False):
     params = {"urls": urls}
     headers = {"x_gterm_response": "preload_images",
                "x_gterm_parameters": params
                }
 
-    wrap_write("", headers=headers)
+    wrap_write("", headers=headers, stderr=stderr)
 
 FILE_URI_PREFIX = "file://"
 FILE_PREFIX = "/file/"
@@ -297,8 +301,10 @@ def split_file_url(url, check_host_secret=None):
                 hostname = ""
 	return [server_port, hostname, filename, filepath, query]
 
-def read_form_input(form_html):
-    write_form(form_html)
+def read_form_input(form_html, stderr=False):
+    write_form(form_html, stderr=stderr)
+
+    assert sys.stdin.isatty()
     saved_settings = termios.tcgetattr(sys.stdin.fileno())
     try:
         tty.setraw(sys.stdin.fileno())
@@ -416,12 +422,13 @@ class FormParser(object):
         input_html = self.create_input_html(id_suffix)
         return Form_template % (id_suffix, self.title, input_html, id_suffix, opt_names) 
         
-    def parse_args(self, args=None):
+    def parse_args(self, args=None, stderr=False):
         if args is None and len(sys.argv) < 2:
-            if sys.stdout.isatty() and Lterm_cookie:
+            stdfile = sys.stderr if stderr else sys.stdout
+            if stdfile.isatty() and Lterm_cookie:
                 assert self.command
-                write_form(self.create_form(), command=self.command)
-            else:
+                write_form(self.create_form(), command=self.command, stderr=stderr)
+            elif not stderr:
                 print >> sys.stderr, self.get_usage()
             sys.exit(1)
 

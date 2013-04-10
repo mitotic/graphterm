@@ -3338,7 +3338,7 @@ function GTDropHandler(evt) {
 		} else if (gterm_mime == "x-graphterm/directory") {
 		    GTFileDropHandler.call(transfer, evt.target);
 		    var options = {};
-		    options.command = "gupload %(path); cd %(path); gls -f";
+		    options.command = "gupload %(path) && cd %(path) && gls -f";
 		    options.dest_url = filename;
 		    options.enter = true;
 		    gtermClickPaste("", gterm_url, options);

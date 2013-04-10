@@ -13,14 +13,29 @@ import gtermapi
 
 usage = "usage: %prog <javascript>"
 parser = OptionParser(usage=usage)
+parser.add_option("-f", "--file",
+                  action="store_true", dest="file", default=False,
+                  help="Read from file")
 
 (options, args) = parser.parse_args()
+
+if options.file:
+    if not args:
+        print >> sys.stderr, "Please provide filename"
+        sys.exit(1)
+    with open(args[0], "r") as f:
+        js = "".join(f.readlines())
+else:
+    js = " ".join(args)
 
 Headers = {"content_type": "text/plain"}
 Headers["x_gterm_response"] = "eval_js"
 Headers["x_gterm_parameters"] = {}
 
-gtermapi.wrap_write(" ".join(args), headers=Headers)
+gtermapi.wrap_write(js, headers=Headers, stderr=True)
 
 lines = sys.stdin.readlines()
+
+if not sys.stdout.isatty():
+    print "".join(lines)
     

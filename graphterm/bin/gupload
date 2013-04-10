@@ -7,8 +7,11 @@ gupload: graphterm-aware upload
 To upload file:
    gupload directory/filename
 
-To pipe uploaded data, use
-   gupload 3>&1 1>&2 2>&3- | cat > outfile
+To pipe uploaded data:
+   gupload | cat > outfile
+
+To switch stdout and stderr:
+   gupload 3>&1 1>&2 2>&3-
 """
 
 import base64
@@ -24,13 +27,16 @@ import gtermapi
 
 CHUNK_BYTES = 4096
 
-Work_dir = os.getcwd()
+Work_dir = os.getenv("PWD", "") or os.getcwd()
 
 usage = "usage: %prog [-f] [<filepath/directory>]"
 parser = OptionParser(usage=usage)
 parser.add_option("-w", "--write",
                   action="store_true", dest="write", default=False,
                   help="Overwrite existing file")
+parser.add_option("-o", "--stdout",
+                  action="store_true", dest="stdout", default=False,
+                  help="Use STDOUT for pagelet output")
 parser.add_option("-v", "--verbose",
                   action="store_true", dest="verbose", default=False,
                   help="Verbose")
@@ -44,13 +50,14 @@ if len(args) > 1:
     print >> sys.stderr, "To many arguments"
     sys.exit(1)
 
+assert sys.stdin.isatty()
+
 assert args or (not options.verbose and not options.veryverbose)
 
 to_dir = False
 if args:
-    filename = args[0]
-    fullname = os.path.expanduser(filename)
-    filepath = os.path.normcase(os.path.abspath(fullname))
+    expname = os.path.expanduser(args[0])
+    filepath = os.path.normcase(os.path.normpath(os.path.join(Work_dir, expname)))
 
     if os.path.exists(filepath):
         if os.path.isdir(filepath):
@@ -58,19 +65,28 @@ if args:
         elif not options.write:
             print >> sys.stderr, "Specify -w option to overwrite file %s" % filepath
             sys.exit(1)
+    else:
+        head, tail = os.path.split(filepath)
+        if head:
+            if os.path.exists(head):
+                if not os.path.isdir(head):
+                    print >> sys.stderr, "Cannot overwrite file %s" % head
+                    sys.exit(1)
+            else:
+                print >> sys.stderr, "Please create directory %s" % head
+                sys.exit(1)
 else:
-    filename = ""
     filepath = ""
 
 params = {"display": "block", "current_directory": Work_dir}
 html_headers = {"x_gterm_response": "upload_file",
                 "x_gterm_parameters": params
                 }
-gtermapi.wrap_write("", headers=html_headers)
+gtermapi.wrap_write("", headers=html_headers, stderr=not options.stdout)
 
 Stdin_fd = sys.stdin.fileno()
 Saved_settings = termios.tcgetattr(Stdin_fd)
-Stderr_data = None
+Stdout_data = None
 
 try:
     # Raw tty input without echo
@@ -80,7 +96,7 @@ try:
     while True:
         ch = sys.stdin.read(1)
         if ch == "\x03" or ch == "\x04": # ^C/^D
-            gtermapi.write_blank()
+            gtermapi.write_blank(stderr=not options.stdout)
             sys.exit(1)
         if ch != "\n":
             line += ch
@@ -97,18 +113,18 @@ try:
 
     # Process headers
     if not header_line:
-        gtermapi.write_blank()
+        gtermapi.write_blank(stderr=not options.stdout)
         sys.exit(1)
 
     headers = json.loads(header_line)
 
     if "x_gterm_filename" not in headers:
-        gtermapi.write_blank()
+        gtermapi.write_blank(stderr=not options.stdout)
         sys.exit(1)
 
     content_type = headers["content_type"]
     if content_type.startswith("none/"):
-        gtermapi.write_blank()
+        gtermapi.write_blank(stderr=not options.stdout)
         sys.exit(1)
 
     filename = headers["x_gterm_filename"]
@@ -144,7 +160,7 @@ except KeyboardInterrupt:
 finally:
     termios.tcsetattr(Stdin_fd, termios.TCSADRAIN, Saved_settings)
 
-gtermapi.write_blank()
+gtermapi.write_blank(stderr=not options.stdout)
 
 if filepath:
     if to_dir:
@@ -154,7 +170,10 @@ if filepath:
     if options.verbose or options.veryverbose:
         print >> sys.stderr, "Wrote file "+filepath
 else:
-    Stderr_data = content
+    Stdout_data = content
 
-if Stderr_data is not None:
-    sys.stderr.write(content)
+if Stdout_data is not None:
+    if options.stdout:
+        sys.stderr.write(content)
+    else:
+        sys.stdout.write(content)
