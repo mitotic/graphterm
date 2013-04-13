@@ -1085,16 +1085,7 @@ class Terminal(object):
                         match = MD_REF_RE.match(line)
                         ref_id = match.group(1).strip()
                         if ref_id in blob_ids:
-                            blob_id = blob_ids[ref_id]
-                            tail = line[len(match.group(0)):]
-                            content_type, sep, tail2 = tail.partition(";")
-                            tem2, sep2, content_b64 = tail2.partition(",")
-                            content_length = len(base64.b64decode(content_b64))
-                            headers = {"content_type": content_type,
-                                       "content_length": content_length}
-                            self.note_screen_buf.add_blob(blob_id, content_type, content_b64)
-                            self.screen_callback(self.term_name, "", "create_blob",
-                                                 [blob_id, headers, content_b64])
+                            self.create_blob(blob_ids[ref_id], line[len(match.group(0)):])
 
                     elif line or not leaving_block:
                         # Non-blank line or not leaving block; handle raw line
@@ -1919,6 +1910,7 @@ class Terminal(object):
                     if match:
                         # gterm comment directive
                         content = content[len(match.group(0)):]
+                        directive = match.group(1)
                         opts = match.group(2) or ""
                         opt_comps = opts.strip().split()
                         opt_dict = {}
@@ -1927,10 +1919,20 @@ class Terminal(object):
                             opt_comp = opt_comps.pop(0)
                             opt_name, sep, opt_value = opt_comp.partition("=")
                             opt_dict[opt_name] = urllib.unquote(opt_value)
-                        row_params = [match.group(1), opt_dict]
+
+                        if directive == "data":
+                            blob_id = opt_dict.get("blob")
+                            if blob_id:
+                                # Note: blob content should be Base64 encoded
+                                self.create_blob(blob_id, content)
+                            else:
+                                logging.warning("No blob_id for data")
+                        else:
+                            row_params = [directive, opt_dict]
+                            screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                     else:
                         row_params = ["pagelet", {}]
-                    screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
+                        screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                 elif response_type == "create_blob":
                     del headers["x_gterm_response"]
                     del headers["x_gterm_parameters"]
@@ -1941,12 +1943,7 @@ class Terminal(object):
                         logging.warning("No content_length specified for create_blob")
                     else:
                         # Note: blob content should be Base64 encoded
-                        if self.note_cells:
-                            content_type = headers.get("content_type", "")
-                            if content_type.startswith("image/"):
-                                self.note_screen_buf.add_blob(blob_id, content_type, content)
-                        self.screen_callback(self.term_name, "", "create_blob",
-                                             [blob_id, headers, content])
+                        self.create_blob(blob_id, content, headers=headers)
                 elif response_type == "frame_msg":
                     self.screen_callback(self.term_name, "", "frame_msg",
                      [response_params.get("user",""), response_params.get("frame",""), content])
@@ -1960,6 +1957,31 @@ class Terminal(object):
         self.gterm_validated = False
         self.gterm_entry_index = None
         return retval
+
+    def create_blob(self, blob_id, content, headers=None):
+        """ If headers, content should be base64 encoded.
+            Else, content should be of the data URI form: "image/png;base64,<base64>"
+        """
+        if headers:
+            content_type = headers.get("content_type", "")
+        else:
+            content_type, sep, tail = content.partition(";")
+            encoding, sep2, content = tail.partition(",")
+            if encoding != "base64":
+                logging.warning("Invalid encoding for data URI: %s", encoding)
+                return ""
+            content_type = content_type.strip()
+            headers = {"content_type": content_type}
+
+        if "content_length" not in headers:
+            headers["content_length"] = len(base64.b64decode(content))
+
+        if self.note_cells and content_type.startswith("image/"):
+            self.note_screen_buf.add_blob(blob_id, content_type, content)
+
+        self.screen_callback(self.term_name, "", "create_blob",
+                             [blob_id, headers, content])
+        return content_type
 
     def graphterm_output(self, params={}, content="", response_id="", from_buffer=False):
         if not from_buffer:
@@ -1988,7 +2010,7 @@ class Terminal(object):
                 self.pty_write(json.dumps(params)+"\n\n")
         else:
             filename = params.get("x_gterm_filename", "")
-            params["x_gterm_encoded_length"] = len(filedata)
+            params["x_gterm_length"] = len(filedata)
             try:
                 self.pty_write(json.dumps(params)+"\n\n")
                 if filedata:

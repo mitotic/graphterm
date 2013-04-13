@@ -128,7 +128,7 @@ try:
         sys.exit(1)
 
     filename = headers["x_gterm_filename"]
-    expect_length = headers["x_gterm_encoded_length"]
+    expect_length = headers["x_gterm_length"]
     if options.veryverbose:
         print >> sys.stderr, "file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length)
 
