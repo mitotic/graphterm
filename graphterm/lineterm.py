@@ -971,8 +971,7 @@ class Terminal(object):
 
             if cell["cellInput"]:
                 if cell["cellType"]:
-                    lang = "python" if self.command_path.endswith("python") else "code"
-                    md_lines.append("```"+lang)
+                    md_lines.append("```"+cell["cellType"])
                 for line in cell["cellInput"]:
                     md_lines.append(line)
                 if cell["cellType"]:
@@ -986,7 +985,7 @@ class Terminal(object):
                     blob_id = opts.get("blob")
                     if blob_id:
                         if out_lines:
-                            md_lines += ["```"] + out_lines + ["```"] + [""]
+                            md_lines += ["```output"] + out_lines + ["```"] + [""]
                             out_lines = []
                         data_uri = self.note_screen_buf.get_blob_uri(blob_id)
                         if data_uri:
@@ -996,7 +995,7 @@ class Terminal(object):
                     else:
                         out_lines.append(scroll_line[JLINE])
                 if out_lines:
-                    md_lines += ["```"] + out_lines + ["```"] + [""]
+                    md_lines += ["```output"] + out_lines + ["```"] + [""]
 
         if ref_blobs:
             for j, ref_blob in enumerate(ref_blobs):
@@ -1030,40 +1029,40 @@ class Terminal(object):
                                 self.add_cell("", init_text="\n".join(raw_lines))
                                 raw_lines = []
                             state = lang
-                            if state:
-                                # New code block
-                                code_lines = []
-                            else:
+                            if state == "output":
                                 # New output block
                                 if not cur_cell:
                                     # Treat orphan output block as raw text
                                     raw_lines.append("")
+                            else:
+                                # New code block
+                                code_lines = []
                         else:
                             # Leaving fenced block
                             leaving_block = True
-                            if state:
+                            if state == "output":
+                                if not cur_cell:
+                                    # Treat orphan output block as raw text
+                                    raw_lines.append("")
+                            else:
                                 # Leaving code block
                                 self.update()
                                 self.add_cell(state, init_text="\n".join(code_lines))
                                 code_lines = None
                                 cur_cell = self.note_cells["cells"][self.note_cells["curIndex"]]
-                            else:
-                                if not cur_cell:
-                                    # Treat orphan output block as raw text
-                                    raw_lines.append("")
                             state = None
                     elif state is not None:
                         # Within fenced block
-                        if state:
-                            # Within code block
-                            code_lines.append(line)
-                        else:
+                        if state == "output":
                             # Within output block
                             if cur_cell:
                                 self.note_screen_buf.scroll_buf_up(line, None)
                             else:
                                 # Treat orphan output line as raw code
                                 raw_lines.append("    "+line)
+                        else:
+                            # Within code block
+                            code_lines.append(line)
 
                     elif MD_IMAGE_RE.match(line):
                         # Inline image
