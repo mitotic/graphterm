@@ -1,4 +1,7 @@
-pro gshow, command, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=_EXTRA
+pro gshow, command, vars, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=_EXTRA
+  ;; Derived from http://moonlets.org/Code/plot2png.pro
+  ;; vars is structure for use in command.
+  ;; Example: gshow,'plot,vars.x,vars.y', {x:[1,2], y:[5,9]}
   esc = string(27B)
   lf = string(10B)
   gterm_code = 1155
@@ -14,22 +17,33 @@ pro gshow, command, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=_EXTRA
   if(not keyword_set(xsize)) then xsize=640
   if(not keyword_set(ysize)) then ysize=480
 
+  old_dev = !d.name
+
   set_plot, 'z'
   device, z_buffering=1, set_resolution=[xsize, ysize], _EXTRA=_EXTRA
-  tvlct, r,g,b, /get
+
+  ;; Color table
+  tvlct, r, g, b, /get
 
   result = execute(command)
 
-  if (not result) then message, "Error in executing command"
+  if (not result) then begin
+    set_plot, old_dev
+    message, "Error in executing command: "+command
+  endif
 
   img = tvrd()
 
+  ;; Revert to saved device
+  set_plot, old_dev
+
   image2d = bytarr(3, xsize, ysize)
-  image2d(0,*,*) = r[img]
-  image2d(1,*,*) = g[img]
-  image2d(2,*,*) = b[img]
+  image2d[0,*,*] = r[img]
+  image2d[1,*,*] = g[img]
+  image2d[2,*,*] = b[img]
 
   blob_id = strtrim(long64(1e12 * randomu(undef)), 2)
+
   ;;filename = filepath('gshow'+blob_id+'.png', /tmp)
   filename = filepath('gshow'+blob_id+'.png', root_dir=".")
 
