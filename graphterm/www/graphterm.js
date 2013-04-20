@@ -1224,12 +1224,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			this.alt_mode = true;
 			if (gSplitScreen)
 			    MergeScreen("alt_mode");
+			$("#terminal").addClass("gterm-altmode");
 			$("#session-screen").hide();
 			$("#session-altscreen").show();
 		    } else if (!alt_mode && this.alt_mode) {
 			this.alt_mode = false;
 			$("#session-screen").show();
 			$("#session-altscreen").hide();
+			$("#terminal").removeClass("gterm-altmode");
 		    }
 
 		    // Note: Paste operation pastes DOM elements with "span.row" class into screen
@@ -1665,44 +1667,118 @@ function GTExportEnvironment() {
 	gWebSocket.write([["export_environment"]]);
 }
 
-function gtermSelectHandler(event) {
-    var idcomps = $(this).attr("id").split("-");
-    var selectedOption = $(this).val();
-    console.log("gtermSelectHandler: ", idcomps[1], selectedOption);
+var gMenuState = {settings: {menubar: true, icons: false, webcast: false, theme: ""}};
 
-    GTReceivedUserInput("select");
-    switch (idcomps[1]) {
-    case "actions":
-	$(this).val(1);
+function GTMenuSetup() {
+    $("ul.sf-menu").superfish({
+	cssArrows: false
+    });
+    $("ul.sf-menu").on("click", "a", GTMenuHandler);
+    GTMenuRefresh();
+}
 
-	if (selectedOption == "about")
-	    GTermAbout();
-	else if (selectedOption == "updates")
-	    CheckUpdates();
-	else if (selectedOption == "export_env")
-	    GTExportEnvironment();
-	else if (selectedOption == "paste_special")
-	    GTPasteSpecialBegin();
-	else if (selectedOption == "reconnect")
-	    ReconnectHost();
-	else if (selectedOption == "steal")
-	    StealSession();
+function GTMenuRefresh() {
+    $("ul.sf-menu a[gterm-toggle]").each(function() {
+	GTMenuRefreshToggle(this);
+    });
+    var curTheme = gMenuState.settings.theme;
+    if (curTheme)
+	GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="settings_theme_'+curTheme+'"]'))
+}
+
+function GTMenuRefreshToggle(target, update, newValue) {
+    if (!newValue && newValue !== false && newValue !== "")
+	newValue = null;
+	
+    var stateKey = $(target).attr("gterm-state");
+    console.log("GTMenuRefreshToggle: ", stateKey, update, newValue, target);
+    if (!stateKey)
+	return null;
+    var comps = stateKey.split("_");
+    var menuObj = gMenuState;
+    while (comps.length > 0) {
+	if (!(comps[0] in menuObj))
+	    return null;
+	if (!_.isObject(menuObj[comps[0]]))
+	    break;
+	menuObj = menuObj[comps.shift()];
+    }
+    if (comps.length > 1) {
+	$(target).parent().siblings().find("a[gterm-toggle]").attr("gterm-toggle", "false");
+	if (update)
+	    menuObj[comps[0]] = (newValue !== null) ? newValue : comps[1];
+	if (menuObj[comps[0]] == comps[1])
+	    $(target).attr("gterm-toggle", "true" );
+    } else {
+	if (update)
+	    menuObj[comps[0]] = (newValue !== null) ? newValue : !menuObj[comps[0]];
+	$(target).attr("gterm-toggle", menuObj[comps[0]] ? "true":"false" );
+    }
+    return menuObj[comps[0]];
+}
+
+function GTMenuHandler(evt) {
+    console.log("GTMenuHandler: ", evt);
+    GTReceivedUserInput("menuhandler");
+    try {
+	GTMenuEvent(this);
+    } catch (err) {
+	console.log("GTMenuHandler: ERROR "+err, err.stack);
+    }
+    return false;
+}
+
+function GTMenuTrigger(stateKey, setValue) {
+    GTReceivedUserInput("menutrigger");
+    var elem = $('#gterm-menu a[gterm-state$="'+stateKey+'"]');
+    if (elem.length)
+	return GTMenuEvent(elem, setValue);
+    else
+	return null;
+}
+
+function GTMenuEvent(target, setValue) {
+    var stateKey = $(target).attr("gterm-state");
+    console.log("GTMenuEvent: ", stateKey, target);
+    if (!stateKey)
+	return null;
+    var comps = stateKey.split("_");
+    var selectKey = comps.slice(1).join("_");
+    if ($(target).hasClass("gterm-toggle-link") || $(target).hasClass("gterm-radio-link")) {
+	var newValue = GTMenuRefreshToggle(target, true, setValue);
+	if (comps[0] == "settings")
+	    GTMenuSettings(selectKey, newValue);
+    } else {
+	if (comps[0] == "terminal")
+	    GTMenuTerminal(selectKey);
+	else if (comps[0] == "action")
+	    GTMenuScreen(selectKey);
+    }
+    return true;
+}
+
+function GTMenuSettings(selectKey, newValue) {
+    console.log("GTMenuSettings: ", selectKey, newValue);
+    var comps = selectKey.split("_");
+    switch (comps[0]) {
+    case "menubar":
+	$("#terminal").toggleClass("gterm-menubar-hide", !newValue);
 	break;
 
     case "icons":
-	gWebSocket.icons = (selectedOption == "on");
+	gWebSocket.icons = !!newValue;
 	$("#terminal").toggleClass("showicons", gWebSocket.icons);
 	break;
 
-      case "webcast":
-         // Webcast
-	Webcast(selectedOption == "on");
-      break;
+    case "webcast":
+        // Webcast
+	Webcast(!!newValue);
+	break;
 
-      case "theme":
-       // Select theme
-       var three_d = (selectedOption.substr(selectedOption.length-2) == "3d");
-       var base_theme = three_d ? selectedOption.substr(0, selectedOption.length-2) : selectedOption;
+    case "theme":
+	// Select theme
+	var three_d = (newValue.substr(newValue.length-2) == "3d");
+	var base_theme = three_d ? newValue.substr(0, newValue.length-2) : newValue;
 
        if (gWebSocket.theme && gWebSocket.theme != "default")
 	   $("body").removeClass(gWebSocket.theme);
@@ -1725,6 +1801,74 @@ function gtermSelectHandler(event) {
     }
 }
 
+function GTMenuTerminal(selectKey) {
+    console.log("GTMenuTerminal: ", selectKey);
+    switch (selectKey) {
+    case "new":
+	OpenNew();
+	break;
+    case "reconnect":
+	ReconnectHost();
+	break;
+    case "steal":
+	StealSession();
+	break;
+    case "detach":
+	window.location = "/";
+	break;
+    case "control":
+	$("#headfoot-control").toggleClass("gterm-headfoot-active");
+	gControlActive = $("#headfoot-control").hasClass("gterm-headfoot-active");
+	break;
+    }
+}
+
+function GTMenuScreen(selectKey) {
+    console.log("GTMenuScreen: ", selectKey);
+    switch (selectKey) {
+    case "top":
+	ScrollTop(0);
+	break;
+    case "bottom":
+	ScrollScreen();
+	break;
+    case "clear":
+	GTClearTerminal();
+	if (gWebSocket && gWebSocket.terminal)
+	    gWebSocket.write([["clear_term"]]);
+	//text = "\x01\x0B";  // Ctrl-A Ctrl-K
+	break;
+    case "collapse":
+	$("#session-bufscreen .oldentry").addClass("gterm-hideoutput");
+	ScrollScreen();
+	break;
+    case "expand":
+	$("#session-bufscreen .oldentry").removeClass("gterm-hideoutput");
+	ScrollScreen();
+	break;
+    case "home":
+	if (gWebSocket)
+	    gWebSocket.term_input("cd; gls\n");
+	break;
+    case "export_env":
+	GTExportEnvironment();
+	break;
+    case "paste_special":
+	GTPasteSpecialBegin();
+	break;
+    }
+}
+
+function GTMenuHelp(selectKey) {
+    console.log("GTMenuHelp: ", selectKey);
+    if (selectedOption == "about")
+	GTermAbout();
+    else if (selectedOption == "updates")
+	CheckUpdates();
+    else
+	GTermHelp();
+}
+
 function gtermMenuClickHandler(event) {
     var idcomps = $(this).attr("id").split("-");
     console.log("gtermMenuClickHandler", $(this).attr("id"), idcomps[1]);
@@ -1734,38 +1878,8 @@ function gtermMenuClickHandler(event) {
 	if (gWebSocket)
 	    gWebSocket.term_input("cd; gls\n");
 	break;
-    case "bottom":
-	ScrollScreen();
-	break;
-    case "help":
-	GTermHelp()
-	break;
-    case "clear":
-	GTClearTerminal();
-	if (gWebSocket && gWebSocket.terminal)
-	    gWebSocket.write([["clear_term"]]);
-	//text = "\x01\x0B";  // Ctrl-A Ctrl-K
-	break;
-    case "detach":
-	window.location = "/";
-	break;
-    case "new":
-	OpenNew();
-	break;
-    case "control":
-	$("#headfoot-control").toggleClass("gterm-headfoot-active");
-	gControlActive = $("#headfoot-control").hasClass("gterm-headfoot-active");
-	break;
     case "top":
 	ScrollTop(0);
-	break;
-    case "collapse":
-	$("#session-bufscreen .oldentry").addClass("gterm-hideoutput");
-	ScrollScreen();
-	break;
-    case "expand":
-	$("#session-bufscreen .oldentry").removeClass("gterm-hideoutput");
-	ScrollScreen();
 	break;
     case "up":
 	if (HandleArrowKeys(38))
@@ -3561,15 +3675,16 @@ function GTReady() {
     if (gSafariIPad)
 	$("body").addClass("ipadscreen");
 
+    GTMenuSetup();
+
     setupTerminal();
     popupSetup();
     $("#gterm-editframe").hide();
     $("#session-bufellipsis").hide();
     $("#session-findercontainer").hide();
     $("#session-widgetcontainer").hide();  // IMPORTANT (else top menu will be invisibly blocked)
-    $(".menubar-select").change(gtermSelectHandler);
     $("#session-footermenu select").change(gtermBottomSelectHandler);
-    $("#session-headermenu .headfoot").bindclick(gtermMenuClickHandler);
+    $("#gterm-header .headfoot-icon").bindclick(gtermMenuClickHandler);
     $("#session-footermenu .headfoot").bindclick(gtermMenuClickHandler);
     $("#session-feedback-button").bindclick(gtermFeedbackHandler);
 

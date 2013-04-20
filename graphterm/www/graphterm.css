@@ -42,6 +42,42 @@ body.ipadscreen  {
     /* font-weight: bold; */
 }
 
+/* Menubar styles */
+
+#terminal:not(.gterm-menubar-hide):not(.gterm-altmode) #gterm-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+
+#terminal #gterm-header {
+    margin: 0;
+    padding: 0;
+}
+
+#gterm-header div#gterm-header-container {
+    background-color: white;
+    padding-bottom: 0.5em;
+}
+
+#gterm-header div#session-topfold {
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    height: 0.6em;
+    padding: 0;
+    background: -webkit-gradient( linear, center top, center bottom, from(rgba(128,128,128,1.0)), to(rgba(255,255,255,0.0)) );
+    background: -moz-linear-gradient( 90deg, rgba(255,255,255,0.0) , rgba(128,128,128,1.0));
+    border-bottom-style: solid;
+    border-bottom-color: gray;
+    border-bottom-width: 0px;
+}
+
+#terminal:not(.gterm-menubar-hide):not(.gterm-altmode) #gterm-mid {
+    padding-top: 1.3em;
+}
+
 /* Generic element styles */
 div, span, pre, .gterm-prewrap {
     margin: 0;
@@ -82,6 +118,18 @@ hr {
 */
 }
 
+
+/* Superfish styles */
+
+ul.sf-menu a[gterm-toggle="false"] span.gterm-toggle-status {
+    opacity: 0.1;
+}
+
+.gterm-menukey-firstletter a:not(.gterm-key-altletter):first-letter,
+ a.gterm-key-firstletter:first-letter,
+ .gterm-key-letter {
+    text-decoration: underline;
+}
 
 /* Screen styles */
 
@@ -201,7 +249,7 @@ span.menubar-label, a.menubar-label {
     font-weight: bold;
 }
 
-span.headfoot {
+span.headfoot, span.headfoot-icon {
     color: blue;
     cursor: pointer;
     text-decoration: none;
@@ -302,8 +350,8 @@ input.gterm-input-arg[type=text] {
     display: none;
 }
 
-#terminal.webcast #menubar-webcast {
-    background-color: red;
+#terminal.webcast #menubar-share-icon {
+    color: red;
 }
 
 #terminal.webcast #menubar-label-webcast {

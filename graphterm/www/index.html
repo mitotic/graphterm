@@ -15,14 +15,21 @@
 -->
     <link title="defaultstyle" rel="stylesheet" type="text/css" href="/static/graphterm.css">
     <link title="defaultstyle" rel="stylesheet" type="text/css" href="/static/themes/stars.css">
+    <link title="defaultstyle" rel="stylesheet" type="text/css" href="/static/css/superfish.css" media="screen">
+    <link title="defaultstyle" rel="stylesheet" type="text/css" href="/static/css/superfish-navbar.css">
 
     <script type="text/javascript" src="/static/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/jquery/jquery-migrate.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/rangy-core.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.autoresize.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.caret.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.cookie.js"></script>
     <script type="text/javascript" src="/static/jquery/js-plugins/jquery.base64.min.js"></script>
+    <script type="text/javascript" src="/static/jquery/js-plugins/hoverIntent.js"></script>
+    <script type="text/javascript" src="/static/jquery/js-plugins/superfish.js"></script>
     <script language="JavaScript" src="/static/utils/hmac-sha256.js"></script>
+    <script language="JavaScript" src="/static/utils/underscore-min.js"></script>
+    <script language="JavaScript" src="/static/utils/underscore.string.min.js"></script>
     <script language="JavaScript" src="/static/graphterm.js"></script>
   </head>
 
@@ -37,52 +44,96 @@
 
   <div id="terminal" class="terminal">
     <div id="gterm-header" class="gterm-header">
-      <span id="menubar-sessionlabel" class="menubar-label"></span>
+      <div id="gterm-header-container">
+        &nbsp;
+        <span id="menubar-sessionlabel" class="menubar-label"></span>
+        &nbsp;
+        <span id="headfoot-home" class="headfoot-icon"><b>&#x2302;</b></span>
 
-      &nbsp;
-      <select id="menubar-actions" class="menubar-select" size=1>
-        <option value="actions" selected>Actions</option>
-        <option value="about">About GraphTerm</option>
-        <option value="updates">Check for updates</option>
-        <option value="export_env">Export environment</option>
-        <option value="paste_special">Paste special</option>
-        <option value="reconnect">Reconnect to host</option>
-        <option value="steal">Steal session</option>
-      </select>
+        <ul class="sf-menu" id="gterm-menu">
+          <li>
+            <a href="#">settings</a>
+            <ul>
+              <li>
+                <a href="#" class="gterm-toggle-link" gterm-state="settings_menubar" gterm-toggle="true">menubar <span class="gterm-toggle-status">&#x2714;</span></a>
+              </li>
+              <li>
+                <a href="#" class="gterm-toggle-link" gterm-state="settings_icons" gterm-toggle="false">icons <span class="gterm-toggle-status">&#x2714;</span></a>
+              </li>
+              <li>
+                <a href="#" class="gterm-toggle-link" gterm-state="settings_webcast" gterm-toggle="false">webcast <span class="gterm-toggle-status">&#x2714;</span></a>
+              </li>
+              <li>
+                <a href="#">theme</a>
+                <ul>
+                  <li>
+                    <a href="#" class="gterm-radio-link" gterm-state="settings_theme_default" gterm-toggle="false">default <span class="gterm-toggle-status">&#x2714;</span></a>
+                  </li>
+                  <li>
+                    <a href="#" class="gterm-radio-link" gterm-state="settings_theme_bold" gterm-toggle="false">bold <span class="gterm-toggle-status">&#x2714;</span></a>
+                  </li>
+                  <li>
+                    <a href="#" class="gterm-radio-link" gterm-state="settings_theme_stars3d" gterm-toggle="false">stars3d <span class="gterm-toggle-status">&#x2714;</span></a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
 
-      &nbsp;
-      <span id="menubar-label-icons" class="menubar-label">Icons:</span>
-      <select id="menubar-icons" class="menubar-select" size=1>
-        <option value="off" selected>off</option>
-        <option value="on">on</option>
-      </select>
+          <li>
+            <a href="#">terminal</a>
+            <ul>
+              <li><a href="#" gterm-state="terminal_new">new</a></li>
+              <li><a href="#" gterm-state="terminal_reconnect">reconnect</a></li>
+              <li><a href="#" gterm-state="terminal_steal">steal</a></li>
+              <li><a href="#" gterm-state="terminal_detach">detach</a></li>
+            </ul>
+          </li>
 
-      &nbsp;
-      <span id="menubar-label-webcast" class="menubar-label">Webcast:</span>
-      <select id="menubar-webcast" class="menubar-select" size=1>
-        <option value="off" selected>off</option>
-        <option class="webcast-alert" value="on">on</option>
-      </select>
+          <li>
+            <a href="#" class="gterm-key-firstletter">screen</a>
+            <ul class="gterm-menukey-firstletter">
+              <li><a href="#" gterm-state="action_top">top</a></li>
+              <li><a href="#" gterm-state="action_bottom">bottom</a></li>
+              <li><a href="#" gterm-state="action_clear">clear</a></li>
+              <li><a href="#" gterm-state="action_collapse" class="gterm-key-altletter">c<span class="gterm-key-letter">o</span>llapse</a></li>
+              <li><a href="#" gterm-state="action_expand" class="gterm-key-altletter">e<span class="gterm-key-letter">x</span>pand</a></li>
+              <li><a href="#" gterm-state="action_home">home folder</a></li>
+              <li><a href="#" gterm-state="action_export">export environment</a></li>
+              <li><a href="#" gterm-state="action_paste">paste special</a></li>
+            </ul>
+          </li>
 
-      &nbsp;
-      <span id="menubar-label-theme" class="menubar-label">Theme:</span>
-      <select id="menubar-theme" class="menubar-select" size=1>
-        <option value="default" selected>default</option>
-        <option value="bold">bold</option>
-        <option value="stars3d">stars3d</option>
-      </select>
+          <li>
+            <a href="#">notebook</a>
+            <ul>
+              <li><a href="#" gterm-state="notebook_new">new</a></li>
+              <li>
+                <a href="#">insert</a>
+                <ul>
+                  <a href="#" gterm-state="notebook_insertbefore">before</a>
+                  <a href="#" gterm-state="notebook_insertafter">after</a>
+                </ul>
+              </li>
+            </ul>
+          </li>
 
-      <p>
-     <div id="session-headermenu"   class="session-headermenu">
-       <span id="headfoot-home"     class="headfoot">Home</span>
-       <span id="headfoot-bottom"   class="headfoot">Bottom</span>
-       <span id="headfoot-clear"    class="headfoot">Clear</span>
-       <span id="headfoot-detach"   class="headfoot">Detach</span>
-       <span id="headfoot-new"      class="headfoot">New</span>
-       <span id="headfoot-help"     class="headfoot">Help</span>
-     </div> <!-- session-headermenu -->
+          <li>
+            <a href="#">help</a>
+            <ul>
+              <li><a href="#" gterm-state="help_about">about</a></li>
+              <li><a href="#" gterm-state="help_updates">updates</a></li>
+              <li><a href="#" gterm-state="help_info">info</a></li>
+            </ul>
+          </li>
 
+        </ul>
+        &nbsp;
+        <span id="menubar-share-icon" class="menubar-label"><b>&#x26AD;</b></span>
+      </div> <!-- gterm-header-container -->
+      <div id="session-topfold"></div>
     </div> <!-- gterm-header -->
+    <p>
 
     <div id="gterm-mid" class="gterm-mid">
 
@@ -138,8 +189,6 @@
               <div id="session-footermenu" class="session-footermenu">
                 <span id="headfoot-control" class="headfoot toggle">Ctrl</span>
                 <span id="headfoot-top"     class="headfoot">Top</span>&nbsp;
-                <span id="headfoot-collapse"  class="headfoot">&#x25AC;</span>&nbsp;&nbsp;
-                <span id="headfoot-expand"    class="headfoot">&#x271A;</span>&nbsp;&nbsp;
                 <span id="headfoot-up"      class="headfoot">&#x25B2;</span>&nbsp;&nbsp;
                 <span id="headfoot-down"    class="headfoot">&#x25BC;</span>&nbsp;&nbsp;
                 <span id="headfoot-delete"  class="headfoot">&#x232B;</span>&nbsp;&nbsp;
