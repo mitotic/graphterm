@@ -12,6 +12,8 @@ html, body {
 /* Default styles */
 body {
     background-color: #FFFFFF;
+    margin-top: 6px;
+    margin-bottom: 6px;
 }
 
 /* Need font styling for both body and pre; otherwise pre styling will be overridden by useragent default */
@@ -129,6 +131,15 @@ ul.sf-menu a[gterm-toggle="false"] span.gterm-toggle-status {
  a.gterm-key-firstletter:first-letter,
  .gterm-key-letter {
     text-decoration: underline;
+}
+
+/* Override superfish CSS defaults */
+#gterm-header ul.sf-menu {
+    margin-bottom: 0.25em;
+}
+
+#gterm-header ul.sf-menu a {
+    padding: .25em 0.5em;
 }
 
 /* Screen styles */
