@@ -127,10 +127,11 @@ ul.sf-menu a[gterm-toggle="false"] span.gterm-toggle-status {
     opacity: 0.1;
 }
 
-.gterm-menukey-firstletter a:not(.gterm-key-altletter):first-letter,
- a.gterm-key-firstletter:first-letter,
- .gterm-key-letter {
+#terminal.gterm-shortcut-mode .gterm-menukey-firstletter > li > a:not(.gterm-key-altletter):first-letter,
+ #terminal.gterm-shortcut-mode a.gterm-key-firstletter:first-letter,
+ #terminal.gterm-shortcut-mode .gterm-key-letter {
     text-decoration: underline;
+    font-weight: bold;
 }
 
 /* Override superfish CSS defaults */

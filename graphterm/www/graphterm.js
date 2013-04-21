@@ -63,6 +63,7 @@ var gFormIndex = null;
 var gExpectUpload = null
 var gUploadFile = null;
 
+var gShortcutMenus = null;
 var gDebug = true;
 var gDebugKeys = false;
 var gDebugMessages = false;
@@ -1668,9 +1669,10 @@ function GTExportEnvironment() {
 }
 
 var gMenuState = {settings: {menubar: true, icons: false, webcast: false, theme: ""}};
+var gMenuObj = null;
 
 function GTMenuSetup() {
-    $("ul.sf-menu").superfish({
+    gMenuObj = $("ul.sf-menu").superfish({
 	cssArrows: false
     });
     $("ul.sf-menu").on("click", "a", GTMenuHandler);
@@ -1752,7 +1754,9 @@ function GTMenuEvent(target, setValue) {
 	if (comps[0] == "terminal")
 	    GTMenuTerminal(selectKey);
 	else if (comps[0] == "action")
-	    GTMenuScreen(selectKey);
+	    GTMenuAction(selectKey);
+	else if (comps[0] == "help")
+	    GTMenuHelp(selectKey);
     }
     return true;
 }
@@ -1823,8 +1827,8 @@ function GTMenuTerminal(selectKey) {
     }
 }
 
-function GTMenuScreen(selectKey) {
-    console.log("GTMenuScreen: ", selectKey);
+function GTMenuAction(selectKey) {
+    console.log("GTMenuAction: ", selectKey);
     switch (selectKey) {
     case "top":
 	ScrollTop(0);
@@ -1861,9 +1865,9 @@ function GTMenuScreen(selectKey) {
 
 function GTMenuHelp(selectKey) {
     console.log("GTMenuHelp: ", selectKey);
-    if (selectedOption == "about")
+    if (selectKey == "about")
 	GTermAbout();
-    else if (selectedOption == "updates")
+    else if (selectKey == "updates")
 	CheckUpdates();
     else
 	GTermHelp();
@@ -2174,7 +2178,19 @@ function keydownHandler(evt) {
     var activeType = "";
     var activeElem = $(document.activeElement);
 
+    if (evt.which == 74 && evt.ctrlKey) {
+	// Control-J prefix: menu shortcuts
+	if (gShortcutMenus) {
+	    GTShortcutEnd();
+	} else {
+	    $("#terminal").addClass("gterm-shortcut-mode");
+	    gShortcutMenus = [$("#gterm-menu")];
+	}
+	return false;
+    }
+
     if (gNotebook && !gNotebook.passthru_stdin && !gNotebook.handling_tab && !gNotebook.prefix_key && evt.which == 77 && evt.ctrlKey) {
+	// Control-M prefix: notebook shortcuts
 	gNotebook.prefix_key = true;
 	return false;
     }
@@ -2516,6 +2532,11 @@ function AjaxKeypress(evt) {
 	return false;
     }
 	    
+    if (gShortcutMenus) {
+	GTShortcutHandler(k);
+	return false;
+    }
+	    
     if (gNotebook && !gNotebook.passthru_stdin && k == String.fromCharCode(3) && window.confirm("Exit notebook mode?")) {
 	// Ctrl-C: close notebook
 	GTCloseNotebook();
@@ -2555,6 +2576,41 @@ function AjaxKeypress(evt) {
     }
     evt.cancelBubble = true;
     return GTPreventHandler(evt);
+}
+
+function GTShortcutHandler(ch) {
+    console.log("GTShortcutHandler: ", ch);
+    if (!gShortcutMenus)
+	return;
+
+    var subMenus = gShortcutMenus[0].find('> li > a');
+    var matched = false;
+    for (var j=0; j<subMenus.length; j++) {
+	var elem = $(subMenus[j]);
+	var elemText = elem.hasClass("gterm-key-altletter") ? elem.children(".gterm-key-letter").text() : elem.text();
+	if (_.str.startsWith(elemText, ch)) {
+	    if (elem.attr("gterm-state")) {
+		GTMenuEvent(elem);
+	    } else {
+		elem.next().show();
+		gShortcutMenus.unshift(elem.next());
+		matched = true;
+	    }
+	    break;
+	}
+    }
+    if (!matched)
+	return GTShortcutEnd();
+}
+
+function GTShortcutEnd() {
+    if (!gShortcutMenus)
+	return;
+    while (gShortcutMenus.length > 1)
+	gShortcutMenus.shift().hide();
+
+    $("#terminal").removeClass("gterm-shortcut-mode");
+    gShortcutMenus = null
 }
 
 function OpenNew(host, term_name, options) {
