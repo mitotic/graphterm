@@ -159,6 +159,13 @@ def open_url(url, target="_blank", stderr=False):
                    }
     wrap_write("", headers=url_headers, stderr=stderr)
 
+def menu_op(target, value=None, stderr=False):
+    """Invoke menu operation"""
+    headers = {"x_gterm_response": "menu_op",
+               "x_gterm_parameters": {"target": target, "value": value}
+               }
+    wrap_write("", headers=headers, stderr=stderr)
+
 def file_hmac(filepath, host_secret):
         return hmac.new(str(host_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
 
@@ -478,3 +485,8 @@ def open_browser(url):
 
     return command_output(command_args, timeout=5)
 
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1].endswith(".py.md"):
+        # Switch to notebook mode (after prompt is displayed)
+        pass

@@ -1028,6 +1028,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    specList.push("height="+response_params.height);
 					  window.open(response_params.url, (response_params.target || "_blank"), specList.join(","));
 
+		    } else if (response_type == "menu_op") {
+			GTMenuTrigger(response_params.target, response_params.value);
+
 		    } else if (response_type == "preload_images") {
 			GTPreloadImages(response_params.urls);
 
@@ -1722,6 +1725,8 @@ function GTMenuRefreshToggle(target, update, newValue) {
 function GTMenuHandler(evt) {
     console.log("GTMenuHandler: ", evt);
     GTReceivedUserInput("menuhandler");
+    if (gShortcutMenus)
+	GTShortcutEnd(false);
     try {
 	GTMenuEvent(this);
     } catch (err) {
@@ -1733,10 +1738,15 @@ function GTMenuHandler(evt) {
 function GTMenuTrigger(stateKey, setValue) {
     GTReceivedUserInput("menutrigger");
     var elem = $('#gterm-menu a[gterm-state$="'+stateKey+'"]');
-    if (elem.length)
+    if (elem.length == 1)
 	return GTMenuEvent(elem, setValue);
-    else
-	return null;
+
+    if (elem.length > 1) {
+	alert("Ambiguous menu selection: "+stateKey);
+    } else {
+	alert("Invalid menu selection: "+stateKey);
+    }
+    return null;
 }
 
 function GTMenuEvent(target, setValue) {
@@ -2181,7 +2191,7 @@ function keydownHandler(evt) {
     if (evt.which == 74 && evt.ctrlKey) {
 	// Control-J prefix: menu shortcuts
 	if (gShortcutMenus) {
-	    GTShortcutEnd();
+	    GTShortcutEnd(true);
 	} else {
 	    $("#terminal").addClass("gterm-shortcut-mode");
 	    gShortcutMenus = [$("#gterm-menu")];
@@ -2600,14 +2610,16 @@ function GTShortcutHandler(ch) {
 	}
     }
     if (!matched)
-	return GTShortcutEnd();
+	return GTShortcutEnd(true);
 }
 
-function GTShortcutEnd() {
+function GTShortcutEnd(hide) {
     if (!gShortcutMenus)
 	return;
-    while (gShortcutMenus.length > 1)
-	gShortcutMenus.shift().hide();
+    if (hide) {
+	while (gShortcutMenus.length > 1)
+	    gShortcutMenus.shift().hide();
+    }
 
     $("#terminal").removeClass("gterm-shortcut-mode");
     gShortcutMenus = null
