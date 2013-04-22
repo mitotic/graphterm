@@ -294,11 +294,11 @@ function setupTerminal() {
     $("#session-log .curentry .input .command").focus();
 }
 
-function handle_resize() {
+function handle_resize(parent_term) {
     gRows = Math.floor($(window).height() / gRowHeight) - 1;
     gCols = Math.floor($(window).width() / gColWidth) - 1;
     if (gWebSocket && gParams.controller)
-	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width()]]]);
+	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width(), parent_term||""]]]);
 }
 
 function openTerminal() {
@@ -510,7 +510,7 @@ function GTUpdateController() {
 	window.name = "";
 
     if (gParams.controller)
-	handle_resize();
+	handle_resize(gParams.parent_term);
 }
 
 function GTClearTerminal() {
@@ -2617,6 +2617,8 @@ function OpenNew(host, term_name, options) {
     host = host || gParams.host;
     term_name = term_name || "new";
     var path = host + "/" + term_name;
+    if (term_name == "new" && gParams && gParams.term)
+	path += "/"+gParams.term;
     var new_url = window.location.protocol+"/"+"/"+window.location.host+"/"+path; // Split the double slash to avoid confusing the JS minifier
     console.log("open", new_url);
     var target = (term_name == "new") ? "_blank" : path;

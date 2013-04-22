@@ -2287,7 +2287,7 @@ class Multiplex(object):
         self.name_count = 0
         self.thread.start()
 
-    def terminal(self, term_name=None, command="", height=25, width=80, winheight=0, winwidth=0):
+    def terminal(self, term_name=None, height=25, width=80, winheight=0, winwidth=0, parent="", command=""):
         """Return (tty_name, cookie) for existing or newly created pty"""
         command = command or self.command
         with self.lock:
@@ -2307,6 +2307,12 @@ class Multiplex(object):
 
             # Create new terminal
             cookie = make_lterm_cookie()
+
+            term_dir = ""
+            if parent:
+                parent_term = self.proc.get(parent)
+                if parent_term:
+                    term_dir = parent_term.current_dir or ""
 
             pid, fd = pty.fork()
             if pid==0:
@@ -2350,8 +2356,14 @@ class Multiplex(object):
                 env["LINES"] = str(height)
                 env.update( dict(self.term_env(term_name, cookie, height, width, winheight, winwidth)) )
 
-                # cd to HOME
-                os.chdir(os.path.expanduser("~"))
+                if term_dir:
+                    try:
+                        os.chdir(term_dir)
+                    except Exception:
+                        term_dir = ""
+                if not term_dir:
+                    # cd to HOME
+                    os.chdir(os.path.expanduser("~"))
                 os.execvpe(cmd[0], cmd, env)
             else:
                 global Exec_errmsg

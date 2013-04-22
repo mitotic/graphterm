@@ -336,7 +336,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             wildhost = "?" in host or "*" in host or "[" in host
             term_feedback = False
+            conn = None
             
+            option = comps[2] if len(comps) > 2 else ""
             if wildhost:
                 if len(comps) < 2 or not comps[1] or comps[1].lower() == "new":
                     self.write_json([["abort", "Must specify terminal name for wildcard host"]])
@@ -351,7 +353,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
                 if len(comps) < 2 or not comps[1]:
-                    term_list = list(conn.term_set)
+                    term_list = conn.term_dict.keys()
                     term_list.sort()
                     self.write_json([["term_list", self.authorized["state_id"], host, term_list]])
                     self.close()
@@ -359,7 +361,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 term_name = comps[1].lower()
                 if term_name == "new":
-                    term_name = conn.remote_terminal_update()
+                    term_name = conn.remote_terminal_update(parent=option)
                     self.write_json([["redirect", "/"+host+"/"+term_name]])
                     self.close()
 
@@ -371,8 +373,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 term_feedback = term_name in conn.allow_feedback
 
             path = host + "/" + term_name
-
-            option = comps[2] if len(comps) > 2 else ""
 
             if option == "kill" and not webcast_auth and not wildhost:
                 kill_remote(path)
@@ -421,11 +421,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 normalized_host = gtermhost.get_normalized_host(host)
                 if self.authorized["auth_type"] in ("null_auth", "code_auth"):
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
+
+            parent_term = conn.term_dict.get(term_name, "") if conn else ""
             self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
-                                        "controller": self.controller,
+                                        "controller": self.controller, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "feedback": term_feedback,
                                         "state_id": self.authorized["state_id"]}]])
@@ -654,7 +656,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     def get_matching_paths(cls, regexp):
         matchpaths = []
         for host, conn in cls._all_connections.iteritems():
-            for term_name in conn.term_set:
+            for term_name in conn.term_dict:
                 path = host + "/" + term_name
                 if regexp.match(path):
                     matchpaths.append(path)
@@ -664,7 +666,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
                                                  key_secret=key_secret, key_version=key_version,
                                                  ssl_options=ssl_options, max_packet_buf=2)
-        self.term_set = set()
+        self.term_dict = dict()
         self.term_count = 0
         self.allow_feedback = set()
 
@@ -679,19 +681,19 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     def handle_close(self):
         pass
 
-    def remote_terminal_update(self, term_name=None, add_flag=True):
+    def remote_terminal_update(self, term_name=None, add_flag=True, parent=""):
         """If term_name is None, generate new terminal name and return it"""
         if not term_name:
             while True:
                 self.term_count += 1
                 term_name = "tty"+str(self.term_count)
-                if term_name not in self.term_set:
+                if term_name not in self.term_dict:
                     break
 
         if add_flag:
-            self.term_set.add(term_name)
+            self.term_dict[term_name] = parent
         else:
-            self.term_set.discard(term_name)
+            self.term_dict.pop(term_name, None)
         return term_name
 
     def remote_response(self, term_name, websocket_id, msg_list):
@@ -715,7 +717,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     raise Exception(errmsg)
                 
                 self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
-                self.term_set = set(msg[1]["term_names"])
+                self.term_dict = dict((key, "") for key in msg[1]["term_names"])
             elif msg[0] == "file_response":
                 ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
             else:

@@ -196,7 +196,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         else:
             self.lineterm.kill_term(term_name)
 
-    def xterm(self, term_name="", height=25, width=80, winheight=0, winwidth=0, command=""):
+    def xterm(self, term_name="", height=25, width=80, winheight=0, winwidth=0, parent="", command=""):
         if not self.lineterm:
             version_str = gtermapi.API_VERSION
             if gtermapi.API_MIN_VERSION and version_str != gtermapi.API_MIN_VERSION and not version_str.startswith(gtermapi.API_MIN_VERSION+"."):
@@ -208,7 +208,8 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                                                prompt_list=self.prompt_list, lc_export=self.lc_export,
                                                logfile=self.lterm_logfile)
         term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width,
-                                                         winheight=winheight, winwidth=winwidth)
+                                                         winheight=winheight, winwidth=winwidth,
+                                                         parent=parent)
         self.add_term(term_name, lterm_cookie)
         return term_name
 
@@ -290,7 +291,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "set_size":
                     if term_name != OSHELL_NAME:
-                        self.xterm(term_name, cmd[0][0], cmd[0][1], cmd[0][2], cmd[0][3])
+                        self.xterm(term_name, cmd[0][0], cmd[0][1], cmd[0][2], cmd[0][3], cmd[0][4])
 
                 elif action == "kill_term":
                     self.remove_term(term_name)
