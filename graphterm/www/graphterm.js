@@ -294,11 +294,11 @@ function setupTerminal() {
     $("#session-log .curentry .input .command").focus();
 }
 
-function handle_resize(parent_term) {
+function handle_resize(evt) {
     gRows = Math.floor($(window).height() / gRowHeight) - 1;
     gCols = Math.floor($(window).width() / gColWidth) - 1;
     if (gWebSocket && gParams.controller)
-	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width(), parent_term||""]]]);
+	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width(), gParams.parent_term||""]]]);
 }
 
 function openTerminal() {
@@ -510,7 +510,7 @@ function GTUpdateController() {
 	window.name = "";
 
     if (gParams.controller)
-	handle_resize(gParams.parent_term);
+	handle_resize();
 }
 
 function GTClearTerminal() {
