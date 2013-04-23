@@ -262,8 +262,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           notebook <activate> <filepath> <prompts>
           save_notebook <filepath> <input_data>
           add_cell <new_cell_type> <init_text> <before_cell_index>
-          switch_cell <cell_index> <move_up>
-          delete_cell
+          select_cell <cell_index> <move_up>
+          move_cell <move_up>
+          delete_cell <move_up>
+          merge_above
+          update_type <cell_type>
           complete_cell <incomplete_line>
           update_cell <cellIndex> <execute> <input_data>
 
@@ -339,15 +342,30 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if self.lineterm:
                         self.lineterm.add_cell(term_name, cmd[0], cmd[1], cmd[2])
 
-                elif action == "switch_cell":
-                    # switch_cell <new_cell_type> <before_cell_index>
+                elif action == "select_cell":
+                    # select_cell <cell_index> <move_up>
                     if self.lineterm:
-                        self.lineterm.switch_cell(term_name, cmd[0], cmd[1])
+                        self.lineterm.select_cell(term_name, cmd[0], cmd[1])
+
+                elif action == "move_cell":
+                    # move_cell <move_up>
+                    if self.lineterm:
+                        self.lineterm.move_cell(term_name, cmd[0])
 
                 elif action == "delete_cell":
-                    # delete_cell
+                    # delete_cell <move_up>
                     if self.lineterm:
-                        self.lineterm.delete_cell(term_name)
+                        self.lineterm.delete_cell(term_name, cmd[0])
+
+                elif action == "merge_above":
+                    # merge_above
+                    if self.lineterm:
+                        self.lineterm.merge_above(term_name)
+
+                elif action == "update_type":
+                    # update_type <cell_type>
+                    if self.lineterm:
+                        self.lineterm.update_type(term_name, cmd[0])
 
                 elif action == "complete_cell":
                     # complete_cell <incomplete_line>

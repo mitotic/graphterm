@@ -108,11 +108,43 @@
             <a href="#">notebook</a>
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="notebook_new">new</a></li>
+              <li><a href="#" gterm-state="notebook_open">open</a></li>
+              <li><a href="#" gterm-state="notebook_close">close</a></li>
+              <li><a href="#" gterm-state="notebook_save">save</a></li>
+              <hr class="sf-separator">
+              <li><a href="#" gterm-state="notebook_execute">execute cell</a></li>
+              <li><a href="#" gterm-state="notebook_run">run in-place</a></li>
               <li>
-                <a href="#">insert</a>
-                <ul>
-                  <a href="#" gterm-state="notebook_insertbefore">before</a>
-                  <a href="#" gterm-state="notebook_insertafter">after</a>
+                <a href="#" class="gterm-toggle-link" gterm-state="notebook_markdown" gterm-toggle="false">markdown <span class="gterm-toggle-status">&#x2714;</span></a>
+              </li>
+              <li>
+                <a href="#">cell</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" gterm-state="notebook_cell_delete">delete</a></li>
+                  <li><a href="#" gterm-state="notebook_cell_split">split</a></li>
+                  <li><a href="#" gterm-state="notebook_cell_merge">merge above</a></li>
+                  <li><a href="#" gterm-state="notebook_cell_read">read file</a></li>
+                </ul>
+              </li>
+              <li>
+                <a href="#">insert cell</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" gterm-state="notebook_insert_above">above</a></li>
+                  <li><a href="#" gterm-state="notebook_insert_below">below</a></li>
+                </ul>
+              </li>
+              <li>
+                <a href="#" class="gterm-key-altletter">mo<span class="gterm-key-letter">v</span>e cell</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" gterm-state="notebook_move_down">down</a></li>
+                  <li><a href="#" gterm-state="notebook_move_up">up</a></li>
+                </ul>
+              </li>
+              <li>
+                <a href="#" class="gterm-key-altletter">se<span class="gterm-key-letter">l</span>ect cell</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" gterm-state="notebook_select_previous">previous</a></li>
+                  <li><a href="#" gterm-state="notebook_select_next">next</a></li>
                 </ul>
               </li>
             </ul>

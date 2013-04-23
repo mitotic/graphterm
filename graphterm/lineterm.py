@@ -949,7 +949,8 @@ class Terminal(object):
                     for line in cell["cellInput"]:
                         self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
                     self.screen_buf.scroll_buf_up(prompt, "")
-                self.screen_buf.append_scroll(cell["cellOutput"])
+                if cell["cellType"]:
+                    self.screen_buf.append_scroll(cell["cellOutput"])
             self.reset_note()
             self.note_screen_buf.set_cur_note(0)
             self.note_screen_buf.clear_buf()
@@ -963,11 +964,13 @@ class Terminal(object):
         fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
         md_lines = []
         ref_blobs = []
-        for cell in self.note_cells["cells"].itervalues():
+        for cell_index in self.note_cells["cellIndices"]:
+            cell = self.note_cells["cells"][cell_index]
             if cell["cellIndex"] == self.note_cells["curIndex"]:
                 # Current cell; copy output
                 cell["cellInput"] = split_lines(input_data) if input_data else []
-                cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+                if cell["cellType"]:
+                    cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
 
             if cell["cellInput"]:
                 if cell["cellType"]:
@@ -978,7 +981,7 @@ class Terminal(object):
                     md_lines.append("```")
                 md_lines.append ("")
 
-            if cell["cellOutput"]:
+            if cell["cellOutput"] and cell["cellType"]:
                 out_lines = []
                 for scroll_line in cell["cellOutput"]:
                     opts = scroll_line[JPARAMS][JOPTS]
@@ -1032,8 +1035,8 @@ class Terminal(object):
                             if state == "output":
                                 # New output block
                                 if not cur_cell:
-                                    # Treat orphan output block as raw text
-                                    raw_lines.append("")
+                                    # Ignore orphan output block
+                                    pass
                             else:
                                 # New code block
                                 code_lines = []
@@ -1041,9 +1044,8 @@ class Terminal(object):
                             # Leaving fenced block
                             leaving_block = True
                             if state == "output":
-                                if not cur_cell:
-                                    # Treat orphan output block as raw text
-                                    raw_lines.append("")
+                                # Ignore orphan output block
+                                pass
                             else:
                                 # Leaving code block
                                 self.update()
@@ -1058,8 +1060,8 @@ class Terminal(object):
                             if cur_cell:
                                 self.note_screen_buf.scroll_buf_up(line, None)
                             else:
-                                # Treat orphan output line as raw code
-                                raw_lines.append("    "+line)
+                                # Ignore orphan output block
+                                pass
                         else:
                             # Within code block
                             code_lines.append(line)
@@ -1111,18 +1113,23 @@ class Terminal(object):
         self.update()
 
     def add_cell(self, new_cell_type="code", init_text="", before_cell_number=0):
-        # New cell after current cell, or before_cell_number
-        logging.warning("ABCadd_cell: %s %s", new_cell_type, before_cell_number)
+        """ If before_cell_number is 0(-1), add new cell after(before) current cell
+            If before_cell_number > 0, add new_cell before before_cell_number
+        """
+        prev_index = self.note_cells["curIndex"]
         self.leave_cell()
         self.note_cells["maxIndex"] += 1
-        prev_index = self.note_cells["curIndex"]
         cell_index = self.note_cells["maxIndex"]
+        logging.warning("ABCadd_cell: %s %s %s %s", new_cell_type, before_cell_number, cell_index, prev_index)
         new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
         new_cell["cellInput"] = split_lines(init_text) if init_text else []
         self.note_cells["cells"][cell_index] = new_cell
         self.note_cells["curIndex"] = cell_index
-        if not before_cell_number:
-            before_cell_number = 2 + self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
+        if before_cell_number in (-1, 0):
+            before_cell_number += 2+self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
+
+        if before_cell_number <= 0:
+            return
 
         if before_cell_number > len(self.note_cells["cellIndices"]):
             before_cell_index = 0
@@ -1134,40 +1141,54 @@ class Terminal(object):
         self.screen_callback(self.term_name, "", "note_add_cell",
                              [cell_index, new_cell_type, before_cell_index, new_cell["cellInput"]])
 
+    def next_index(self, move_up=False, switch=False):
+        """Return index of next cell down (or up), or 0. If switch, switch moving up or down, if necessary"""
+        cur_index = self.note_cells["curIndex"]
+        ncells = len(self.note_cells["cellIndices"])
+        if not cur_index or ncells < 2:
+            return 0
+
+        cur_location = self.note_cells["cellIndices"].index(cur_index)
+
+        if switch:
+            if move_up and cur_location == 0:
+                move_up = False
+            elif not move_up and cur_location == ncells-1:
+                move_up = True
+
+        if move_up and cur_location > 0:
+            return self.note_cells["cellIndices"][cur_location-1]
+        elif not move_up and cur_location < ncells-1:
+            return self.note_cells["cellIndices"][cur_location+1]
+
+        return 0
+
     def leave_cell(self, delete=False, move_up=False):
         """Leave current cell, deleting it if requested. Return index of new cell, or 0"""
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return
+        select_cell_index = self.next_index(move_up=move_up, switch=True)
+
         # Move all screen lines to scroll buffer
         cur_cell = self.note_cells["cells"][cur_index]
         self.scroll_screen(self.active_rows)
-        cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+        if cur_cell["cellType"]:
+            cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
         self.note_screen_buf.clear_buf()
-
         self.note_cells["curIndex"] = 0
-        cur_location = self.note_cells["cellIndices"].index(cur_index)
-        
-        if move_up and cur_location > 0:
-            switch_cell_index = self.note_cells["cellIndices"][cur_location-1]
-        elif cur_location < len(self.note_cells["cellIndices"])-1:
-            switch_cell_index = self.note_cells["cellIndices"][cur_location+1]
-        elif cur_location > 0:
-            switch_cell_index = self.note_cells["cellIndices"][0]
-        else:
-            switch_cell_index = 0
             
         if delete:
             assert len(self.note_cells["cells"]) > 1
             del self.note_cells["cells"][cur_index]
             self.note_cells["cellIndices"].remove(cur_index)
 
-        logging.warning("ABCleave_cell: %s %s", cur_index, switch_cell_index)
-        return switch_cell_index
+        logging.warning("ABCleave_cell: %s %s", cur_index, select_cell_index)
+        return select_cell_index
 
-    def select_cell(self, cell_index=0, delete=False, move_up=False):
-        """Select cell with cell_index (if zero, move up/down one cell)"""
-        logging.warning("ABCselect_cell: %s delete=%s up=%s", cell_index, delete, move_up)
+    def switch_cell(self, cell_index=0, delete=False, move_up=False):
+        """Switch to cell with cell_index (if zero, move up/down one cell)"""
+        logging.warning("ABCswitch_cell: %s delete=%s up=%s", cell_index, delete, move_up)
         next_cell_index = self.leave_cell(delete=delete, move_up=move_up)
         if not cell_index:
             cell_index = next_cell_index
@@ -1175,20 +1196,59 @@ class Terminal(object):
         assert cell_index in self.note_cells["cells"]
         self.note_cells["curIndex"] = cell_index
         next_cell = self.note_cells["cells"][cell_index]
-        self.note_screen_buf.prefill_buf(next_cell["cellOutput"])
+        if next_cell["cellType"]:
+            self.note_screen_buf.prefill_buf(next_cell["cellOutput"])
         next_cell["cellOutput"] = []
         return cell_index
 
-    def switch_cell(self, cell_index=0, move_up=False):
+    def select_cell(self, cell_index=0, move_up=False):
         cur_index = self.note_cells["curIndex"]
-        switch_cell_index = self.select_cell(cell_index, move_up=move_up)
-        if cur_index != switch_cell_index:
-            self.screen_callback(self.term_name, "", "note_switch_cell", [switch_cell_index])
+        select_cell_index = self.switch_cell(cell_index, move_up=move_up)
+        if cur_index != select_cell_index:
+            self.screen_callback(self.term_name, "", "note_select_cell", [select_cell_index])
 
-    def delete_cell(self):
+    def update_type(self, cell_type):
         cur_index = self.note_cells["curIndex"]
-        switch_cell_index = self.select_cell(delete=True)
-        self.screen_callback(self.term_name, "", "note_delete_cell", [cur_index, switch_cell_index])
+        if not cur_index:
+            return
+        logging.warning("ABCupdate_type: %s", cell_type)
+        cur_cell = self.note_cells["cells"][cur_index]
+        cur_cell["cellType"] = cell_type
+        cur_cell["cellOutput"] = []
+        self.screen_callback(self.term_name, "", "note_update_type", [cur_index, cell_type])
+
+    def move_cell(self, move_up=False):
+        cur_index = self.note_cells["curIndex"]
+        next_cell_index = self.next_index(move_up=move_up)
+        logging.warning("ABCmove_cell: up=%s, next=%s", move_up, next_cell_index)
+        if not next_cell_index:
+            return
+        cur_location = self.note_cells["cellIndices"].index(cur_index)
+        next_location = self.note_cells["cellIndices"].index(next_cell_index)
+        self.note_cells["cellIndices"][cur_location] = next_cell_index
+        self.note_cells["cellIndices"][next_location] = cur_index
+        self.screen_callback(self.term_name, "", "note_move_cell", [next_cell_index, move_up])
+
+    def delete_cell(self, move_up=False):
+        cur_index = self.note_cells["curIndex"]
+        select_cell_index = self.switch_cell(delete=True, move_up=move_up)
+        self.screen_callback(self.term_name, "", "note_delete_cell", [cur_index, select_cell_index])
+
+    def merge_above(self):
+        next_cell_index = self.next_index(move_up=True)
+        if not next_cell_index:
+            return
+        logging.warning("ABCmerge_above:")
+        cur_index = self.note_cells["curIndex"]
+        cur_cell = self.note_cells["cells"][cur_index]
+        next_cell = self.note_cells["cells"][next_cell_index]
+        if cur_cell["cellType"] != next_cell["cellType"]:
+            logging.warning("merge_cell: cell type mismatch %s != %s", cur_cell["cellType"], next_cell["cellType"])
+            return
+        next_cell["cellInput"] += cur_cell["cellInput"]
+        next_cell["cellOutput"] = []
+        self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(next_cell["cellInput"]), next_cell_index])
+        self.delete_cell(move_up=True)
 
     def complete_cell(self, incomplete):
         if incomplete:
@@ -1346,7 +1406,7 @@ class Terminal(object):
                                               self.width, self.height,
                                               0, 0, 0,
                                               [], cell["cellOutput"]])
-                self.screen_callback(self.term_name, "", "note_switch_cell", [self.note_cells["curIndex"]])
+                self.screen_callback(self.term_name, "", "note_select_cell", [self.note_cells["curIndex"]])
 
             full_update, update_rows, update_scroll = self.note_screen_buf.update(self.active_rows, self.width, self.height,
                                                                              self.cursor_x, self.cursor_y,
@@ -2586,19 +2646,40 @@ class Multiplex(object):
                 return ""
             return term.add_cell(new_cell_type, init_text, before_cell_number)
 
-    def switch_cell(self, term_name, cell_index, move_up):
+    def select_cell(self, term_name, cell_index, move_up):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.switch_cell(cell_index, move_up)
+            return term.select_cell(cell_index, move_up)
 
-    def delete_cell(self, term_name):
+    def move_cell(self, term_name, move_up):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.delete_cell()
+            return term.move_cell(move_up)
+
+    def update_type(self, term_name, cell_type):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.update_type(cell_type)
+
+    def delete_cell(self, term_name, move_up):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.delete_cell(move_up)
+
+    def merge_above(self, term_name):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.merge_above()
 
     def complete_cell(self, term_name, incomplete):
         with self.lock:
