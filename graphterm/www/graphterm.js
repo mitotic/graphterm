@@ -167,6 +167,41 @@ function epoch_time(round) {
     return round ? Math.round(time) : time;
 }
 
+var gRawConverter = new Markdown.Converter();
+var gConverter = new Markdown.getSanitizingConverter();
+
+function cgi_unescape(escaped_str) {
+  // Reverses python cgi.escape
+    return escaped_str ? ("" +escaped_str).replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&") : escaped_str;
+}
+
+function split_lines(text) {
+    // Split at line breaks; also replace no-break space (\xa0) with normal space
+    return text.replace(/\xa0/g, " ").replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n");
+}
+
+function md2html(mdText, safe, firstLine) {
+    if (!mdText)
+	return "";
+    var converter = safe ? gConverter : gRawConverter;
+    // Undo safe HTML escapes
+    mdText = cgi_unescape(mdText);
+    var lines = split_lines(mdText);
+    if (firstLine)
+	lines = lines.slice(0,1);
+    var new_lines = [];
+    for (var j=0; j<lines.length; j++) {
+	// Strip out lines with !python pygments directive
+	if (!lines[j].match(/^\s*!python\s*$/))
+	    new_lines.push(lines[j]);
+    }
+    var html = converter.makeHtml(new_lines.join("\n")+"\n");
+    if (html.substr(0,3) == "<p>" && html.substr(html.length-4) == "</p>") {
+	html = html.substr(3, html.length-7);
+    }
+    return html;
+}
+
 function createFileURI(uri) {
     if (uri.substr(0,FILE_URI_PREFIX.length) == FILE_URI_PREFIX)
 	return uri;
@@ -1421,6 +1456,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    if (row_params[JTYPE] == "pagelet") {
 				GTAppendPagelet($("#session-bufscreen"), row_params, entry_class, "pagelet entry "+entry_class+' '+add_class, markup);
 				delayed_scroll = true;
+			    } else if (row_params[JTYPE] == "markdown") {
+				row_html = '<div class="gterm-notecell-markdown '+entry_class+' '+add_class+'">\n'+md2html(markup)+'\n</div>';
+				$(row_html).appendTo("#session-bufscreen");
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
 				row_html = '<pre '+id_attr+' class="row entry '+entry_class+' '+add_class+'">'+row_escaped+"\n</pre>";
@@ -3175,6 +3213,7 @@ function GTNotebook(note_dir, fullpage) {
 }
 
 GTNotebook.prototype.close = function() {
+    console.log("GTNotebook.close: ");
     this.closed = true;
     if (this.poll_intervalID) {
 	window.clearInterval(this.poll_intervalID);
@@ -3358,7 +3397,7 @@ GTNotebook.prototype.renderCell = function(showInput) {
 	var text = inputElem.val();
 	if (!$.trim(text))
 	    text = "EMPTY MARKDOWN CELL";
-	outputElem.html(text);
+	outputElem.html(md2html(text));
 	if (showInput)
 	    this.cellFocus(true);
 	else

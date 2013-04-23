@@ -945,12 +945,16 @@ class Terminal(object):
             prompt = self.note_prompts[0]
             for cell in self.note_cells["cells"].itervalues():
                 # Copy all cellInput and cellOutput to scroll buffer
-                if cell["cellInput"]:
-                    for line in cell["cellInput"]:
-                        self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
-                    self.screen_buf.scroll_buf_up(prompt, "")
                 if cell["cellType"]:
+                    if cell["cellInput"]:
+                        for line in cell["cellInput"]:
+                            self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
+                        self.screen_buf.scroll_buf_up(prompt, "")
                     self.screen_buf.append_scroll(cell["cellOutput"])
+                elif cell["cellInput"]:
+                    row_params = ["markdown", {}]
+                    self.screen_buf.scroll_buf_up("", "", row_params=row_params, add_class="gterm-cell-input",
+                                                  markup="\n".join(cell["cellInput"]))
             self.reset_note()
             self.note_screen_buf.set_cur_note(0)
             self.note_screen_buf.clear_buf()
@@ -1202,6 +1206,8 @@ class Terminal(object):
         return cell_index
 
     def select_cell(self, cell_index=0, move_up=False):
+        if not self.note_cells:
+            return
         cur_index = self.note_cells["curIndex"]
         select_cell_index = self.switch_cell(cell_index, move_up=move_up)
         if cur_index != select_cell_index:
