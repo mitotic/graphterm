@@ -594,15 +594,9 @@ span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
     width: 80%;
 }
 
-
-
 /* Editor style */
-#jseditarea_content {
-    position: absolute;
-    top: 40;
-    left: 0;
-    width: 100%;
-    height: 100%;
+#gterm-editframe {
+    margin-top: 1.3em;
 }
 
 /* Tilting 3D perspective style */

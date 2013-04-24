@@ -51,7 +51,7 @@ var gRows = 0;
 var gCols = 0;
 var gWebSocket = null;
 
-var gTextEditing = null;
+var gEditing = null;
 
 var gFeedback = false;
 
@@ -546,6 +546,7 @@ function GTUpdateController() {
     GTMenuUpdateToggle("terminal_control", gParams.controller);
     if (gParams.controller)
 	handle_resize();
+    gFrameDispatcher.updateControl(gParams.controller);
 }
 
 function GTClearTerminal() {
@@ -1755,7 +1756,7 @@ function GTJoin(user, joining, setup) {
 }
 
 var gMenuState = {settings: {menubar: true, icons: false, terminal: {lock: false, share: true}, theme: ""},
-                  terminal: {control: true, webcast: false},
+                  terminal: {control: true, tandem: false, webcast: false},
                   notebook: {markdown: false}};
 var gMenuObj = null;
 
@@ -1788,6 +1789,8 @@ function GTMenuRefresh() {
 }
 
 function GTMenuRefreshToggle(target, update, newValue) {
+    if (!target || !$(target).length)
+	return;
     if (!newValue && newValue !== false && newValue !== "")
 	newValue = null;
 	
@@ -1882,6 +1885,9 @@ function GTMenuUpdate(stateKey, newValue) {
 	GTUpdateController();
 	break;
 
+    case "terminal_tandem":
+	break;
+
     case "terminal_webcast":
 	break;
 
@@ -1959,7 +1965,12 @@ function GTMenuTerminal(selectKey, newValue) {
 	window.location = "/";
 	break;
     case "control":
+	gParams.controller = newValue;
+	GTUpdateController();
 	gWebSocket.write([["settings", "terminal_control", newValue]])
+	break;
+    case "tandem":
+	gWebSocket.write([["settings", "terminal_tandem", newValue]])
 	break;
     case "webcast":
 	if (newValue && !window.confirm('Make terminal publicly viewable ("webcast")?')) {
@@ -2937,7 +2948,7 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
 function GTCaptureInput() {
     if (gShortcutMenus)
 	return false;
-    return (gParams.controller && gNotebook && !gNotebook.passthru_stdin && !gNotebook.prefix_key) || gForm || (gParams.controller && gTextEditing) || gPopupType;
+    return (gParams.controller && gNotebook && !gNotebook.passthru_stdin && !gNotebook.prefix_key) || gForm || (gParams.controller && gEditing) || gPopupType;
 }
 
 function GTClearCKEditor() {
@@ -2959,24 +2970,23 @@ function GTResizeCKEditor() {
 function GTStartEdit(params, content) {
     var editor = params.editor ? params.editor : gDefaultEditor;
     console.log("GTStartEdit", editor, params);
-    $("#terminal").hide();
+    $("#gterm-mid").hide();
+    gEditing = {params: params, content: content, editor: editor};
     if (params.editor == "textarea") {
-	gTextEditing = {params: params, content: content, editor: editor};
 	$("#gterm-texteditarea-content").val(content);
 	popupShow("#gterm-texteditarea", "editarea");
     } else {
 	var url = gParams.apps_url+"/"+editor+".html";
-	gFrameDispatcher.createFrame(params, content, url, "gterm-editframe");
-	$("#gterm-editframe").attr("src", url);
-	$("#gterm-editframe").show();
+	var html = gFrameDispatcher.createFrame(params, content, url, "gterm-editframe");
+	$("body").append(html);
     }
 }
 
 function GTEndEditArea(save) {
-    if (!gTextEditing)
+    if (!gEditing)
 	return;
     var newContent = $("#gterm-texteditarea-content").val();
-    GTEndEdit(newContent, gTextEditing.content, gTextEditing.params, save);
+    GTEndEdit(newContent, gEditing.content, gEditing.params, save);
 }
 
 function GTEndEdit(newContent, oldContent, params, save) {
@@ -3000,14 +3010,15 @@ function GTEndEdit(newContent, oldContent, params, save) {
     if (params.editor == "textarea") {
 	$("#gterm-texteditarea-content").val("");
 	popupClose(false);
-	gTextEditing = null;
     } else {
-	$("#gterm-editframe").attr("src", "");
-	$("#gterm-editframe").hide();
-	if (!save)
-	    GTPopAlert("File not saved");   // Seems to be needed to return focus to terminal. Why?
+	// Kludge to return focus from editor iframe to terminal
+	$('<textarea></textarea>').replaceAll("#gterm-editframe").focus().remove();
+	//$("#gterm-editframe").remove();
+	//if (!save)
+	    //GTPopAlert("File not saved");   // Seems to be needed to return focus to terminal. Why?
     }
-    $("#terminal").show();
+    gEditing = null;
+    $("#gterm-mid").show();
     ScrollScreen();
 }
 
@@ -3162,7 +3173,7 @@ function StartFullpage(display, split) {
 
 function GTFrameDispatcher() {
     this.frameControllers = {};
-    this.frameProps = null;
+    this.frameProps = {};
     this.frameIndex = 0;
 }
 
@@ -3173,17 +3184,16 @@ GTFrameDispatcher.prototype.createFrame = function(params, content, url, frameId
 	frameId = "frame" + this.frameIndex;
     }
 
-    this.frameProps = {id: frameId, params: params, content: content,
-                       controller: (gParams && gParams.controller)};
-    return '<iframe id="'+frameId+'" src="'+url+'" width="100%" height="100%></iframe>';
+    this.frameProps[frameId] = {id: frameId, params: params, content: content, controller: gParams && gParams.controller};
+    return '<iframe id="'+frameId+'" class="gterm-iframe" src="'+url+'" width="100%" height="100%"></iframe>';
 }
 
 GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
-    this.frameControllers[frameController.frameName] = {controller: frameController, props: this.frameProps};
 
     var frameId = $(frameObj).attr("id");
-    if (frameController && "open" in frameController && this.frameProps && this.frameProps.id == frameId) {
-	frameController.open(this.frameProps);
+    if (frameController && "open" in frameController && (frameId in this.frameProps)) {
+	this.frameControllers[frameController.frameName] = {controller: frameController, props: this.frameProps[frameId]};
+	frameController.open(this.frameProps[frameId]);
     }
     if (!gMobileBrowser) {
 	$("#"+frameId).addClass("noheader");
@@ -3191,6 +3201,18 @@ GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
 	$(".gterm-iframeheader").hide();
     }
     $("#"+frameId).focus();
+}
+
+GTFrameDispatcher.prototype.updateControl = function(value) {
+    for (var frameName in this.frameControllers) {
+	try {
+	    var frameController = this.frameControllers[frameName].controller;
+	    if ("control" in frameController)
+		frameController.control(value);
+	} catch (err) {
+	    console.log("GTFrameDispatcher.updateControl: ERROR "+frameName+": "+err);
+	}
+    }
 }
 
 GTFrameDispatcher.prototype.send = function(toUser, toFrame, msg) {
@@ -3221,7 +3243,7 @@ GTFrameDispatcher.prototype.close = function(frameName, save) {
 
     var props = this.frameControllers[frameName].props;
     if (frameName == "editor") {
-	if (!save && !window.confirm("Discard changes?"))
+	if (!save && gParams.controller && !window.confirm("Discard changes?"))
 	    return;
 	var newContent = save ? this.frameControllers[frameName].controller.getContent() : null;
 	GTEndEdit(newContent, props.content, props.params, save);
@@ -4075,7 +4097,6 @@ function GTReady() {
 
     setupTerminal();
     popupSetup();
-    $("#gterm-editframe").hide();
     $("#session-bufellipsis").hide();
     $("#session-findercontainer").hide();
     $("#session-widgetcontainer").hide();  // IMPORTANT (else top menu will be invisibly blocked)

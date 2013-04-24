@@ -379,7 +379,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if path not in self._control_params:
                 # Initialize parameters
-                self._control_params[path] = {"lock": False, "share": True}
+                self._control_params[path] = {"lock": False, "share": True, "tandem": False}
 
             terminal_params = self._control_params[path]
             if not terminal_params["share"]:
@@ -406,13 +406,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 controller = False
             elif self.wildcard:
                 controller = True
-            elif option == "share" and not terminal_params["lock"]:
-                controller = True
-                self._control_set[path].add(self.websocket_id)
             elif option == "steal" and not terminal_params["lock"]:
                 controller = True
-                self.broadcast(path, ["update", "terminal_control", False], controller=True)
-                self._control_set[path] = set([self.websocket_id])
+                if terminal_params["tandem"]:
+                    self._control_set[path].add(self.websocket_id)
+                else:
+                    self.broadcast(path, ["update", "terminal_control", False], controller=True)
+                    self._control_set[path] = set([self.websocket_id])
             elif option == "watch" or (path in self._control_set and self._control_set[path]):
                 controller = False
             else:
@@ -570,11 +570,19 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if not value:
                             self._control_set[self.remote_path].discard(self.websocket_id)
                         elif not self._control_set[self.remote_path] or not terminal_params["lock"]:
-                            self.broadcast(self.remote_path, ["update", key, False], controller=True)
-                            self._control_set[self.remote_path] = set([self.websocket_id])
+                            if terminal_params["tandem"]:
+                                self._control_set[self.remote_path].add(self.websocket_id)
+                            else:
+                                self.broadcast(self.remote_path, ["update", key, False], controller=True)
+                                self._control_set[self.remote_path] = set([self.websocket_id])
                         else:
                             raise Exception("Failed to acquire control of terminal")
-
+                    elif key == "terminal_tandem":
+                        terminal_params["tandem"] = value
+                        if not value:
+                            self.broadcast(self.remote_path, ["update", key, False], controller=True)
+                            self._control_set[self.remote_path] = set([self.websocket_id])
+                        self.broadcast(self.remote_path, ["update", key, value])
                     elif key == "terminal_webcast":
                         if terminal_params["share"]:
                             if self.remote_path in self._webcast_paths:

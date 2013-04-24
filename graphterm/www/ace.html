@@ -18,6 +18,7 @@ function GTermEditor(frameDispatcher) {
     this.frameDispatcher = frameDispatcher;
     this.frameName = "editor";
     this.frameApp = "ace";
+    this.updating = false;
 }
 
 GTermEditor.prototype.resize = function() {
@@ -41,6 +42,10 @@ GTermEditor.prototype.open = function(props) {
         GTUndoManager.prototype = new AceUndoManager();
 
         GTUndoManager.prototype.execute = function(options) {
+            if (gEditor.updating) {
+                gEditor.updating = false;
+                return;
+            }
     	    var deltas = options.args[0][0].deltas;
   	    if (gEditor.props.controller) {
 	        //console.log("GTUndoManager.execute: ", deltas);
@@ -60,7 +65,19 @@ GTermEditor.prototype.open = function(props) {
     }
 
     this.editor.getSession().setValue(props.content);
+    this.control(this.props.controller, true);
     setTimeout(this.resize, 500);
+}
+
+GTermEditor.prototype.control = function(value, setup) {
+    console.log("GTermEditor.control", value, setup);
+    if (!setup)
+        this.props.controller = value;
+    if (!value) {
+        this.editor.setReadOnly(true);
+    } else if (value && !setup) {
+        this.editor.setReadOnly(false);
+    }
 }
 
 GTermEditor.prototype.getContent = function() {
@@ -68,10 +85,15 @@ GTermEditor.prototype.getContent = function() {
 }
 
 GTermEditor.prototype.receive = function(fromUser, toUser, msg) {
-    if (msg[0] == "deltas")
-        this.editor.getSession().doc.applyDeltas(msg[1]);
-    else
-        this.close()
+    if (msg[0] == "deltas") {
+        this.updating = true;
+        try {
+            this.editor.getSession().doc.applyDeltas(msg[1]);
+        } catch(err) {
+        }
+    } else {
+        this.close();
+    }
 }
 
 GTermEditor.prototype.send = function(msg) {

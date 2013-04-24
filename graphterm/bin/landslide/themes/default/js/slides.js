@@ -571,6 +571,11 @@ function main() {
 	//setTimeout(this.resize, 500);
     }
 
+    GTermPresenter.prototype.control = function(value, setup) {
+	if (!setup)
+	    this.props.controller = value;
+    }
+
     GTermPresenter.prototype.receive = function(fromUser, toUser, msg) {
 	console.log("GTermPresenter.receive", fromUser, toUser, msg);
 	if (msg[0] == "slide") {
