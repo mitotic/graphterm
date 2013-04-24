@@ -64,7 +64,15 @@
                 <a href="#" class="gterm-toggle-link" gterm-state="settings_icons" gterm-toggle="false">icons <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
               <li>
-                <a href="#" class="gterm-toggle-link" gterm-state="settings_webcast" gterm-toggle="false">webcast <span class="gterm-toggle-status">&#x2714;</span></a>
+                <a href="#">terminal</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li>
+                    <a href="#" class="gterm-toggle-link" gterm-state="settings_terminal_lock" gterm-toggle="false">lock <span class="gterm-toggle-status">&#x2714;</span></a>
+                  </li>
+                  <li>
+                    <a href="#" class="gterm-toggle-link" gterm-state="settings_terminal_share" gterm-toggle="false">share <span class="gterm-toggle-status">&#x2714;</span></a>
+                  </li>
+                </ul>
               </li>
               <li>
                 <a href="#">theme</a>
@@ -88,8 +96,20 @@
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="terminal_new">new</a></li>
               <li><a href="#" gterm-state="terminal_reconnect">reconnect</a></li>
-              <li><a href="#" gterm-state="terminal_steal">steal</a></li>
               <li><a href="#" gterm-state="terminal_detach">detach</a></li>
+              <hr class="sf-separator">
+              <li>
+                <a href="#" class="gterm-toggle-link" gterm-state="terminal_control" gterm-toggle="false">control <span class="gterm-toggle-status">&#x2714;</span></a>
+              </li>
+              <li>
+                <a href="#" class="gterm-toggle-link" gterm-state="terminal_webcast" gterm-toggle="false">webcast <span class="gterm-toggle-status">&#x2714;</span></a>
+              </li>
+              <hr class="sf-separator">
+              <li>
+                <a href="#">shared <span id="gterm-menu-shared-count"></span></a>
+                <ul id="gterm-menu-shared-list">
+                </ul>
+              </li>
             </ul>
           </li>
 
@@ -112,8 +132,8 @@
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="notebook_new">new</a></li>
               <li><a href="#" gterm-state="notebook_open">open</a></li>
-              <li><a href="#" gterm-state="notebook_close">close</a></li>
               <li><a href="#" gterm-state="notebook_save">save</a></li>
+              <li><a href="#" gterm-state="notebook_quit">quit</a></li>
               <hr class="sf-separator">
               <li><a href="#" gterm-state="notebook_execute">execute cell</a></li>
               <li><a href="#" gterm-state="notebook_run">run in-place</a></li>

@@ -537,13 +537,13 @@ function GTReceivedUserInput(source) {
 }
 
 function GTUpdateController() {
-    var label_text = "Session: "+gParams.host+"/"+gParams.term+"/"+(gParams.controller ? "control" : "watch");
+    var label_text = gParams.host+"/"+gParams.term;
     $("#menubar-sessionlabel").text(label_text);
     if (gParams.controller)
 	window.name = gParams.host+"/"+gParams.term;
     else
 	window.name = "";
-
+    GTMenuUpdateToggle("terminal_control", gParams.controller);
     if (gParams.controller)
 	handle_resize();
 }
@@ -854,18 +854,22 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "redirect") {
 		window.location = command[1];
 
+            } else if (action == "join") {
+		GTJoin(command[1], command[2]);
+
             } else if (action == "update") {
-		if (command[1] == "controller") {
-		    gParams.controller = command[2];
-		    GTUpdateController();
-		}
+		// Update settings
+		GTMenuUpdate(command[1], command[2]);
 
             } else if (action == "setup") {
 		$("#authenticate").hide();
 		$("#terminal").show();
 		$("#session-container").show();
 		gParams = command[1];
+		GTMenuStateUpdate(gParams.state_values);
 		GTUpdateController();
+		for (var k=0; k<gParams.watchers.length; k++)
+		    GTJoin(gParams.watchers[k], true, true);
 		gtermFeedbackStatus(gParams.feedback);
 
 		if (gParams.host_secret)
@@ -1730,7 +1734,29 @@ function GTExportEnvironment() {
 	gWebSocket.write([["export_environment"]]);
 }
 
-var gMenuState = {settings: {menubar: true, icons: false, webcast: false, theme: ""}, notebook: {markdown: false}};
+var gSharedCount = 0;
+var gShared = {};
+function GTJoin(user, joining, setup) {
+    console.log("GTJoin: ", user, joining, setup);
+    if (joining) {
+	gSharedCount += 1;
+	if (user && !(user in gShared)) {
+	    gShared[user] = 1;
+	    $('#gterm-menu-shared-list').append('<li class="gterm-menu-shared-user" gterm-user="'+user+'"><a href="#">'+user+'</a></li>');
+	}
+    } else {
+	gSharedCount -= 1;
+	if (user && (user in gShared)) {
+	    $('#gterm-menu-shared-list li[gterm-user="'+user+'"]').remove();
+	    delete gShared[user];
+	}
+    }
+    $('#gterm-menu-shared-count').text(""+gSharedCount);
+}
+
+var gMenuState = {settings: {menubar: true, icons: false, terminal: {lock: false, share: true}, theme: ""},
+                  terminal: {control: true, webcast: false},
+                  notebook: {markdown: false}};
 var gMenuObj = null;
 
 function GTMenuSetup() {
@@ -1739,6 +1765,17 @@ function GTMenuSetup() {
     });
     $("ul.sf-menu").on("click", "a", GTMenuHandler);
     GTMenuRefresh();
+}
+
+function GTMenuStateUpdate(stateValues, prefix) {
+    prefix = prefix || "";
+    for (var key in stateValues) {
+	var val = stateValues[key];
+	if (_.isObject(val))
+	    GTMenuStateUpdate(val, prefix+key+"_");
+	else
+	    GTMenuUpdateToggle(prefix+key, val);
+    }
 }
 
 function GTMenuRefresh() {
@@ -1755,7 +1792,7 @@ function GTMenuRefreshToggle(target, update, newValue) {
 	newValue = null;
 	
     var stateKey = $(target).attr("gterm-state");
-    console.log("GTMenuRefreshToggle: ", stateKey, update, newValue, target);
+    //console.log("GTMenuRefreshToggle: ", stateKey, update, newValue, target);
     if (!stateKey)
 	return null;
     var comps = stateKey.split("_");
@@ -1779,6 +1816,10 @@ function GTMenuRefreshToggle(target, update, newValue) {
 	$(target).attr("gterm-toggle", menuObj[comps[0]] ? "true":"false" );
     }
     return menuObj[comps[0]];
+}
+
+function GTMenuUpdateToggle(stateKey, newValue) {
+    GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="'+stateKey+'"]'), true, newValue);
 }
 
 function GTMenuHandler(evt) {
@@ -1815,23 +1856,41 @@ function GTMenuEvent(target, setValue) {
 	return null;
     var comps = stateKey.split("_");
     var selectKey = comps.slice(1).join("_");
-    if ($(target).hasClass("gterm-toggle-link") || $(target).hasClass("gterm-radio-link")) {
-	var newValue = GTMenuRefreshToggle(target, true, setValue);
-	if (comps[0] == "settings")
-	    GTMenuSettings(selectKey, newValue);
-	else if (comps[0] == "notebook")
-	    GTMenuNotebook(selectKey, newValue);
-    } else {
-	if (comps[0] == "terminal")
-	    GTMenuTerminal(selectKey);
-	else if (comps[0] == "action")
-	    GTMenuAction(selectKey);
-	else if (comps[0] == "notebook")
-	    GTMenuNotebook(selectKey);
-	else if (comps[0] == "help")
-	    GTMenuHelp(selectKey);
-    }
+    var newValue = null;
+    if ($(target).hasClass("gterm-toggle-link") || $(target).hasClass("gterm-radio-link"))
+	newValue = GTMenuRefreshToggle(target, true, setValue);
+    if (comps[0] == "settings")
+	GTMenuSettings(selectKey, newValue);
+    else if (comps[0] == "terminal")
+	GTMenuTerminal(selectKey, newValue);
+    else if (comps[0] == "action")
+	GTMenuAction(selectKey, newValue);
+    else if (comps[0] == "notebook")
+	GTMenuNotebook(selectKey, newValue);
+    else if (comps[0] == "help")
+	GTMenuHelp(selectKey, newValue);
     return true;
+}
+
+function GTMenuUpdate(stateKey, newValue) {
+    console.log("GTMenuSettings: ", stateKey, newValue);
+    GTMenuUpdateToggle(stateKey, newValue);
+
+    switch (stateKey) {
+    case "terminal_control":
+	gParams.controller = newValue;
+	GTUpdateController();
+	break;
+
+    case "terminal_webcast":
+	break;
+
+    case "settings_terminal_lock":
+	break;
+
+    case "settings_terminal_share":
+	break;
+    }
 }
 
 function GTMenuSettings(selectKey, newValue) {
@@ -1847,9 +1906,8 @@ function GTMenuSettings(selectKey, newValue) {
 	$("#terminal").toggleClass("showicons", gWebSocket.icons);
 	break;
 
-    case "webcast":
-        // Webcast
-	Webcast(!!newValue);
+    case "terminal":
+	gWebSocket.write([["settings", "settings_terminal_"+comps[1], !!newValue]]);
 	break;
 
     case "theme":
@@ -1878,7 +1936,14 @@ function GTMenuSettings(selectKey, newValue) {
     }
 }
 
-function GTMenuTerminal(selectKey) {
+function GTMenuTerminal(selectKey, newValue) {
+    if (!gWebSocket)
+	return;
+    if (!gParams.controller && (selectKey != "control" || gMenuState.settings.terminal.lock)) {
+	alert("Only controller can update settings");
+    }
+	
+    newValue = !!newValue;
     console.log("GTMenuTerminal: ", selectKey);
     switch (selectKey) {
     case "new":
@@ -1894,8 +1959,16 @@ function GTMenuTerminal(selectKey) {
 	window.location = "/";
 	break;
     case "control":
-	$("#headfoot-control").toggleClass("gterm-headfoot-active");
-	gControlActive = $("#headfoot-control").hasClass("gterm-headfoot-active");
+	gWebSocket.write([["settings", "terminal_control", newValue]])
+	break;
+    case "webcast":
+	if (newValue && !window.confirm('Make terminal publicly viewable ("webcast")?')) {
+	    GTMenuUpdateToggle("terminal_webcast", false);
+	    return;
+	}
+	$("#terminal").toggleClass("webcast", newValue);
+	gWebSocket.webcast = newValue;
+	gWebSocket.write([["settings", "terminal_webcast", newValue]]);
 	break;
     }
 }
@@ -1973,6 +2046,10 @@ function gtermMenuClickHandler(event) {
     console.log("gtermMenuClickHandler", $(this).attr("id"), idcomps[1]);
     var text = "";
     switch (idcomps[1]) {
+    case "control":
+	$("#headfoot-control").toggleClass("gterm-headfoot-active");
+	gControlActive = $("#headfoot-control").hasClass("gterm-headfoot-active");
+	break;
     case "home":
 	if (gWebSocket)
 	    gWebSocket.term_input("cd; gls\n");
@@ -3305,7 +3382,7 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
     if (!gWebSocket || !gParams.controller)
 	return;
     var cellParams = this.cellParams[this.curIndex];
-    if (command == "close") {
+    if (command == "quit") {
 	GTCloseNotebook();
     } else if (command == "save") {
 	var filepath = $.trim(window.prompt("Save as: "));
@@ -3472,7 +3549,7 @@ GTNotebook.prototype.cellFocus = function(focus, fullScroll) {
 	textElem.trigger("change");
 	this.passthru_stdin = false;
 	setTimeout(fullScroll ? ScrollTerm : bind_method(this, this.cellScroll), 200);
-	GTMenuRefreshToggle($('#gterm-menu a[gterm-state="notebook_markdown"]'), true, !this.cellParams[this.curIndex].cellType);
+	GTMenuUpdateToggle("notebook_markdown", !this.cellParams[this.curIndex].cellType);
     } else {
 	textElem.blur();
 	this.passthru_stdin = true;
