@@ -48,11 +48,7 @@
   <div id="terminal" class="terminal">
     <div id="gterm-header" class="gterm-header">
       <div id="gterm-header-container">
-        &nbsp;
-        <span id="menubar-sessionlabel" class="menubar-label"></span>
-        &nbsp;
-        <span id="headfoot-home" class="headfoot-icon"><b>&#x2302;</b></span>
-
+        <div class="gterm-menubar-container">
         <ul class="sf-menu gterm-menukey-firstletter" id="gterm-menu">
           <li>
             <a href="#">settings</a>
@@ -64,18 +60,18 @@
                 <a href="#" class="gterm-toggle-link" gterm-state="settings_icons" gterm-toggle="false">icons <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
               <li>
-                <a href="#">terminal</a>
+                <a href="#">terminal &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
                   <li>
-                    <a href="#" class="gterm-toggle-link" gterm-state="settings_terminal_lock" gterm-toggle="false">lock <span class="gterm-toggle-status">&#x2714;</span></a>
+                    <a href="#" class="gterm-toggle-link gterm-only-controller" gterm-state="settings_terminal_lock" gterm-toggle="false">lock <span class="gterm-toggle-status">&#x2714;</span></a>
                   </li>
                   <li>
-                    <a href="#" class="gterm-toggle-link" gterm-state="settings_terminal_share" gterm-toggle="false">share <span class="gterm-toggle-status">&#x2714;</span></a>
+                    <a href="#" class="gterm-toggle-link gterm-only-controller" gterm-state="settings_terminal_share" gterm-toggle="false">share <span class="gterm-toggle-status">&#x2714;</span></a>
                   </li>
                 </ul>
               </li>
               <li>
-                <a href="#">theme</a>
+                <a href="#">theme &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
                   <li>
                     <a href="#" class="gterm-radio-link" gterm-state="settings_theme_default" gterm-toggle="false">default <span class="gterm-toggle-status">&#x2714;</span></a>
@@ -99,19 +95,13 @@
               <li><a href="#" gterm-state="terminal_detach">detach</a></li>
               <hr class="sf-separator">
               <li>
-                <a href="#" class="gterm-toggle-link" gterm-state="terminal_control" gterm-toggle="false">control <span class="gterm-toggle-status">&#x2714;</span></a>
+                <a href="#" class="gterm-toggle-link gterm-non-locked" gterm-state="terminal_control" gterm-toggle="false">control <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
               <li>
-                <a href="#" class="gterm-toggle-link" gterm-state="terminal_tandem" gterm-toggle="false">tandem <span class="gterm-toggle-status">&#x2714;</span></a>
+                <a href="#" class="gterm-toggle-link gterm-only-controller" gterm-state="terminal_tandem" gterm-toggle="false">tandem <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
               <li>
-                <a href="#" class="gterm-toggle-link" gterm-state="terminal_webcast" gterm-toggle="false">webcast <span class="gterm-toggle-status">&#x2714;</span></a>
-              </li>
-              <hr class="sf-separator">
-              <li>
-                <a href="#">shared <span id="gterm-menu-shared-count"></span></a>
-                <ul id="gterm-menu-shared-list">
-                </ul>
+                <a href="#" class="gterm-toggle-link gterm-only-controller" gterm-state="terminal_webcast" gterm-toggle="false">webcast <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
             </ul>
           </li>
@@ -124,53 +114,54 @@
               <li><a href="#" gterm-state="action_clear">clear</a></li>
               <li><a href="#" gterm-state="action_collapse" class="gterm-key-altletter">c<span class="gterm-key-letter">o</span>llapse</a></li>
               <li><a href="#" gterm-state="action_expand" class="gterm-key-altletter">e<span class="gterm-key-letter">x</span>pand</a></li>
-              <li><a href="#" gterm-state="action_home">home folder</a></li>
-              <li><a href="#" gterm-state="action_export">export environment</a></li>
-              <li><a href="#" gterm-state="action_paste">paste special</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="action_home">home folder</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="action_export">export environment</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="action_paste">paste special</a></li>
             </ul>
           </li>
 
           <li>
             <a href="#">notebook</a>
             <ul class="gterm-menukey-firstletter">
-              <li><a href="#" gterm-state="notebook_new">new</a></li>
-              <li><a href="#" gterm-state="notebook_open">open</a></li>
-              <li><a href="#" gterm-state="notebook_save">save</a></li>
-              <li><a href="#" gterm-state="notebook_quit">quit</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="notebook_new">new</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="notebook_open">open</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="notebook_save">save</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="notebook_quit">quit</a></li>
               <hr class="sf-separator">
-              <li><a href="#" gterm-state="notebook_execute">execute cell</a></li>
-              <li><a href="#" gterm-state="notebook_run">run in-place</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="notebook_execute">execute cell</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="notebook_run">run in-place</a></li>
               <li>
-                <a href="#" class="gterm-toggle-link" gterm-state="notebook_markdown" gterm-toggle="false">markdown <span class="gterm-toggle-status">&#x2714;</span></a>
+                <a href="#" class="gterm-toggle-link gterm-only-controller" gterm-state="notebook_markdown" gterm-toggle="false">markdown <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
               <li>
-                <a href="#">cell</a>
+                <a href="#">cell &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
-                  <li><a href="#" gterm-state="notebook_cell_delete">delete</a></li>
-                  <li><a href="#" gterm-state="notebook_cell_split">split</a></li>
-                  <li><a href="#" gterm-state="notebook_cell_merge">merge above</a></li>
-                  <li><a href="#" gterm-state="notebook_cell_read">read file</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_delete">delete</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_split">split</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_merge">merge above</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_read">read file</a></li>
+                  <li><a href="#" gterm-state="notebook_cell_write">write file</a></li>
                 </ul>
               </li>
               <li>
-                <a href="#">insert cell</a>
+                <a href="#">insert cell &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
-                  <li><a href="#" gterm-state="notebook_insert_above">above</a></li>
-                  <li><a href="#" gterm-state="notebook_insert_below">below</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_insert_above">above</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_insert_below">below</a></li>
                 </ul>
               </li>
               <li>
-                <a href="#" class="gterm-key-altletter">mo<span class="gterm-key-letter">v</span>e cell</a>
+                <a href="#" class="gterm-key-altletter">mo<span class="gterm-key-letter">v</span>e cell &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
-                  <li><a href="#" gterm-state="notebook_move_down">down</a></li>
-                  <li><a href="#" gterm-state="notebook_move_up">up</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_move_down">down</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_move_up">up</a></li>
                 </ul>
               </li>
               <li>
-                <a href="#" class="gterm-key-altletter">se<span class="gterm-key-letter">l</span>ect cell</a>
+                <a href="#" class="gterm-key-altletter">se<span class="gterm-key-letter">l</span>ect cell &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
-                  <li><a href="#" gterm-state="notebook_select_previous">previous</a></li>
-                  <li><a href="#" gterm-state="notebook_select_next">next</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_select_previous">previous</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_select_next">next</a></li>
                 </ul>
               </li>
             </ul>
@@ -184,10 +175,21 @@
               <li><a href="#" gterm-state="help_info">info</a></li>
             </ul>
           </li>
-
+          <li class="gterm-menu-white">
+              <a href="#" class="gterm-key-altletter"><span id="menubar-sessionlabel"></span>: <span id="gterm-menu-shared-count"></span></a>
+              <ul id="gterm-menu-shared-list">
+              </ul>
+          </li>
+          <li class="gterm-menu-curved gterm-non-controller"><a href="#" gterm-state="steal" class="gterm-key-altletter">s<span class="gterm-key-letter">t</span>eal</a></li>
+          <li class="gterm-menu-curved"><a href="#" gterm-state="home"  class="gterm-key-altletter">ho<span class="gterm-key-letter">m</span>e</a></li>
+          <li class="gterm-menu-curved"><a href="#" gterm-state="new" class="gterm-key-altletter">ne<span class="gterm-key-letter">w</span></a></li>
         </ul>
         &nbsp;
-        <span id="menubar-share-icon" class="menubar-label"><b>&#x26AD;</b></span>
+        <ul class="sf-menu gterm-menulabel-container">
+          <!--<li class="gterm-nolink gterm-menu-white"><a href="#">share</a></li>-->
+        </ul>
+        </div>
+
       </div> <!-- gterm-header-container -->
       <div id="session-topfold"></div>
     </div> <!-- gterm-header -->

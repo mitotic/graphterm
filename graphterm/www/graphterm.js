@@ -63,6 +63,7 @@ var gFormIndex = null;
 var gExpectUpload = null
 var gUploadFile = null;
 
+var gControlQ = false;
 var gShortcutMenus = null;
 var gDebug = true;
 var gDebugKeys = false;
@@ -544,6 +545,7 @@ function GTUpdateController() {
     else
 	window.name = "";
     GTMenuUpdateToggle("terminal_control", gParams.controller);
+    $("#terminal").toggleClass("gterm-controller", gParams.controller);
     if (gParams.controller)
 	handle_resize();
     gFrameDispatcher.updateControl(gParams.controller);
@@ -1798,6 +1800,8 @@ function GTMenuRefreshToggle(target, update, newValue) {
     //console.log("GTMenuRefreshToggle: ", stateKey, update, newValue, target);
     if (!stateKey)
 	return null;
+    if (stateKey == "settings_terminal_lock")
+	$("#terminal").toggleClass("gterm-locked", !!newValue);
     var comps = stateKey.split("_");
     var menuObj = gMenuState;
     while (comps.length > 0) {
@@ -1840,7 +1844,10 @@ function GTMenuHandler(evt) {
 
 function GTMenuTrigger(stateKey, setValue) {
     GTReceivedUserInput("menutrigger");
-    var elem = $('#gterm-menu a[gterm-state$="'+stateKey+'"]');
+    // Check for exact match
+    var elem = $('#gterm-menu a[gterm-state="'+stateKey+'"]');
+    if (!elem.length)
+	elem = $('#gterm-menu a[gterm-state$="'+stateKey+'"]');
     if (elem.length == 1)
 	return GTMenuEvent(elem, setValue);
 
@@ -1853,6 +1860,12 @@ function GTMenuTrigger(stateKey, setValue) {
 }
 
 function GTMenuEvent(target, setValue) {
+    if ($(target).hasClass("gterm-only-controller") && !gParams.controller)
+	return false;
+    if ($(target).hasClass("gterm-non-controller") && gParams.controller)
+	return false;
+    if ($(target).hasClass("gterm-non-locked") && gMenuState.settings.lock)
+	return false;
     var stateKey = $(target).attr("gterm-state");
     console.log("GTMenuEvent: ", stateKey, target);
     if (!stateKey)
@@ -1872,6 +1885,8 @@ function GTMenuEvent(target, setValue) {
 	GTMenuNotebook(selectKey, newValue);
     else if (comps[0] == "help")
 	GTMenuHelp(selectKey, newValue);
+    else
+	GTMenuTop(comps[0]);
     return true;
 }
 
@@ -1980,6 +1995,24 @@ function GTMenuTerminal(selectKey, newValue) {
 	$("#terminal").toggleClass("webcast", newValue);
 	gWebSocket.webcast = newValue;
 	gWebSocket.write([["settings", "terminal_webcast", newValue]]);
+	break;
+    }
+}
+
+function GTMenuTop(topKey) {
+    console.log("GTMenuTop: ", topKey);
+    switch (topKey) {
+    case "steal":
+	gParams.controller = true;
+	GTUpdateController();
+	gWebSocket.write([["settings", "terminal_control", true]])
+	break;
+    case "home":
+	if (gWebSocket)
+	    gWebSocket.term_input("cd; gls\n");
+	break;
+    case "new":
+	OpenNew();
 	break;
     }
 }
@@ -2356,19 +2389,32 @@ function GTExpandCurEntry(expand) {
     }
 }
 
+
+function GTShortcutPrefixKey(evt) {
+    // Control-J prefix: menu shortcuts
+    if (gControlQ) {
+	gControlQ = false;
+	return false;
+    }
+    if (gShortcutMenus) {
+	GTShortcutEnd(true);
+    } else {
+	$("#terminal").addClass("gterm-shortcut-mode");
+	gShortcutMenus = [$("#gterm-menu")];
+    }
+    return true;
+}
+
 function keydownHandler(evt) {
     var activeTag = "";
     var activeType = "";
     var activeElem = $(document.activeElement);
 
-    if (evt.which == 74 && evt.ctrlKey) {
+    if (evt.which == 81 && evt.ctrlKey) {
+	// Control-Q prefix: menu shortcuts
+	gControlQ = true;
+    } else if (evt.which == 74 && evt.ctrlKey && GTShortcutPrefixKey(evt)) {
 	// Control-J prefix: menu shortcuts
-	if (gShortcutMenus) {
-	    GTShortcutEnd(true);
-	} else {
-	    $("#terminal").addClass("gterm-shortcut-mode");
-	    gShortcutMenus = [$("#gterm-menu")];
-	}
 	return false;
     }
 
@@ -2490,6 +2536,11 @@ function pasteKeyHandler(evt) {
 function keypressHandler(evt) {
     if (gDebugKeys)
 	console.log("graphterm.keypressHandler: code ", evt.keyCode, evt.which, evt);
+
+    if (evt.which == 106 && evt.ctrlKey && gShortcutMenus) {
+	// Control-J prefix: ignore duplicate in Firefox
+	return false;
+    }
 
     if (gWebSocket && gWebSocket.terminal)
 	return AjaxKeypress(evt);
@@ -2709,6 +2760,9 @@ function AjaxKeypress(evt) {
 
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress2", kc, k, k.charCodeAt(0), k.length);
+
+    if (k != String.fromCharCode(17))
+	gControlQ = false;
 
     if (gShortcutMenus) {
 	GTShortcutHandler(k);

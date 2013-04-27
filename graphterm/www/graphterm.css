@@ -56,6 +56,7 @@ body.ipadscreen  {
 #terminal #gterm-header {
     margin: 0;
     padding: 0;
+    width: 100%;
 }
 
 #gterm-header div#gterm-header-container {
@@ -128,6 +129,32 @@ hr {
 
 /* Superfish styles */
 
+#terminal.gterm-controller .sf-menu .gterm-non-controller,
+ #terminal:not(gterm-controller) .sf-menu .gterm-only-controller,
+ #terminal.gterm-locked .sf-menu .gterm-non-locked,
+ #terminal:not(gterm-locked) .sf-menu .gterm-only-locked {
+    opacity: 0.40;
+}
+
+.sf-menu li.gterm-menu-white {
+    background-color: white;
+    color: black;
+}
+
+.sf-menu li.gterm-menu-curved {
+    border-radius: 15px;
+    padding-right: 1px;
+    padding-left: 1px;
+    margin-left: 2px;
+}
+.sf-menu li.gterm-menu-curved a {
+    border: none;
+}
+
+.sf-menu.gterm-menulabel-container li.gterm-menu-white:hover,
+.sf-menu.gterm-menulabel-container li.gterm-menu-white.sfHover {
+}
+
 ul.sf-menu a[gterm-toggle="false"] span.gterm-toggle-status {
     opacity: 0.1;
 }
@@ -156,6 +183,7 @@ hr.sf-separator {
 }
 
 #gterm-header ul.sf-menu a {
+    font-family: helvetica, sans-serif;
     padding: .25em 0.5em;
 }
 
