@@ -7,6 +7,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
 <!--
     <link href="http://code.mindmeldr.com/graphterm/_static/appicons/apple-touch-icon-57x57.png" sizes="57x57" rel="apple-touch-icon" />
     <link href="http://code.mindmeldr.com/graphterm/_static/appicons/apple-touch-icon-72x72.png" sizes="72x72" rel="apple-touch-icon" />
@@ -50,6 +51,7 @@
       <div id="gterm-header-container">
         <div class="gterm-menubar-container">
         <ul class="sf-menu gterm-menukey-firstletter" id="gterm-menu">
+          <li><a href="#" class="gterm-menu-img gterm-menu-splash" onclick="GTShowSplash(true,true);"><img class="gterm-logo" src="/static/GTY48x48.png" height="24"></img></a></li>
           <li>
             <a href="#">settings</a>
             <ul class="gterm-menukey-firstletter">
@@ -180,7 +182,7 @@
               <ul id="gterm-menu-shared-list">
               </ul>
           </li>
-          <li class="gterm-menu-curved gterm-non-controller"><a href="#" gterm-state="steal" class="gterm-key-altletter">s<span class="gterm-key-letter">t</span>eal</a></li>
+          <li class="gterm-menu-curved gterm-non-controller"><a href="#" gterm-state="steal" class="gterm-key-altletter">stea<span class="gterm-key-letter">l</span></a></li>
           <li class="gterm-menu-curved"><a href="#" gterm-state="home"  class="gterm-key-altletter">ho<span class="gterm-key-letter">m</span>e</a></li>
           <li class="gterm-menu-curved"><a href="#" gterm-state="new" class="gterm-key-altletter">ne<span class="gterm-key-letter">w</span></a></li>
         </ul>
@@ -295,13 +297,16 @@
   <div id="gtermsplashtext" class="gtermsplashtext">
    <h3>GraphTerm is a <em>graphical terminal interface</em> the blends
 the command line with the graphical user interface.</h3>
-<p>
-<h3>Type a Bash shell command or click <b>Home</b> on the menubar to get started...</h3>
-<p>
-<h3 class="gtermsplashalt">GraphTerm was developed as part of the Mindmeldr project.
+  <p>
+  <h3>Type a Bash shell command or click <em>home</em> on the menubar to get started.</h3>
+  <h3>Type Control-J to access menubar from keyboard.</h3>
+  <h3 class="gtermsplashalt">GraphTerm was developed as part of the Mindmeldr project.
 For more information, see <a target="_blank"
 href="http://code.mindmeldr.com/graphterm">code.mindmeldr.com/graphterm</a></h3>
   </div> <!-- gtermsplashtext -->
+   <div id="gtermsplashdiv">
+     <img src="/static/GTYY500.png" align="center" height="200"></img>
+   </div>
 </div> <!-- gtermsplash -->
 
 <!-- ACE/CK editor -->

@@ -75,6 +75,7 @@ var gAlwaysSplitScreen = gMobileBrowser;
 var gSplitScreen = false;
 var gShowingFinder = false;
 
+var gAnimatingSplash = false;
 var gProgrammaticScroll = false;
 var gManualScroll = false;
 var gMaxScrollOffset = 0;
@@ -883,7 +884,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		if (!gParams.oshell)
 		    openTerminal();
 		if (gParams.controller && gParams.display_splash && gParams.term != "osh")
-		    GTShowSplash();
+		    GTShowSplash(true);
 
             } else if (action == "host_list") {
 		if (command[1])
@@ -1831,7 +1832,8 @@ function GTMenuUpdateToggle(stateKey, newValue) {
 
 function GTMenuHandler(evt) {
     console.log("GTMenuHandler: ", evt);
-    GTReceivedUserInput("menuhandler");
+    if (!$(this).hasClass("gterm-menu-splash"))
+	GTReceivedUserInput("menuhandler");
     if (gShortcutMenus)
 	GTShortcutEnd(false);
     try {
@@ -4065,8 +4067,10 @@ function ScrollEventHandler(event) {
 }
 
 function ScrollTop(offset) {
+    if (gAnimatingSplash)
+	return;
     gProgrammaticScroll = true;
-    if (offset == null)
+    if (typeof(offset) == "undefined" || offset == null)
 	offset = $(document).height() - $(window).height(); // Scroll to bottom
     if (offset >= 0)
 	$(window).scrollTop(offset);
@@ -4078,24 +4082,57 @@ function ScrollTerm() {
     $(window).scrollTop(bot_offset - $(window).height());
 }
 
-function GTShowSplash(animate) {
-    if ($("#gtermsplash").hasClass("hidesplash"))
+function GTShowSplash(animate, force) {
+    if (!force && $("#gtermsplash").hasClass("hidesplash"))
 	return;
-    $("#gtermsplash").removeClass("noshow");
+    if (force) {
+	if (!$("#gtermsplash").hasClass("noshow")) {
+	    GTHideSplash(true);
+	    return;
+	}
+	$("#gtermsplash").attr("style", "").removeClass("hidesplash").removeClass("noshow");
+	setTimeout(ScrollTop, 200);
+    } else {
+	$("#gtermsplash").removeClass("noshow");
+    }
 }
 
-function GTHideSplash(animate) {
+function GTHideSplash(animate, rotate) {
+    console.log("GTHideSplash: ", animate);
     if ($("#gtermsplash").hasClass("hidesplash"))
 	return;
     $("#gtermsplash").addClass("hidesplash");
     if (animate) {
+	$("#gtermsplashdiv img").css("top", $("#gtermsplashdiv img").offset().top);
+        $("#gtermsplashdiv").addClass("gtermsplashanchor");
+	gAnimatingSplash = true;
 	$("#gtermsplash").animate({ 
             "margin-top": "+=300px",
             opacity: 0.0,
-	}, 2000, function() { $("#gtermsplash").hide(); });
+            "gtermRotation": 75.0
+	},
+        {
+           duration: 2000,
+	   step: function(now, tween) {
+               if (rotate && tween && tween.prop === "gtermRotation") {
+                $("#gtermsplashdiv img").css('transform','rotate('+now+'deg)');  
+            }
+           },
+	   complete: GTEndSplashAnimate
+       });
     } else {
-	$("#gtermsplash").hide();
+	GTEndSplashAnimate();
     }
+}
+
+function GTEndSplashAnimate() {
+    $("#gtermsplash").addClass("noshow");
+    //$("#gtermsplash").hide();
+    $("#gtermsplashdiv").removeClass("gtermsplashanchor");
+    $("#gtermsplashdiv img").css("top", "");
+    $("#gtermsplashdiv img").css("transform", "");
+    gAnimatingSplash = false;
+    ScrollTop(null);
 }
 
 function ScrollScreen(alt_mode) {
