@@ -3461,7 +3461,8 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	return;
     var cellParams = this.cellParams[this.curIndex];
     if (command == "quit") {
-	GTCloseNotebook();
+	if (window.confirm("Exit notebook mode?"))
+	    GTCloseNotebook();
     } else if (command == "save") {
 	var filepath = $.trim(window.prompt("Save as: "));
 	if (filepath) {
@@ -4103,25 +4104,37 @@ function GTHideSplash(animate, rotate) {
 	return;
     $("#gtermsplash").addClass("hidesplash");
     if (animate) {
-	$("#gtermsplashdiv img").css("top", $("#gtermsplashdiv img").offset().top);
+	$("#gtermsplashdiv img").css("top", $("#gtermsplashdiv img").offset().top - $("#gtermsplash").offset().top);
         $("#gtermsplashdiv").addClass("gtermsplashanchor");
 	gAnimatingSplash = true;
+	var offset = $("#gtermsplash").offset().top;
 	$("#gtermsplash").animate({ 
             "margin-top": "+=300px",
             opacity: 0.0,
-            "gtermRotation": 75.0
+            "gtermAnimate": 1.0
 	},
         {
-           duration: 2000,
+           duration: 2500,
 	   step: function(now, tween) {
-               if (rotate && tween && tween.prop === "gtermRotation") {
-                $("#gtermsplashdiv img").css('transform','rotate('+now+'deg)');  
-            }
+               if (tween && tween.prop === "gtermAnimate") {
+		   if (offset > 0)
+                       $(window).scrollTop(offset - now*$(window).height());
+		   if (rotate) {
+                       $("#gtermsplashdiv img").css('width',(200*(1.0-now))+"px");
+                       $("#gtermsplashdiv img").css('height',(200*(1.0-now))+"px");
+                       $("#gtermsplashdiv img").css('margin-left',(-100*(1.0-now))+"px");
+                       $("#gtermsplashdiv img").css('transform','rotate('+(now*75)+'deg)');
+		   }
+               }
            },
 	   complete: GTEndSplashAnimate
        });
     } else {
 	GTEndSplashAnimate();
+	if ($(window).height() < $("body").height())
+	    ScrollTop(null);
+	else
+	    ScrollTop(0);
     }
 }
 
@@ -4129,10 +4142,13 @@ function GTEndSplashAnimate() {
     $("#gtermsplash").addClass("noshow");
     //$("#gtermsplash").hide();
     $("#gtermsplashdiv").removeClass("gtermsplashanchor");
+    $("#gtermsplashdiv img").css("width", "");
+    $("#gtermsplashdiv img").css("height", "");
+    $("#gtermsplashdiv img").css("margin-left", "");
     $("#gtermsplashdiv img").css("top", "");
     $("#gtermsplashdiv img").css("transform", "");
+    $("#gtermsplash").css("gtermAnimate", "0");
     gAnimatingSplash = false;
-    ScrollTop(null);
 }
 
 function ScrollScreen(alt_mode) {

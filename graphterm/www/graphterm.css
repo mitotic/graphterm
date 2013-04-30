@@ -136,9 +136,9 @@ hr {
 /* Superfish styles */
 
 #terminal.gterm-controller .sf-menu .gterm-non-controller,
- #terminal:not(gterm-controller) .sf-menu .gterm-only-controller,
+ #terminal:not(.gterm-controller) .sf-menu .gterm-only-controller,
  #terminal.gterm-locked .sf-menu .gterm-non-locked,
- #terminal:not(gterm-locked) .sf-menu .gterm-only-locked {
+ #terminal:not(.gterm-locked) .sf-menu .gterm-only-locked {
     opacity: 0.40;
 }
 
@@ -633,6 +633,10 @@ span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
    left: 50%;
    width: 200px;
    margin-left: -100px;
+}
+
+#gtermsplashdiv.gtermsplashanchor img {
+    position: fixed;
 }
 
 /* Drag-and-drop */
