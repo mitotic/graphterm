@@ -3671,6 +3671,8 @@ GTNotebook.prototype.poll = function(force) {
 }
 
 GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
+    if (!this.curIndex)
+	return;
     var cellParams = this.cellParams[this.curIndex];
     if (!cellParams.cellType)
 	return;
@@ -4095,6 +4097,7 @@ function GTShowSplash(animate, force) {
 	setTimeout(ScrollTop, 200);
     } else {
 	$("#gtermsplash").removeClass("noshow");
+	ScrollTop(0);
     }
 }
 
@@ -4108,11 +4111,13 @@ function GTHideSplash(animate, rotate) {
         $("#gtermsplashdiv").addClass("gtermsplashanchor");
 	gAnimatingSplash = true;
 	var offset = $("#gtermsplash").offset().top;
-	$("#gtermsplash").animate({ 
-            "margin-top": "+=300px",
-            opacity: 0.0,
-            "gtermAnimate": 1.0
-	},
+	var props = { opacity: 0.0, "gtermAnimate": 1.0};
+	if ($(window).height() > offset) {
+	    offset = 0;
+	    props["margin-top"] ="+=300px";
+	}
+	$("#gtermsplash").animate(
+	props,
         {
            duration: 2500,
 	   step: function(now, tween) {

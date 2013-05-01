@@ -149,27 +149,37 @@ def resize(dimensions=""):
         raise Exception("Error in resizing: "+str(excp))
         
 
-def demo():
+def main():
     """gterm-aware matplotlib demo"""
     setup()
 
     import matplotlib.pyplot as plt
+    from optparse import OptionParser
 
-    fmt = "png" # or "pdf"
+    usage = "usage: %prog [--animate]"
+    parser = OptionParser(usage=usage)
+    parser.add_option("", "--animate",
+                      action="store_true", dest="animate", default=False,
+                      help="Simple animation demo")
 
-    ##plt.plot([1,2,3,2,3,0])
-    ##show(overwrite=False, format=fmt, title="Simple plot")
-    ##time.sleep(2)
+    (options, args) = parser.parse_args()
 
-    plt.plot([1,2,3,2,3,1])
-    show(overwrite=False, format=fmt, title="Simple animation")
+    fmt = "png"
 
-    n = 10
-    dx = 5.0/n
-    for j in range(1,n):
-        time.sleep(0.5)
-        plt.plot([1,2,3,2,3,1+j*dx])
-        show(overwrite=True, format=fmt)
+    if options.animate:
+        plt.plot([1,2,3,2,3,1])
+        show(overwrite=False, format=fmt, title="Simple animation")
+
+        n = 10
+        dx = 5.0/n
+        for j in range(1,n):
+            time.sleep(0.5)
+            plt.plot([1,2,3,2,3,1+j*dx])
+            show(overwrite=True, format=fmt)
+    else:
+        plt.plot([1,2,3,2,3,0])
+        show(overwrite=False, format=fmt, title="Simple plot")
+        ##time.sleep(2)
 
 if __name__ == "__main__":
-    demo()
+    main()

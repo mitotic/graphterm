@@ -73,6 +73,61 @@ MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
 
 BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/blob/local/%s" alt="%s"></div>'
 
+IPYNB_JSON_HEADER = """{
+ "metadata": {
+  "name": "%(name)s"
+ },
+ "nbformat": %(version_major)s,
+ "nbformat_minor": %(version_minor)s,
+ "worksheets": [
+  {
+   "cells": [
+"""
+
+IPYNB_JSON_FOOTER = """   ],
+   "metadata": {}
+  }
+ ]
+}
+"""
+
+IPYNB_JSON_MARKDOWN = """    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": %(source)s
+    }"""
+
+IPYNB_JSON_CODE0 = """    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": %(input)s,
+     "language": "%(lang)s",
+     "metadata": {},
+     "outputs": [
+"""
+     
+IPYNB_JSON_CODE1 = """     ],
+     "prompt_number": %(in_prompt)s
+    }
+"""
+     
+IPYNB_JSON_STDOUT   = """      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": %(text)s
+      }"""
+
+IPYNB_JSON_PYOUT    = """      {
+       "output_type": "pyout",
+       "prompt_number": %(out_prompt)s,
+       "text": %(text)s
+      }"""
+
+IPYNB_JSON_DATA     = """      {
+       "output_type": "display_data",
+       "%(format)s": "%(base64)s"
+      }"""
+
 PYTHON_PROMPTS = [">>> ", "... "]
 IPYTHON_PROMPTS = ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "] # Works up to 10,000 prompts
 NODE_PROMPTS = ["> ", "... "]
@@ -115,8 +170,11 @@ def make_lterm_cookie():
 JCURDIR = 0
 JCONTINUATION = 1
 
-def split_lines(text):
-    return text.replace("\r\n","\n").replace("\r","\n").split("\n")
+def split_lines(text, chomp=False):
+    lines = text.replace("\r\n","\n").replace("\r","\n").split("\n")
+    if chomp and len(lines) > 1 and not lines[-1]:
+        lines = lines[:-1]
+    return lines
 
 def create_array(fill_value, count):
     """Return array of 32-bit values"""
@@ -964,11 +1022,19 @@ class Terminal(object):
             self.screen_callback(self.term_name, "", "note_activate", [False, self.current_dir, self.note_shell])
             self.update()
 
-    def save_notebook(self, filepath, input_data):
+    def save_notebook(self, filepath, input_data, format=""):
         fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
+        fig_suffix = re.sub(r"[^a-zA-Z0-9_.\-+=@,]", "", os.path.splitext(os.path.basename(fullpath))[0])
+        if filepath.endswith(".ipynb.json"):
+            format = "ipynb"
+            fig_suffix, sep, tail = fig_suffix.rpartition(".")
         md_lines = []
-        ref_blobs = []
-        for cell_index in self.note_cells["cellIndices"]:
+        if format == "ipynb":
+            md_lines += [IPYNB_JSON_HEADER % dict(name=fig_suffix, version_major=3, version_minor=0)]
+        ref_blobs = OrderedDict()
+        prompt_num = 0
+        in_prompt = 0
+        for j, cell_index in enumerate(self.note_cells["cellIndices"]):
             cell = self.note_cells["cells"][cell_index]
             if cell["cellIndex"] == self.note_cells["curIndex"]:
                 # Current cell; copy output
@@ -976,7 +1042,18 @@ class Terminal(object):
                 if cell["cellType"]:
                     cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
 
-            if cell["cellInput"]:
+            cell_out = False
+            if format == "ipynb":
+                if j:
+                    md_lines[-1] += ","
+                input_json = json.dumps("\n".join(cell["cellInput"]))
+                if cell["cellType"]:
+                    prompt_num += 1
+                    in_prompt = prompt_num
+                    md_lines += [IPYNB_JSON_CODE0 % dict(input=input_json, lang="python")]
+                else:
+                    md_lines += [IPYNB_JSON_MARKDOWN % dict(source=input_json)]
+            elif cell["cellInput"]:
                 if cell["cellType"]:
                     md_lines.append("```"+cell["cellType"])
                 for line in cell["cellInput"]:
@@ -992,27 +1069,86 @@ class Terminal(object):
                     blob_id = opts.get("blob")
                     if blob_id:
                         if out_lines:
-                            md_lines += ["```output"] + out_lines + ["```"] + [""]
+                            if format == "ipynb":
+                                if cell_out:
+                                    md_lines[-1] += ","
+                                prompt_num += 1
+                                md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=json.dumps("\n".join(out_lines)))]
+                            else:
+                                md_lines += ["```output"] + out_lines + ["```"] + [""]
+                            cell_out = True
                             out_lines = []
                         data_uri = self.note_screen_buf.get_blob_uri(blob_id)
                         if data_uri:
-                            ref_blobs.append(data_uri)
-                            md_lines.append("![image][%d]" % len(ref_blobs))
-                            md_lines.append ("")
+                            if format == "ipynb":
+                                if cell_out:
+                                    md_lines[-1] += ","
+                                content_type, sep, tail = data_uri[len("data:"):].partition(";")
+                                encoding, sep2, content = tail.partition(",")
+                                md_lines += [IPYNB_JSON_DATA % dict(format=content_type.split("/")[1], base64=content)]
+                                cell_out = True
+                            else:
+                                ref_id = "fig%d-%s" % (len(ref_blobs)+1, fig_suffix)
+                                ref_blobs[ref_id] = data_uri
+                                md_lines.append("![image][%s]" % ref_id)
+                                md_lines.append ("")
                     else:
                         out_lines.append(scroll_line[JLINE])
                 if out_lines:
-                    md_lines += ["```output"] + out_lines + ["```"] + [""]
+                    if format == "ipynb":
+                        if cell_out:
+                            md_lines[-1] += ","
+                        prompt_num += 1
+                        md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=json.dumps("\n".join(out_lines)))]
+                    else:
+                        md_lines += ["```output"] + out_lines + ["```"] + [""]
+                    cell_out = True
+                    out_lines = []
+
+            if format == "ipynb" and cell["cellType"]:
+                md_lines += [IPYNB_JSON_CODE1 % dict(in_prompt=in_prompt)]
 
         if ref_blobs:
-            for j, ref_blob in enumerate(ref_blobs):
-                md_lines.append("[%d]: %s" % (j+1, ref_blob))
+            for ref_id, ref_blob in ref_blobs.iteritems():
+                md_lines.append("[%s]: %s" % (ref_id, ref_blob))
 
+        if format == "ipynb":
+            md_lines += [IPYNB_JSON_FOOTER]
         filedata = "\n".join(md_lines) + "\n"
         self.save_data({"x_gterm_filepath": fullpath, "content_type": "text/x-markdown"}, filedata)
 
+    def read_ipynb(self, fullpath):
+        try:
+            with open(fullpath, "r") as f:
+                nb = json.loads(f.read())
+                cells = nb["worksheets"][0]["cells"]
+                for cell in cells:
+                    if cell["cell_type"] == "markdown":
+                        self.add_cell("", init_text=cell["source"])
+                        
+                    elif cell["cell_type"] == "code":
+                        new_cell = self.add_cell("code", init_text=cell["input"])
+                        for output in cell["outputs"]:
+                            if output["output_type"] in ("pyout", "stream"):
+                                for line in split_lines(output["text"], chomp=True):
+                                    self.note_screen_buf.scroll_buf_up(line, None)
+                            elif output["output_type"] == "display_data":
+                                blob_id = str(uuid.uuid4())
+                                data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
+                                self.create_blob(blob_id, data_uri[len("data:"):])
+                                markup = BLOCKIMGFORMAT % (blob_id, blob_id, "image")
+                                self.note_screen_buf.scroll_buf_up("", None, markup=markup,
+                                                                   row_params=["pagelet", {"blob": blob_id}])
+                    self.update()
+                    
+        except Exception, excp:
+            logging.warning("read_ipynb: %s", excp)
+
+
     def read_notebook(self, filepath):
         fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
+        if filepath.endswith(".ipynb.json"):
+            return self.read_ipynb(fullpath)
         cur_cell = None
         code_lines = None
         raw_lines = []
@@ -1121,6 +1257,12 @@ class Terminal(object):
             If before_cell_number > 0, add new_cell before before_cell_number
         """
         prev_index = self.note_cells["curIndex"]
+        if before_cell_number in (-1, 0):
+            before_cell_number += 2+self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
+
+        if before_cell_number <= 0:
+            return None
+
         self.leave_cell()
         self.note_cells["maxIndex"] += 1
         cell_index = self.note_cells["maxIndex"]
@@ -1129,11 +1271,6 @@ class Terminal(object):
         new_cell["cellInput"] = split_lines(init_text) if init_text else []
         self.note_cells["cells"][cell_index] = new_cell
         self.note_cells["curIndex"] = cell_index
-        if before_cell_number in (-1, 0):
-            before_cell_number += 2+self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
-
-        if before_cell_number <= 0:
-            return
 
         if before_cell_number > len(self.note_cells["cellIndices"]):
             before_cell_index = 0
@@ -1144,6 +1281,8 @@ class Terminal(object):
 
         self.screen_callback(self.term_name, "", "note_add_cell",
                              [cell_index, new_cell_type, before_cell_index, new_cell["cellInput"]])
+
+        return new_cell
 
     def next_index(self, move_up=False, switch=False):
         """Return index of next cell down (or up), or 0. If switch, switch moving up or down, if necessary"""
