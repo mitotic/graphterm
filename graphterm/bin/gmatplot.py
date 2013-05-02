@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 """
-gmatplot: Convenience functions of gterm-aware matplotlib usage
+gmatplot: Convenience and demo functions for gterm-aware matplotlib usage
+(See also gpylab.py)
 
 Usage:
 
-python -i gpylab.py
-  OR
-import gmatplot as gm
-gm.setup()    # Sets up gmatplot and patches pylab/pyplot
-import pylab
+$ python
+>>> import gmatplot as gm
+>>> gm.setup()    # Sets up gmatplot and patches pylab/pyplot
+>>> import pylab
 
 ...
 pylab.plot(...)
@@ -22,7 +22,7 @@ pylab.show(False)  # To display new image
 gm.display(fig)    # To display figure
 gm.resize()        # To resize default figure
 
-If setting up using gm.setup(nopatch=True),
+Note: If setting up using gm.setup(nopatch=True),
  use gm.show(), gm.figure(), gm.draw instead of pylab functions
 
 """

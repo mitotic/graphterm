@@ -67,7 +67,6 @@ FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gcp", "gimages", "gls", "gopen", "
 REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
-GTERM_DIRECTIVE_RE = re.compile(r"^\s*<!--gterm\s+(\w+)(\s.*)?-->")
 MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
 MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
 
@@ -128,10 +127,6 @@ IPYNB_JSON_DATA     = """      {
        "%(format)s": "%(base64)s"
       }"""
 
-PYTHON_PROMPTS = [">>> ", "... "]
-IPYTHON_PROMPTS = ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "] # Works up to 10,000 prompts
-NODE_PROMPTS = ["> ", "... "]
-
 # Scroll lines array components
 JINDEX = 0
 JOFFSET = 1
@@ -176,6 +171,12 @@ def split_lines(text, chomp=False):
         lines = lines[:-1]
     return lines
 
+def join_lines(lines):
+    if isinstance(lines, basestring):
+        return lines
+    else:
+        return "".join(lines)
+
 def create_array(fill_value, count):
     """Return array of 32-bit values"""
     return array.array('L', [fill_value]*count)
@@ -216,6 +217,9 @@ def shell_unquote(token):
         return shlex_split_str(token)[0]
     except Exception:
         return token
+
+def safe_filename(name):
+    return re.sub(r"[^a-zA-Z0-9_.\-+=@,]", "", name)
 
 def prompt_offset(line, pdelim, meta=None):
     """Return offset at end of prompt (not including trailing space), or zero"""
@@ -321,14 +325,16 @@ def getcwd(pid):
 
 def parse_headers(text):
     """Parse gterm output and return (headers, content)"""
-    headers = {"content_type": "text/html", "x_gterm_response": "",
-               "x_gterm_parameters": {}}
-    content = text
     if text.startswith("<"):
         # Raw HTML
-        return (headers, content)
+        headers = {"content_type": "text/html",
+                   "x_gterm_response": "",
+                   "x_gterm_parameters": {}}
+        return (headers, text)
 
     # "MIME headers"
+    headers = {}
+    content = text
     head_str, sep, tail_str = text.partition("\r\n\r\n")
     if not sep:
         head_str, sep, tail_str = text.partition("\n\n")
@@ -354,7 +360,6 @@ def parse_headers(text):
         headers["x_gterm_parameters"] = {}
 
     return (headers, content)
-
 
 def shplit(line, delimiters=COMMAND_DELIMITERS, final_delim="&", index=None):
     """Split shell command line, returning all components as a list, including separators
@@ -832,8 +837,11 @@ class Terminal(object):
         self.note_prompts = []
         self.note_cells = None
         self.note_input = []
+        self.note_file = ""
         self.note_shell = False
         self.note_dir = ""
+        self.note_command = ""
+        self.note_start = None
 
     def init(self):
         self.esc_seq={
@@ -951,17 +959,15 @@ class Terminal(object):
         self.screen = self.alt_screen if self.alt_mode else self.main_screen
         self.needs_updating = True
 
-    def notebook(self, activate, filepath, prompts=[]):
+    def notebook(self, activate, filepath, prompts=[], content=None):
+        self.note_start = None
         if activate:
             self.note_count += 1
             at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
             self.note_dir = self.current_dir
-            if not prompts and self.command_path:
-                basename = os.path.basename(self.command_path)
-                if basename == "python":
-                    prompts = PYTHON_PROMPTS
-                if basename == "node":
-                    prompts = NODE_PROMPTS
+            self.note_command = os.path.basename(self.command_path) if self.command_path and not at_shell else ""
+            if not prompts and self.note_command in gtermapi.PROMPTS_LIST:
+                prompts = gtermapi.PROMPTS_LIST[self.note_command]
             if not prompts:
                 # Search buffer to use current prompt
                 try:
@@ -969,18 +975,18 @@ class Terminal(object):
                     comps = line.split()
                     if comps and comps[0]:
                         prompts = [comps[0]+" "]
-                        if prompts[0] == PYTHON_PROMPTS[0]:
-                            prompts += PYTHON_PROMPTS[1:]
-                        elif prompts[0] == IPYTHON_PROMPTS[0]:
-                            prompts += IPYTHON_PROMPTS[1:]
+                        if prompts[0] == gtermapi.PROMPTS_LIST["python"][0]:
+                            prompts += gtermapi.PROMPTS_LIST["python"][1:]
+                        elif prompts[0] == gtermapi.PROMPTS_LIST["ipython"][0]:
+                            prompts += gtermapi.PROMPTS_LIST["ipython"][1:]
                         elif at_shell:
                             prompts += ["> "]
-                        elif prompts[-1] == "> ":
+                        elif prompts[-1] == gtermapi.PROMPTS_LIST["node"][0]:
                             # Handles node REPL shell
                             prompts += ["... "]
                 except Exception:
                     raise
-            logging.warning("ABCnotebook: activate=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", activate, self.command_path, self.note_dir, at_shell, prompts)
+            logging.warning("ABCnotebook: activate=%s, file=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", activate, filepath, self.command_path, self.note_dir, at_shell, prompts)
 
             self.scroll_screen(self.active_rows)
             self.update()
@@ -991,11 +997,29 @@ class Terminal(object):
             self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
             self.note_prompts = prompts
 
-            self.note_shell = at_shell
-            self.screen_callback(self.term_name, "", "note_activate", [True, self.note_dir, self.note_shell])
             self.note_file = filepath
-            if filepath:
-                self.read_notebook(filepath)
+            self.note_shell = at_shell
+            self.screen_callback(self.term_name, "", "note_activate", [True, self.note_file, self.note_dir, self.note_shell])
+            self.note_file = filepath
+            if content is None:
+                if not filepath:
+                    content = ""
+                else:
+                    fullname = os.path.expanduser(filepath)
+                    fullpath = fullname if fullname.startswith("/") else self.note_dir+"/"+fullname
+                    try:
+                        with open(fullpath) as f:
+                            content = f.read()
+                    except Exception, excp:
+                        content = "Error in reading notebook file %s" % fullpath
+                        logging.error("Error in reading notebook file %s" % fullpath)
+
+            if content:
+                if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
+                    self.read_ipynb(content)
+                else:
+                    self.read_md(content)
+
             if not self.note_cells["curIndex"]:
                 self.add_cell(new_cell_type="code")
         else:
@@ -1019,18 +1043,23 @@ class Terminal(object):
             self.scroll_bot = self.height-1
             self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
             self.zero_screen()
-            self.screen_callback(self.term_name, "", "note_activate", [False, self.current_dir, self.note_shell])
+            self.screen_callback(self.term_name, "", "note_activate", [False, self.note_file, self.current_dir, self.note_shell])
             self.update()
 
-    def save_notebook(self, filepath, input_data, format=""):
-        fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
-        fig_suffix = re.sub(r"[^a-zA-Z0-9_.\-+=@,]", "", os.path.splitext(os.path.basename(fullpath))[0])
+    def save_notebook(self, filepath, input_data="", params={}):
+        fullname = os.path.expanduser(filepath)
+        fullpath = fullname if fullname.startswith("/") else self.note_dir+"/"+fullname
+        fig_suffix = safe_filename(os.path.splitext(os.path.basename(fullpath))[0])
+        format = params.get("format", "")
+        logging.warning("ABCsave_notebook: file=%s, params=%s", fullpath, params)
         if filepath.endswith(".ipynb.json"):
             format = "ipynb"
             fig_suffix, sep, tail = fig_suffix.rpartition(".")
         md_lines = []
         if format == "ipynb":
             md_lines += [IPYNB_JSON_HEADER % dict(name=fig_suffix, version_major=3, version_minor=0)]
+        elif self.note_command:
+            md_lines.append('<!--gterm notebook command=%s-->' % safe_filename(self.note_command))
         ref_blobs = OrderedDict()
         prompt_num = 0
         in_prompt = 0
@@ -1115,140 +1144,141 @@ class Terminal(object):
         if format == "ipynb":
             md_lines += [IPYNB_JSON_FOOTER]
         filedata = "\n".join(md_lines) + "\n"
-        self.save_data({"x_gterm_filepath": fullpath, "content_type": "text/x-markdown"}, filedata)
+        save_params = {"x_gterm_filepath": fullpath, "content_type": "text/x-markdown"}
+        if params.get("location") == "remote":
+            save_params["x_gterm_location"] = "remote"
+        else:
+            save_params["x_gterm_popstatus"] = params.get("popstatus", "")
+        self.save_data(save_params, filedata)
 
-    def read_ipynb(self, fullpath):
+    def read_ipynb(self, content):
         try:
-            with open(fullpath, "r") as f:
-                nb = json.loads(f.read())
-                cells = nb["worksheets"][0]["cells"]
-                for cell in cells:
-                    if cell["cell_type"] == "markdown":
-                        self.add_cell("", init_text=cell["source"])
-                        
-                    elif cell["cell_type"] == "code":
-                        new_cell = self.add_cell("code", init_text=cell["input"])
-                        for output in cell["outputs"]:
-                            if output["output_type"] in ("pyout", "stream"):
-                                for line in split_lines(output["text"], chomp=True):
-                                    self.note_screen_buf.scroll_buf_up(line, None)
-                            elif output["output_type"] == "display_data":
-                                blob_id = str(uuid.uuid4())
-                                data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
-                                self.create_blob(blob_id, data_uri[len("data:"):])
-                                markup = BLOCKIMGFORMAT % (blob_id, blob_id, "image")
-                                self.note_screen_buf.scroll_buf_up("", None, markup=markup,
-                                                                   row_params=["pagelet", {"blob": blob_id}])
-                    self.update()
-                    
+            nb = json.loads(content)
+            cells = nb["worksheets"][0]["cells"]
+            for cell in cells:
+                if cell["cell_type"] == "markdown":
+                    self.add_cell("", init_text=join_lines(cell["source"]))
+
+                elif cell["cell_type"] == "code":
+                    new_cell = self.add_cell("code", init_text=join_lines(cell["input"]))
+                    for output in cell["outputs"]:
+                        if output["output_type"] in ("pyout", "stream"):
+                            lines = split_lines(output["text"], chomp=True) if isinstance(output["text"], basestring) else output["text"]
+                            for line in lines:
+                                if line.endswith("\n"):
+                                    line = line[:-1]
+                                self.note_screen_buf.scroll_buf_up(line, None)
+                        elif output["output_type"] == "display_data":
+                            blob_id = str(uuid.uuid4())
+                            data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
+                            self.create_blob(blob_id, data_uri[len("data:"):])
+                            markup = BLOCKIMGFORMAT % (blob_id, blob_id, "image")
+                            self.note_screen_buf.scroll_buf_up("", None, markup=markup,
+                                                               row_params=["pagelet", {"blob": blob_id}])
+                self.update()
         except Exception, excp:
             logging.warning("read_ipynb: %s", excp)
 
 
-    def read_notebook(self, filepath):
-        fullpath = filepath if filepath.startswith("/") else self.note_dir+"/"+filepath
-        if filepath.endswith(".ipynb.json"):
-            return self.read_ipynb(fullpath)
+    def read_md(self, content):
         cur_cell = None
         code_lines = None
         raw_lines = []
         leaving_block = False
         blob_ids = {}
         try:
-            with open(fullpath, "r") as f:
-                state = None
-                for line in f:
-                    line = line.rstrip("\r\n")
-                    if line.startswith("```"):
-                        lang = line[len("```"):].strip()
-                        if state is None:
-                            # Entering fenced block
-                            leaving_block = False
-                            if raw_lines:
-                                # Add raw cell
-                                if cur_cell:
-                                    self.update()
-                                    cur_cell = None
-                                self.add_cell("", init_text="\n".join(raw_lines))
-                                raw_lines = []
-                            state = lang
-                            if state == "output":
-                                # New output block
-                                if not cur_cell:
-                                    # Ignore orphan output block
-                                    pass
-                            else:
-                                # New code block
-                                code_lines = []
-                        else:
-                            # Leaving fenced block
-                            leaving_block = True
-                            if state == "output":
-                                # Ignore orphan output block
-                                pass
-                            else:
-                                # Leaving code block
-                                self.update()
-                                self.add_cell(state, init_text="\n".join(code_lines))
-                                code_lines = None
-                                cur_cell = self.note_cells["cells"][self.note_cells["curIndex"]]
-                            state = None
-                    elif state is not None:
-                        # Within fenced block
-                        if state == "output":
-                            # Within output block
-                            if cur_cell:
-                                self.note_screen_buf.scroll_buf_up(line, None)
-                            else:
-                                # Ignore orphan output block
-                                pass
-                        else:
-                            # Within code block
-                            code_lines.append(line)
-
-                    elif MD_IMAGE_RE.match(line):
-                        # Inline image
-                        leaving_block = True
-                        match = MD_IMAGE_RE.match(line)
-                        alt = match.group(1).strip() or "image"
-                        ref_id = match.group(2).strip()
-                        blob_id = str(uuid.uuid4())
-                        blob_ids[ref_id] = blob_id
-                        if cur_cell:
-                            markup = BLOCKIMGFORMAT % (blob_id, blob_id, alt)
-                            self.note_screen_buf.scroll_buf_up("", None, markup=markup,
-                                                               row_params=["pagelet", {"blob": blob_id}])
-                        else:
-                            raw_lines.append("![%s](/blob/%s)" % (alt, blob_id))
-
-                    elif MD_REF_RE.match(line):
-                        # Reference list
-                        match = MD_REF_RE.match(line)
-                        ref_id = match.group(1).strip()
-                        if ref_id in blob_ids:
-                            self.create_blob(blob_ids[ref_id], line[len(match.group(0)):])
-
-                    elif line or not leaving_block:
-                        # Non-blank line or not leaving block; handle raw line
+            state = None
+            for line in split_lines(content, chomp=True):
+                if line.startswith("```"):
+                    lang = line[len("```"):].strip()
+                    if state is None:
+                        # Entering fenced block
                         leaving_block = False
-                        if cur_cell:
-                            if line:
-                                # New raw block (if not blank line)
+                        if raw_lines:
+                            # Add raw cell
+                            if cur_cell:
                                 self.update()
                                 cur_cell = None
-                                raw_lines = [line]
-                        elif line or raw_lines:
-                            raw_lines.append(line)
-                        
-                if raw_lines:
-                    # Add raw cell
+                            self.add_cell("", init_text="\n".join(raw_lines))
+                            raw_lines = []
+                        state = lang
+                        if state == "output":
+                            # New output block
+                            if not cur_cell:
+                                # Ignore orphan output block
+                                pass
+                        else:
+                            # New code block
+                            code_lines = []
+                    else:
+                        # Leaving fenced block
+                        leaving_block = True
+                        if state == "output":
+                            # Ignore orphan output block
+                            pass
+                        else:
+                            # Leaving code block
+                            self.update()
+                            self.add_cell(state, init_text="\n".join(code_lines))
+                            code_lines = None
+                            cur_cell = self.note_cells["cells"][self.note_cells["curIndex"]]
+                        state = None
+                elif state is not None:
+                    # Within fenced block
+                    if state == "output":
+                        # Within output block
+                        if cur_cell:
+                            self.note_screen_buf.scroll_buf_up(line, None)
+                        else:
+                            # Ignore orphan output block
+                            pass
+                    else:
+                        # Within code block
+                        code_lines.append(line)
+
+                elif MD_IMAGE_RE.match(line):
+                    # Inline image
+                    leaving_block = True
+                    match = MD_IMAGE_RE.match(line)
+                    alt = match.group(1).strip() or "image"
+                    ref_id = match.group(2).strip()
+                    blob_id = str(uuid.uuid4())
+                    blob_ids[ref_id] = blob_id
                     if cur_cell:
-                        self.update()
-                        cur_cell = None
-                    self.add_cell("", init_text="\n".join(raw_lines))
-                    raw_lines = []
+                        markup = BLOCKIMGFORMAT % (blob_id, blob_id, alt)
+                        self.note_screen_buf.scroll_buf_up("", None, markup=markup,
+                                                           row_params=["pagelet", {"blob": blob_id}])
+                    else:
+                        raw_lines.append("![%s](/blob/%s)" % (alt, blob_id))
+
+                elif MD_REF_RE.match(line):
+                    # Reference list
+                    match = MD_REF_RE.match(line)
+                    ref_id = match.group(1).strip()
+                    if ref_id in blob_ids:
+                        self.create_blob(blob_ids[ref_id], line[len(match.group(0)):])
+
+                elif line or not leaving_block:
+                    # Non-blank line or not leaving block; handle raw line
+                    leaving_block = False
+                    if cur_cell:
+                        if line:
+                            # New raw block (if not blank line)
+                            self.update()
+                            cur_cell = None
+                            raw_lines = [line]
+                    elif line or raw_lines:
+                        raw_lines.append(line)
+
+            if raw_lines:
+                # Add raw cell
+                if cur_cell:
+                    self.update()
+                    cur_cell = None
+                self.add_cell("", init_text="\n".join(raw_lines))
+                raw_lines = []
         except Exception, excp:
-            logging.warning("read_notebook: %s", excp)
+            logging.warning("read_md: %s", excp)
 
         self.update()
 
@@ -1952,7 +1982,7 @@ class Terminal(object):
                     logf.write("ALTMODE\n")
         elif l[0] == 4:
             pass
-#                       print "insert on"
+#           print "insert on"
 
     def csi_l(self, l):
         """Reset private mode"""
@@ -1970,7 +2000,7 @@ class Terminal(object):
                     logf.write("NORMODE\n")
         elif l[0] == 4:
             pass
-#                       print "insert off"
+#           print "insert off"
 
     def csi_m(self, l):
         """Select Graphic Rendition"""
@@ -1992,9 +2022,9 @@ class Terminal(object):
                 # Background Black(40), Red, Green, Yellow, Blue, Magenta, Cyan, White
                 c = i-40
                 self.current_nul = (self.current_nul & 0x8fffffff) | (c << (UNI24+STYLE4))
-#                       else:
-#                               print >> sys.stderr, "lineterm: CSI style ignore",l,i
-#               print >> sys.stderr, 'lineterm: style: %r %x'%(l, self.current_nul)
+#           else:
+#               print >> sys.stderr, "lineterm: CSI style ignore",l,i
+#       print >> sys.stderr, 'lineterm: style: %r %x'%(l, self.current_nul)
 
     def csi_r(self, l):
         """Set scrolling region [top;bottom]"""
@@ -2088,42 +2118,53 @@ class Terminal(object):
                     screen_buf.scroll_buf_up(content_lines[0]+"...", None)
             else:
                 # Validated data
-                if response_type == "edit_file":
-                    filepath = response_params.get("filepath", "")
+                if response_type in ("create_blob", "edit_file", "open_notebook"):
                     try:
+                        filepath = response_params.get("filepath", "")
+                        if "content_length" not in headers:
+                            # Read local file content
+                            if filepath:
+                                if not os.path.exists(filepath) or not os.path.isfile(filepath):
+                                    raise Exception("File %s not found" % filepath)
+                                filestats = os.stat(filepath)
+                                if filestats.st_size > MAX_PAGELET_BYTES:
+                                    raise Exception("File size (%d bytes) exceeds pagelet limit (%d bytes) for %s" % (filestats.st_size,  MAX_PAGELET_BYTES, filepath))
+                                with open(filepath) as f:
+                                    content = f.read()
+                            else:
+                                content = ""
+                            headers["content_length"] = len(content)
+                            if response_type == "create_blob":
+                                headers["x_gterm_encoding"] = "base64"
+                                content = base64.b64encode(content)
+
+                        # TODO: use content to determine MIME type
+                        basename, extension = os.path.splitext(filepath)
+                        if "content_type" not in headers:
+                            mimetype, encoding = mimetypes.guess_type(basename)
+                            headers["content_type"] = mimetype
                         if "filetype" not in response_params:
-                            basename, extension = os.path.splitext(filepath)
                             if extension:
                                 response_params["filetype"] = FILE_EXTENSIONS.get(extension[1:].lower(), "")
                             else:
                                 response_params["filetype"] = ""
-                        filestats = os.stat(filepath)
-                        if filestats.st_size > MAX_PAGELET_BYTES:
-                            raise Exception("File size (%d bytes) exceeds pagelet limit (%d bytes)" % (filestats.st_size,  MAX_PAGELET_BYTES))
-                        with open(filepath) as f:
-                            content = f.read()
                     except Exception, excp:
                         content = "ERROR in opening file '%s': %s" % (filepath, excp)
-                        headers["x_gterm_response"] = "error_message"
+                        response_type = "error_message"
+                        headers["x_gterm_response"] = response_type
                         headers["x_gterm_parameters"] = {}
                         headers["content_type"] = "text/plain"
 
                 if not response_type:
                     # Raw html display
-                    match = GTERM_DIRECTIVE_RE.match(content)
-                    if match:
+                    if "content_type" not in headers:
+                        headers["content_type"] = "text/html"
+                    offset, directive, opt_dict = gtermapi.parse_gterm_directive(content)
+                    if offset:
                         # gterm comment directive
-                        content = content[len(match.group(0)):]
-                        directive = match.group(1)
-                        opts = match.group(2) or ""
-                        opt_comps = opts.strip().split()
-                        opt_dict = {}
-                        while opt_comps:
-                            # Parse options
-                            opt_comp = opt_comps.pop(0)
-                            opt_name, sep, opt_value = opt_comp.partition("=")
-                            opt_dict[opt_name] = urllib.unquote(opt_value)
-
+                        content = content[offset:]
+                        if "content_length" in headers:
+                            headers["content_length"] = len(content)
                         if directive == "data":
                             blob_id = opt_dict.get("blob")
                             if blob_id:
@@ -2151,6 +2192,21 @@ class Terminal(object):
                 elif response_type == "frame_msg":
                     self.screen_callback(self.term_name, "", "frame_msg",
                      [response_params.get("user",""), response_params.get("frame",""), content])
+                elif response_type == "save_notebook":
+                    if self.note_cells:
+                        filepath = response_params.get("filepath", "")
+                        self.save_notebook(filepath, params=response_params)
+                elif response_type == "open_notebook":
+                    if not self.note_start and not self.note_cells:
+                        prompts = response_params.get("prompts", [])
+                        if not prompts:
+                            command = os.path.basename(self.command_path) if self.command_path else ""
+                            if command in gtermapi.PROMPTS_LIST:
+                                prompts = gtermapi.PROMPTS_LIST[command][:]
+                        if prompts:
+                            self.note_start = (prompts[0], filepath, prompts, content)
+                        else:
+                            self.note_start = (">>> ", filepath, [], content)
                 else:
                     headers["content_length"] = len(content)
                     params = {"validated": self.gterm_validated, "headers": headers}
@@ -2195,11 +2251,13 @@ class Terminal(object):
         self.screen_callback(self.term_name, response_id, "graphterm_output", self.gterm_output_buf)
 
     def save_data(self, save_params, filedata):
+        logging.warning("ABCsave_data: params=%s", save_params)
         params = save_params.copy()
         status = ""
+        location = params.get("x_gterm_location", "")
         filepath = params.get("x_gterm_filepath", "")
         encoded = params.get("x_gterm_encoding") == "base64"
-        if filepath:
+        if location != "remote":
             try:
                 with open(filepath, "w") as f:
                     f.write(base64.b64decode(filedata) if encoded else filedata)
@@ -2213,15 +2271,17 @@ class Terminal(object):
                 params["x_gterm_status"] = status
                 self.pty_write(json.dumps(params)+"\n\n")
         else:
-            filename = params.get("x_gterm_filename", "")
-            params["x_gterm_length"] = len(filedata)
+            send_data = filedata if encoded else base64.b64encode(filedata)
+            params["x_gterm_length"] = len(send_data)
+            if send_data:
+                params["x_gterm_digest"] = hashlib.md5(send_data).hexdigest()
             try:
                 self.pty_write(json.dumps(params)+"\n\n")
-                if filedata:
-                    self.pty_write(filedata)
+                if send_data:
+                    self.pty_write(send_data)
             except (IOError, OSError), excp:
                 print >> sys.stderr, "lineterm: Error in writing to %s (%s %s)" % (self.term_name, excp.__class__, excp)
-                self.screen_callback(self.term_name, "", "save_status", [filename, str(excp)])
+                self.screen_callback(self.term_name, "", "save_status", [filepath, str(excp)])
                 
 
     def get_finder(self, kind, directory=""):
@@ -2450,19 +2510,22 @@ class Terminal(object):
         if reply:
             # Send terminal response
             os.write(self.fd, reply)
-        if self.note_input:
+        if self.note_input or self.note_start:
             line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
-            if self.note_shell and prompt_offset(line, self.pdelim, self.main_screen.meta[0]):
-                # Prompt found; transmit buffered notebook cell line
-                os.write(self.fd, self.note_input.pop(0)+"\n")
-                os.fsync(self.fd)
-            else:
-                for prompt in self.note_prompts:
-                    if line.startswith(prompt):
-                        # Prompt found; transmit buffered notebook cell line
-                        os.write(self.fd, self.note_input.pop(0)+"\n")
-                        os.fsync(self.fd)
-                        break
+            if self.note_input:
+                if self.note_shell and prompt_offset(line, self.pdelim, self.main_screen.meta[0]):
+                    # Prompt found; transmit buffered notebook cell line
+                    os.write(self.fd, self.note_input.pop(0)+"\n")
+                    os.fsync(self.fd)
+                else:
+                    for prompt in self.note_prompts:
+                        if line.startswith(prompt):
+                            # Prompt found; transmit buffered notebook cell line
+                            os.write(self.fd, self.note_input.pop(0)+"\n")
+                            os.fsync(self.fd)
+                            break
+            elif self.note_start and line.startswith(self.note_start[0]):
+                self.notebook(True, self.note_start[1], prompts=self.note_start[2], content=self.note_start[3])
 
 class Multiplex(object):
     def __init__(self, screen_callback, command=None, shared_secret="",
@@ -2770,19 +2833,19 @@ class Multiplex(object):
                 return ""
             return term.click_paste(text, file_url=file_url, options=options)
 
-    def notebook(self, term_name, activate, filepath, prompts):
+    def notebook(self, term_name, activate, filepath, prompts, content):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.notebook(activate, filepath, prompts)
+            return term.notebook(activate, filepath, prompts, content)
 
-    def save_notebook(self, term_name, filepath, input_data):
+    def save_notebook(self, term_name, filepath, input_data, params):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.save_notebook(filepath, input_data)
+            return term.save_notebook(filepath, input_data, params)
 
     def add_cell(self, term_name, new_cell_type, init_text, before_cell_number):
         with self.lock:

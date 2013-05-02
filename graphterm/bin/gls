@@ -20,9 +20,13 @@ gimagecmd = os.getenv("GRAPHTERM_IMAGE_CMD", "") or "gimage"
 glscmd = os.getenv("GRAPHTERM_LS_CMD", "") or "gls"
 gopencmd = os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
 gvicmd = gbrowsecmd if gtermapi.Export_host else os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
+pynbcmd = "python -i gtermapi.py"
+ipynbcmd = "ipython -i gpylab.py"
 
 FILE_TYPES = {"directory": ("/static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
               "executable": ("/static/images/tango-application-x-executable.png", ""),
+              "pynotebook": ("/static/images/tango-text-x-generic-template.png", pynbcmd),
+              "ipynotebook": ("/static/images/tango-text-x-generic-template.png", ipynbcmd),
               "audiofile": ("/static/images/tango-audio-x-generic.png", gbrowsecmd),
               "htmlfile": ("/static/images/tango-text-html.png", gopencmd),
               "imagefile": ("/static/images/tango-image-x-generic.png", gimagecmd),
@@ -54,6 +58,10 @@ def file2html(filepath, filename, filemode=0):
         filetype = "plainfile"
         if os.path.isdir(filepath):
             filetype = "directory"
+        elif filepath.endswith(".py.gnb.md"):
+            filetype = "pynotebook"
+        elif filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
+            filetype = "ipynotebook"
         elif os.access(filepath, os.X_OK):
             filetype = "executable"
         elif mimetype:

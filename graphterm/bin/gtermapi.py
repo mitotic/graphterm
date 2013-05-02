@@ -17,11 +17,13 @@ import mimetypes
 import os
 import Queue
 import random
+import re
 import subprocess
 import sys
 import termios
 import threading
 import tty
+import termios
 import urllib
 import uuid
 
@@ -45,6 +47,12 @@ Host, Session = Path.split("/") if Path else ("", "")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
 
+PROMPTS_LIST = {"python": [">>> ", "... "],
+                "ipython": ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "], # Works up to 10,000 prompts
+                "node": ["> ", "... "],
+                "idl": ["IDL> "],
+                }
+
 App_dir = os.path.join(os.path.expanduser("~"), ".graphterm")
 Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
 
@@ -56,6 +64,26 @@ def split_version(version_str):
 
 Min_version = split_version(Min_version_str or Version_str) 
 Api_version = split_version(API_VERSION)
+
+GTERM_DIRECTIVE_RE = re.compile(r"^\s*<!--gterm\s+(\w+)(\s.*)?-->")
+def parse_gterm_directive(text):
+    """Return (offset, directive, opt_dict)"""
+    match = GTERM_DIRECTIVE_RE.match(text)
+    if not match:
+        return (0, "",{})
+    # gterm directive
+    offset = len(match.group(0))
+    directive = match.group(1)
+    opts = match.group(2) or ""
+    opt_comps = opts.strip().split()
+    opt_dict = {}
+    while opt_comps:
+        # Parse options
+        opt_comp = opt_comps.pop(0)
+        opt_name, sep, opt_value = opt_comp.partition("=")
+        opt_dict[opt_name] = urllib.unquote(opt_value)
+
+    return (offset, directive, opt_dict)
 
 def wrap(html, headers={}):
     """Wrap html, with headers, between escape sequences"""
@@ -159,6 +187,131 @@ def open_url(url, target="_blank", stderr=False):
                    }
     wrap_write("", headers=url_headers, stderr=stderr)
 
+def in_ipython():
+    try:
+        __IPYTHON__
+        return True
+    except NameError:
+        return False
+
+def edit_file(filename="", dir="", content=None, editor="ace", stderr=False):
+    """Edit file"""
+    filepath = ""
+    if filename:
+        fullname = os.path.expanduser(filename)
+        filepath = os.path.normcase(os.path.abspath(fullname))
+
+        if content is None and (not os.path.exists(filepath) or not os.path.isfile(filepath)):
+            print >> sys.stderr, "File %s not found" % filename
+            return None
+
+    params = {"filepath": filepath, "editor": editor, "modify": True, "command": "", "current_directory": dir}
+    if Export_host:
+        params["location"] = "remote"
+
+    headers = {"x_gterm_response": "edit_file",
+               "x_gterm_parameters": params
+               }
+
+    if not Export_host or not filepath:
+        # Local file or empty file
+        wrap_write("", headers=headers, stderr=stderr)
+    else:
+        # Not local file":
+        if content is None:
+            try:
+                with open(filepath) as fp:
+                    content = fp.read()
+            except Exception, excp:
+                print >> sys.stderr, "Error in reading file %s: %s" % (filepath, excp)
+                return None
+
+        headers.update({"content_length": len(content)})
+        wrap_write(content, headers=headers, stderr=stderr)
+
+    if Export_host:
+        errmsg, headers, content = receive_data(stderr=stderr)
+        if errmsg:
+            print >> sys.stderr, "Error in saving file:", errmsg
+        else:
+            if not filepath:
+                filepath = headers.get("x_gterm_filepath", "")
+            if filepath:
+                with open(filepath, "w") as f:
+                    f.write(content)
+                print >> sys.stderr, "Saved ", filepath
+            else:
+                print >> sys.stderr, "Error in saving file: No file path"
+
+def open_notebook(filename="", dir="", content=None, command_path="", prompts=[], stderr=False):
+    """Open notebook"""
+    filepath = ""
+    if filename:
+        fullname = os.path.expanduser(filename)
+        filepath = os.path.normcase(os.path.abspath(fullname))
+
+        if content is None and (not os.path.exists(filepath) or not os.path.isfile(filepath)):
+            print >> sys.stderr, "File %s not found" % filename
+            return None
+
+    if not command_path:
+        command_path = "ipython" if in_ipython() else "python"
+
+    if not prompts and command_path:
+        command = os.path.basename(command_path)
+        if command in PROMPTS_LIST:
+            prompts = PROMPTS_LIST[command][:]
+
+    headers = {"x_gterm_response": "open_notebook",
+               "x_gterm_parameters": {"filepath": filepath, "prompts": prompts, "current_directory": dir}
+               }
+
+    if not Export_host or not filepath:
+        # Local file or blank notebook
+        wrap_write("", headers=headers, stderr=stderr)
+    else:
+        # Not local file":
+        if content is None:
+            try:
+                with open(filepath) as fp:
+                    content = fp.read()
+            except Exception, excp:
+                print >> sys.stderr, "Error in reading file %s: %s" % (filepath, excp)
+                return None
+
+        headers.update({"content_length": len(content)})
+        wrap_write(content, headers=headers, stderr=stderr)
+
+def save_notebook(filename="", dir="", stderr=False):
+    """Save notebook"""
+    filepath = ""
+    if filename:
+        fullname = os.path.expanduser(filename)
+        filepath = os.path.normcase(os.path.abspath(fullname))
+
+    params = {"filepath": filepath, "current_directory": dir, "popstatus": "alert"}
+    if Export_host:
+        params["location"] = "remote"
+
+    headers = {"x_gterm_response": "save_notebook",
+               "x_gterm_parameters": params
+               }
+    wrap_write("", headers=headers, stderr=stderr)
+
+    if Export_host:
+        errmsg, headers, content = receive_data(stderr=stderr)
+        if errmsg:
+            print >> sys.stderr, "Error in saving notebook:", errmsg
+        else:
+            if not filepath:
+                filepath = headers.get("x_gterm_filepath", "")
+            if filepath:
+                with open(filepath, "w") as f:
+                    f.write(content)
+                print >> sys.stderr, "Saved ", filepath
+            else:
+                print >> sys.stderr, "Error in saving notebook: No file path"
+
 def menu_op(target, value=None, stderr=False):
     """Invoke menu operation"""
     headers = {"x_gterm_response": "menu_op",
@@ -200,38 +353,46 @@ def get_blob_id(blob_url):
 
 def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=False):
     """Create blob and returns URL to blob"""
-    if content is None:
-        if not from_file:
-            print >> sys.stderr, "Error: No content and no file to create blob"
-            return None
+    filepath = ""
+    if from_file:
         fullname = os.path.expanduser(from_file)
         filepath = os.path.normcase(os.path.abspath(fullname))
 
         if not os.path.exists(filepath) or not os.path.isfile(filepath):
             print >> sys.stderr, "File %s not found" % from_file
             return None
+    elif content is None:
+        print >> sys.stderr, "Error: No content and no file to create blob from"
+        return None
 
-        try:
-            with open(filepath) as fp:
-                content = fp.read()
-        except Exception, excp:
-            print >> sys.stderr, "Error in reading file %s: %s" % (from_file, excp)
-            return None
+    if not content_type and filepath:
+        content_type, encoding = mimetypes.guess_type(filepath)
 
-        if not content_type:
-            content_type, encoding = mimetypes.guess_type(filepath)
-
-    content_type = content_type or "text/html"
-    params = {}
     blob_id, blob_url = make_blob_url(blob_id)
-    params["blob"] = blob_id
+    params = dict(blob=blob_id, filepath=filepath)
     headers = {"x_gterm_response": "create_blob",
                "x_gterm_parameters": params,
-               "content_type": content_type,
-               "content_length": len(content)
-               }
+               "content_type": content_type}
 
-    wrap_write(base64.b64encode(content), headers=headers, stderr=stderr)
+    if not Export_host and content is None:
+        # Local file
+        wrap_write("", headers=headers, stderr=stderr)
+    else:
+        # Not local file
+        if content is None:
+            try:
+                with open(filepath) as fp:
+                    content = fp.read()
+            except Exception, excp:
+                print >> sys.stderr, "Error in reading file %s: %s" % (from_file, excp)
+                return None
+
+        headers.update({"x_gterm_encoding": "base64",
+                        "content_length": len(content)
+                        })
+
+        wrap_write(base64.b64encode(content), headers=headers, stderr=stderr)
+
     return blob_url
     
 class BlobStringIO(StringIO.StringIO):
@@ -485,8 +646,95 @@ def open_browser(url):
 
     return command_output(command_args, timeout=5)
 
+CHUNK_BYTES = 4096
+def receive_data(stderr=False, verbose=False):
+    """Receive from client via stdin, returning (errmsg, headers, content)"""
+    saved_stdin = sys.stdin.fileno()
+    saved_settings = termios.tcgetattr(saved_stdin)
+
+    try:
+        # Raw tty input without echo
+        tty.setraw(saved_stdin)
+        line = ""
+        header_line = ""
+        header_start = False
+        while True:
+            ch = sys.stdin.read(1)
+            if ch == "\x03" or ch == "\x04": # ^C/^D
+                return ("Interrupted", None, None)
+            if not header_start:
+                if ch == "{":
+                    header_start = True
+                    line = ch
+                continue
+            if ch != "\n":
+                line += ch
+                continue
+            if line:
+                header_line += line
+                line = ""
+            else:
+                # Terminal null line
+                break
+
+        if verbose and not stderr:
+            print >> sys.stderr, "header=%s\n" % (header_line,)
+
+        # Process headers
+        if not header_line:
+            return ("No headers", None, None)
+
+        headers = json.loads(header_line)
+
+        content_type = headers.get("content_type", "")
+        if content_type.startswith("none/"):
+            return ("Null content", None, None)
+
+        if "x_gterm_length" not in headers:
+            return ("No expected length", None, None)
+
+        expect_length = headers["x_gterm_length"]
+        if verbose and not stderr:
+            print >> sys.stderr, "type=%s, expect_len=%s\n" % (content_type, expect_length)
+
+        if not expect_length:
+            return ("", headers, "")
+
+        md5_digest = headers.get("x_gterm_digest", "")
+
+        count = expect_length
+        assert not (count % 4)
+        prefix = ""
+        content_list = []
+        digest_buf = hashlib.md5()
+        while count > 0:
+            chunk = sys.stdin.read(min(count, CHUNK_BYTES))
+            assert chunk
+            count = count - len(chunk)
+            line = prefix + chunk
+            prefix = ""
+            offset = len(line) % 4
+            if offset:
+                prefix = line[-offset:]
+                line = line[:-offset]
+            if verbose and not stderr:
+                print >> sys.stderr, "line(%d,%s)=%s" % (len(chunk), count, line,)
+            digest_buf.update(line)
+            content_list.append(base64.b64decode(line))
+        assert not prefix
+        if digest_buf.hexdigest() != md5_digest:
+            return ("MD5 digest mismatch", headers, None)
+        else:
+            return ("", headers, "".join(content_list))
+    except Exception, excp:
+        if verbose and not stderr:
+            print >> sys.stderr, "receive_data: ERROR %s" % excp
+        return (str(excp), None, None)
+    finally:
+        termios.tcsetattr(saved_stdin, termios.TCSADRAIN, saved_settings)
+
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1 and sys.argv[1].endswith(".py.md"):
+    if len(sys.argv) > 1 and (sys.argv[1].endswith(".gnb.md") or sys.argv[1].endswith(".ipynb.json")):
         # Switch to notebook mode (after prompt is displayed)
-        pass
+        open_notebook(sys.argv[1])
