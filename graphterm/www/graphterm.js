@@ -1300,34 +1300,31 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			gNotebook.eraseOutput(cellIndex);
 
 		} else if (cmd_type == "note_row_update") {
-                    var reset       = cmd_arg[1];
-		    var update_rows = cmd_arg[8];
-		    var update_scroll = cmd_arg[9];
-		    console.log("ABCnote_row_update", update_rows, update_scroll);
+                    var update_opts = cmd_arg[0];
+		    var update_rows = cmd_arg[5];
+		    var update_scroll = cmd_arg[6];
+		    console.log("ABCnote_row_update", update_opts, update_rows, update_scroll);
 		    if (gNotebook)
-			gNotebook.output(reset, update_rows, update_scroll);
+			gNotebook.output(update_opts, update_rows, update_scroll);
 
 		} else if (cmd_type == "row_update") {
-                    var alt_mode    = cmd_arg[0];
-                    var reset       = cmd_arg[1];
-                    var active_rows = cmd_arg[2];
-                    var term_width  = cmd_arg[3];
-                    var term_height = cmd_arg[4];
-                    var cursor_x    = cmd_arg[5];
-                    var cursor_y    = cmd_arg[6];
-                    var pre_offset  = cmd_arg[7];
-		    var update_rows = cmd_arg[8];
-		    var update_scroll = cmd_arg[9];
+                    var update_opts = cmd_arg[0];
+                    var term_width  = cmd_arg[1];
+                    var term_height = cmd_arg[2];
+                    var cursor_x    = cmd_arg[3];
+                    var cursor_y    = cmd_arg[4];
+		    var update_rows = cmd_arg[5];
+		    var update_scroll = cmd_arg[6];
 
 		    var delayed_scroll = false;
-		    if (alt_mode && !this.alt_mode) {
+		    if (update_opts.alt_mode && !this.alt_mode) {
 			this.alt_mode = true;
 			if (gSplitScreen)
 			    MergeScreen("alt_mode");
 			$("#terminal").addClass("gterm-altmode");
 			$("#session-screen").hide();
 			$("#session-altscreen").show();
-		    } else if (!alt_mode && this.alt_mode) {
+		    } else if (!update_opts.alt_mode && this.alt_mode) {
 			this.alt_mode = false;
 			$("#session-screen").show();
 			$("#session-altscreen").hide();
@@ -1338,29 +1335,29 @@ GTWebSocket.prototype.onmessage = function(evt) {
                     // Therefore, need to restrict selector to immediate children of #session-screen
 		    var nrows = $("#session-screen > span.row").length;
 
-		    if (!alt_mode && (reset || nrows != active_rows)) {
-			if (reset) {
+		    if (!update_opts.alt_mode && (update_opts.reset || nrows != update_opts.active_rows)) {
+			if (update_opts.reset) {
 			    $("#session-screen").empty();
 			    nrows = 0;
 			    if (gSplitScreen)
 				MergeScreen("reset");
 			}
 
-			if (gSplitScreen && active_rows != 1)
+			if (gSplitScreen && update_opts.active_rows != 1)
 			    MergeScreen("rows");
 
-			if (active_rows < nrows) {
-			    for (var k=active_rows; k<nrows; k++)
+			if (update_opts.active_rows < nrows) {
+			    for (var k=update_opts.active_rows; k<nrows; k++)
 				$("#gterm-pre"+k).remove();
-			} else if (active_rows > nrows) {
-			    for (var k=nrows; k<active_rows; k++)
+			} else if (update_opts.active_rows > nrows) {
+			    for (var k=nrows; k<update_opts.active_rows; k++)
 				$('<span id="'+"gterm-pre"+k+'" class="row">\n</span>').appendTo("#session-screen");
 			    if (gSplitScreen)
 				ResizeSplitScreen(true);
 			}
 		    }
 
-		    if (alt_mode && (reset || !$("#session-altscreen span.row").length)) {
+		    if (update_opts.alt_mode && (update_opts.reset || !$("#session-altscreen span.row").length)) {
 			gCursorAtEOL = false;
 			var preList = ["<hr>"];
 			for (var k=0; k<term_height; k++)
@@ -1382,9 +1379,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    if (row_num == cursor_y) {
 				gCursorAtEOL = (cursor_x == row_line.length);
 				var cursor_char = gCursorAtEOL ? ' ' : row_line.substr(cursor_x,1);
-				line_html += GTEscape(row_line.substr(0,cursor_x), pre_offset, prompt_offset)+GTCursorSpan(cursor_char)+GTEscape(row_line.substr(cursor_x+1));
+				line_html += GTEscape(row_line.substr(0,cursor_x), update_opts.pre_offset, prompt_offset)+GTCursorSpan(cursor_char)+GTEscape(row_line.substr(cursor_x+1));
 			    } else {
-				line_html += GTEscape(row_line, pre_offset, prompt_offset);
+				line_html += GTEscape(row_line, update_opts.pre_offset, prompt_offset);
 			    }
 
 			} else {
@@ -1413,7 +1410,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				line_html += GTCursorSpan(' ');
 			    }
 			}
-			var idstr = (alt_mode ? "gterm-alt" : "gterm-pre") + row_num;
+			var idstr = (update_opts.alt_mode ? "gterm-alt" : "gterm-pre") + row_num;
 			var cmd_class = prompt_offset ? " gterm-cmd-line droppable" : "";
 			var row_html = '<span id="'+idstr+'" class="row'+cmd_class+'">'+line_html+'\n</span>';
 			if ($("#"+idstr).length) {
@@ -1500,7 +1497,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				row_html = '<div class="gterm-notecell-markdown '+entry_class+' '+add_class+'">\n'+md2html(markup)+'\n</div>';
 				$(row_html).appendTo("#session-bufscreen");
 			    } else {
-				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], pre_offset, prompt_offset, prompt_id) : markup;
+				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], update_opts.pre_offset, prompt_offset, prompt_id) : markup;
 				row_html = '<pre '+id_attr+' class="row entry '+entry_class+' '+add_class+'">'+row_escaped+"\n</pre>";
 				$(row_html).appendTo("#session-bufscreen");
 			    }
@@ -1521,7 +1518,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    } else {
 			// Scroll to bottom of screen, if not split
 			if (!gSplitScreen)
-			    ScrollScreen(alt_mode);
+			    ScrollScreen(update_opts.alt_mode);
 		    }
 		}
 
@@ -3371,7 +3368,6 @@ function GTNotebook(note_file, note_dir, fullpage) {
 
     this.cellParams = {};
     this.curIndex = 0;
-    this.execIndex = 0;
     this.openNext = false;
 					      
     this.last_poll_time = epoch_time();
@@ -3653,8 +3649,6 @@ GTNotebook.prototype.updateType = function(cellIndex, cellType) {
 }
 
 GTNotebook.prototype.deleteCell = function(deleteIndex, switchIndex) {
-    if (this.execIndex == deleteIndex)
-	this.execIndex = 0;
     $("#"+this.getCellId(deleteIndex)).remove();
     this.selectCell(switchIndex);
 }
@@ -3696,7 +3690,6 @@ GTNotebook.prototype.cellScrollOutput = function() {
 
 GTNotebook.prototype.update_text = function(execute, openNext) {
     if (execute) {
-	this.execIndex = this.curIndex;
 	this.openNext = !!openNext;
 	this.cellFocus(false);
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").show();
@@ -3724,16 +3717,15 @@ GTNotebook.prototype.poll = function(force) {
     this.update_text(false, false);
 }
 
-GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
+GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) {
     if (!this.curIndex)
 	return;
     var cellParams = this.cellParams[this.curIndex];
     if (!cellParams.cellType)
 	return;
-    console.log("ABCGTNotebook.output: ", this.curIndex, this.curIndex, reset, update_rows, update_scroll);
-    var note_prompt = false;
+    console.log("ABCGTNotebook.output: ", this.curIndex, this.curIndex, update_opts, update_rows, update_scroll);
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
-    if (reset)
+    if (update_opts.reset)
 	outElem.html("");
 
     for (var j=0; j<update_scroll.length; j++) {
@@ -3778,11 +3770,11 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
 		this.cancelCompletion();
 	    }
 	} else {
-	    $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-screen").html('<pre class="row '+add_class+'">'+GTEscape(row_line)+((note_prompt||!this.passthru_stdin)?'':GTCursorSpan(' '))+'\n</pre>');
+	    $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-screen").html('<pre class="row '+add_class+'">'+GTEscape(row_line)+((update_opts.note_prompt || !this.passthru_stdin)?'':GTCursorSpan(' '))+'\n</pre>');
 	}
     }
 
-    if (note_prompt) {
+    if (update_opts.note_prompt) {
 	// "End of output"
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();
 	if (this.openNext) {

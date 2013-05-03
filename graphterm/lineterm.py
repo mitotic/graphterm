@@ -682,7 +682,7 @@ class ScreenBuf(object):
         self.scroll_lines += scroll_lines
 
     def update(self, active_rows, width, height, cursorx, cursory, main_screen,
-               alt_screen=None, pdelim=[], note_prompts=[], reconnecting=False):
+               alt_screen=None, pdelim=[], reconnecting=False):
         """ Returns full_update, update_rows, update_scroll
         """
         full_update = self.full_update or reconnecting
@@ -715,20 +715,8 @@ class ScreenBuf(object):
                 row_update = (new_row != old_screen.data[width*j:width*(j+1)])
             if row_update or (cursor_moved and (cursory == j or self.cursory == j)):
                 new_row_str = dump(new_row)
-                offset = prompt_offset(new_row_str, pdelim, screen.meta[j])
                 opts = {"add_class": ""}
-                if note_prompts:
-                    ##if offset:
-                    ##    opts["note_prompt"] = "yes"
-                    if not offset:
-                        # Assume everything after the first prompt is a continuation prompt and ignore
-                        # NOTE: This may need to be re-evaluated
-                        for prompt in note_prompts[:1]:
-                            if new_row_str.startswith(prompt):
-                                # Entry starts with non-continuation prompt
-                                opts["note_prompt"] = "yes"
-                                break
-
+                offset = prompt_offset(new_row_str, pdelim, screen.meta[j])
                 update_rows.append([j, offset, "", ["", opts], self.dumprichtext(new_row, trim=True), None])
 
         if reconnecting:
@@ -835,6 +823,8 @@ class Terminal(object):
 
     def reset_note(self):
         self.note_prompts = []
+        self.note_expect_prompt = False
+        self.note_found_prompt = False
         self.note_cells = None
         self.note_input = []
         self.note_file = ""
@@ -1467,6 +1457,8 @@ class Terminal(object):
         self.note_screen_buf.clear_buf()
         self.zero_screen()
         self.cursor_x = 0
+        self.note_expect_prompt = False
+        self.note_found_prompt = False
 
         # Send a blank line to clear any indentation level and trigger a prompt
         os.write(self.fd, "\n")
@@ -1573,9 +1565,10 @@ class Terminal(object):
                                                                              reconnecting=reconnecting)
             pre_offset = len(self.pdelim[0]) if self.pdelim else 0
             self.screen_callback(self.term_name, response_id, "row_update",
-                                 [self.alt_mode, full_update, self.active_rows,
+                                 [dict(alt_mode=self.alt_mode, reset=full_update,
+                                       active_rows=self.active_rows, pre_offset=pre_offset),
                                   self.width, self.height,
-                                  self.cursor_x, self.cursor_y, pre_offset,
+                                  self.cursor_x, self.cursor_y,
                                   update_rows, update_scroll])
             if not self.note_cells and not reconnecting and (update_rows or update_scroll):
                 self.gterm_output_buf = []
@@ -1592,9 +1585,10 @@ class Terminal(object):
                     if cell["cellIndex"] != self.note_cells["curIndex"]:
                         # Current cell will be updated later
                         self.screen_callback(self.term_name, response_id, "note_row_update",
-                                             [False, True, self.active_rows,
+                                             [dict(alt_mode=False, reset=True,
+                                                   active_rows=self.active_rows, pre_offset=0),
                                               self.width, self.height,
-                                              0, 0, 0,
+                                              0, 0,
                                               [], cell["cellOutput"]])
                 self.screen_callback(self.term_name, "", "note_select_cell", [self.note_cells["curIndex"]])
 
@@ -1603,16 +1597,16 @@ class Terminal(object):
                                                                              self.main_screen,
                                                                              alt_screen=False,
                                                                              pdelim=[],
-                                                                             note_prompts=self.note_prompts,
                                                                              reconnecting=reconnecting)
 
             update_scroll = strip_prompt_lines(update_scroll, self.note_prompts)
 
             logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
             self.screen_callback(self.term_name, response_id, "note_row_update",
-                                 [False, full_update, self.active_rows,
+                                 [dict(alt_mode=False, reset=full_update,                                                                                    active_rows=self.active_rows, pre_offset=0,
+                                       note_prompt=self.note_found_prompt),
                                   self.width, self.height,
-                                  self.cursor_x, self.cursor_y, 0,
+                                  self.cursor_x, self.cursor_y,
                                   update_rows, update_scroll])
             if not reconnecting and (update_rows or update_scroll):
                 self.gterm_output_buf = []
@@ -2544,20 +2538,23 @@ class Terminal(object):
         if reply:
             # Send terminal response
             os.write(self.fd, reply)
-        if self.note_input or self.note_start:
+        if self.note_input or self.note_expect_prompt or self.note_start:
             line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
-            if self.note_input:
-                if self.note_shell and prompt_offset(line, self.pdelim, self.main_screen.meta[0]):
-                    # Prompt found; transmit buffered notebook cell line
-                    os.write(self.fd, self.note_input.pop(0)+"\n")
-                    os.fsync(self.fd)
+            if self.note_input or self.note_expect_prompt:
+                if self.note_shell:
+                    prompt_found = bool(prompt_offset(line, self.pdelim, self.main_screen.meta[0]))
                 else:
-                    for prompt in self.note_prompts:
-                        if line.startswith(prompt):
-                            # Prompt found; transmit buffered notebook cell line
-                            os.write(self.fd, self.note_input.pop(0)+"\n")
-                            os.fsync(self.fd)
-                            break
+                    prompt_found = any(line.startswith(prompt) for prompt in self.note_prompts)
+                if prompt_found:
+                    # Prompt found
+                    if self.note_input:
+                        # transmit buffered notebook cell line
+                        os.write(self.fd, self.note_input.pop(0)+"\n")
+                        os.fsync(self.fd)
+                        self.note_expect_prompt = not self.note_input
+                    else:
+                        self.note_expect_prompt = False
+                        self.note_found_prompt = True
             elif self.note_start and line.startswith(self.note_start[0]):
                 self.open_notebook(self.note_start[1], prompts=self.note_start[2], content=self.note_start[3])
 
