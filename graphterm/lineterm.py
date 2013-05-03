@@ -959,92 +959,95 @@ class Terminal(object):
         self.screen = self.alt_screen if self.alt_mode else self.main_screen
         self.needs_updating = True
 
-    def notebook(self, activate, filepath, prompts=[], content=None):
+    def open_notebook(self, filepath, prompts=[], content=None):
         self.note_start = None
-        if activate:
-            self.note_count += 1
-            at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
-            self.note_dir = self.current_dir
-            self.note_command = os.path.basename(self.command_path) if self.command_path and not at_shell else ""
-            if not prompts and self.note_command in gtermapi.PROMPTS_LIST:
-                prompts = gtermapi.PROMPTS_LIST[self.note_command]
-            if not prompts:
-                # Search buffer to use current prompt
+        self.note_count += 1
+        at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
+        self.note_dir = self.current_dir
+        self.note_command = os.path.basename(self.command_path) if self.command_path and not at_shell else ""
+        if not prompts and self.note_command in gtermapi.PROMPTS_LIST:
+            prompts = gtermapi.PROMPTS_LIST[self.note_command]
+        if not prompts:
+            # Search buffer to use current prompt
+            try:
+                line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
+                comps = line.split()
+                if comps and comps[0]:
+                    prompts = [comps[0]+" "]
+                    if prompts[0] == gtermapi.PROMPTS_LIST["python"][0]:
+                        prompts += gtermapi.PROMPTS_LIST["python"][1:]
+                    elif prompts[0] == gtermapi.PROMPTS_LIST["ipython"][0]:
+                        prompts += gtermapi.PROMPTS_LIST["ipython"][1:]
+                    elif at_shell:
+                        prompts += ["> "]
+                    elif prompts[-1] == gtermapi.PROMPTS_LIST["node"][0]:
+                        # Handles node REPL shell
+                        prompts += ["... "]
+            except Exception:
+                raise
+        logging.warning("ABCopen_notebook: file=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", filepath, self.command_path, self.note_dir, at_shell, prompts)
+
+        self.scroll_screen(self.active_rows)
+        self.update()
+        self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
+        self.scroll_bot = 0
+        self.note_screen_buf.clear_buf()
+        self.note_screen_buf.set_cur_note(self.note_count)
+        self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
+        self.note_prompts = prompts
+
+        self.note_file = filepath
+        self.note_shell = at_shell
+        self.screen_callback(self.term_name, "", "note_activate", [True, self.note_file, self.note_dir, self.note_shell])
+        self.note_file = filepath
+        if content is None:
+            if not filepath:
+                content = ""
+            else:
+                fullname = os.path.expanduser(filepath)
+                fullpath = fullname if fullname.startswith("/") else self.note_dir+"/"+fullname
                 try:
-                    line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
-                    comps = line.split()
-                    if comps and comps[0]:
-                        prompts = [comps[0]+" "]
-                        if prompts[0] == gtermapi.PROMPTS_LIST["python"][0]:
-                            prompts += gtermapi.PROMPTS_LIST["python"][1:]
-                        elif prompts[0] == gtermapi.PROMPTS_LIST["ipython"][0]:
-                            prompts += gtermapi.PROMPTS_LIST["ipython"][1:]
-                        elif at_shell:
-                            prompts += ["> "]
-                        elif prompts[-1] == gtermapi.PROMPTS_LIST["node"][0]:
-                            # Handles node REPL shell
-                            prompts += ["... "]
-                except Exception:
-                    raise
-            logging.warning("ABCnotebook: activate=%s, file=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", activate, filepath, self.command_path, self.note_dir, at_shell, prompts)
+                    with open(fullpath) as f:
+                        content = f.read()
+                except Exception, excp:
+                    content = "Error in reading notebook file %s" % fullpath
+                    logging.error("Error in reading notebook file %s" % fullpath)
 
-            self.scroll_screen(self.active_rows)
-            self.update()
-            self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
-            self.scroll_bot = 0
-            self.note_screen_buf.clear_buf()
-            self.note_screen_buf.set_cur_note(self.note_count)
-            self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
-            self.note_prompts = prompts
+        if content:
+            if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
+                self.read_ipynb(content)
+            else:
+                self.read_md(content)
 
-            self.note_file = filepath
-            self.note_shell = at_shell
-            self.screen_callback(self.term_name, "", "note_activate", [True, self.note_file, self.note_dir, self.note_shell])
-            self.note_file = filepath
-            if content is None:
-                if not filepath:
-                    content = ""
-                else:
-                    fullname = os.path.expanduser(filepath)
-                    fullpath = fullname if fullname.startswith("/") else self.note_dir+"/"+fullname
-                    try:
-                        with open(fullpath) as f:
-                            content = f.read()
-                    except Exception, excp:
-                        content = "Error in reading notebook file %s" % fullpath
-                        logging.error("Error in reading notebook file %s" % fullpath)
+        if not self.note_cells["curIndex"]:
+            self.add_cell(new_cell_type="code")
 
-            if content:
-                if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
-                    self.read_ipynb(content)
-                else:
-                    self.read_md(content)
-
-            if not self.note_cells["curIndex"]:
-                self.add_cell(new_cell_type="code")
-        else:
-            self.leave_cell()
-            prompt = self.note_prompts[0]
-            for cell in self.note_cells["cells"].itervalues():
-                # Copy all cellInput and cellOutput to scroll buffer
-                if cell["cellType"]:
-                    if cell["cellInput"]:
-                        for line in cell["cellInput"]:
-                            self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
-                        self.screen_buf.scroll_buf_up(prompt, "")
-                    self.screen_buf.append_scroll(cell["cellOutput"])
-                elif cell["cellInput"]:
-                    row_params = ["markdown", {}]
-                    self.screen_buf.scroll_buf_up("", "", row_params=row_params, add_class="gterm-cell-input",
-                                                  markup="\n".join(cell["cellInput"]))
-            self.reset_note()
-            self.note_screen_buf.set_cur_note(0)
-            self.note_screen_buf.clear_buf()
-            self.scroll_bot = self.height-1
-            self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
-            self.zero_screen()
-            self.screen_callback(self.term_name, "", "note_activate", [False, self.note_file, self.current_dir, self.note_shell])
-            self.update()
+    def close_notebook(self):
+        logging.warning("ABCclose_notebook: ")
+        self.note_start = None
+        self.leave_cell()
+        for cell_index in self.note_cells["cellIndices"]:
+            # Copy all cellInput and cellOutput to scroll buffer
+            cell = self.note_cells["cells"][cell_index]
+            if cell["cellType"]:
+                if cell["cellInput"]:
+                    for line in cell["cellInput"]:
+                        self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
+                    if not cell["cellOutput"]:
+                        self.screen_buf.scroll_buf_up(" ", "")
+                self.screen_buf.append_scroll(cell["cellOutput"])
+            elif cell["cellInput"]:
+                row_params = ["markdown", {}]
+                self.screen_buf.scroll_buf_up("", "", row_params=row_params, add_class="gterm-cell-input",
+                                              markup="\n".join(cell["cellInput"]))
+        self.reset_note()
+        self.note_screen_buf.set_cur_note(0)
+        self.note_screen_buf.clear_buf()
+        self.scroll_bot = self.height-1
+        self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
+        self.zero_screen()
+        self.screen_callback(self.term_name, "", "note_activate", [False, self.note_file, self.current_dir, self.note_shell])
+        self.update()
 
     def save_notebook(self, filepath, input_data="", params={}):
         fullname = os.path.expanduser(filepath)
@@ -1474,6 +1477,18 @@ class Terminal(object):
                 os.write(self.fd, self.note_input.pop(0)+"\n")
 
         os.fsync(self.fd)
+
+    def erase_output(self, all_cells):
+        cur_index = self.note_cells["curIndex"]
+        for cell in self.note_cells["cells"].itervalues():
+            if not all_cells and cell["cellIndex"] != cur_index:
+                continue
+            cell["cellOutput"] = []
+
+        # Clear screen buffer
+        self.scroll_screen(self.active_rows)
+        self.note_screen_buf.clear_buf()
+        self.screen_callback(self.term_name, "", "note_erase_output", [0 if all_cells else cur_index])
 
     def clear(self):
         self.screen_buf.clear_buf()
@@ -2121,7 +2136,25 @@ class Terminal(object):
                 if response_type in ("create_blob", "edit_file", "open_notebook"):
                     try:
                         filepath = response_params.get("filepath", "")
-                        if "content_length" not in headers:
+                        if "content_length" in headers:
+                            # Remote content provided
+                            encoding = headers.get("x_gterm_encoding", "")
+                            md5_digest = headers.get("x_gterm_digest", "")
+                            if md5_digest and md5_digest != hashlib.md5(content).hexdigest():
+                                raise Exception("File digest mismatch for %s: %s" % (response_type, filepath))
+
+                            if response_type == "create_blob":
+                                assert not content or encoding == "base64"
+                            else:
+                                if encoding == "base64":
+                                    # Only create blob content needs to remain encoded as Base64
+                                    headers.pop("x_gterm_encoding")
+                                    headers.pop("x_gterm_digest")
+                                    content = base64.b64decode(content)
+                                if len(content) != headers["content_length"]:
+                                    raise Exception("Content length mismatch (%d!=%d) for %s: %s" % (len(content), headers["content_length"], response_type, filepath))
+
+                        else:
                             # Read local file content
                             if filepath:
                                 if not os.path.exists(filepath) or not os.path.isfile(filepath):
@@ -2135,6 +2168,7 @@ class Terminal(object):
                                 content = ""
                             headers["content_length"] = len(content)
                             if response_type == "create_blob":
+                                # Encode create blob content to Base64
                                 headers["x_gterm_encoding"] = "base64"
                                 content = base64.b64encode(content)
 
@@ -2525,7 +2559,7 @@ class Terminal(object):
                             os.fsync(self.fd)
                             break
             elif self.note_start and line.startswith(self.note_start[0]):
-                self.notebook(True, self.note_start[1], prompts=self.note_start[2], content=self.note_start[3])
+                self.open_notebook(self.note_start[1], prompts=self.note_start[2], content=self.note_start[3])
 
 class Multiplex(object):
     def __init__(self, screen_callback, command=None, shared_secret="",
@@ -2833,12 +2867,19 @@ class Multiplex(object):
                 return ""
             return term.click_paste(text, file_url=file_url, options=options)
 
-    def notebook(self, term_name, activate, filepath, prompts, content):
+    def open_notebook(self, term_name, filepath, prompts, content):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.notebook(activate, filepath, prompts, content)
+            return term.open_notebook(filepath, prompts, content)
+
+    def close_notebook(self, term_name):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.close_notebook()
 
     def save_notebook(self, term_name, filepath, input_data, params):
         with self.lock:
@@ -2902,6 +2943,13 @@ class Multiplex(object):
             if not term:
                 return ""
             return term.update_cell(cur_index, execute, input_data)
+
+    def erase_output(self, term_name, all_cells):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.erase_output(all_cells)
 
     def reconnect(self, term_name, response_id=""):
         with self.lock:

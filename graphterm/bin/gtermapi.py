@@ -105,6 +105,29 @@ def wrap_write(content, headers={}, stderr=False):
     """Wrap content, with headers, and write to stdout"""
     write(wrap(content, headers=headers), stderr=stderr)
 
+def wrap_encoded_file_or_data(filepath, content=None, headers={}, stderr=False):
+    """Send local filepath or transmit remote Base64-encoded file content"""
+    if content is None and (not Export_host or not filepath):
+        # Local file or empty file
+        wrap_write("", headers=headers, stderr=stderr)
+    else:
+        # Not local file
+        if content is None:
+            try:
+                with open(filepath) as fp:
+                    content = fp.read()
+            except Exception, excp:
+                print >> sys.stderr, "Error in reading file %s: %s" % (filepath, excp)
+                return None
+
+        headers.update({"x_gterm_encoding": "base64",
+                        "content_length": len(content)
+                        })
+        b64_content = base64.b64encode(content)
+        if content:
+            headers["x_gterm_digest"] = hashlib.md5(b64_content).hexdigest()
+        wrap_write(b64_content, headers=headers, stderr=stderr)
+
 def write_html(html, stderr=False):
     """Write raw html to stdout"""
     html_headers = {"content_type": "text/html"}
@@ -213,21 +236,7 @@ def edit_file(filename="", dir="", content=None, editor="ace", stderr=False):
                "x_gterm_parameters": params
                }
 
-    if not Export_host or not filepath:
-        # Local file or empty file
-        wrap_write("", headers=headers, stderr=stderr)
-    else:
-        # Not local file":
-        if content is None:
-            try:
-                with open(filepath) as fp:
-                    content = fp.read()
-            except Exception, excp:
-                print >> sys.stderr, "Error in reading file %s: %s" % (filepath, excp)
-                return None
-
-        headers.update({"content_length": len(content)})
-        wrap_write(content, headers=headers, stderr=stderr)
+    wrap_encoded_file_or_data(filepath, content=content, headers=headers, stderr=stderr)
 
     if Export_host:
         errmsg, headers, content = receive_data(stderr=stderr)
@@ -266,21 +275,7 @@ def open_notebook(filename="", dir="", content=None, command_path="", prompts=[]
                "x_gterm_parameters": {"filepath": filepath, "prompts": prompts, "current_directory": dir}
                }
 
-    if not Export_host or not filepath:
-        # Local file or blank notebook
-        wrap_write("", headers=headers, stderr=stderr)
-    else:
-        # Not local file":
-        if content is None:
-            try:
-                with open(filepath) as fp:
-                    content = fp.read()
-            except Exception, excp:
-                print >> sys.stderr, "Error in reading file %s: %s" % (filepath, excp)
-                return None
-
-        headers.update({"content_length": len(content)})
-        wrap_write(content, headers=headers, stderr=stderr)
+    wrap_encoded_file_or_data(filepath, content=content, headers=headers, stderr=stderr)
 
 def save_notebook(filename="", dir="", stderr=False):
     """Save notebook"""
@@ -374,25 +369,7 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=
                "x_gterm_parameters": params,
                "content_type": content_type}
 
-    if not Export_host and content is None:
-        # Local file
-        wrap_write("", headers=headers, stderr=stderr)
-    else:
-        # Not local file
-        if content is None:
-            try:
-                with open(filepath) as fp:
-                    content = fp.read()
-            except Exception, excp:
-                print >> sys.stderr, "Error in reading file %s: %s" % (from_file, excp)
-                return None
-
-        headers.update({"x_gterm_encoding": "base64",
-                        "content_length": len(content)
-                        })
-
-        wrap_write(base64.b64encode(content), headers=headers, stderr=stderr)
-
+    wrap_encoded_file_or_data(filepath, content=content, headers=headers, stderr=stderr)
     return blob_url
     
 class BlobStringIO(StringIO.StringIO):

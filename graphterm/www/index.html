@@ -130,8 +130,8 @@
               <li><a href="#" class="gterm-only-controller" gterm-state="notebook_save">save</a></li>
               <li><a href="#" class="gterm-only-controller" gterm-state="notebook_quit">quit</a></li>
               <hr class="sf-separator">
-              <li><a href="#" class="gterm-only-controller" gterm-state="notebook_execute">execute cell</a></li>
               <li><a href="#" class="gterm-only-controller" gterm-state="notebook_run">run in-place</a></li>
+              <li><a href="#" class="gterm-only-controller gterm-key-altletter" gterm-state="notebook_execute">e<span class="gterm-key-letter">x</span>ecute &amp; insert</a></li>
               <li>
                 <a href="#" class="gterm-toggle-link gterm-only-controller" gterm-state="notebook_markdown" gterm-toggle="false">markdown <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
@@ -164,6 +164,13 @@
                 <ul class="gterm-menukey-firstletter">
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_select_previous">previous</a></li>
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_select_next">next</a></li>
+                </ul>
+              </li>
+              <li>
+                <a href="#">erase output &#x25b9;</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_erase_cell">cell</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_erase_all">all</a></li>
                 </ul>
               </li>
             </ul>
@@ -299,16 +306,11 @@
 
 <!-- gtermsplash -->
 <div id="gtermsplash" class="gtermsplash noshow">
-  <div id="gtermsplashtext" class="gtermsplashtext">
-   <h3>GraphTerm is a <em>graphical terminal interface</em> the blends
-the command line with the graphical user interface.</h3>
-  <p>
-  <h3>Type a Bash shell command or click <em>home</em> on the menubar
-to get started.</h3>
-  <h3 class="gtermsplashalt">GraphTerm was developed as part of the Mindmeldr project.
-For more information, see <a target="_blank"
-href="http://code.mindmeldr.com/graphterm">code.mindmeldr.com/graphterm</a></h3>
-  </div> <!-- gtermsplashtext -->
+  <div id="gtermsplashcontainer" class="gtermsplashcontainer">
+    <p>&nbsp;<span class="gterm-splashclose" onclick="GTHideSplash(true);">&#215;</span></p>
+    <div id="gtermsplashtext" class="gtermsplashtext">
+    </div> <!-- gtermsplashtext -->
+  </div> <!-- gtermsplashcontainer -->
    <div id="gtermsplashdiv">
      <img src="/static/GTYY500.png" align="center" height="200"></img>
    </div>

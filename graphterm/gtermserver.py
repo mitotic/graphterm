@@ -264,19 +264,31 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         del cls._cookie_states[state_id]
         return None
 
+    @classmethod
+    def add_state(cls, user, auth_type, webcast=False):
+        state_id = "" if webcast else uuid.uuid4().hex[:HEX_DIGITS]
+        authorized = {"user": user, "auth_type": auth_type, "state_id": state_id, "time": time.time()}
+        if webcast:
+            return authorized
+        if len(cls._cookie_states) >= MAX_COOKIE_STATES:
+            cls._cookie_states.pop(last=False)
+        cls._cookie_states[state_id] = authorized
+        return authorized
+
     def open(self):
         need_code = bool(self._auth_code)
         need_user = need_code      ##bool(self._auth_users)
 
         user = ""
         try:
-            if not self._auth_code:
-                self.authorized = {"user": "", "auth_type": "null_auth", "time": time.time(), "state_id": ""}
-
-            elif COOKIE_NAME in self.request.cookies:
+            if COOKIE_NAME in self.request.cookies:
                 state_value = self.get_state(self.request.cookies[COOKIE_NAME].value)
                 if state_value:
                     self.authorized = state_value
+
+            if not self.authorized and not self._auth_code:
+                # No authorization code
+                self.authorized = self.add_state("", "null_auth")
 
             webcast_auth = False
             if not self.authorized:
@@ -300,14 +312,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         return
 
                 if code == self._auth_code or code == expect_code:
-                    state_id = uuid.uuid4().hex[:HEX_DIGITS]
-                    self.authorized = {"user": user, "auth_type": "code_auth", "time": time.time(), "state_id": state_id}
-                    if len(self._cookie_states) >= MAX_COOKIE_STATES:
-                        self._cookie_states.pop(last=False)
-                    self._cookie_states[state_id] = self.authorized
+                    self.authorized = self.add_state(user, "code_auth")
 
                 elif self.req_path in self._webcast_paths:
-                    self.authorized = {"user": user, "auth_type": "webcast_auth", "time": time.time(), "state_id": ""}
+                    self.authorized = self.add_state(user, "webcast_auth", webcast=True)
                     webcast_auth = True
 
             if not self.authorized:
@@ -356,7 +364,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
                 if len(comps) < 2 or not comps[1]:
-                    term_list = conn.term_dict.keys()
+                    term_list = []
+                    for term_name in conn.term_dict:
+                        path = host + "/" + term_name
+                        terminal_params = self._control_params.get(path)
+                        if terminal_params and (terminal_params["share"] or terminal_params["state_id"] == self.authorized["state_id"]):
+                            term_list.append(term_name)
                     term_list.sort()
                     self.write_json([["term_list", self.authorized["state_id"], host, term_list]])
                     self.close()
@@ -378,15 +391,17 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             path = host + "/" + term_name
 
             if path not in self._control_params:
-                # Initialize parameters
-                self._control_params[path] = {"lock": False, "share": True, "tandem": False}
-
-            terminal_params = self._control_params[path]
-            if not terminal_params["share"]:
-                # No sharing
-                self.write_json([["abort", "Invalid terminal path: %s" % path]])
-                self.close()
-                return
+                # Initialize parameters for new terminal
+                assert not webcast_auth and self.authorized["state_id"]
+                terminal_params = {"lock": False, "share": False, "tandem": False, "state_id": self.authorized["state_id"]}
+                self._control_params[path] = terminal_params
+            else:
+                terminal_params = self._control_params[path]
+                if not terminal_params["share"] and (terminal_params["state_id"] != self.authorized["state_id"]):
+                    # No sharing
+                    self.write_json([["abort", "Invalid terminal path: %s" % path]])
+                    self.close()
+                    return
 
             if option == "kill" and not webcast_auth and not wildhost:
                 kill_remote(path)

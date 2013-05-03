@@ -259,13 +259,15 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           paste_command <text>
           get_finder <kind> <directory>
           save_data <save_params> <filedata>
-          notebook <activate> <filepath> <prompts> <content>
+          open_notebook <filepath> <prompts> <content>
+          close_notebook
           save_notebook <filepath> <input_data> <params>
           add_cell <new_cell_type> <init_text> <before_cell_index>
           select_cell <cell_index> <move_up>
           move_cell <move_up>
           delete_cell <move_up>
           merge_above
+          erase_output <all_cells>
           update_type <cell_type>
           complete_cell <incomplete_line>
           update_cell <cellIndex> <execute> <input_data>
@@ -327,10 +329,15 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         paste_text = self.lineterm.click_paste(term_name, cmd[0], cmd[1], cmd[2])
                         self.paste_command(term_name, paste_text)
 
-                elif action == "notebook":
-                    # notebook <activate> <filepath> <prompts> <content>
+                elif action == "open_notebook":
+                    # open_notebook <filepath> <prompts> <content>
                     if self.lineterm:
-                        self.lineterm.notebook(term_name, cmd[0], cmd[1], cmd[2], cmd[3])
+                        self.lineterm.open_notebook(term_name, cmd[0], cmd[1], cmd[2])
+
+                elif action == "close_notebook":
+                    # close_notebook
+                    if self.lineterm:
+                        self.lineterm.close_notebook(term_name)
 
                 elif action == "save_notebook":
                     # save_notebook <filepath> <input_data> <params>
@@ -361,6 +368,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     # merge_above
                     if self.lineterm:
                         self.lineterm.merge_above(term_name)
+
+                elif action == "erase_output":
+                    # erase_output <all_cells>
+                    if self.lineterm:
+                        self.lineterm.erase_output(term_name, cmd[0])
 
                 elif action == "update_type":
                     # update_type <cell_type>

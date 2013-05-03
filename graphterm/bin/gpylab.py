@@ -18,17 +18,34 @@ Example:
     plot([2,3])
     show(False)
 
-Note: If not using ion(),
-     use show() to update image
-     and show(False) to display new image
+Example 2:
+    fig = plt.figure()  # a new figure window
+    ax = fig.add_subplot(1, 1, 1)  # specify (nrows, ncols, axnum)
+    x = np.linspace(0, 10, 1000)
+    y = np.sin(x)
+
+    ax.plot(x, y)
+    display(fig)
+
+Notes: Use ioff() to disable interactive mode
+       Use show() to update image
+       Use show(False) to display new image
+       Use display(fig) to display figure
+       Use autoprint(True) to re-enable default expression printing behaviour
 """
 
 import gmatplot as gm
 gm.setup()    # Sets up gmatplot and patches pylab
 from pylab import *
+from gmatplot import display
+import matplotlib
 
 import sys
 Saved_displayhook = sys.displayhook
+
+def gpylab_display_hook(expr):
+    if isinstance(expr, matplotlib.figure.Figure):
+        display(expr, overwrite=True)
 
 def autoprint(enable=True):
     global Saved_displayhook
@@ -37,9 +54,10 @@ def autoprint(enable=True):
     else:
         # Suppress automatic printing of expressions
         Saved_displayhook = sys.displayhook
-        sys.displayhook = lambda x: None
+        sys.displayhook = gpylab_display_hook
 
 autoprint(False)
+ion()
 
 if __name__ == "__main__":
     import sys

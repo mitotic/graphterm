@@ -75,6 +75,7 @@ var gAlwaysSplitScreen = gMobileBrowser;
 var gSplitScreen = false;
 var gShowingFinder = false;
 
+var gShowingSplash = false;
 var gAnimatingSplash = false;
 var gProgrammaticScroll = false;
 var gManualScroll = false;
@@ -550,7 +551,7 @@ function GTGetFilePath(fileURI, parentURI) {
 
 function GTReceivedUserInput(source) {
     gControlActive = false;
-    if (!$("#gtermsplash").hasClass("hidesplash"))
+    if (gShowingSplash && !gAnimatingSplash)
 	GTHideSplash(true);
     $("#headfoot-control").removeClass("gterm-headfoot-active");
     if (source != "select") {
@@ -908,7 +909,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		if (!gParams.oshell)
 		    openTerminal();
 		if (gParams.controller && gParams.display_splash && gParams.term != "osh")
-		    GTShowSplash(true);
+		    GTShowSplash(true, true);
 
             } else if (action == "host_list") {
 		if (command[1])
@@ -1291,6 +1292,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    console.log("ABCnote_cell_value", inputData, cellIndex);
 		    if (gNotebook)
 			gNotebook.cellValue(inputData, cellIndex);
+
+		} else if (cmd_type == "note_erase_output") {
+		    var cellIndex = cmd_arg[0];
+		    console.log("ABCnote_erase_output", cellIndex);
+		    if (gNotebook)
+			gNotebook.eraseOutput(cellIndex);
 
 		} else if (cmd_type == "note_row_update") {
                     var reset       = cmd_arg[1];
@@ -2892,23 +2899,6 @@ function OpenNew(host, term_name, options) {
     window.open(new_url, target=target);
 }
 
-function GTermAbout() {
-    GTPopAlert('<b>'+GTEscape(gParams.about_description)+"</b><p>\n&nbsp;&nbsp;Version: "+gParams.about_version+
-	       '<p>\n&nbsp;&nbsp;Author(s): '+ GTEscape(gParams.about_authors.join(", "))+
-               '<p>\n&nbsp;&nbsp;Website: <a href="'+gParams.about_url+'" target="_blank">'+gParams.about_url+'</a>'+
-               '<p>\n&nbsp;&nbsp;Mailing list: <a href="https://groups.google.com/group/graphterm" target="_blank">https://groups.google.com/group/graphterm</a> (<b>NEW</b>)'+
-               '<p>\n&nbsp;&nbsp;Twitter: <a href="https://twitter.com/intent/user?screen_name=graphterm" target="_blank">@graphterm</a>',
-               true);
-}
-
-function GTermHelp() {
-    GTPopAlert('<b>GraphTerm Help</b>'+
-'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/usage.html" target="_blank">General usage information</a>'+
-'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/troubleshooting.html" target="_blank">Troubleshooting</a>'+
-'<p>\n&nbsp;&nbsp;<a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> (<b>NEW</b>)',
-               true);
-}
-
 function CheckUpdates() {
     $.getJSON(PYPI_JSON_URL, function(data) {
 	if (gParams.about_version == data.info.version) {
@@ -3345,13 +3335,13 @@ var gFrameDispatcher = new GTFrameDispatcher();
 
 function GTActivateNotebook(filepath, prompts) {
     if (gWebSocket && gParams.controller) {
-	gWebSocket.write([["notebook", true, filepath, prompts || [], null]]);
+	gWebSocket.write([["open_notebook", filepath, prompts || [], null]]);
     }
 }
 
 function GTCloseNotebook() {
     if (gWebSocket && gParams.controller) {
-	gWebSocket.write([["notebook", false, "", [], null]]);
+	gWebSocket.write([["close_notebook"]]);
     }
 }
 
@@ -3381,6 +3371,7 @@ function GTNotebook(note_file, note_dir, fullpage) {
 
     this.cellParams = {};
     this.curIndex = 0;
+    this.execIndex = 0;
     this.openNext = false;
 					      
     this.last_poll_time = epoch_time();
@@ -3430,7 +3421,17 @@ GTNotebook.prototype.handleFocus = function(evt) {
     return false;
 }
 
-GTNotebook.prototype.lastCellIndex = function() {
+GTNotebook.prototype.eraseOutput = function(cellIndex) {
+    if (cellIndex) {
+	$("#"+this.getCellId(cellIndex)+"-output").html("");
+	$("#"+this.getCellId(cellIndex)+"-screen").html("");
+    } else {
+	$(this.pagelet).find(".gterm-notecell-output").html("");
+	$(this.pagelet).find(".gterm-notecell-screen").html("");
+    }
+}
+
+GTNotebook.prototype.getLastIndex = function() {
     var cellId = $(this.pagelet).children(".gterm-notecell-container").last().attr("id");
     try {
 	return parseInt(cellId.split("-")[4]);
@@ -3451,9 +3452,9 @@ GTNotebook.prototype.handleOutput = function(evt) {
 	var cellIndex = parseInt(cellId.split("-")[4]);
 	console.log("GTNotebook.handleOutput: cell", cellIndex);
 	if (cellIndex == this.curIndex) {
-	    this.renderCell();
-	    this.cellFocus(true);
+	    this.renderCell(true, true);
 	} else {
+	    parent.hide();  // Hide markdown output for target
 	    gWebSocket.write([["select_cell", cellIndex, false]]);
 	}
     } catch(err) {
@@ -3510,19 +3511,21 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    this.update_text(true, false);
 	} else {
 	    this.update_text(false, false);
-	    this.renderCell();
-	    this.cellFocus(true);
+	    this.renderCell(true, false);
 	}
     } else if (command == "execute") {
 	if (cellParams.cellType) {
 	    this.update_text(true, true);
 	} else {
-	    this.renderCell();
+	    this.renderCell(false, false);
 	    this.update_text(false, true);
-	    gWebSocket.write([["select_cell", 0, false]]);
 	}
     } else if (command == "markdown") {
 	gWebSocket.write([["update_type", newValue ? "" : "code"]]);
+    } else if (command == "erase_cell") {
+	gWebSocket.write([["erase_output", false]]);
+    } else if (command == "erase_all") {
+	gWebSocket.write([["erase_output", true]]);
     } else if (command == "cell_delete") {
 	gWebSocket.write([["delete_cell", false]]);
     } else if (command == "cell_merge") {
@@ -3556,7 +3559,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     var cellId = this.getCellId(cellIndex);
     var cellParams = { cellType: cellType, cellIndex: cellIndex, cellId: cellId };
     this.cellParams[cellIndex] = cellParams;
-    var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-input gterm-notecell-code"></textarea><div class="gterm-notecell-busy">Running...</div><div id="'+cellId+'-output" class="gterm-notecell-output"></div><div id="'+cellId+'-screen" class="gterm-notecell-screen"></div></div>';
+    var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-input gterm-notecell-code" spellcheck="false"></textarea><div class="gterm-notecell-busy">Running...</div><div id="'+cellId+'-output" class="gterm-notecell-output"></div><div id="'+cellId+'-screen" class="gterm-notecell-screen"></div></div>';
     var newElem;
     if (!beforeCellIndex) {
 	newElem = $(cellHtml).appendTo(this.pagelet);
@@ -3566,17 +3569,18 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     this.curIndex = cellIndex;
     this.cellValue(inputData);
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
-    textElem.autoResize();
+    textElem.autoResize({extraSpace: 6});
     //if (!gParams.controller)
     //	textElem.attr("disabled", "disabled");
     this.lastTextValue = null;
     $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();
     $("#"+this.getCellId(this.curIndex)+"-output").bind("click", bind_method(this, this.handleOutput));
-    this.renderCell(this.splitting);
+    this.renderCell(this.splitting, this.splitting);
     this.splitting = false;
 }
 
-GTNotebook.prototype.renderCell = function(showInput) {
+GTNotebook.prototype.renderCell = function(showInput, hideOutput) {
+    console.log("GTNotebook.renderCell: ", showInput, hideOutput);
     var cellParams = this.cellParams[this.curIndex];
     var inputElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     var outputElem = $("#"+this.getCellId(this.curIndex)+"-output");
@@ -3590,6 +3594,11 @@ GTNotebook.prototype.renderCell = function(showInput) {
 	if (!$.trim(text))
 	    text = "EMPTY MARKDOWN CELL";
 	outputElem.html(md2html(text));
+	if (hideOutput)
+	    outputElem.hide();
+	else
+	    outputElem.show();
+	    
 	if (showInput)
 	    this.cellFocus(true);
 	else
@@ -3611,7 +3620,7 @@ GTNotebook.prototype.splitCell = function() {
 	$("#"+this.getCellId(this.curIndex)+"-output").html("");
 	$("#"+this.getCellId(this.curIndex)+"-screen").html("");
 	this.update_text();
-	this.renderCell();
+	this.renderCell(false, false);
 	this.splitting = true;
 	gWebSocket.write([["add_cell", cellParams.cellType, tail, 0]]);
     }
@@ -3620,7 +3629,7 @@ GTNotebook.prototype.splitCell = function() {
 GTNotebook.prototype.selectCell = function(cellIndex) {
     var cellParams = this.cellParams[this.curIndex];
     if (!cellParams.cellType) {
-	this.renderCell();
+	this.renderCell(false, false);
     }
     this.curIndex = cellIndex;
     this.cellFocus(true);
@@ -3644,6 +3653,8 @@ GTNotebook.prototype.updateType = function(cellIndex, cellType) {
 }
 
 GTNotebook.prototype.deleteCell = function(deleteIndex, switchIndex) {
+    if (this.execIndex == deleteIndex)
+	this.execIndex = 0;
     $("#"+this.getCellId(deleteIndex)).remove();
     this.selectCell(switchIndex);
 }
@@ -3679,12 +3690,13 @@ GTNotebook.prototype.cellScrollInput = function() {
 }
 
 GTNotebook.prototype.cellScrollOutput = function() {
-    var containerElem = $("#"+this.getCellId(this.curIndex)+"-container");
+    var containerElem = $("#"+this.getCellId(this.curIndex));
     $(window).scrollTop(containerElem.offset().top+containerElem.height()-$(window).height());
 }
 
 GTNotebook.prototype.update_text = function(execute, openNext) {
     if (execute) {
+	this.execIndex = this.curIndex;
 	this.openNext = !!openNext;
 	this.cellFocus(false);
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").show();
@@ -3718,7 +3730,7 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     var cellParams = this.cellParams[this.curIndex];
     if (!cellParams.cellType)
 	return;
-    console.log("ABCGTNotebook.output: ", reset, update_rows, update_scroll);
+    console.log("ABCGTNotebook.output: ", this.curIndex, this.curIndex, reset, update_rows, update_scroll);
     var note_prompt = false;
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
     if (reset)
@@ -3771,18 +3783,24 @@ GTNotebook.prototype.output = function(reset, update_rows, update_scroll) {
     }
 
     if (note_prompt) {
+	// "End of output"
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();
 	if (this.openNext) {
 	    this.openNext = false;
-	    gWebSocket.write([["add_cell", "code", "", 0]]);
-	} else if (this.curIndex == this.lastCellIndex()) {
+	    if (this.curIndex == this.getLastIndex())
+		gWebSocket.write([["add_cell", "code", "", 0]]);
+	    else
+		gWebSocket.write([["select_cell", 0, false]]);
+	} else if (this.curIndex == this.getLastIndex()) {
+	    // Last cell
 	    this.cellFocus(true, true);
 	    setTimeout(ScrollTerm, 200);
 	} else {
 	    this.cellFocus(true);
 	}
     } else {
-	if (this.curIndex == this.lastCellIndex())
+	// Scroll on output
+	if (this.curIndex == this.getLastIndex())
 	    setTimeout(ScrollTerm, 200);
 	else
 	    setTimeout(bind_method(this, this.cellScrollOutput), 200);
@@ -4132,14 +4150,44 @@ function ScrollTerm() {
     $(window).scrollTop(bot_offset - $(window).height());
 }
 
-function GTShowSplash(animate, force) {
+function GTermHelp() {
+    GTPopAlert('<b>GraphTerm Help</b>'+
+'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/usage.html" target="_blank">General usage information</a>'+
+'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/troubleshooting.html" target="_blank">Troubleshooting</a>'+
+'<p>\n&nbsp;&nbsp;<a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> (<b>NEW</b>)',
+               true);
+}
+
+function GTermAbout() {
+    if (gNotebook || gMobileBrowser)
+	GTPopAlert(GTAboutText(), true);
+    else
+	GTShowSplash(true, true, true);
+}
+
+function GTAboutText() {
+    return '<b>'+GTEscape(gParams.about_description)+"</b><p>\n&nbsp;&nbsp;Version: "+gParams.about_version+
+	   '<p>\n&nbsp;&nbsp;Author(s): '+ GTEscape(gParams.about_authors.join(", "))+
+           '<p class="gtermsplashalt">\n&nbsp;&nbsp;Website: <a href="'+gParams.about_url+'" target="_blank">'+gParams.about_url+'</a></p>'+
+           '<p class="gtermsplashalt">\n&nbsp;&nbsp;Mailing list: <a href="https://groups.google.com/group/graphterm" target="_blank">https://groups.google.com/group/graphterm</a> (<b>NEW</b>)</p>'+
+           '<p class="gtermsplashalt">\n&nbsp;&nbsp;Twitter: <a href="https://twitter.com/intent/user?screen_name=graphterm" target="_blank">@graphterm</a></p>';
+}
+
+var gSplashText = '<h3>GraphTerm is a <em>graphical terminal interface</em> the blends the command line with the graphical user interface.</h3>'+
+                  '<p><h3>Type a Bash shell command or click <em>home</em> on the menubar to get started.</h3>'+
+                  '<h3 class="gtermsplashalt">GraphTerm was developed as part of the Mindmeldr project. For more information, see <a target="_blank" href="http://code.mindmeldr.com/graphterm">code.mindmeldr.com/graphterm</a></h3>';
+
+function GTShowSplash(force, animate, about) {
     if (!force && $("#gtermsplash").hasClass("hidesplash"))
 	return;
+    console.log("GTShowSplash:", force, animate, about);
+    $("#gtermsplashtext").html(about ? GTAboutText() : gSplashText);
     if (force) {
 	if (!$("#gtermsplash").hasClass("noshow")) {
 	    GTHideSplash(true);
 	    return;
 	}
+	gShowingSplash = true;
 	$("#gtermsplash").attr("style", "").removeClass("hidesplash").removeClass("noshow");
 	setTimeout(ScrollTop, 200);
     } else {
@@ -4149,10 +4197,13 @@ function GTShowSplash(animate, force) {
 }
 
 function GTHideSplash(animate, rotate) {
-    console.log("GTHideSplash: ", animate);
+    console.log("GTHideSplash: ", animate, rotate);
     if ($("#gtermsplash").hasClass("hidesplash"))
 	return;
     $("#gtermsplash").addClass("hidesplash");
+    gShowingSplash = false;
+    if (gAnimatingSplash)
+	return;
     if (animate) {
 	$("#gtermsplashdiv img").css("top", $("#gtermsplashdiv img").offset().top - $("#gtermsplash").offset().top);
         $("#gtermsplashdiv").addClass("gtermsplashanchor");
@@ -4191,6 +4242,7 @@ function GTHideSplash(animate, rotate) {
 }
 
 function GTEndSplashAnimate() {
+    console.log("GTEndSplashAnimate: ");
     $("#gtermsplash").addClass("noshow");
     //$("#gtermsplash").hide();
     $("#gtermsplashdiv").removeClass("gtermsplashanchor");
@@ -4201,6 +4253,8 @@ function GTEndSplashAnimate() {
     $("#gtermsplashdiv img").css("transform", "");
     $("#gtermsplash").css("gtermAnimate", "0");
     gAnimatingSplash = false;
+    if ($(window).height() > $("#terminal").height())
+	ScrollTop(0);
 }
 
 function ScrollScreen(alt_mode) {
