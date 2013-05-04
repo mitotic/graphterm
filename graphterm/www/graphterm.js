@@ -51,6 +51,7 @@ var gRows = 0;
 var gCols = 0;
 var gWebSocket = null;
 
+var gAuthenticating = false;
 var gEditing = null;
 
 var gFeedback = false;
@@ -290,6 +291,7 @@ function setCookie(name, value, exp_days) {
 }
 
 function AuthPage(need_user, need_code, msg) {
+    gAuthenticating = true;
     $("#authcode").val("");
 
     if (need_user)
@@ -307,10 +309,17 @@ function AuthPage(need_user, need_code, msg) {
 
     $("#terminal").hide();
     $("#session-container").hide();
+
+    $(document).unbind("keydown");
+    $(document).unbind("keypress");
+
+    $("#authenticate").rebind("submit", Authenticate);
 }
 
-function Authenticate() {
+function Authenticate(evt) {
+    console.log("Authenticate: ", evt);
     Connect($("#authuser").val(), $("#authcode").val());
+    return false;
 }
 
 function Connect(auth_user, auth_code) {
@@ -565,6 +574,8 @@ function GTReceivedUserInput(source) {
 
 function GTUpdateController() {
     var label_text = gParams.host+"/"+gParams.term;
+    if (gParams.user)
+	label_text = gParams.user+"@"+label_text;
     $("#menubar-sessionlabel").text(label_text);
     if (gParams.controller)
 	window.name = gParams.host+"/"+gParams.term;
@@ -914,8 +925,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "host_list") {
 		if (command[1])
 		    setCookie("GRAPHTERM_AUTH", command[1]);
-		var hosts = command[2];
-		var host_html = 'Hosts available:<p><ol>';
+		var user = command[2];
+		var hosts = command[3];
+		var host_html = "";
+		if (user)
+		    host_html += "User: "+user + "<br>\n";
+		host_html += 'Hosts available:<p><ol>';
 		for (var j=0; j<hosts.length; j++)
 		    host_html += '<li><a href="/'+hosts[j]+'">'+hosts[j]+'</a></li>';
 		host_html += '</ol> <p><a href="#" onclick="SignOut();">Sign out</a>';
@@ -924,9 +939,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "term_list") {
 		if (command[1])
 		    setCookie("GRAPHTERM_AUTH", command[1]);
-		var host = command[2];
-		var terms = command[3];
-		var term_html = 'Connect to session:<p><ol>';
+		var user = command[2];
+		var host = command[3];
+		var terms = command[4];
+		var term_html = "@" + host + "<p>\n";
+		if (user)
+		    term_html = user + term_html;
+		term_html += 'Connect to session:<p><ol>';
 		for (var j=0; j<terms.length; j++)
 		    term_html += '<li><a href="/'+host+'/'+terms[j]+'">'+terms[j]+'</a></li>';
 		term_html += '<li><a href="/'+host+'/new"><b><em>new</em></b></a></li>';
@@ -1238,17 +1257,20 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			}
 		    }
 
-		} else if (cmd_type == "note_activate") {
-		    var activate = cmd_arg[0];
-		    var note_file = cmd_arg[1];
-		    var note_dir = cmd_arg[2];
-		    var shell_prompt = cmd_arg[3];
-		    console.log("ABCnote_activate", activate, note_file, note_dir, shell_prompt);
-		    if (activate) {
+		} else if (cmd_type == "note_open") {
+		    var note_file = cmd_arg[0];
+		    var note_dir = cmd_arg[1];
+		    var shell_prompt = cmd_arg[2];
+		    console.log("ABCnote_aopen", note_file, note_dir, shell_prompt);
+		    if (!gNotebook) {
 			gNotebook = new GTNotebook(note_file, note_dir, !shell_prompt);
-		    } else if (gNotebook) {
-			gNotebook.close();
+			$("#terminal").addClass("gterm-notebook");
 		    }
+
+		} else if (cmd_type == "note_close") {
+		    console.log("ABCnote_close");
+		    if (gNotebook)
+			gNotebook.close();
 
 		} else if (cmd_type == "note_add_cell") {
 		    var cellIndex = cmd_arg[0];
@@ -1857,6 +1879,10 @@ function GTMenuRefreshToggle(target, update, newValue) {
 
 function GTMenuUpdateToggle(stateKey, newValue) {
     GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="'+stateKey+'"]'), true, newValue);
+    if (stateKey == "settings_terminal_share")
+	$("#terminal").toggleClass("gterm-share", newValue);
+    if (stateKey == "terminal_webcast")
+	$("#terminal").toggleClass("gterm-webcast", newValue);
 }
 
 function GTMenuHandler(evt) {
@@ -1897,6 +1923,8 @@ function GTMenuEvent(target, setValue) {
 	return false;
     if ($(target).hasClass("gterm-non-locked") && gMenuState.settings.lock)
 	return false;
+    if ($(target).hasClass("gterm-only-notebook") && !gNotebook)
+	return false;
     var stateKey = $(target).attr("gterm-state");
     console.log("GTMenuEvent: ", stateKey, target);
     if (!stateKey)
@@ -1910,8 +1938,8 @@ function GTMenuEvent(target, setValue) {
 	GTMenuSettings(selectKey, newValue);
     else if (comps[0] == "terminal")
 	GTMenuTerminal(selectKey, newValue);
-    else if (comps[0] == "action")
-	GTMenuAction(selectKey, newValue);
+    else if (comps[0] == "display")
+	GTMenuDisplay(selectKey, newValue);
     else if (comps[0] == "notebook")
 	GTMenuNotebook(selectKey, newValue);
     else if (comps[0] == "help")
@@ -1922,7 +1950,7 @@ function GTMenuEvent(target, setValue) {
 }
 
 function GTMenuUpdate(stateKey, newValue) {
-    console.log("GTMenuSettings: ", stateKey, newValue);
+    console.log("GTMenuUpdate: ", stateKey, newValue);
     GTMenuUpdateToggle(stateKey, newValue);
 
     switch (stateKey) {
@@ -1960,6 +1988,8 @@ function GTMenuSettings(selectKey, newValue) {
 
     case "terminal":
 	gWebSocket.write([["settings", "settings_terminal_"+comps[1], !!newValue]]);
+	if (comps[1] == "share")
+	    $("#terminal").toggleClass("gterm-share", !!newValue);
 	break;
 
     case "theme":
@@ -1991,7 +2021,8 @@ function GTMenuSettings(selectKey, newValue) {
 function GTMenuTerminal(selectKey, newValue) {
     if (!gWebSocket)
 	return;
-    if (!gParams.controller && (selectKey != "control" || gMenuState.settings.terminal.lock)) {
+    if (gParams.controller || selectKey == "new" || selectKey == "detach" || selectKey == "reconnect" &&  (selectKey != "control" || !gMenuState.settings.terminal.lock)) {
+    } else {
 	alert("Only controller can update settings");
     }
 	
@@ -2023,7 +2054,7 @@ function GTMenuTerminal(selectKey, newValue) {
 	    GTMenuUpdateToggle("terminal_webcast", false);
 	    return;
 	}
-	$("#terminal").toggleClass("webcast", newValue);
+	$("#terminal").toggleClass("gterm-webcast", newValue);
 	gWebSocket.webcast = newValue;
 	gWebSocket.write([["settings", "terminal_webcast", newValue]]);
 	break;
@@ -2034,12 +2065,14 @@ function GTMenuTop(topKey) {
     console.log("GTMenuTop: ", topKey);
     switch (topKey) {
     case "steal":
-	gParams.controller = true;
-	GTUpdateController();
-	gWebSocket.write([["settings", "terminal_control", true]])
+	if (!gMenuState.settings.terminal.lock) {
+	    gParams.controller = true;
+	    GTUpdateController();
+	    gWebSocket.write([["settings", "terminal_control", true]]);
+	}
 	break;
     case "home":
-	if (gWebSocket)
+	if (gParams.controller && gWebSocket)
 	    gWebSocket.term_input("cd; gls\n");
 	break;
     case "new":
@@ -2048,8 +2081,8 @@ function GTMenuTop(topKey) {
     }
 }
 
-function GTMenuAction(selectKey) {
-    console.log("GTMenuAction: ", selectKey);
+function GTMenuDisplay(selectKey) {
+    console.log("GTMenuDisplay: ", selectKey);
     switch (selectKey) {
     case "top":
 	ScrollTop(0);
@@ -2238,6 +2271,7 @@ function gtermClickPaste(text, file_url, options) {
 }
 
 function gtermInterruptHandler(event) {
+    console.log("gtermInterruptHandler");
     if (gWebSocket && gWebSocket.terminal)
 	gWebSocket.term_input(String.fromCharCode(3));
 }
@@ -2703,12 +2737,12 @@ function AjaxKeypress(evt) {
 	}
 
 	if (gNotebook && evt.ctrlKey) {
-	    gNotebook.handleCommand("run");
+	    gNotebook.handleCommand("execute");
 	    return false;
 	}
 
 	if (gNotebook && evt.shiftKey) {
-	    gNotebook.handleCommand("execute");
+	    gNotebook.handleCommand("run");
 	    return false;
 	}
 
@@ -2929,7 +2963,7 @@ function Webcast(start) {
     if (start && !window.confirm('Make terminal publicly viewable ("webcast")?'))
 	return;
 
-    $("#terminal").toggleClass("webcast", start);
+    $("#terminal").toggleClass("gterm-webcast", start);
     gWebSocket.webcast = start;
     gWebSocket.write([["webcast", gWebSocket.webcast]]);
 }
@@ -3323,8 +3357,8 @@ GTFrameDispatcher.prototype.close = function(frameName, save) {
     }
     
     delete this.frameControllers[frameName];
-    if (gWebSocket && gParams.controller)
-	gWebSocket.term_input("\x03");
+    if (gParams.controller)  // Delay sending Control-C so that any data stream sent back by the frame is not pre-empted
+	setTimeout(gtermInterruptHandler, 200);
     EndFullpage();
 }
 
@@ -3395,6 +3429,7 @@ GTNotebook.prototype.close = function() {
     $("#"+this.notebookId).remove();
 
     gNotebook = null;
+    $("#terminal").removeClass("gterm-notebook");
     if (gWebSocket && gParams.controller)
 	gWebSocket.term_input("\n");
 }
@@ -3471,8 +3506,6 @@ GTNotebook.prototype.handleKey = function(ch) {
 	this.handleCommand("markdown", false);
     } else if (ch == "d") {
 	this.handleCommand("cell_delete");
-    } else if (ch == "f") {
-	this.handleCommand("cell_read");
     } else if (ch == "j") {
 	this.handleCommand("move_up");
     } else if (ch == "k") {
@@ -3483,8 +3516,12 @@ GTNotebook.prototype.handleKey = function(ch) {
 	this.handleCommand("select_next");
     } else if (ch == "p") {
 	this.handleCommand("select_previous");
+    } else if (ch == "r") {
+	this.handleCommand("cell_read");
     } else if (ch == "s") {
 	this.handleCommand("save");
+    } else if (ch == "w") {
+	this.handleCommand("cell_write");
     }
 }
 
@@ -3504,17 +3541,17 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	}
     } else if (command == "run") {
 	if (cellParams.cellType) {
-	    this.update_text(true, false);
-	} else {
-	    this.update_text(false, false);
-	    this.renderCell(true, false);
-	}
-    } else if (command == "execute") {
-	if (cellParams.cellType) {
 	    this.update_text(true, true);
 	} else {
 	    this.renderCell(false, false);
 	    this.update_text(false, true);
+	}
+    } else if (command == "execute") {
+	if (cellParams.cellType) {
+	    this.update_text(true, false);
+	} else {
+	    this.update_text(false, false);
+	    this.renderCell(true, false);
 	}
     } else if (command == "markdown") {
 	gWebSocket.write([["update_type", newValue ? "" : "code"]]);
@@ -3530,8 +3567,18 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	this.splitCell();
     } else if (command == "cell_read") {
 	var filepath = window.prompt("Read file: ", "");
-	if (filepath)
+	if (filepath) {
 	    GTGetLocalFile(filepath,  this.note_dir, bind_method(this, this.cellValue));
+	    gNotebook.cellParams[gNotebook.curIndex].cellFile = filepath;
+	}
+    } else if (command == "cell_write") {
+	var filepath = window.prompt("Write file: ", gNotebook.cellParams[gNotebook.curIndex].cellFile || "");
+	if (filepath) {
+	    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+	    gWebSocket.write([["save_data", {x_gterm_filepath: filepath,
+					     x_gterm_popstatus: "alert",
+					     x_gterm_encoding: "base64"}, utf8_to_b64(textElem.val())]]);
+	}
     } else if (command == "insert_above") {
 	gWebSocket.write([["add_cell", "code", "", -1]]);
     } else if (command == "insert_below") {
@@ -3659,13 +3706,15 @@ GTNotebook.prototype.cellValue = function(inputData, cellIndex) {
     textElem.val(inputData || "");
 }
 
-GTNotebook.prototype.cellFocus = function(focus, noScroll) {
+GTNotebook.prototype.cellFocus = function(focus, selectAll, noScroll) {
     console.log("GTNotebook.cellFocus: ", focus, noScroll);
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     this.focusing = true;
     if (focus) {
 	textElem.show();
 	textElem.focus();
+	if (selectAll)
+	    textElem[0].select();
 	textElem.trigger("change");
 	this.passthru_stdin = false;
 	if (!noScroll)
@@ -3785,10 +3834,10 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 		gWebSocket.write([["select_cell", 0, false]]);
 	} else if (this.curIndex == this.getLastIndex()) {
 	    // Last cell
-	    this.cellFocus(true, true);
+	    this.cellFocus(true, true, true);
 	    setTimeout(ScrollTerm, 200);
 	} else {
-	    this.cellFocus(true);
+	    this.cellFocus(true, true);
 	}
     } else {
 	// Scroll on output
@@ -4174,17 +4223,18 @@ function GTShowSplash(force, animate, about) {
 	return;
     console.log("GTShowSplash:", force, animate, about);
     $("#gtermsplashtext").html(about ? GTAboutText() : gSplashText);
-    if (force) {
-	if (!$("#gtermsplash").hasClass("noshow")) {
-	    GTHideSplash(true);
-	    return;
-	}
-	gShowingSplash = true;
-	$("#gtermsplash").attr("style", "").removeClass("hidesplash").removeClass("noshow");
-	setTimeout(ScrollTop, 200);
-    } else {
-	$("#gtermsplash").removeClass("noshow");
+    if (force && !$("#gtermsplash").hasClass("noshow")) {
+	GTHideSplash(true);
+	return;
+    }
+
+    gShowingSplash = true;
+    $("#gtermsplash").attr("style", "").removeClass("hidesplash").removeClass("noshow");
+
+    if ($(window).height() > 3*$("#terminal").height()) {
 	ScrollTop(0);
+    } else {
+	setTimeout(ScrollTop, 200);
     }
 }
 
@@ -4197,7 +4247,7 @@ function GTHideSplash(animate, rotate) {
     if (gAnimatingSplash)
 	return;
     if (animate) {
-	$("#gtermsplashdiv img").css("top", $("#gtermsplashdiv img").offset().top - $("#gtermsplash").offset().top);
+	$("#gtermsplashdiv img").css("top", $("#gtermsplashdiv img").offset().top - $(window).scrollTop());
         $("#gtermsplashdiv").addClass("gtermsplashanchor");
 	gAnimatingSplash = true;
 	var offset = $("#gtermsplash").offset().top;
@@ -4330,7 +4380,6 @@ function GTReady() {
     $(GTNextEntry()).appendTo("#session-log");
 
     $(window).scroll(ScrollEventHandler);
-
 
     // Bind window keydown/keypress events
     $(document).keydown(keydownHandler);

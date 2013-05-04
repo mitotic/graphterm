@@ -177,6 +177,11 @@ def join_lines(lines):
     else:
         return "".join(lines)
 
+def nb_json(lines, ipy_format=False):
+    if not ipy_format:
+        return json.dumps("\n".join(lines))
+    return json.dumps([line+"\n" for line in lines[:-1]] + lines[-1:])
+
 def create_array(fill_value, count):
     """Return array of 32-bit values"""
     return array.array('L', [fill_value]*count)
@@ -678,8 +683,11 @@ class ScreenBuf(object):
                     self.delete_blob(tem_params[JOPTS].get("blob"))
 
     def append_scroll(self, scroll_lines):
-        self.current_scroll_count += len(scroll_lines)
-        self.scroll_lines += scroll_lines
+        tem_lines = scroll_lines[:]
+        for tem_line in tem_lines:
+            tem_line[JINDEX] = self.entry_index
+        self.scroll_lines += tem_lines
+        self.current_scroll_count += len(tem_lines)
 
     def update(self, active_rows, width, height, cursorx, cursory, main_screen,
                alt_screen=None, pdelim=[], reconnecting=False):
@@ -988,7 +996,7 @@ class Terminal(object):
 
         self.note_file = filepath
         self.note_shell = at_shell
-        self.screen_callback(self.term_name, "", "note_activate", [True, self.note_file, self.note_dir, self.note_shell])
+        self.screen_callback(self.term_name, "", "note_open", [self.note_file, self.note_dir, self.note_shell])
         self.note_file = filepath
         if content is None:
             if not filepath:
@@ -1036,7 +1044,7 @@ class Terminal(object):
         self.scroll_bot = self.height-1
         self.resize(self.height, self.width, self.winheight, self.winwidth, force=True)
         self.zero_screen()
-        self.screen_callback(self.term_name, "", "note_activate", [False, self.note_file, self.current_dir, self.note_shell])
+        self.screen_callback(self.term_name, "", "note_close", [])
         self.update()
 
     def save_notebook(self, filepath, input_data="", params={}):
@@ -1045,8 +1053,9 @@ class Terminal(object):
         fig_suffix = safe_filename(os.path.splitext(os.path.basename(fullpath))[0])
         format = params.get("format", "")
         logging.warning("ABCsave_notebook: file=%s, params=%s", fullpath, params)
-        if filepath.endswith(".ipynb.json"):
+        if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
             format = "ipynb"
+            ipy_format = filepath.endswith(".ipynb")
             fig_suffix, sep, tail = fig_suffix.rpartition(".")
         md_lines = []
         if format == "ipynb":
@@ -1068,7 +1077,7 @@ class Terminal(object):
             if format == "ipynb":
                 if j:
                     md_lines[-1] += ","
-                input_json = json.dumps("\n".join(cell["cellInput"]))
+                input_json = nb_json(cell["cellInput"], ipy_format)
                 if cell["cellType"]:
                     prompt_num += 1
                     in_prompt = prompt_num
@@ -1095,7 +1104,8 @@ class Terminal(object):
                                 if cell_out:
                                     md_lines[-1] += ","
                                 prompt_num += 1
-                                md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=json.dumps("\n".join(out_lines)))]
+                                out_json = nb_json(out_lines, ipy_format)
+                                md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=out_json)]
                             else:
                                 md_lines += ["```output"] + out_lines + ["```"] + [""]
                             cell_out = True
@@ -1121,7 +1131,8 @@ class Terminal(object):
                         if cell_out:
                             md_lines[-1] += ","
                         prompt_num += 1
-                        md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=json.dumps("\n".join(out_lines)))]
+                        out_json = nb_json(out_lines, ipy_format)
+                        md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=out_json)]
                     else:
                         md_lines += ["```output"] + out_lines + ["```"] + [""]
                     cell_out = True
@@ -1275,7 +1286,7 @@ class Terminal(object):
 
         self.update()
 
-    def add_cell(self, new_cell_type="code", init_text="", before_cell_number=0):
+    def add_cell(self, new_cell_type="code", init_text="", before_cell_number=0, filename=""):
         """ If before_cell_number is 0(-1), add new cell after(before) current cell
             If before_cell_number > 0, add new_cell before before_cell_number
         """
@@ -1290,7 +1301,7 @@ class Terminal(object):
         self.note_cells["maxIndex"] += 1
         cell_index = self.note_cells["maxIndex"]
         logging.warning("ABCadd_cell: %s %s %s %s", new_cell_type, before_cell_number, cell_index, prev_index)
-        new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellInput": [], "cellOutput": []}
+        new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellFile": filename, "cellInput": [], "cellOutput": []}
         new_cell["cellInput"] = split_lines(init_text) if init_text else []
         self.note_cells["cells"][cell_index] = new_cell
         self.note_cells["curIndex"] = cell_index
@@ -1575,10 +1586,10 @@ class Terminal(object):
 
         if self.note_cells:
             if reconnecting:
-                self.screen_callback(self.term_name, response_id, "note_activate", [True, self.current_dir, self.note_shell])
+                self.screen_callback(self.term_name, response_id, "note_open", [self.current_dir, self.note_shell])
                 for cell_index in self.note_cells["cellIndices"]:
                     cell = self.note_cells["cells"][cell_index]
-                    logging.warning("ABCnote_add_cell: %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellInput"], cell["cellOutput"])
+                    logging.warning("ABCnote_add_cell: %s %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellFile"], cell["cellInput"], cell["cellOutput"])
                     self.screen_callback(self.term_name, response_id, "note_add_cell",
                                          [cell["cellIndex"], cell["cellType"], 0,
                                           cell["cellInput"], cell["cellOutput"]])
@@ -2107,6 +2118,8 @@ class Terminal(object):
             response_type = headers["x_gterm_response"]
             response_params = headers["x_gterm_parameters"]
             screen_buf = self.note_screen_buf if self.note_cells else self.screen_buf
+            ##logging.warning("lineterm.Terminal.gterm_append: %s %s", response_type, response_params)
+
             if not self.gterm_validated:
                 # Unvalidated markup; plain-text or escaped HTML content for security
                 try:
@@ -2142,8 +2155,8 @@ class Terminal(object):
                             else:
                                 if encoding == "base64":
                                     # Only create blob content needs to remain encoded as Base64
-                                    headers.pop("x_gterm_encoding")
-                                    headers.pop("x_gterm_digest")
+                                    headers.pop("x_gterm_encoding", None)
+                                    headers.pop("x_gterm_digest", None)
                                     content = base64.b64decode(content)
                                 if len(content) != headers["content_length"]:
                                     raise Exception("Content length mismatch (%d!=%d) for %s: %s" % (len(content), headers["content_length"], response_type, filepath))
@@ -2286,6 +2299,12 @@ class Terminal(object):
         filepath = params.get("x_gterm_filepath", "")
         encoded = params.get("x_gterm_encoding") == "base64"
         if location != "remote":
+            filepath = os.path.expanduser(filepath)
+            if not filepath.startswith("/"):
+                if self.current_dir:
+                    filepath = self.current_dir + "/" + filepath
+                else:
+                    filepath = getcwd(self.pid) + "/" + filepath
             try:
                 with open(filepath, "w") as f:
                     f.write(base64.b64decode(filedata) if encoded else filedata)

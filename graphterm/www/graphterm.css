@@ -81,6 +81,15 @@ body.ipadscreen  {
     padding-top: 1.3em;
 }
 
+#terminal.gterm-share:not(.gterm-webcast) .sf-menu #gterm-menu-shared-count {
+    color: red;
+}
+
+#terminal.gterm-webcast .sf-menu #menubar-sessionlabel-container,
+#terminal.gterm-webcast .sf-menu #gterm-menu-shared-count {
+    background: #ff5555;
+}
+
 /* Generic element styles */
 div, span, pre, .gterm-prewrap {
     margin: 0;
@@ -138,8 +147,9 @@ hr {
 #terminal.gterm-controller .sf-menu .gterm-non-controller,
  #terminal:not(.gterm-controller) .sf-menu .gterm-only-controller,
  #terminal.gterm-locked .sf-menu .gterm-non-locked,
- #terminal:not(.gterm-locked) .sf-menu .gterm-only-locked {
-    opacity: 0.40;
+ #terminal:not(.gterm-locked) .sf-menu .gterm-only-locked,
+ #terminal:not(.gterm-notebook) .sf-menu .gterm-only-notebook {
+    opacity: 0.35;
 }
 
 #terminal .sf-menu li {
@@ -173,7 +183,7 @@ hr {
 }
 
 ul.sf-menu a[gterm-toggle="false"] span.gterm-toggle-status {
-    opacity: 0.1;
+    opacity: 0.15;
 }
 
 #terminal.gterm-shortcut-mode .gterm-menukey-firstletter > li > a:not(.gterm-key-altletter):first-letter,
@@ -424,18 +434,6 @@ input.gterm-input-arg[type=text] {
 
 #terminal {
     padding-bottom: 3px;
-}
-
-#terminal:not(.webcast) .webcast-alert {
-    display: none;
-}
-
-#terminal.webcast #menubar-share-icon {
-    color: red;
-}
-
-#terminal.webcast #menubar-label-webcast {
-    color: red;
 }
 
 #terminal:not(.showicons) .pagelet .gterm-rowimg {

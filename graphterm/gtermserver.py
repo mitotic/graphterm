@@ -201,7 +201,7 @@ def get_user(ws):
 
 class GTSocket(tornado.websocket.WebSocketHandler):
     _all_websockets = {}
-    _all_users = collections.defaultdict(dict)
+    _all_users = collections.defaultdict(set)
     _control_set = collections.defaultdict(set)
     _control_params = collections.defaultdict(dict)
     _watch_set = collections.defaultdict(set)
@@ -249,6 +249,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         self.authorized = None
         self.remote_path = None
         self.wildcard = None
+        self.websocket_id = None
+        self.oshell = None
         self.last_output = None
 
     def allow_draft76(self):
@@ -276,8 +278,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return authorized
 
     def open(self):
-        need_code = bool(self._auth_code)
-        need_user = need_code      ##bool(self._auth_users)
+        need_code = bool(self._auth_code and self._auth_code != "name")
+        need_user = bool(self._auth_code)     ##bool(self._auth_users)
 
         user = ""
         try:
@@ -285,6 +287,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 state_value = self.get_state(self.request.cookies[COOKIE_NAME].value)
                 if state_value:
                     self.authorized = state_value
+                    user = self.authorized["user"]
 
             if not self.authorized and not self._auth_code:
                 # No authorization code
@@ -302,21 +305,30 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 user = query_data.get("user", [""])[0]
                 code = query_data.get("code", [""])[0]
 
-                expect_code = self._auth_code
-                if self._auth_users:
-                    if user in self._auth_users:
-                        expect_code = self._auth_users[user]
+                if self._auth_code == "name":
+                    if user and user not in self._all_users:
+                        # New named user
+                        self.authorized = self.add_state(user, "name_auth")
                     else:
-                        self.write_json([["authenticate", need_user, need_code, "Invalid user" if user else ""]])
+                        errmsg = "User name %s already in use" % user if user else "Please specify user name"
+                        self.write_json([["authenticate", need_user, need_code, errmsg]])
                         self.close()
                         return
+                else:
+                    expect_code = self._auth_code
+                    if self._auth_users:
+                        if user in self._auth_users:
+                            expect_code = self._auth_users[user]
+                        else:
+                            self.write_json([["authenticate", need_user, need_code, "Invalid user" if user else ""]])
+                            self.close()
+                            return
 
-                if code == self._auth_code or code == expect_code:
-                    self.authorized = self.add_state(user, "code_auth")
-
-                elif self.req_path in self._webcast_paths:
-                    self.authorized = self.add_state(user, "webcast_auth", webcast=True)
-                    webcast_auth = True
+                    if code == self._auth_code or code == expect_code:
+                        self.authorized = self.add_state(user, "code_auth")
+                    elif self.req_path in self._webcast_paths:
+                        self.authorized = self.add_state(user, "webcast_auth", webcast=True)
+                        webcast_auth = True
 
             if not self.authorized:
                 self.write_json([["authenticate", need_user, need_code, "Authentication failed; retry"]])
@@ -330,7 +342,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     if LOCAL_HOST in host_list:
                         host_list.remove(LOCAL_HOST)
                 host_list.sort()
-                self.write_json([["host_list", self.authorized["state_id"], host_list]])
+                self.write_json([["host_list", self.authorized["state_id"], user, host_list]])
                 self.close()
                 return
 
@@ -371,7 +383,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if terminal_params and (terminal_params["share"] or terminal_params["state_id"] == self.authorized["state_id"]):
                             term_list.append(term_name)
                     term_list.sort()
-                    self.write_json([["term_list", self.authorized["state_id"], host, term_list]])
+                    self.write_json([["term_list", self.authorized["state_id"], user, host, term_list]])
                     self.close()
                     return
 
@@ -437,7 +449,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.remote_path = path
             self._all_websockets[self.websocket_id] = self
             if user:
-                self._all_users[user][self.websocket_id] = self
+                self._all_users[user].add(self.websocket_id)
 
             if self.websocket_id not in self._watch_set[path]:
                 self.broadcast(path, ["join", get_user(self), True])
@@ -455,7 +467,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             state_values = {"settings": {"terminal": terminal_params},
                             "terminal": {"webcast": path in self._webcast_paths}}
             watchers = [get_user(GTSocket._all_websockets.get(ws_id)) for ws_id in self._watch_set[self.remote_path]]
-            self.write_json([["setup", {"host": host, "term": term_name, "oshell": self.oshell,
+            self.write_json([["setup", {"user": user, "host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
@@ -479,12 +491,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if self.authorized:
             user = self.authorized["user"]
             if user:
-                user_sockets = self._all_users.get(user)
-                if user_sockets:
-                    try:
-                        del user_sockets[self.websocket_id]
-                    except Exception:
-                        pass
+                user_socket_ids = self._all_users.get(user)
+                if user_socket_ids:
+                    user_socket_ids.discard(self.websocket_id)
 
         if self.remote_path in self._control_set:
              self._control_set[self.remote_path].discard(self.websocket_id)
@@ -537,7 +546,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if not controller and term_name in conn.allow_feedback:
                 allow_feedback_only = True
 
-        allow_control_request = not terminal_params["lock"] and terminal_params["share"]
+        allow_control_request = not terminal_params["lock"] and (terminal_params["share"] or self.websocket_id in self._watch_set[self.remote_path])
         if controller or allow_feedback_only or allow_control_request:
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
@@ -689,7 +698,11 @@ class TraceInterface(object):
         """
         # Must be thread-safe
         if GTSocket._all_users:
-            websocket_id = GTSocket._all_users.get(path_comps[0])
+            websocket_ids = GTSocket._all_users.get(path_comps[0])
+            if websocket_ids:
+                websocket_id = list(websocket_ids)[0]
+            else:
+                websocket_id = None
         else:
             websocket_id = path_comps[0]
         websocket = GTSocket._all_websockets.get(websocket_id)

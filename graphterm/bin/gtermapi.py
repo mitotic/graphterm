@@ -217,16 +217,23 @@ def in_ipython():
     except NameError:
         return False
 
-def edit_file(filename="", dir="", content=None, editor="ace", stderr=False):
+def edit_file(filename="", dir="", content=None, create=False, editor="ace", stderr=False):
     """Edit file"""
     filepath = ""
     if filename:
         fullname = os.path.expanduser(filename)
         filepath = os.path.normcase(os.path.abspath(fullname))
 
-        if content is None and (not os.path.exists(filepath) or not os.path.isfile(filepath)):
-            print >> sys.stderr, "File %s not found" % filename
-            return None
+        if content is None:
+            if not os.path.exists(filepath):
+                if create:
+                    content = ""
+                else:
+                    print >> sys.stderr, "File %s not found" % filename
+                    return None
+            elif not os.path.isfile(filepath):
+                print >> sys.stderr, "File %s not a plain file" % filename
+                return None
 
     params = {"filepath": filepath, "editor": editor, "modify": True, "command": "", "current_directory": dir}
     if Export_host:
@@ -712,6 +719,6 @@ def receive_data(stderr=False, verbose=False):
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1 and (sys.argv[1].endswith(".gnb.md") or sys.argv[1].endswith(".ipynb.json")):
+    if len(sys.argv) > 1 and (sys.argv[1].endswith(".gnb.md") or sys.argv[1].endswith(".ipynb") or sys.argv[1].endswith(".ipynb.json")):
         # Switch to notebook mode (after prompt is displayed)
         open_notebook(sys.argv[1])
