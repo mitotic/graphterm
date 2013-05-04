@@ -90,7 +90,6 @@ HEX_DIGITS = 16
 
 PROTOCOL = "http"
 
-SUPER_USERS = set(["root"])
 LOCAL_HOST = "local"
 
 # Short prompt (long prompt with directory metadata fills most of row):
@@ -211,10 +210,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _auth_users = OrderedDict()
     _auth_code = uuid.uuid4().hex[:HEX_DIGITS]
     _wildcards = {}
+    _super_users = set()
 
     @classmethod
-    def get_auth_code(cls):
-        return cls._auth_code
+    def set_super_users(cls, users=[]):
+        cls._super_users = set(users)
     
     @classmethod
     def set_auth_code(cls, value):
@@ -335,10 +335,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
+            super_user = self.authorized["user"] in self._super_users
+
             comps = self.req_path.split("/")
             if len(comps) < 1 or not comps[0]:
                 host_list = TerminalConnection.get_connection_ids()
-                if self._auth_users and self.authorized["user"] not in SUPER_USERS:
+                if self._auth_users and not super_user:
                     if LOCAL_HOST in host_list:
                         host_list.remove(LOCAL_HOST)
                 host_list.sort()
@@ -352,7 +354,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            if host == LOCAL_HOST and self._auth_users and self.authorized["user"] not in SUPER_USERS: 
+            if host == LOCAL_HOST and self._auth_users and not super_user: 
                 self.write_json([["abort", "Local host access not allowed for user %s" % self.authorized["user"]]])
                 self.close()
                 return
@@ -363,6 +365,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             
             option = comps[2] if len(comps) > 2 else ""
             if wildhost:
+                if not super_user:
+                    self.write_json([["abort", "User not authorized for wildcard host"]])
+                    self.close()
+                    return
                 if len(comps) < 2 or not comps[1] or comps[1].lower() == "new":
                     self.write_json([["abort", "Must specify terminal name for wildcard host"]])
                     self.close()
@@ -415,8 +421,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
-            if option == "kill" and not webcast_auth and not wildhost:
-                kill_remote(path)
+            if option == "kill":
+                if not wildhost and (super_user or terminal_params["state_id"] == self.authorized["state_id"]):
+                    kill_remote(path)
+                self.close()
                 return
 
             self.oshell = (term_name == gtermhost.OSHELL_NAME)
@@ -425,8 +433,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.websocket_id = str(self._counter[0])
 
             if "?" in path or "*" in path or "[" in path:
+                if not super_user:
+                    self.write_json([["abort", "User not authorized for wildcard path"]])
+                    self.close()
+                    return
                 self.wildcard = re.compile("^"+path.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")+"$")
                 self._wildcards[path] = (self.wildcard, self.websocket_id)
+                terminal_params["share"] = False
+                terminal_params["lock"] = True
 
             controller = False
             if webcast_auth:
@@ -440,7 +454,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 else:
                     self.broadcast(path, ["update", "terminal_control", False], controller=True)
                     self._control_set[path] = set([self.websocket_id])
-            elif option == "watch" or (path in self._control_set and self._control_set[path]):
+            elif option == "watch" or self._control_set.get(path):
                 controller = False
             else:
                 controller = True
@@ -524,6 +538,19 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             except Exception:
                 pass
 
+    def close_watchers(self, keep_controllers=False, close_self=False):
+        if self.remote_path not in self._watch_set:
+            return
+        controllers = self._control_set.get(self.remote_path, set())
+        for ws_id in self._watch_set[self.remote_path]:
+            if ws_id == self.websocket_id and not close_self:
+                continue
+            if keep_controllers and ws_id in controllers:
+                continue
+            ws = self._all_websockets.get(ws_id)
+            if ws:
+                ws.close()
+
     def on_message(self, message):
         ##logging.warning("GTSocket.on_message: %s", message)
         if not self.remote_path:
@@ -546,7 +573,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if not controller and term_name in conn.allow_feedback:
                 allow_feedback_only = True
 
-        allow_control_request = not terminal_params["lock"] and (terminal_params["share"] or self.websocket_id in self._watch_set[self.remote_path])
+        allow_control_request = not terminal_params["lock"] and terminal_params["share"] and not self._webcast_paths.get(self.remote_path)
         if controller or allow_feedback_only or allow_control_request:
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
@@ -590,7 +617,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 elif msg[0] == "settings":
                     # settings key value
                     key, value = msg[1], msg[2]
-                    if key == "terminal_control":
+                    if self.wildcard:
+                        raise Exception("Cannot change setting for wildcard terminal: %s" % key)
+                    elif key == "terminal_control":
                         if not value:
                             self._control_set[self.remote_path].discard(self.websocket_id)
                         elif not self._control_set[self.remote_path] or not terminal_params["lock"]:
@@ -615,13 +644,21 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 self._webcast_paths.pop(last=False)
                             if value:
                                 self._webcast_paths[self.remote_path] = time.time()
+                            else:
+                                # Cancel webcast
+                                self.close_watchers(keep_controllers=True)
                             self.broadcast(self.remote_path, ["update", key, value])
                     elif key == "settings_terminal_lock":
                         terminal_params["lock"] = value
                         self.broadcast(self.remote_path, ["update", key, value])
                     elif key == "settings_terminal_share":
                         terminal_params["share"] = value
-                        self.broadcast(self.remote_path, ["update", key, value])
+                        if value:
+                            # Share
+                            self.broadcast(self.remote_path, ["update", key, value])
+                        elif self.remote_path in GTSocket._watch_set:
+                            # Unshare
+                            self.close_watchers()
                     else:
                         raise Exception("Invalid setting: %s" % key)
                             
@@ -1080,6 +1117,8 @@ def run_server(options, args):
         auth_code = options.auth_code
         GTSocket.set_auth_code(auth_code)
 
+    GTSocket.set_super_users(options.super_users.split(",") if options.super_users else [])
+
     http_port = options.port
     http_host = options.host
     internal_host = options.internal_host or http_host
@@ -1269,6 +1308,8 @@ def main():
     parser.add_option("", "--nolocal", dest="nolocal", action="store_true",
                       help="Disable connection to localhost")
 
+    parser.add_option("", "--super_users", dest="super_users", default="",
+                      help="Super user list: root,admin,...")
     parser.add_option("", "--shell_command", dest="shell_command", default="",
                       help="Shell command")
     parser.add_option("", "--oshell", dest="oshell", action="store_true",

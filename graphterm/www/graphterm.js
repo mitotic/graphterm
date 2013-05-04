@@ -1578,7 +1578,11 @@ GTWebSocket.prototype.onclose = function(e) {
   if (!this.opened && !this.closed && !this.failed) {
       this.failed = true;
       alert("Failed to open websocket: "+this.ws_url);
+  } else {
+      GTPopAlert("Terminal closed");
   }
+
+  $("#menubar-sessionlabel").text("CLOSED");
   this.closed = true;
 }
 
