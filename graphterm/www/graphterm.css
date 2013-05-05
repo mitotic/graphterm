@@ -81,12 +81,12 @@ body.ipadscreen  {
     padding-top: 1.3em;
 }
 
-#terminal.gterm-share:not(.gterm-webcast) .sf-menu #gterm-menu-shared-count {
+#terminal.gterm-share:not(.gterm-webcast) .sf-menu #gterm-menu-users-count {
     color: red;
 }
 
 #terminal.gterm-webcast .sf-menu #menubar-sessionlabel-container,
-#terminal.gterm-webcast .sf-menu #gterm-menu-shared-count {
+#terminal.gterm-webcast .sf-menu #gterm-menu-users-count {
     background: #ff5555;
 }
 
@@ -146,9 +146,12 @@ hr {
 
 #terminal.gterm-controller .sf-menu .gterm-non-controller,
  #terminal:not(.gterm-controller) .sf-menu .gterm-only-controller,
+ #terminal.gterm-private .sf-menu .gterm-non-private,
  #terminal.gterm-locked .sf-menu .gterm-non-locked,
  #terminal:not(.gterm-locked) .sf-menu .gterm-only-locked,
- #terminal:not(.gterm-notebook) .sf-menu .gterm-only-notebook {
+ #terminal.gterm-notebook .sf-menu .gterm-non-notebook,
+ #terminal:not(.gterm-notebook) .sf-menu .gterm-only-notebook,
+ .menu-disabled {
     opacity: 0.35;
 }
 

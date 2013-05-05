@@ -203,7 +203,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _all_users = collections.defaultdict(set)
     _control_set = collections.defaultdict(set)
     _control_params = collections.defaultdict(dict)
-    _watch_set = collections.defaultdict(set)
+    _watch_dict = collections.defaultdict(dict)
     _counter = [0]
     _webcast_paths = OrderedDict()
     _cookie_states = OrderedDict()
@@ -302,15 +302,20 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     except Exception:
                         pass
 
-                user = query_data.get("user", [""])[0]
+                user = query_data.get("user", [""])[0].lower()
                 code = query_data.get("code", [""])[0]
+
+                if user and not gtermhost.USER_RE.match(user):
+                    self.write_json([["abort", "Invalid characters in user name '%s'; must start with letter and include only letters/digits/hyphen" % user]])
+                    self.close()
+                    return
 
                 if self._auth_code == "name":
                     if user and user not in self._all_users:
                         # New named user
                         self.authorized = self.add_state(user, "name_auth")
                     else:
-                        errmsg = "User name %s already in use" % user if user else "Please specify user name"
+                        errmsg = "User name %s already in use" % user if user else "Please specify user name (letters/digits/hyphens, starting with letter)"
                         self.write_json([["authenticate", need_user, need_code, errmsg]])
                         self.close()
                         return
@@ -386,7 +391,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     for term_name in conn.term_dict:
                         path = host + "/" + term_name
                         terminal_params = self._control_params.get(path)
-                        if terminal_params and (terminal_params["share"] or terminal_params["state_id"] == self.authorized["state_id"]):
+                        if terminal_params and (not terminal_params["sharing_private"] or terminal_params["state_id"] == self.authorized["state_id"]):
                             term_list.append(term_name)
                     term_list.sort()
                     self.write_json([["term_list", self.authorized["state_id"], user, host, term_list]])
@@ -408,14 +413,19 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             path = host + "/" + term_name
 
+            if self.authorized["state_id"] in self._watch_dict[path].values():
+                self.write_json([["abort", "Already connected to this terminal from different window"]])
+                self.close()
+                return
+
             if path not in self._control_params:
                 # Initialize parameters for new terminal
                 assert not webcast_auth and self.authorized["state_id"]
-                terminal_params = {"lock": False, "share": False, "tandem": False, "state_id": self.authorized["state_id"]}
+                terminal_params = {"sharing_locked": False, "sharing_private": True, "sharing_tandem": False, "state_id": self.authorized["state_id"]}
                 self._control_params[path] = terminal_params
             else:
                 terminal_params = self._control_params[path]
-                if not terminal_params["share"] and (terminal_params["state_id"] != self.authorized["state_id"]):
+                if terminal_params["sharing_private"] and (terminal_params["state_id"] != self.authorized["state_id"]):
                     # No sharing
                     self.write_json([["abort", "Invalid terminal path: %s" % path]])
                     self.close()
@@ -438,21 +448,23 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
                 self.wildcard = re.compile("^"+path.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")+"$")
-                self._wildcards[path] = (self.wildcard, self.websocket_id)
-                terminal_params["share"] = False
-                terminal_params["lock"] = True
+                self._wildcards[self.websocket_id] = self.wildcard
+                terminal_params["sharing_private"] = True
+                terminal_params["sharing_locked"] = True
+
+            assert self.websocket_id not in self._watch_dict[path]
 
             controller = False
             if webcast_auth:
                 controller = False
             elif self.wildcard:
                 controller = True
-            elif option == "steal" and not terminal_params["lock"]:
+            elif option == "steal" and not terminal_params["sharing_locked"]:
                 controller = True
-                if terminal_params["tandem"]:
+                if terminal_params["sharing_tandem"]:
                     self._control_set[path].add(self.websocket_id)
                 else:
-                    self.broadcast(path, ["update", "terminal_control", False], controller=True)
+                    self.broadcast(path, ["update_menu", "sharing_control", False], controller=True)
                     self._control_set[path] = set([self.websocket_id])
             elif option == "watch" or self._control_set.get(path):
                 controller = False
@@ -465,9 +477,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if user:
                 self._all_users[user].add(self.websocket_id)
 
-            if self.websocket_id not in self._watch_set[path]:
-                self.broadcast(path, ["join", get_user(self), True])
-                self._watch_set[path].add(self.websocket_id)
+            self._watch_dict[path][self.websocket_id] = self.authorized["state_id"]
+            self.broadcast(path, ["join", get_user(self), True])
 
             display_splash = controller and self._counter[0] <= 2
             normalized_host, host_secret = "", ""
@@ -478,14 +489,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
 
             parent_term = conn.term_dict.get(term_name, "") if conn else ""
-            state_values = {"settings": {"terminal": terminal_params},
-                            "terminal": {"webcast": path in self._webcast_paths}}
-            watchers = [get_user(GTSocket._all_websockets.get(ws_id)) for ws_id in self._watch_set[self.remote_path]]
+            state_values = terminal_params.copy()
+            state_values.pop("state_id", None)
+            state_values["sharing_webcast"] = bool(path in self._webcast_paths)
+            users = [get_user(self._all_websockets.get(ws_id)) for ws_id in self._watch_dict[self.remote_path]]
             self.write_json([["setup", {"user": user, "host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
-                                        "state_values": state_values, "watchers": watchers,
+                                        "state_values": state_values, "watchers": users,
                                         "controller": controller, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "feedback": term_feedback,
@@ -495,9 +507,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.close()
 
     def broadcast(self, path, msg, controller=False, include_self=False):
-        ws_set = self._control_set[path] if controller else self._watch_set[path]
-        for ws_id in ws_set:
-            ws = GTSocket._all_websockets.get(ws_id)
+        ws_ids = self._control_set[path] if controller else self._watch_dict[path]
+        for ws_id in ws_ids:
+            ws = self._all_websockets.get(ws_id)
             if ws and (ws_id != self.websocket_id or include_self):
                 ws.write_json([msg])
 
@@ -512,20 +524,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if self.remote_path in self._control_set:
              self._control_set[self.remote_path].discard(self.websocket_id)
 
-        if self.remote_path in self._watch_set:
-            if self.websocket_id in self._watch_set[self.remote_path]:
-                self._watch_set[self.remote_path].discard(self.websocket_id)
+        if self.remote_path in self._watch_dict:
+            if self.websocket_id in self._watch_dict[self.remote_path]:
+                self._watch_dict[self.remote_path].pop(self.websocket_id, None)
                 self.broadcast(self.remote_path, ["join", get_user(self), False])
 
-        if self.wildcard and self.remote_path:
-            try:
-                del self._wildcards[self.remote_path]
-            except Exception:
-                pass
-        try:
-            del self._all_websockets[self.websocket_id]
-        except Exception:
-            pass
+        if self.wildcard:
+            self._wildcards.pop(self.websocket_id, None)
+        self._all_websockets.pop(self.websocket_id, None)
 
     def write_json(self, data):
         try:
@@ -539,10 +545,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 pass
 
     def close_watchers(self, keep_controllers=False, close_self=False):
-        if self.remote_path not in self._watch_set:
+        if self.remote_path not in self._watch_dict:
             return
         controllers = self._control_set.get(self.remote_path, set())
-        for ws_id in self._watch_set[self.remote_path]:
+        for ws_id in self._watch_dict[self.remote_path]:
             if ws_id == self.websocket_id and not close_self:
                 continue
             if keep_controllers and ws_id in controllers:
@@ -573,14 +579,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if not controller and term_name in conn.allow_feedback:
                 allow_feedback_only = True
 
-        allow_control_request = not terminal_params["lock"] and terminal_params["share"] and not self._webcast_paths.get(self.remote_path)
+        allow_control_request = not terminal_params["sharing_locked"] and not terminal_params["sharing_private"] and not self._webcast_paths.get(self.remote_path)
         if controller or allow_feedback_only or allow_control_request:
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
                 if allow_feedback_only:
                     msg_list = [msg for msg in msg_list if msg[0] == "feedback"]
                 elif not controller:
-                    msg_list = [msg for msg in msg_list if msg[0] == "settings" and msg[1] == "terminal_control"]
+                    msg_list = [msg for msg in msg_list if msg[0] == "update_params" and msg[1] == "sharing_control"]
             except Exception, excp:
                 logging.warning("GTSocket.on_message: ERROR %s", excp)
                 self.write_json([["errmsg", str(excp)]])
@@ -614,30 +620,35 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         blocking_call = BlockingCall(self.updates_callback, 10)
                         blocking_call.call(feedparser.parse, RSS_FEED_URL)
         
-                elif msg[0] == "settings":
-                    # settings key value
+                elif msg[0] == "update_params":
+                    # params key value
                     key, value = msg[1], msg[2]
                     if self.wildcard:
                         raise Exception("Cannot change setting for wildcard terminal: %s" % key)
-                    elif key == "terminal_control":
+                    elif key == "sharing_control":
                         if not value:
-                            self._control_set[self.remote_path].discard(self.websocket_id)
-                        elif not self._control_set[self.remote_path] or not terminal_params["lock"]:
-                            if terminal_params["tandem"]:
+                            if len(self._control_set[self.remote_path]) == 1 and terminal_params["sharing_private"]:
+                                # Reset control for lone, private controller
+                                self.broadcast(self.remote_path, ["update_menu", "sharing_control", True],
+                                               controller=True, include_self=True)
+                            else:
+                                self._control_set[self.remote_path].discard(self.websocket_id)
+                        elif not self._control_set[self.remote_path] or not terminal_params["sharing_locked"]:
+                            if terminal_params["sharing_tandem"]:
                                 self._control_set[self.remote_path].add(self.websocket_id)
                             else:
-                                self.broadcast(self.remote_path, ["update", key, False], controller=True)
+                                self.broadcast(self.remote_path, ["update_menu", key, False], controller=True)
                                 self._control_set[self.remote_path] = set([self.websocket_id])
                         else:
                             raise Exception("Failed to acquire control of terminal")
-                    elif key == "terminal_tandem":
-                        terminal_params["tandem"] = value
+                    elif key == "sharing_tandem":
+                        terminal_params["sharing_tandem"] = value
                         if not value:
-                            self.broadcast(self.remote_path, ["update", key, False], controller=True)
+                            self.broadcast(self.remote_path, ["update_menu", key, False], controller=True)
                             self._control_set[self.remote_path] = set([self.websocket_id])
-                        self.broadcast(self.remote_path, ["update", key, value])
-                    elif key == "terminal_webcast":
-                        if terminal_params["share"]:
+                        self.broadcast(self.remote_path, ["update_menu", key, value])
+                    elif key == "sharing_webcast":
+                        if not terminal_params["sharing_private"]:
                             if self.remote_path in self._webcast_paths:
                                 del self._webcast_paths[self.remote_path]
                             if len(self._webcast_paths) > MAX_WEBCASTS:
@@ -647,17 +658,17 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             else:
                                 # Cancel webcast
                                 self.close_watchers(keep_controllers=True)
-                            self.broadcast(self.remote_path, ["update", key, value])
-                    elif key == "settings_terminal_lock":
-                        terminal_params["lock"] = value
-                        self.broadcast(self.remote_path, ["update", key, value])
-                    elif key == "settings_terminal_share":
-                        terminal_params["share"] = value
-                        if value:
+                            self.broadcast(self.remote_path, ["update_menu", key, value])
+                    elif key == "sharing_locked":
+                        terminal_params["sharing_locked"] = value
+                        self.broadcast(self.remote_path, ["update_menu", key, value])
+                    elif key == "sharing_private":
+                        terminal_params["sharing_private"] = value
+                        if not value:
                             # Share
-                            self.broadcast(self.remote_path, ["update", key, value])
-                        elif self.remote_path in GTSocket._watch_set:
-                            # Unshare
+                            self.broadcast(self.remote_path, ["update_menu", key, value])
+                        elif self.remote_path in self._watch_dict:
+                            # Private
                             self.close_watchers()
                     else:
                         raise Exception("Invalid setting: %s" % key)
@@ -666,14 +677,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     if self.wildcard:
                         continue
                     to_user = msg[1]
-                    ws_list = GTSocket._watch_set.get(self.remote_path)
-                    if not ws_list:
-                        continue
-                    for ws_id in ws_list:
+                    for ws_id in self._watch_dict.get(self.remote_path, {}):
                         if ws_id == self.websocket_id:
                             continue
                         # Broadcast to all watchers (excluding originator)
-                        ws = GTSocket._all_websockets.get(ws_id)
+                        ws = self._all_websockets.get(ws_id)
                         if not ws:
                             continue
                         ws_user = ws.authorized["user"] if ws.authorized else ""
@@ -855,17 +863,15 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
 
         path = self.connection_id + "/" + term_name
         if websocket_id:
-            ws_list = [websocket_id]
+            ws_set = set([websocket_id])
         else:
-            ws_list = GTSocket._watch_set.get(path) or set()
+            ws_set = set(GTSocket._watch_dict.get(path, {}).keys())
 
-            for regexp, ws_id in GTSocket._wildcards.itervalues():
+            for ws_id, regexp in GTSocket._wildcards.iteritems():
                 if regexp.match(path):
-                    ws_list.add(ws_id)
+                    ws_set.add(ws_id)
             
-        if not ws_list:
-            return
-        for ws_id in ws_list:
+        for ws_id in ws_set:
             ws = GTSocket._all_websockets.get(ws_id)
             if ws:
                 try:

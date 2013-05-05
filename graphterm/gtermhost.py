@@ -56,8 +56,9 @@ HTML_ESCAPES = ["\x1b[?1155;", "h",
 DEFAULT_HTTP_PORT = 8900
 DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
 
-HOST_RE = re.compile(r"^[\w\-\.\*\?\[\]]+$")               # Allowed host names
-SESSION_RE = re.compile(r"^[a-z\*\?\[\]][\w\*\?\[\]]*$")   # Allowed session names
+USER_RE    = re.compile(r"^[a-z][a-z0-9\-]*$")                # Allowed user names
+HOST_RE    = re.compile(r"^[a-z][a-z0-9\-\*\?\[\]]*$")        # Allowed host names
+SESSION_RE = re.compile(r"^[a-zA-Z\*\?\[\]][\w\*\?\[\]]*$")   # Allowed session names
 
 Host_secret = None
 IO_loop = None
