@@ -78,6 +78,7 @@ Cache_files = False                     # Controls caching of files (blobs are a
 
 MAX_COOKIE_STATES = 100
 MAX_WEBCASTS = 500
+MAX_RECURSION = 5
 
 MAX_CACHE_TIME = 86400
 
@@ -414,14 +415,20 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             path = host + "/" + term_name
 
             if self.authorized["state_id"] in self._watch_dict[path].values():
-                self.write_json([["abort", "Already connected to this terminal from different window"]])
-                self.close()
-                return
+                if not option:
+                    self.write_json([["abort", "Already connected to this terminal from different window"]])
+                    self.close()
+                    return
+                if self._watch_dict[path].values().count(self.authorized["state_id"]) > MAX_RECURSION:
+                    self.write_json([["abort", "Max recursion level exceeded"]])
+                    self.close()
+                    return
 
             if path not in self._control_params:
                 # Initialize parameters for new terminal
                 assert not webcast_auth and self.authorized["state_id"]
                 terminal_params = {"sharing_locked": False, "sharing_private": True, "sharing_tandem": False, "state_id": self.authorized["state_id"]}
+                terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params
             else:
                 terminal_params = self._control_params[path]
@@ -1074,7 +1081,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
 
 def run_server(options, args):
-    global IO_loop, Http_server, Local_client, Host_secret, Trace_shell
+    global IO_loop, Http_server, Local_client, Host_secret, Term_settings, Trace_shell
     import signal
 
     def auth_token(secret, connection_id, client_nonce, server_nonce):
@@ -1107,6 +1114,12 @@ def run_server(options, args):
         if os.stat(App_dir).st_mode != 0700:
             # Protect App directory
             os.chmod(App_dir, 0700)
+
+    try:
+        Term_settings = json.loads(options.term_settings or "{}")
+    except Exception, excp:
+        logging.error("Error in parsing term_settings: %s", excp)
+        Term_settings = {}
 
     auth_file = ""
     random_auth = False
@@ -1338,6 +1351,8 @@ def main():
                       help="Terminal type (linux/screen/xterm)")
     parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",
                       help="Terminal character encoding (utf-8/latin-1/...)")
+    parser.add_option("", "--term_settings", dest="term_settings", default="{}",
+                      help="Terminal settings (JSON)")
     parser.add_option("", "--lterm_logfile", dest="lterm_logfile", default="",
                       help="Lineterm logfile")
     parser.add_option("", "--widgets", dest="widgets", action="store_true",

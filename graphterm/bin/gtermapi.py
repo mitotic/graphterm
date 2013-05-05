@@ -153,7 +153,7 @@ def write_scroll_pagelet(html, display="block", dir="", add_headers={}, stderr=F
     if dir:
         params += " current_dir=" + urllib.quote(dir)
     for header, value in add_headers.iteritems():
-        params += " " + header + "=" + urllib.quote(value)
+        params += " " + header + "=" + urllib.quote(str(value))
 
     PAGELETFORMAT = '<!--gterm pagelet %s-->'
     prefix = PAGELETFORMAT % (params,)
