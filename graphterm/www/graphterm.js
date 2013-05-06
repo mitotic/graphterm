@@ -341,11 +341,25 @@ function setupTerminal() {
     $("#session-log .curentry .input .command").focus();
 }
 
-function handle_resize(evt) {
+function handle_resize() {
     gRows = Math.floor($(window).height() / gRowHeight) - 1;
     gCols = Math.floor($(window).width() / gColWidth) - 1;
     if (gWebSocket && gParams.controller)
 	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width(), gParams.parent_term||""]]]);
+    var isNarrow = $("#terminal").hasClass("gterm-narrow");
+    try {
+	$("#terminal").toggleClass("gterm-narrow", $("#menubar-first-item").width()/$(window).width() > 0.15);
+    } catch(err) {
+    }
+    if (isNarrow == $("#terminal").hasClass("gterm-narrow"))
+	handle_resize_aux();
+    else
+	setTimeout(handle_resize_aux, 100);
+}
+
+function handle_resize_aux() {
+    $("#menubar-padding").css("height", $("#menubar-menu").height());
+    $("#gterm-mid-padding").css("height", $("#menubar-menu").height());
 }
 
 function scrolledIntoView(elem, scroll) {

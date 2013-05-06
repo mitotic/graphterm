@@ -51,9 +51,9 @@
     <div id="gterm-header" class="gterm-header">
       <div id="gterm-header-container">
         <div class="gterm-menubar-container">
-        <ul class="sf-menu gterm-menukey-firstletter" id="gterm-menu">
+        <ul id="menubar-menu" class="sf-menu gterm-menukey-firstletter" id="gterm-menu">
           <li><a href="#" class="gterm-menu-img gterm-menu-splash" onclick="GTShowSplash(true,true);"><img class="gterm-logo" src="/static/GTYY48.png" height="24"></img></a></li>
-          <li>
+          <li id="menubar-first-item">
             <a href="#">appearance</a>
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="appearance_top">top</a></li>
@@ -213,14 +213,11 @@
 	  <li id="menubar-sessionlabel-container" class="gterm-menu-white">
               <a href="#" class="gterm-only-controller gterm-key-altletter"><span id="menubar-sessionlabel"></span>: <span id="gterm-menu-users-count"></span></a>
           </li>
-          <li class="gterm-menu-curved gterm-non-controller gterm-non-locked"><a href="#" gterm-state="steal" class="gterm-key-altletter">stea<span class="gterm-key-letter">l</span></a></li>
-          <li class="gterm-menu-curved gterm-only-controller"><a href="#" gterm-state="home"  class="gterm-key-altletter">ho<span class="gterm-key-letter">m</span>e</a></li>
-          <li class="gterm-menu-curved"><a href="#" gterm-state="new" class="gterm-key-altletter">ne<span class="gterm-key-letter">w</span></a></li>
+          <li class="gterm-menu-curved gterm-non-controller gterm-non-locked gterm-wide"><a href="#" gterm-state="steal" class="gterm-key-altletter">stea<span class="gterm-key-letter">l</span></a></li>
+          <li class="gterm-menu-curved gterm-only-controller gterm-wide"><a href="#" gterm-state="home"  class="gterm-key-altletter">ho<span class="gterm-key-letter">m</span>e</a></li>
+          <li id="menubar-last-button" class="gterm-menu-curved gterm-wide"><a href="#" gterm-state="new" class="gterm-key-altletter">ne<span class="gterm-key-letter">w</span></a></li>
         </ul>
-        &nbsp;
-        <ul class="sf-menu gterm-menulabel-container">
-          <!--<li class="gterm-nolink gterm-menu-white"><a href="#">share</a></li>-->
-        </ul>
+        <div id="menubar-padding" class"menubar-padding"></div>
         </div>
 
       </div> <!-- gterm-header-container -->
@@ -228,6 +225,7 @@
     </div> <!-- gterm-header -->
     <p>
 
+    <div id="gterm-mid-padding"  class"menubar-padding"></div>
     <div id="gterm-mid" class="gterm-mid">
 
       <div id="session-container" class="session-container">

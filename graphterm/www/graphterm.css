@@ -61,7 +61,7 @@ body.ipadscreen  {
 
 #gterm-header div#gterm-header-container {
     background-color: white;
-    padding-bottom: 0.5em;
+    /* padding-bottom: 0.5em; */
 }
 
 #gterm-header div#session-topfold {
@@ -77,8 +77,20 @@ body.ipadscreen  {
     border-bottom-width: 0px;
 }
 
+#terminal.gterm-narrow .gterm-wide {
+    display: none;
+}
+
+#terminal.gterm-menubar-hide #gterm-mid-padding {
+    display: none;
+}
+
+.menubar-padding {
+    height: 1.15em;
+}
+
 #terminal:not(.gterm-menubar-hide):not(.gterm-altmode) #gterm-mid {
-    padding-top: 1.3em;
+    /* padding-top: 1.3em; */
 }
 
 #terminal.gterm-share:not(.gterm-webcast) .sf-menu #gterm-menu-users-count {
