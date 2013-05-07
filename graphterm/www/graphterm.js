@@ -19,9 +19,13 @@ var gMobileBrowser = ('ontouchstart' in window) || gUserAgent.indexOf("android")
 
 var gSafariIPad = gSafariBrowser && gUserAgent.indexOf('ipad') > -1;
 
+var gWinPlatform = _.str.startsWith("Win", window.navigator.platform);
+
 var gDefaultEditor = gMobileBrowser ? "ckeditor" : "ace";
 
-var gAltPasteImpl = !gFirefoxBrowser && !gMobileBrowser;  // Alternative paste implemention (using hidden textarea)
+var gAltPasteImpl = !gMobileBrowser;  // Alternative paste implemention (using hidden textarea)
+var gPasteDebug = false;
+var gPasteActive = false;
 
 var gPasteSpecialKeycode = 20;  // Control-T shortcut for Paste Special
 
@@ -358,8 +362,8 @@ function handle_resize() {
 }
 
 function handle_resize_aux() {
-    $("#menubar-padding").css("height", $("#menubar-menu").height());
-    $("#gterm-mid-padding").css("height", $("#menubar-menu").height());
+    $("#menubar-padding").css("height", $("#gterm-menu").height());
+    $("#gterm-mid-padding").css("height", $("#gterm-menu").height());
 }
 
 function scrolledIntoView(elem, scroll) {
@@ -543,7 +547,9 @@ function GTCursorSpan(cursor_char) {
     if (!cursor_char)
 	return "";
     var tag = gFirefoxBrowser ? "div" : "span"; // Can't paste into span in firefox
-    var innerEditable = gFirefoxBrowser ? "true" : "false";
+    //var innerEditable = !gFirefoxBrowser ? "true" : "false";
+    var innerEditable = "true";
+
     return '<span class="typeahead"></span><span class="cmd-completion"></span><'+tag+' class="cursorspan" contentEditable="true" data-gtermcursorchar="'+cursor_char+'"><'+tag+' class="cursorloc" autocapitalize="off" contentEditable="'+innerEditable+'">'+GTEscape(cursor_char)+'</'+tag+'></'+tag+'>';
 }
 
@@ -1459,8 +1465,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			}
 		    }
 		    if (update_rows.length && !gAltPasteImpl) {
-			$(".cursorspan").rebind("paste", pasteHandler);
-			$(".cursorspan").rebind("click", pasteReadyHandler);
+			GTPasteSetup(false);
 		    }
 
 		    if (update_scroll.length) {
@@ -1747,11 +1752,18 @@ function pasteReadyHandler(evt) {
 }
 
 function pasteHandler(evt) {
+    if (gPasteActive)
+	return true;
+    if ((gNotebook && !gNotebook.passthru_stdin) || gForm || gPopupActive)
+	return true;
+
+    gPasteActive = true;
     var elem = $(this);
     setTimeout(function() {
 	var cursor_char = elem.attr("data-gtermcursorchar");
 	var pasteText = "";
 	var innerElem = elem.children(".cursorloc");
+	gPasteActive = false;
 
 	if (innerElem.attr("contentEditable") == "true") {
 	    // Firefox paste implementation (setting inner span to not contentEditable does not work)
@@ -1780,11 +1792,14 @@ function pasteHandler(evt) {
     }, 100);
 }
 
-function GTAltPasteHandler() {
-    console.log("GTAltPasteHandler:");
+function GTAltPasteHandler(evt) {
+    console.log("GTAltPasteHandler:", gPasteActive, evt, evt.clipboardData);
+    if (gPasteActive)
+	return true;
     if ((gNotebook && !gNotebook.passthru_stdin) || gForm || gPopupActive)
 	return true;
 
+    gPasteActive = true;
     setTimeout(GTAltPasteHandlerAux, 100);
     $("#gterm-pastedirect-content").val("");
     $(".gterm-pastedirect").show();
@@ -1792,11 +1807,30 @@ function GTAltPasteHandler() {
     return true;
 }
 
-function GTAltPasteHandlerAux() {
-    $(".gterm-pastedirect").hide();
-    var text = $("#gterm-pastedirect-content").val();
+function GTPasteShortcut(auto) {
+    console.log("GTPasteShortcut:");
+    if ((gNotebook && !gNotebook.passthru_stdin) || gForm || gPopupActive)
+	return true;
+
     $("#gterm-pastedirect-content").val("");
-    console.log("GTAltPasteHandlerAux: ");
+    $(".gterm-pastedirect").show();
+    $("#gterm-pastedirect-content").focus();
+
+    if (auto) {
+	gPasteActive = true;
+	setTimeout(GTAltPasteHandlerAux, 250);
+    }
+    return true;
+}
+
+function GTAltPasteHandlerAux() {
+    gPasteActive = false;
+    if (!gPasteDebug)
+	$(".gterm-pastedirect").hide();
+    var text = $("#gterm-pastedirect-content").val();
+    console.log("GTAltPasteHandlerAux: ", text);
+    $("#gterm-pastedirect-content").val("");
+    $("#gterm-pastedirect-content").unbind("change");
     if (text)
 	gWebSocket.term_input(text);
     //setTimeout(function() { ScrollTop(null); }, 100);
@@ -2507,6 +2541,8 @@ function GTShortcutPrefixKey(evt) {
 }
 
 function keydownHandler(evt) {
+    if (gPasteActive)
+	return true;
     var activeTag = "";
     var activeType = "";
     var activeElem = $(document.activeElement);
@@ -2577,6 +2613,11 @@ function keydownHandler(evt) {
     if (gDebugKeys)
 	console.log("graphterm.keydownHandler: ", evt.keyCode, evt.which, evt);
 
+    if (evt.which == 86 && ((gWinPlatform && evt.ctrlKey) || (!gWinPlatform && evt.metaKey))) {
+	// Ctrl-V or Meta-V for paste
+	return GTPasteShortcut(true);
+    }
+
     GTExpandCurEntry(false);
 
     if (evt.which >= 33 && evt.which <= 46) {
@@ -2635,6 +2676,9 @@ function pasteKeyHandler(evt) {
 }
 
 function keypressHandler(evt) {
+    if (gPasteActive)
+	return true;
+
     if (gDebugKeys)
 	console.log("graphterm.keypressHandler: code ", evt.keyCode, evt.which, evt);
 
@@ -3590,7 +3634,7 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    this.renderCell(true, false);
 	}
     } else if (command == "markdown") {
-	gWebSocket.write([["update_type", newValue ? "" : "code"]]);
+	gWebSocket.write([["update_type", newValue ? "" : "auto"]]);
     } else if (command == "erase_cell") {
 	gWebSocket.write([["erase_output", false]]);
     } else if (command == "erase_all") {
@@ -3616,9 +3660,9 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 					     x_gterm_encoding: "base64"}, utf8_to_b64(textElem.val())]]);
 	}
     } else if (command == "insert_above") {
-	gWebSocket.write([["add_cell", "code", "", -1]]);
+	gWebSocket.write([["add_cell", "auto", "", -1]]);
     } else if (command == "insert_below") {
-	gWebSocket.write([["add_cell", "code", "", 0]]);
+	gWebSocket.write([["add_cell", "auto", "", 0]]);
     } else if (command == "move_down") {
 	gWebSocket.write([["move_cell", false]]);
     } else if (command == "move_up") {
@@ -3865,7 +3909,7 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 	if (this.openNext) {
 	    this.openNext = false;
 	    if (this.curIndex == this.getLastIndex())
-		gWebSocket.write([["add_cell", "code", "", 0]]);
+		gWebSocket.write([["add_cell", "auto", "", 0]]);
 	    else
 		gWebSocket.write([["select_cell", 0, false]]);
 	} else if (this.curIndex == this.getLastIndex()) {
@@ -4372,6 +4416,29 @@ $(document).ready(function() {
     }
 });
 
+function GTPasteSetup(altImpl, debug) {
+    if (debug) {
+	gAltPasteImpl = altImpl;
+	gPasteDebug = true;
+	$("body").unbind("paste");
+	$(".gterm-pastedirectclose").unbind("click");
+	$(".cursorspan").unbind("paste");
+	$(".cursorspan").unbind("click");
+	$(".gterm-pastedirect-content").addClass("gterm-paste-debug");
+	if (altImpl)
+	    $(".gterm-pastedirect").show();
+	else
+	    $(".gterm-pastedirect").hide();
+    }
+    if (altImpl) {
+	$("body").rebind("paste",  GTAltPasteHandler);
+	$(".gterm-pastedirectclose").click(GTAltPasteHandlerAux);
+    } else {
+	$(".cursorspan").rebind("paste", pasteHandler);
+	$(".cursorspan").rebind("click", pasteReadyHandler);
+    }
+}
+
 function GTReady() {
     console.log("GTReady");
     //LoadHandler();
@@ -4406,8 +4473,7 @@ function GTReady() {
     $(".gterm-pastedirect").hide();
 
     if (gAltPasteImpl) {
-	$("body").rebind("paste",  GTAltPasteHandler);
-	$(".gterm-pastedirectclose").click(GTAltPasteHandlerAux);
+	GTPasteSetup(true);
     }
 
     if (gMobileBrowser)

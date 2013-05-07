@@ -127,7 +127,7 @@ hr {
 
 /* Content Editable styles */
 
-*[contenteditable="true"]:not(.cursorhighlight) {
+#session-log .input .command[contenteditable="true"]:not(.cursorhighlight) {
 /*
     padding: 10px;
     outline: 3px dashed #CCC;
@@ -135,12 +135,21 @@ hr {
  outline: none;
 }
 
-*[contenteditable="true"]:hover {
+#session-screen .row *[contenteditable="true"]:not(.cursorhighlight),
+#session-altscreen .row *[contenteditable="true"]:not(.cursorhighlight) {
 /*
+    padding: 10px;
+    outline: 3px dashed #CCC;
+*/
+ /* outline: none; */
+}
+
+/*
+*[contenteditable="true"]:hover {
     background: rgba(255, 255, 153, 1);
     outline: 3px dashed #0090D2;
-*/
 }
+*/
 
 .sf-menu .gterm-logo {
     height: 20px;
@@ -554,8 +563,8 @@ textarea.gterm-notecell-code {
 /* Paste pop styles */
 .gterm-pastedirect {
     position: fixed;
-    top: 10px;
-    right: 10px;
+    top: 30px;
+    right: 30px;
     z-index: 9900;
     width: 100px;
     height: 1em;
@@ -568,6 +577,9 @@ textarea.gterm-notecell-code {
     width: 100px;
     height: 15px;
     outline: none;
+}
+
+.gterm-pastedirect-content:not(.gterm-paste-debug) {
     color:            rgba(255,255,255,0);
     background-color: rgba(255,255,255,0);
     border-color:     rgba(255,255,255,0);
