@@ -962,7 +962,12 @@ class Terminal(object):
         self.note_count += 1
         at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
         self.note_dir = self.current_dir
-        self.note_command = os.path.basename(self.command_path) if self.command_path and not at_shell else ""
+        if at_shell:
+            self.note_command = "bash"
+        elif self.command_path:
+            self.note_command = os.path.basename(self.command_path)
+        else:
+            self.note_command = ""
         if not prompts and self.note_command in gtermapi.PROMPTS_LIST:
             prompts = gtermapi.PROMPTS_LIST[self.note_command]
         if not prompts:
@@ -1018,7 +1023,7 @@ class Terminal(object):
                 self.read_md(content)
 
         if not self.note_cells["curIndex"]:
-            self.add_cell(new_cell_type="code")
+            self.add_cell(new_cell_type="auto")
 
     def close_notebook(self):
         logging.warning("ABCclose_notebook: ")
@@ -1164,7 +1169,7 @@ class Terminal(object):
                     self.add_cell("", init_text=join_lines(cell["source"]))
 
                 elif cell["cell_type"] == "code":
-                    new_cell = self.add_cell("code", init_text=join_lines(cell["input"]))
+                    new_cell = self.add_cell("auto", init_text=join_lines(cell["input"]))
                     for output in cell["outputs"]:
                         if output["output_type"] in ("pyout", "stream"):
                             lines = split_lines(output["text"], chomp=True) if isinstance(output["text"], basestring) else output["text"]
@@ -1286,10 +1291,12 @@ class Terminal(object):
 
         self.update()
 
-    def add_cell(self, new_cell_type="code", init_text="", before_cell_number=0, filename=""):
+    def add_cell(self, new_cell_type="auto", init_text="", before_cell_number=0, filename=""):
         """ If before_cell_number is 0(-1), add new cell after(before) current cell
             If before_cell_number > 0, add new_cell before before_cell_number
         """
+        if new_cell_type == "auto":
+            new_cell_type = gtermapi.LANGUAGES.get(self.note_command, "code")
         prev_index = self.note_cells["curIndex"]
         if before_cell_number in (-1, 0):
             before_cell_number += 2+self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])

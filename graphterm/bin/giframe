@@ -18,6 +18,9 @@ import gtermapi
 usage = "usage: %prog [file|URL]"
 parser = OptionParser(usage=usage)
 
+parser.add_option("-p", "--prefix", dest="prefix", default="",
+                  help="prefix text")
+
 parser.add_option("", "--opacity", dest="opacity", default=1.0,
                   help="Feed opacity (default: 1.0)")
 

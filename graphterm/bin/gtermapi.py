@@ -47,11 +47,18 @@ Host, Session = Path.split("/") if Path else ("", "")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
 
-PROMPTS_LIST = {"python": [">>> ", "... "],
-                "ipython": ["In ", "   ...: ", "   ....: ", "   .....: ", "   ......: "], # Works up to 10,000 prompts
-                "node": ["> ", "... "],
-                "idl": ["IDL> "],
-                }
+INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
+                "ipython": ("py", "python", ("In ", "   ...: ", "   ....: ", "   .....: ", "   ......: ")), # Works up to 10,000 prompts
+                "idl": ("pro", "idl", ("IDL> ",)),
+                "ncl": ("ncl", "ncl", ("ncl ",)),
+                "node": ("js", "javascript", ("> ", "... ")),
+                "bash": ("sh", "bash", ()),
+            }
+
+EXTENSIONS   = dict((prog, values[0]) for prog, values in INTERPRETERS.items())
+LANGUAGES    = dict((prog, values[1]) for prog, values in INTERPRETERS.items())
+PROMPTS_LIST = dict((prog, values[2]) for prog, values in INTERPRETERS.items() if values[2])
+MAP_EXTENSIONS = dict((values[0], values[1]) for prog, values in INTERPRETERS.items())
 
 App_dir = os.path.join(os.path.expanduser("~"), ".graphterm")
 Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
