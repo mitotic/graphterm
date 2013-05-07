@@ -147,6 +147,8 @@ $.fn.bindclick = function(handler, context) {
   };
  })( jQuery, "click");
 
+var MARKUP_TYPES = {markdown: 1};
+
 var FILE_URI_PREFIX = "file:/"+"/"; // Split double slash for minification
 var FILE_PREFIX = "/file/";
 var JSERVER = 0;
@@ -2594,7 +2596,7 @@ function keydownHandler(evt) {
 			textElem.caret(caretPos-tabOffset);
 			return false;
 		    }
-		} else if (evt.which == 9 && !cellParams.cellType) {
+		} else if (evt.which == 9 && (cellParams.cellType in MARKUP_TYPES)) {
 		    // TAB: ignored for non-blank markup line prefix
 		    return false;
 		} else if (evt.which == 9 && gWebSocket) {
@@ -2919,23 +2921,31 @@ function AjaxKeypress(evt) {
 	gNotebook.handleKey(k);
 	return false;
     }
-	    
-    if (gNotebook && !gNotebook.passthru_stdin && k == String.fromCharCode(3) && window.confirm("Exit notebook mode?")) {
-	// Ctrl-C: close notebook
-	GTCloseNotebook();
-	return false;
-    } else if (gForm && k == String.fromCharCode(3)) {
-	// Ctrl-C exit from form
-	GTEndForm("", true);
-    } else if (gExpectUpload && k == String.fromCharCode(3)) {
-	// Ctrl-C exit from upload
-	GTUploadCancel(null);
-    } else if (gPopupType && k == String.fromCharCode(3)) {
-	// Ctrl-C exit from popup
-	popupClose();
-	return false;
-    } else if (GTCaptureInput()) {
-	// Editing or processing form
+
+    if (k == String.fromCharCode(3)) {
+	// Ctrl-C handling
+	if (gPopupType) {
+	    // Exit from popup
+	    popupClose();
+	    return false;
+	} else if (gExpectUpload) {
+	    // Exit from upload
+	    GTUploadCancel(null);
+	    return false;
+	} else if (gForm) {
+	    // Exit from form
+	    GTEndForm("", true);
+	    return false;
+	} else if (gNotebook && !gNotebook.passthru_stdin) {
+	    // Close notebook
+	    if (window.confirm("Exit notebook mode?"))
+		GTCloseNotebook();
+	    return false;
+	}
+    }
+
+    if (GTCaptureInput()) {
+	// Editing or processing form or using notebook
 	return true;
     }
 
@@ -3620,21 +3630,25 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    gWebSocket.write([["save_notebook", filepath, textElem.val() || "", {popstatus: "alert"}]]);
 	}
     } else if (command == "run") {
-	if (cellParams.cellType) {
-	    this.update_text(true, true);
-	} else {
+	if (cellParams.cellType in MARKUP_TYPES) {
 	    this.renderCell(false, false);
-	    this.update_text(false, true);
+	    this.update_text(false, false);
+	    if (this.curIndex == this.getLastIndex())
+		gWebSocket.write([["add_cell", "", "", 0]]);
+	    else
+		gWebSocket.write([["select_cell", 0, false]]);
+	} else {
+	    this.update_text(true, true);
 	}
     } else if (command == "execute") {
-	if (cellParams.cellType) {
-	    this.update_text(true, false);
-	} else {
+	if (cellParams.cellType in MARKUP_TYPES) {
 	    this.update_text(false, false);
 	    this.renderCell(true, false);
+	} else {
+	    this.update_text(true, false);
 	}
     } else if (command == "markdown") {
-	gWebSocket.write([["update_type", newValue ? "" : "auto"]]);
+	gWebSocket.write([["update_type", newValue ? "markdown" : ""]]);
     } else if (command == "erase_cell") {
 	gWebSocket.write([["erase_output", false]]);
     } else if (command == "erase_all") {
@@ -3660,9 +3674,9 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 					     x_gterm_encoding: "base64"}, utf8_to_b64(textElem.val())]]);
 	}
     } else if (command == "insert_above") {
-	gWebSocket.write([["add_cell", "auto", "", -1]]);
+	gWebSocket.write([["add_cell", "", "", -1]]);
     } else if (command == "insert_below") {
-	gWebSocket.write([["add_cell", "auto", "", 0]]);
+	gWebSocket.write([["add_cell", "", "", 0]]);
     } else if (command == "move_down") {
 	gWebSocket.write([["move_cell", false]]);
     } else if (command == "move_up") {
@@ -3682,7 +3696,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     var cellId = this.getCellId(cellIndex);
     var cellParams = { cellType: cellType, cellIndex: cellIndex, cellId: cellId };
     this.cellParams[cellIndex] = cellParams;
-    var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-input gterm-notecell-code" spellcheck="false"></textarea><div class="gterm-notecell-busy">Running...</div><div id="'+cellId+'-output" class="gterm-notecell-output"></div><div id="'+cellId+'-screen" class="gterm-notecell-screen"></div></div>';
+    var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-input gterm-notecell-text" spellcheck="false"></textarea><div class="gterm-notecell-busy">Running...</div><div id="'+cellId+'-output" class="gterm-notecell-output"></div><div id="'+cellId+'-screen" class="gterm-notecell-screen"></div></div>';
     var newElem;
     if (!beforeCellIndex) {
 	newElem = $(cellHtml).appendTo(this.pagelet);
@@ -3692,6 +3706,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     this.curIndex = cellIndex;
     this.cellValue(inputData);
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+    textElem.toggleClass("gterm-notecell-markup", cellParams.cellType in MARKUP_TYPES);
     textElem.autoResize({extraSpace: 6});
     //if (!gParams.controller)
     //	textElem.attr("disabled", "disabled");
@@ -3708,10 +3723,7 @@ GTNotebook.prototype.renderCell = function(showInput, hideOutput) {
     var inputElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     var outputElem = $("#"+this.getCellId(this.curIndex)+"-output");
     console.log("GTNotebook.renderCell: ", cellParams.cellType, inputElem, outputElem);
-    if (cellParams.cellType) {
-	outputElem.removeClass("gterm-notecell-markdown");
-	this.cellFocus(true);
-    } else {
+    if (cellParams.cellType in MARKUP_TYPES) {
 	outputElem.addClass("gterm-notecell-markdown");
 	var text = inputElem.val();
 	if (!$.trim(text))
@@ -3726,6 +3738,9 @@ GTNotebook.prototype.renderCell = function(showInput, hideOutput) {
 	    this.cellFocus(true);
 	else
 	    inputElem.hide();
+    } else {
+	outputElem.removeClass("gterm-notecell-markdown");
+	this.cellFocus(true);
     }
 }
 
@@ -3751,7 +3766,7 @@ GTNotebook.prototype.splitCell = function() {
 
 GTNotebook.prototype.selectCell = function(cellIndex) {
     var cellParams = this.cellParams[this.curIndex];
-    if (!cellParams.cellType) {
+    if (cellParams.cellType in MARKUP_TYPES) {
 	this.renderCell(false, false);
     }
     this.curIndex = cellIndex;
@@ -3771,7 +3786,8 @@ GTNotebook.prototype.moveCell = function(cellIndex, moveUp) {
 
 GTNotebook.prototype.updateType = function(cellIndex, cellType) {
     this.cellParams[this.curIndex].cellType = cellType;
-    var elem = $("#"+this.getCellId(cellIndex));
+    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+    textElem.toggleClass("gterm-notecell-markup", cellType in MARKUP_TYPES);
     this.cellFocus(true);
 }
 
@@ -3793,13 +3809,13 @@ GTNotebook.prototype.cellFocus = function(focus, selectAll, noScroll) {
     if (focus) {
 	textElem.show();
 	textElem.focus();
-	if (selectAll)
+	if (selectAll && textElem.length)
 	    textElem[0].select();
 	textElem.trigger("change");
 	this.passthru_stdin = false;
 	if (!noScroll)
 	    setTimeout(bind_method(this, this.cellScrollInput), 200);
-	GTMenuUpdateToggle("notebook_markdown", !this.cellParams[this.curIndex].cellType);
+	GTMenuUpdateToggle("notebook_markdown", this.cellParams[this.curIndex].cellType in MARKUP_TYPES);
     } else {
 	textElem.blur();
 	this.passthru_stdin = true;
@@ -3850,7 +3866,7 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
     if (!this.curIndex)
 	return;
     var cellParams = this.cellParams[this.curIndex];
-    if (!cellParams.cellType)
+    if (cellParams.cellType in MARKUP_TYPES)
 	return;
     console.log("ABCGTNotebook.output: ", this.curIndex, this.curIndex, update_opts, update_rows, update_scroll);
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
@@ -3909,7 +3925,7 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 	if (this.openNext) {
 	    this.openNext = false;
 	    if (this.curIndex == this.getLastIndex())
-		gWebSocket.write([["add_cell", "auto", "", 0]]);
+		gWebSocket.write([["add_cell", "", "", 0]]);
 	    else
 		gWebSocket.write([["select_cell", 0, false]]);
 	} else if (this.curIndex == this.getLastIndex()) {

@@ -726,6 +726,6 @@ def receive_data(stderr=False, verbose=False):
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1 and (sys.argv[1].endswith(".gnb.md") or sys.argv[1].endswith(".ipynb") or sys.argv[1].endswith(".ipynb.json")):
+    if len(sys.argv) > 1 and (sys.argv[1].endswith(".md") or sys.argv[1].endswith(".ipynb") or sys.argv[1].endswith(".ipynb.json")):
         # Switch to notebook mode (after prompt is displayed)
         open_notebook(sys.argv[1])

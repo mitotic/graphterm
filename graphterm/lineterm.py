@@ -70,6 +70,8 @@ COMMAND_DELIMITERS = "<>;"
 MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
 MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
 
+MARKUP_TYPES = set(["markdown"])
+
 BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/blob/local/%s" alt="%s"></div>'
 
 IPYNB_JSON_HEADER = """{
@@ -1023,7 +1025,7 @@ class Terminal(object):
                 self.read_md(content)
 
         if not self.note_cells["curIndex"]:
-            self.add_cell(new_cell_type="auto")
+            self.add_cell("")
 
     def close_notebook(self):
         logging.warning("ABCclose_notebook: ")
@@ -1032,17 +1034,18 @@ class Terminal(object):
         for cell_index in self.note_cells["cellIndices"]:
             # Copy all cellInput and cellOutput to scroll buffer
             cell = self.note_cells["cells"][cell_index]
-            if cell["cellType"]:
+            if cell["cellType"] in MARKUP_TYPES:
+                if cell["cellInput"]:
+                    row_params = ["markdown", {}]
+                    self.screen_buf.scroll_buf_up("", "", row_params=row_params, add_class="gterm-cell-input",
+                                                  markup="\n".join(cell["cellInput"]))
+            else:
                 if cell["cellInput"]:
                     for line in cell["cellInput"]:
                         self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
                     if not cell["cellOutput"]:
                         self.screen_buf.scroll_buf_up(" ", "")
                 self.screen_buf.append_scroll(cell["cellOutput"])
-            elif cell["cellInput"]:
-                row_params = ["markdown", {}]
-                self.screen_buf.scroll_buf_up("", "", row_params=row_params, add_class="gterm-cell-input",
-                                              markup="\n".join(cell["cellInput"]))
         self.reset_note()
         self.note_screen_buf.set_cur_note(0)
         self.note_screen_buf.clear_buf()
@@ -1075,7 +1078,7 @@ class Terminal(object):
             if cell["cellIndex"] == self.note_cells["curIndex"]:
                 # Current cell; copy output
                 cell["cellInput"] = split_lines(input_data) if input_data else []
-                if cell["cellType"]:
+                if cell["cellType"] not in MARKUP_TYPES:
                     cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
 
             cell_out = False
@@ -1083,22 +1086,22 @@ class Terminal(object):
                 if j:
                     md_lines[-1] += ","
                 input_json = nb_json(cell["cellInput"], ipy_format)
-                if cell["cellType"]:
+                if cell["cellType"] in MARKUP_TYPES:
+                    md_lines += [IPYNB_JSON_MARKDOWN % dict(source=input_json)]
+                else:
                     prompt_num += 1
                     in_prompt = prompt_num
                     md_lines += [IPYNB_JSON_CODE0 % dict(input=input_json, lang="python")]
-                else:
-                    md_lines += [IPYNB_JSON_MARKDOWN % dict(source=input_json)]
             elif cell["cellInput"]:
-                if cell["cellType"]:
+                if cell["cellType"] not in MARKUP_TYPES:
                     md_lines.append("```"+cell["cellType"])
                 for line in cell["cellInput"]:
                     md_lines.append(line)
-                if cell["cellType"]:
+                if cell["cellType"] not in MARKUP_TYPES:
                     md_lines.append("```")
                 md_lines.append ("")
 
-            if cell["cellOutput"] and cell["cellType"]:
+            if cell["cellOutput"] and cell["cellType"] not in MARKUP_TYPES:
                 out_lines = []
                 for scroll_line in cell["cellOutput"]:
                     opts = scroll_line[JPARAMS][JOPTS]
@@ -1143,7 +1146,7 @@ class Terminal(object):
                     cell_out = True
                     out_lines = []
 
-            if format == "ipynb" and cell["cellType"]:
+            if format == "ipynb" and cell["cellType"] not in MARKUP_TYPES:
                 md_lines += [IPYNB_JSON_CODE1 % dict(in_prompt=in_prompt)]
 
         if ref_blobs:
@@ -1166,10 +1169,10 @@ class Terminal(object):
             cells = nb["worksheets"][0]["cells"]
             for cell in cells:
                 if cell["cell_type"] == "markdown":
-                    self.add_cell("", init_text=join_lines(cell["source"]))
+                    self.add_cell("markdown", init_text=join_lines(cell["source"]))
 
                 elif cell["cell_type"] == "code":
-                    new_cell = self.add_cell("auto", init_text=join_lines(cell["input"]))
+                    new_cell = self.add_cell(cell["language"], init_text=join_lines(cell["input"]))
                     for output in cell["outputs"]:
                         if output["output_type"] in ("pyout", "stream"):
                             lines = split_lines(output["text"], chomp=True) if isinstance(output["text"], basestring) else output["text"]
@@ -1208,7 +1211,7 @@ class Terminal(object):
                             if cur_cell:
                                 self.update()
                                 cur_cell = None
-                            self.add_cell("", init_text="\n".join(raw_lines))
+                            self.add_cell("markdown", init_text="\n".join(raw_lines))
                             raw_lines = []
                         state = lang
                         if state == "output":
@@ -1267,6 +1270,10 @@ class Terminal(object):
                     if ref_id in blob_ids:
                         self.create_blob(blob_ids[ref_id], line[len(match.group(0)):])
 
+                elif gtermapi.GTERM_DIRECTIVE_RE.match(line):
+                    # gterm comment directive (currently just ignored)
+                    offset, directive, opt_dict = gtermapi.parse_gterm_directive(line)
+
                 elif line or not leaving_block:
                     # Non-blank line or not leaving block; handle raw line
                     leaving_block = False
@@ -1284,18 +1291,18 @@ class Terminal(object):
                 if cur_cell:
                     self.update()
                     cur_cell = None
-                self.add_cell("", init_text="\n".join(raw_lines))
+                self.add_cell("markdown", init_text="\n".join(raw_lines))
                 raw_lines = []
         except Exception, excp:
             logging.warning("read_md: %s", excp)
 
         self.update()
 
-    def add_cell(self, new_cell_type="auto", init_text="", before_cell_number=0, filename=""):
+    def add_cell(self, new_cell_type="", init_text="", before_cell_number=0, filename=""):
         """ If before_cell_number is 0(-1), add new cell after(before) current cell
             If before_cell_number > 0, add new_cell before before_cell_number
         """
-        if new_cell_type == "auto":
+        if not new_cell_type:
             new_cell_type = gtermapi.LANGUAGES.get(self.note_command, "code")
         prev_index = self.note_cells["curIndex"]
         if before_cell_number in (-1, 0):
@@ -1357,7 +1364,7 @@ class Terminal(object):
         # Move all screen lines to scroll buffer
         cur_cell = self.note_cells["cells"][cur_index]
         self.scroll_screen(self.active_rows)
-        if cur_cell["cellType"]:
+        if cur_cell["cellType"] not in MARKUP_TYPES:
             cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
         self.note_screen_buf.clear_buf()
         self.note_cells["curIndex"] = 0
@@ -1380,7 +1387,7 @@ class Terminal(object):
         assert cell_index in self.note_cells["cells"]
         self.note_cells["curIndex"] = cell_index
         next_cell = self.note_cells["cells"][cell_index]
-        if next_cell["cellType"]:
+        if next_cell["cellType"] not in MARKUP_TYPES:
             self.note_screen_buf.prefill_buf(next_cell["cellOutput"])
         next_cell["cellOutput"] = []
         return cell_index
