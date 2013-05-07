@@ -1758,6 +1758,8 @@ class Terminal(object):
                 return
             # Complete UTF-8 sequence
             uchar = self.echobuf.decode("utf-8", "replace")
+            if len(uchar) > 1:
+                uchar = u"?"
             self.echobuf = ""
             self.echobuf_count = 0
         else:
