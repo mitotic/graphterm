@@ -582,7 +582,7 @@ class FormParser(object):
         return Form_template % (id_suffix, self.title, input_html, id_suffix, opt_names) 
         
     def parse_args(self, args=None, stderr=False):
-        if args is None and len(sys.argv) < 2:
+        if sys.stdin.isatty() and args is None and (len(sys.argv) < 2 or (len(sys.argv) == 2 and sys.argv[1] == "-g")):
             stdfile = sys.stderr if stderr else sys.stdout
             if stdfile.isatty() and Lterm_cookie:
                 assert self.command

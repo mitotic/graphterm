@@ -89,6 +89,8 @@ function GTPageletJSON(pageletElem, tweet) {
 </div>
 """
 
+Tty_out = sys.stdout.isatty()
+
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 def parsedate(rfc822_time):
     """Return (epoch_time, YYYY-mm-ddThh:mm:ss (local))"""
@@ -149,7 +151,7 @@ def send_request(path, path_prefix=TWITTER_URL_PREFIX, get_args={}, post_args=No
                                    post_args=post_args,
                                    streaming_callback=streaming_callback,
                                    connect_timeout=60.0,
-                                   timeout=TWITTER_STREAM_TIMEOUT_SEC)
+                                   timeout=float(options.timeout))
 
     http_client = tornado.httpclient.HTTPClient()
     try:
@@ -268,7 +270,7 @@ class TwitterStreamReader(object):
                 tweet_html = cgi.escape(message["text"])
             else:
                 tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
-            gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers)
+            gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers, stderr=(not Tty_out))
 
 def read_twitter_user_stream(Auth_tokens, keywords=[], recv=False):
     global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
@@ -349,23 +351,24 @@ usage = "usage: %prog [-h ...] [keyword1] ..."
 form_parser = gtermapi.FormParser(usage=usage, title="Text to tweet or keywords to search for: ", command="gtweet")
 
 form_parser.add_argument(help="Tweet text for sending, or keywords for receiving")
-form_parser.add_option("search", False, short="s", help="Search for all tweets containing specified keywords (to STDERR, if fullscreen)")
-form_parser.add_option("recv", False, short="r", help="Receive tweets mentioning this user or any keywords (to STDERR, if fullscreen)")
+form_parser.add_option("search", False, short="s", help="Search for all tweets containing specified keywords")
+form_parser.add_option("recv", False, short="r", help="Receive tweets mentioning this user or any keywords")
 form_parser.add_option("anon", False, short="a", help="Anonymize (hide user names in public display)")
 
 form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display", raw=True)
-form_parser.add_option("csv", False, short="c", help="CSV output (to STDERR, if -f)", raw=True)
-form_parser.add_option("json", False, short="j", help="JSON output (to STDERR, if -f)", raw=True)
-form_parser.add_option("text", False, short="t", help="Text output (to STDERR, if -f)", raw=True)
+form_parser.add_option("csv", False, short="c", help="CSV output", raw=True)
+form_parser.add_option("json", False, short="j", help="JSON output", raw=True)
+form_parser.add_option("text", False, short="t", help="Text output", raw=True)
 form_parser.add_option("opacity", 1.0, help="Feed opacity (default: 1.0)")
+form_parser.add_option("timeout", 0.0, help="Timeout in sec (default: 0 => no timeout)")
 
 form_parser.add_option("auth_file", Default_auth_file, raw=True,
-                       help="File with authentication tokens in JSON format (default: %s) % Default_auth_file")
+                       help="File with authentication tokens in JSON format (default: %s)" % Default_auth_file)
 
 (options, args) = form_parser.parse_args()
 
 if not options.fullscreen and not options.csv and not options.json and not options.text:
-    if sys.stdout.isatty():
+    if Tty_out:
         options.fullscreen = True
     else:
         options.text = True
@@ -387,7 +390,7 @@ Json_headers["x_gterm_response"] = "pagelet_json"
 Json_headers["x_gterm_parameters"] = {}
 
 if options.fullscreen:
-    gtermapi.wrap_write(pagelet_html, headers=Headers)
+    gtermapi.wrap_write(pagelet_html, headers=Headers, stderr=(not Tty_out))
 
 if options.search or options.recv:
     try:
@@ -398,4 +401,4 @@ else:
     update_status(" ".join(args))
 
 if options.fullscreen:
-    gtermapi.write_blank()
+    gtermapi.write_blank(stderr=(not Tty_out))

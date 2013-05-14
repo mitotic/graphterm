@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+#
+
+"""
+d3cloud: Display words from stdin as a word cloud using d3.js
+"""
+
+import json
+import os
+import re
+import sys
+
+import gtermapi
+
+usage = "usage: %prog [file1] [file2] ..."
+form_parser = gtermapi.FormParser(usage=usage, title="Files containing words", command="d3cloud")
+form_parser.add_argument(help="Provide input text with words")
+
+cloud_layout = """
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/static/d3-3.1.6.min.js"></script>
+<script src="/static/d3.layout.cloud.js"></script>
+</head>
+<body>
+<script>
+  var word_list = %s;
+  var fill = d3.scale.category20();
+
+  d3.layout.cloud().size([300, 300])
+      .words(word_list.map(function(d) {
+        return {text: d, size: 10 + Math.random() * 90};
+      }))
+      .rotate(function() { return ~~(Math.random() * 2) * 90; })
+      .font("Impact")
+      .fontSize(function(d) { return d.size; })
+      .on("end", draw)
+      .start();
+
+  function draw(words) {
+    d3.select("body").append("svg")
+        .attr("width", 300)
+        .attr("height", 300)
+      .append("g")
+        .attr("transform", "translate(150,150)")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d, i) { return fill(i); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+  }
+</script>
+<body>
+</html>
+"""
+
+(options, args) = form_parser.parse_args()
+
+PUNC_RE = re.compile(r"[^a-zA-Z_\-@#+]")
+WORD_RE = re.compile(r"^[a-zA-Z0-9@#+][a-zA-Z0-9_\-]+$")
+
+def split_words(text):
+    return [w for w in PUNC_RE.sub(" ", text).split() if WORD_RE.match(w)]
+
+if args:
+    word_list = []
+    for filename in args:
+        try:
+            with open(filename) as f:
+                word_list += split_words(f.read())
+        except Exception:
+            raise
+            print >> sys.stderr, "Error in reading words from file", filename
+            sys.exit(1)
+else:
+    try:
+        word_list = split_words(sys.stdin.read())
+    except (EOFError, KeyboardInterrupt):
+        word_list = []
+
+if not word_list:
+      print >> sys.stderr, "No text to process"
+      sys.exit(1)
+
+sys.stdout.write(cloud_layout % json.dumps(word_list))
+
