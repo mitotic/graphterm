@@ -1,0 +1,219 @@
+#!/usr/bin/env python
+#
+
+"""
+greveal: reveal.js in graphterm
+"""
+
+import json
+import os
+import re
+import sys
+
+import gtermapi
+
+usage = "usage: %prog [markdown_file] ..."
+form_parser = gtermapi.FormParser(usage=usage, title="Display markdown presentation", command="greveal")
+form_parser.add_argument(label="", help="Markdown filename")
+form_parser.add_option("controls", True, help="Display navigation controls")
+form_parser.add_option("progress", True, help="Show progress bar")
+form_parser.add_option("theme", ("default", "beige", "sky", "night", "serif", "simple"), help="Presentation theme")
+form_parser.add_option("transition", ("default", "concave", "cube", "fade", "linear", "none", "page", "zoom"), help="Slide transition")
+form_parser.add_option("transpeed", ("default", "fast", "slow"), help="Slide transition speed")
+form_parser.add_option("transtime", 0, help="Automatic transition interval (millisec)")
+
+reveal_format = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<title>%(title)s</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<link rel="stylesheet" href="/_static/reveal/css/reveal.min.css">
+<link rel="stylesheet" href="/_static/reveal/css/theme/default.css" id="theme">
+
+<!-- For syntax highlighting -->
+<link rel="stylesheet" href="/_static/reveal/lib/css/zenburn.css">
+
+<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+<script>
+	document.write( '<link rel="stylesheet" href="/_static/reveal/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+</script>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section data-markdown data-separator="^\\n---\\n$" data-vertical="^\\n--\\n$">
+<script type="text/template">
+%(content)s</script
+        </section>
+    </div>
+</div>
+
+<script src="/_static/reveal/lib/js/head.min.js"></script>
+<script src="/_static/reveal/js/reveal.min.js"></script>
+<script>
+
+    // Full list of configuration options available here:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: %(controls)s,
+        progress: %(progress)s,
+        keyboard: true,
+        history: true,
+        center: true,
+
+        theme: "%(theme)s",
+        autoSlide: %(autoSlide)d,
+        transition: "%(transition)s",
+        transitionSpeed: "%(transitionSpeed)s",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+        { src: '/_static/reveal/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+        { src: '/_static/reveal/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: '/_static/reveal/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: '/_static/reveal/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        { src: '/_static/reveal/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+        { src: '/_static/reveal/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        // { src: '/_static/reveal/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+        // { src: '/_static/reveal/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+        });
+
+        // initialize
+        var gPresenter = null;
+        function GTermPresenter(frameDispatcher) {
+            this.frameDispatcher = frameDispatcher;
+            this.frameName = "presenter";
+	    this.frameApp = "reveal.js";
+        }
+
+        GTermPresenter.prototype.resize = function() {
+        }
+
+        GTermPresenter.prototype.clear = function() {
+        }
+
+        GTermPresenter.prototype.open = function(props) {
+	    this.props = props;
+            var params = props.params;
+            //console.log("GTermPresenter.open", params);
+           //setTimeout(this.resize, 500);
+        }
+
+        GTermPresenter.prototype.control = function(value, setup) {
+          if (!setup)
+	      this.props.controller = value;
+        }
+
+        GTermPresenter.prototype.receive = function(fromUser, toUser, msg) {
+	    console.log("GTermPresenter.receive", fromUser, toUser, msg);
+	    if (msg[0] == "slidechanged") {
+	        Reveal.slide(msg[1], msg[2]);
+	    } else {
+                this.close();
+	    }
+        }
+
+        GTermPresenter.prototype.send = function(msg) {
+	    if (!this.frameDispatcher)
+                return;
+	    try {
+                this.frameDispatcher.send("", "presenter", msg);
+	    } catch(err) {
+                console.log("GTermPresenter.prototype.send: "+err);
+	    }
+        }
+
+        GTermPresenter.prototype.write = function(text) {
+	    if (!this.frameDispatcher)
+                return;
+	    try {
+                this.frameDispatcher.write(text);
+	    } catch(err) {
+                console.log("GTermPresenter.prototype.write: "+err);
+	    }
+        }
+
+        GTermPresenter.prototype.close = function(save) {
+	    if (!this.frameDispatcher)
+                return;
+	    try {
+                this.frameDispatcher.close(this.frameName, save);
+	    } catch(err) {
+                console.log("GTermPresenter.prototype.close: "+err);
+	    }
+        }
+
+	if (window.parent && window.parent.gFrameDispatcher) {
+            gPresenter = new GTermPresenter(window.parent.gFrameDispatcher);
+            gPresenter.frameDispatcher.open(gPresenter, window.frameElement);
+	} else if (gDebug) {
+            gPresenter = new GTermPresenter(null);
+            var props = {controller: true,
+			 params: {},
+			 content: ""}
+            gPresenter.open(props);
+	}
+
+        var resumedTime = 0;
+        Reveal.addEventListener( 'resumed', function() {
+            resumedTime = new Date().getTime();
+        }, false);
+        Reveal.addEventListener( 'paused', function() {
+            if (new Date().getTime() - resumedTime < 3000)
+                gPresenter.close();
+        }, false);
+        Reveal.addEventListener( 'slidechanged', function(evt) {
+            gPresenter.send(["slidechanged", evt.indexh, evt.indexv]);
+        }, false);
+</script>
+<body>
+</html>
+"""
+
+(options, args) = form_parser.parse_args()
+
+title = "Title"
+url = ""
+content = ""
+if args:
+    title = args[0]
+    try:
+        with open(args[0]) as f:
+            content = f.read()
+    except Exception:
+        print >> sys.stderr, "Error in reading markdown content from file", args[0]
+        sys.exit(1)
+else:
+    title = "stdin"
+    try:
+        content = sys.stdin.read()
+    except (EOFError, KeyboardInterrupt):
+        print >> sys.stderr, "Error in reading markdown content from standard input"
+
+if not content:
+      print >> sys.stderr, "No content to process"
+      sys.exit(1)
+
+def jsbool(value):
+    return "true" if value else "false"
+
+params = {"title": title, "content": content,
+          "controls": jsbool(options.controls), "progress": jsbool(options.progress),
+          "theme": options.theme, "autoSlide": int(options.transtime),
+          "transition": options.transition, "transitionSpeed": options.transpeed,
+          }
+
+sys.stdout.write(reveal_format % params)
+
+
+
+
