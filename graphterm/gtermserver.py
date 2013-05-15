@@ -59,7 +59,7 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
-APPS_URL = "/static"
+APPS_URL = "/"+gtermapi.STATIC_PATH
 
 App_dir = os.path.join(os.getenv("HOME"), ".graphterm")
 File_dir = os.path.dirname(__file__)
@@ -960,7 +960,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             if last_modified:
                 last_modified_datetime = gtermhost.str2datetime(last_modified)
 
-            if self.request.path.startswith("/blob/"):
+            if self.request.path.startswith(gtermapi.BLOB_PREFIX):
                 if last_modified_datetime and \
                    if_mod_since_datetime and \
                    if_mod_since_datetime >= last_modified_datetime:
@@ -971,7 +971,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
                 self.finish_write(bheaders, bcontent)
                 return
 
-        if self.request.path.startswith("/file/"):
+        if self.request.path.startswith(gtermapi.FILE_PREFIX):
             # Check if access to file is permitted
             self.file_path = "/" + self.file_path
 
@@ -1068,14 +1068,14 @@ class ProxyFileHandler(tornado.web.RequestHandler):
         if etag:
             headers.append(("Etag", etag))
 
-        if self.request.path.startswith("/blob/"):
+        if self.request.path.startswith(gtermapi.BLOB_PREFIX):
             headers.append(("Expires", datetime.datetime.utcnow() +
                                       datetime.timedelta(seconds=MAX_CACHE_TIME)))
             headers.append(("Cache-Control", "private, max-age="+str(MAX_CACHE_TIME)))
         elif last_modified and content_type:
             headers.append(("Cache-Control", "private, max-age=0, must-revalidate"))
 
-        cache = self.request.method != "HEAD" and (self.request.path.startswith("/blob/") or
+        cache = self.request.method != "HEAD" and (self.request.path.startswith(gtermapi.BLOB_PREFIX) or
                                                      (Cache_files and last_modified) )
         self.finish_write(headers, content, cache=cache)
 
@@ -1175,9 +1175,9 @@ def run_server(options, args):
                 auth_file = ""
 
     handlers += [(r"/_websocket/.*", GTSocket),
-                 (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
-                 (r"/blob/(.*)", ProxyFileHandler, {}),
-                 (r"/file/(.*)", ProxyFileHandler, {}),
+                 (gtermapi.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
+                 (gtermapi.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
+                 (gtermapi.FILE_PREFIX+r"(.*)", ProxyFileHandler, {}),
                  (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
                  ]
 

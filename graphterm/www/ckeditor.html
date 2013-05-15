@@ -14,6 +14,7 @@ function GTermEditor(frameDispatcher) {
     this.frameDispatcher = frameDispatcher;
     this.frameName = "editor";
     this.frameApp = "ckeditor";
+    this.updating = false;
 }
 
 GTermEditor.prototype.resize = function() {

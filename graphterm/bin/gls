@@ -23,17 +23,17 @@ gvicmd = gbrowsecmd if gtermapi.Export_host else os.getenv("GRAPHTERM_VI_CMD", "
 pynbcmd = "python -i gtermapi.py"
 ipynbcmd = "ipython -i gpylab.py"
 
-FILE_TYPES = {"directory": ("/static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
-              "executable": ("/static/images/tango-application-x-executable.png", ""),
-              "pynotebook": ("/static/images/tango-text-x-generic-template.png", pynbcmd),
-              "ipynotebook": ("/static/images/tango-text-x-generic-template.png", ipynbcmd),
-              "audiofile": ("/static/images/tango-audio-x-generic.png", gbrowsecmd),
-              "htmlfile": ("/static/images/tango-text-html.png", gopencmd),
-              "imagefile": ("/static/images/tango-image-x-generic.png", gimagecmd),
-              "pdffile": ("/static/images/tango-text-x-generic-template.png", gbrowsecmd),
-              "plainfile": ("/static/images/tango-text-x-generic-template.png", gopencmd),
-              "textfile": ("/static/images/tango-text-x-generic.png", gvicmd),
-              "videofile": ("/static/images/tango-video-x-generic.png", gopencmd),  # Need to implement streaming...
+FILE_TYPES = {"directory": ("/_static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
+              "executable": ("/_static/images/tango-application-x-executable.png", ""),
+              "pynotebook": ("/_static/images/tango-text-x-generic-template.png", pynbcmd),
+              "ipynotebook": ("/_static/images/tango-text-x-generic-template.png", ipynbcmd),
+              "audiofile": ("/_static/images/tango-audio-x-generic.png", gbrowsecmd),
+              "htmlfile": ("/_static/images/tango-text-html.png", gopencmd),
+              "imagefile": ("/_static/images/tango-image-x-generic.png", gimagecmd),
+              "pdffile": ("/_static/images/tango-text-x-generic-template.png", gbrowsecmd),
+              "plainfile": ("/_static/images/tango-text-x-generic-template.png", gopencmd),
+              "textfile": ("/_static/images/tango-text-x-generic.png", gvicmd),
+              "videofile": ("/_static/images/tango-video-x-generic.png", gopencmd),  # Need to implement streaming...
 }
 
 IMGFORMAT = '<td><a class="gterm-link gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img" src="%(fileicon)s"></img></a>'

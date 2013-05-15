@@ -20,8 +20,8 @@ cloud_layout = """
 <!DOCTYPE html>
 <html>
 <head>
-<script src="/static/d3-3.1.6.min.js"></script>
-<script src="/static/d3.layout.cloud.js"></script>
+<script src="/_static/d3-3.1.6.min.js"></script>
+<script src="/_static/d3.layout.cloud.js"></script>
 </head>
 <body>
 <script>

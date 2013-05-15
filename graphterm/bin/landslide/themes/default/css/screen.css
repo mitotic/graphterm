@@ -2,6 +2,7 @@ body {
   font: 14px "Lucida Grande", "Trebuchet MS", Verdana, sans-serif;
   background: #778;
   padding: 0;
+  padding-top: 1.5em;
   margin: 0;
   overflow: hidden;
 }

@@ -60,6 +60,15 @@ LANGUAGES    = dict((prog, values[1]) for prog, values in INTERPRETERS.items())
 PROMPTS_LIST = dict((prog, values[2]) for prog, values in INTERPRETERS.items() if values[2])
 MAP_EXTENSIONS = dict((values[0], values[1]) for prog, values in INTERPRETERS.items())
 
+BLOB_PATH = "_blob"
+FILE_PATH = "_file"
+STATIC_PATH = "_static"
+
+BLOB_PREFIX = "/"+BLOB_PATH+"/"
+FILE_PREFIX = "/"+FILE_PATH+"/"
+STATIC_PREFIX = "/"+STATIC_PATH+"/"
+FILE_URI_PREFIX = "file://"
+
 App_dir = os.path.join(os.path.expanduser("~"), ".graphterm")
 Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
 
@@ -152,11 +161,13 @@ def write_pagelet(html, display="block", dir="", add_headers={}, stderr=False):
                     }
     wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_scroll_pagelet(html, display="block", dir="", add_headers={}, stderr=False):
+def write_scroll_pagelet(html, display="block", overwrite=False, dir="", add_headers={}, stderr=False):
     """Write scrollable html pagelet to stdout"""
     params = "scroll=top"
     if display:
         params += " display=" + urllib.quote(display)
+    if overwrite:
+        params += " overwrite=yes"
     if dir:
         params += " current_dir=" + urllib.quote(dir)
     for header, value in add_headers.iteritems():
@@ -178,6 +189,10 @@ def write_form(html, command="", dir="", stderr=False):
 def write_blank(display="fullpage", stderr=False):
     """Write blank pagelet to stdout"""
     write_pagelet("", display=display, stderr=stderr)
+
+def write_scroll_blank(display="fullpage", stderr=False):
+    """Write blank scroll pagelet to stdout"""
+    write_scroll_pagelet("", display=display, overwrite=True, stderr=stderr)
 
 def display_blockimg(url, overwrite=False, alt="", stderr=False):
     """Display block image in a sequence.
@@ -333,7 +348,7 @@ def file_hmac(filepath, host_secret):
 
 def get_file_url(filepath, relative=False, exists=False, plain=False):
     """Construct file URL by expanding/normalizing filepath, with hmac cookie suffix.
-    If relative, return '/file/host/path'
+    If relative, return '/_file/host/path'
     """
     if not filepath.startswith("/"):
         filepath = os.path.normcase(os.path.abspath(os.path.expanduser(filepath)))
@@ -346,16 +361,16 @@ def get_file_url(filepath, relative=False, exists=False, plain=False):
 
     filehmac = "?hmac="+file_hmac(filepath, Shared_secret)
     if relative:
-        return "/file/" + Host + filepath + filehmac
+        return FILE_PREFIX + Host + filepath + filehmac
     else:
         return "file://" + ("" if Host == "local" else Host) + filepath + filehmac
 
 def make_blob_url(blob_id=""):
     blob_id = blob_id or str(uuid.uuid4())
-    return (blob_id, "/blob/"+Host+"/"+blob_id)
+    return (blob_id, BLOB_PREFIX+Host+"/"+blob_id)
 
 def get_blob_id(blob_url):
-    if blob_url.startswith("/blob/"):
+    if blob_url.startswith(BLOB_PREFIX):
         return blob_url.split("/")[3]
     else:
         return ""
@@ -406,9 +421,6 @@ def preload_images(urls, stderr=False):
 
     wrap_write("", headers=headers, stderr=stderr)
 
-FILE_URI_PREFIX = "file://"
-FILE_PREFIX = "/file/"
-
 JSERVER = 0
 JHOST = 1
 JFILENAME = 2
@@ -417,7 +429,7 @@ JQUERY = 4
 
 def split_file_url(url, check_host_secret=None):
 	"""Return [protocol://server[:port], hostname, filename, fullpath, query] for file://host/path
-        or http://server:port/file/host/path, or /file/host/path URLs.
+        or http://server:port/_file/host/path, or /_file/host/path URLs.
 	If not file URL, returns []
         If check_host_secret is specified, and file hmac matches, then hostname is set to the null string.
 	"""
@@ -516,7 +528,7 @@ class FormParser(object):
             short = "-" + short if short else ""
             if isinstance(default, bool):
                 self.parser.add_option(short, "--"+name, dest=name, default=default,
-                                  help=help, action=("store_false" if default else "store_true"))
+                                  help=help, action=("store_true" if default else "store_false"))
             else:
                 self.parser.add_option(short, "--"+name, dest=name, default=default,
                                        help=help)

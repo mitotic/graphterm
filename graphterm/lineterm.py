@@ -72,7 +72,7 @@ MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
 
 MARKUP_TYPES = set(["markdown"])
 
-BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/blob/local/%s" alt="%s"></div>'
+BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="%slocal/%s" alt="%s"></div>'
 
 IPYNB_JSON_HEADER = """{
  "metadata": {
@@ -177,7 +177,7 @@ def join_lines(lines):
     if isinstance(lines, basestring):
         return lines
     else:
-        return "".join(lines)
+        return "".join(line if line.endswith("\n") else line+"\n" for line in lines[:-1])+lines[-1]
 
 def nb_json(lines, ipy_format=False):
     if not ipy_format:
@@ -422,9 +422,6 @@ def shplit(line, delimiters=COMMAND_DELIMITERS, final_delim="&", index=None):
     else:
         return [j+index for j in indices]
 
-FILE_URI_PREFIX = "file://"
-FILE_PREFIX = "/file/"
-
 JSERVER = 0
 JHOST = 1
 JFILENAME = 2
@@ -432,21 +429,21 @@ JFILEPATH = 3
 JQUERY = 4
 
 def create_file_uri(url_comps):
-    return FILE_URI_PREFIX + url_comps[JHOST] + url_comps[JFILEPATH] + url_comps[JQUERY]
+    return gtermapi.FILE_URI_PREFIX + url_comps[JHOST] + url_comps[JFILEPATH] + url_comps[JQUERY]
 
 def split_file_url(url, check_host_secret=None):
     """Return [protocol://server[:port], hostname, filename, fullpath, query] for file://host/path
-    or http://server:port/file/host/path, or /file/host/path URLs.
+    or http://server:port/_file/host/path, or /_file/host/path URLs.
     If not file URL, returns []
     If check_host_secret is specified, and file hmac matches, then hostname is set to the null string.
     """
     if not url:
         return []
     server_port = ""
-    if url.startswith(FILE_URI_PREFIX):
-        host_path = url[len(FILE_URI_PREFIX):]
-    elif url.startswith(FILE_PREFIX):
-        host_path = url[len(FILE_PREFIX):]
+    if url.startswith(gtermapi.FILE_URI_PREFIX):
+        host_path = url[len(gtermapi.FILE_URI_PREFIX):]
+    elif url.startswith(gtermapi.FILE_PREFIX):
+        host_path = url[len(gtermapi.FILE_PREFIX):]
     else:
         if url.startswith("http://"):
             protocol = "http"
@@ -459,9 +456,9 @@ def split_file_url(url, check_host_secret=None):
             return []
         server_port = url[:j]
         url_path = url[j:]
-        if not url_path.startswith(FILE_PREFIX):
+        if not url_path.startswith(gtermapi.FILE_PREFIX):
             return []
-        host_path = url_path[len(FILE_PREFIX):]
+        host_path = url_path[len(gtermapi.FILE_PREFIX):]
 
     host_path, sep, tail = host_path.partition("?")
     query = sep + tail
@@ -660,6 +657,7 @@ class ScreenBuf(object):
         prev_edit_file = self.scroll_lines and self.scroll_lines[-1][JPARAMS][JTYPE] == "edit_file"
 
         row_params[JOPTS]["add_class"] = add_class
+        ##logging.warning("ABCscroll_buf_up2: type=%s, line='%s', overwrite=%s, opts=%s, id=%s", row_params[JTYPE], line, overwrite, prev_pagelet_opts, cur_pagelet_id)
         if overwrite and prev_pagelet_opts and prev_pagelet_opts["pagelet_id"] == cur_pagelet_id:
             # Overwrite previous pagelet entry
             row_params[JOPTS]["pagelet_id"] = cur_pagelet_id
@@ -1184,7 +1182,7 @@ class Terminal(object):
                             blob_id = str(uuid.uuid4())
                             data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
                             self.create_blob(blob_id, data_uri[len("data:"):])
-                            markup = BLOCKIMGFORMAT % (blob_id, blob_id, "image")
+                            markup = BLOCKIMGFORMAT % (blob_id, gtermapi.BLOB_PREFIX, blob_id, "image")
                             self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                                row_params=["pagelet", {"blob": blob_id}])
                 self.update()
@@ -1257,11 +1255,11 @@ class Terminal(object):
                     blob_id = str(uuid.uuid4())
                     blob_ids[ref_id] = blob_id
                     if cur_cell:
-                        markup = BLOCKIMGFORMAT % (blob_id, blob_id, alt)
+                        markup = BLOCKIMGFORMAT % (blob_id, gtermapi.BLOB_PREFIX, blob_id, alt)
                         self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                            row_params=["pagelet", {"blob": blob_id}])
                     else:
-                        raw_lines.append("![%s](/blob/%s)" % (alt, blob_id))
+                        raw_lines.append("![%s](%slocal/%s)" % (alt, gtermapi.BLOB_PREFIX, blob_id))
 
                 elif MD_REF_RE.match(line):
                     # Reference list
@@ -2003,7 +2001,14 @@ class Terminal(object):
                 self.gterm_buf_size = 0
                 self.gterm_entry_index = self.screen_buf.entry_index+1
                 if self.gterm_code != GRAPHTERM_SCREEN_CODES[0]:
-                    self.scroll_screen(self.active_rows)
+                    scroll_rows = self.active_rows
+                    if scroll_rows == 1 and self.cursor_y == 0:
+                        # Special handling to skip echoed ^C before writing blank pagelet
+                        line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
+                        if line.endswith("^C"):
+                            scroll_rows = 0
+                    if scroll_rows:
+                        self.scroll_screen(scroll_rows)
                     if self.logfile:
                         with open(self.logfile, "a") as logf:
                             logf.write("GTERMMODE\n")
@@ -2369,7 +2374,7 @@ class Terminal(object):
         row_content = test_finder_row % {"fullpath": directory,
                                          "filetype": "directory",
                                          "clickcmd": "cd %(path); gls -f",
-                                         "fileicon": "/static/images/tango-folder.png",
+                                         "fileicon": "/_static/images/tango-folder.png",
                                          "filename": "."}
         content = "\n".join([test_finder_head] + 40*[row_content] + [test_finder_tail])
         headers = {"content_type": "text/html",

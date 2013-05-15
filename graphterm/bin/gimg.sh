@@ -14,6 +14,6 @@ echo -n "${esc}[?${gterm_code}l"
 
 # Display blob
 echo -n "${esc}[?${gterm_code};${gterm_cookie}h"
-echo -n '<!--gterm pagelet display-block blob='${blob_id}'--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/blob/local/'${blob_id}'"></div>'
+echo -n '<!--gterm pagelet display-block blob='${blob_id}'--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/_blob/local/'${blob_id}'"></div>'
 echo -n "${esc}[?${gterm_code}l"
 

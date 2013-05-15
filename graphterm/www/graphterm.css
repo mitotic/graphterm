@@ -560,7 +560,7 @@ textarea.gterm-notecell-markup {
     color: red;
 }
 
-.gterm-iframe:not(.noheader) {
+.gterm-iframe:not(.gterm-noheader) {
     margin-top: 1em;
 }
 

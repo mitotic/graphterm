@@ -50,7 +50,7 @@ output=""
 clickcmd="cd %(path); $glscmd -f"
 files='.. . ~'
 for file in $files; do
-   fileicon="/static/images/tango-folder.png"
+   fileicon="/_static/images/tango-folder.png"
    filetype="specialfile"
 
    if [ "$file" == ".." ]; then
@@ -79,15 +79,15 @@ for file in *; do
    fullpath="$PWD/$file"
    if [ -d "$file" ]; then       #directory
       filetype="directory"
-      fileicon="/static/images/tango-folder.png"
+      fileicon="/_static/images/tango-folder.png"
       clickcmd="cd %(path); $glscmd -f"
    elif [ -x "$file" ]; then  #executable
       filetype="executable"
-      fileicon="/static/images/tango-application-x-executable.png"
+      fileicon="/_static/images/tango-application-x-executable.png"
       clickcmd=""
    else                       #plain file
       filetype="plainfile"
-      fileicon="/static/images/tango-text-x-generic.png"
+      fileicon="/_static/images/tango-text-x-generic.png"
       clickcmd="$gvicmd"
    fi
 

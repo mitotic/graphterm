@@ -72,7 +72,7 @@ pagelet_html = """<script>
 var GTPageletMaxTweets = 36;
 function GTPageletJSON(pageletElem, tweet) {
     // Display new tweet, sliding it into the top line
-    $('<li><img src="/static/images/twitter_bird_32.png"> '+tweet+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
+    $('<li><img src="/_static/images/twitter_bird_32.png"> '+tweet+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
     if (pageletElem.find("ul li").length > GTPageletMaxTweets)
         pageletElem.find("ul li:last-child").remove();
 }

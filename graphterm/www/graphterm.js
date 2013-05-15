@@ -150,7 +150,7 @@ $.fn.bindclick = function(handler, context) {
 var MARKUP_TYPES = {markdown: 1};
 
 var FILE_URI_PREFIX = "file:/"+"/"; // Split double slash for minification
-var FILE_PREFIX = "/file/";
+var FILE_PREFIX = "/_file/";
 var JSERVER = 0;
 var JHOST = 1;
 var JFILENAME = 2;
@@ -244,7 +244,7 @@ function makeFileURL(url) {
 }
 
 // Returns [protocol://server[:port], hostname, filename, fullpath, query] for for file://host/path
-//        or http://server:port/file/host/path, or /file/host/path URLs.
+//        or http://server:port/_file/host/path, or /_file/host/path URLs.
 // If not file URL, returns null
 function splitFileURL(url) {
     var hostPath;
@@ -348,8 +348,8 @@ function setupTerminal() {
 }
 
 function handle_resize() {
-    gRows = Math.floor($(window).height() / gRowHeight) - 1;
-    gCols = Math.floor($(window).width() / gColWidth) - 1;
+    gRows = Math.max(2, Math.floor($(window).height()/gRowHeight)-1);
+    gCols = Math.max(3, Math.floor($(window).width()/gColWidth)-1);
     if (gWebSocket && gParams.controller)
 	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width(), gParams.parent_term||""]]]);
     var isNarrow = $("#terminal").hasClass("gterm-narrow");
@@ -615,6 +615,7 @@ function GTClearTerminal() {
 }
 
 function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
+    //console.log("GTAppendPagelet:", row_params);
     var row_opts = row_params[JOPTS];
     var overwrite = !!row_opts.overwrite;
     var pagelet_id = row_opts.pagelet_id || "";
@@ -622,7 +623,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     var current_dir = row_opts.current_dir|| "";
     var pagelet_display = row_opts.display || "";
     var scrollElemId = "gterm-scroll"+pagelet_id;
-    var attrs = ' data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'" ';
+    var attrs = ' id="'+scrollElemId+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'" ';
 
     if (pagelet_display.substr(0,4) == "full") {
 	// Hide previous entries
@@ -697,7 +698,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     scrollElem.find('td .gterm-link').bindclick(gtermPageletClickHandler);
     scrollElem.find('td img').bind("dragstart", function(evt) {evt.preventDefault();});
     scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
-    scrollElem.find('.gterm-iframeclose').bindclick(gtermInterruptHandler);
+    scrollElem.find('.gterm-iframeclose').bindclick(CloseIFrame);
     GTDropBindings(scrollElem.find(' .droppable'));
     return scrollElem;
 }
@@ -729,7 +730,7 @@ function GTGetLocalFile(filepath, current_dir, callback) {
 	return;
     if (filepath.charAt(0) != "/")
 	filepath = current_dir + "/" + filepath;
-    var url =  window.location.protocol+"/"+"/"+window.location.host + "/file/local" + filepath;
+    var url =  window.location.protocol+"/"+"/"+window.location.host + FILE_PREFIX + "local" + filepath;
     url += "?hmac="+compute_hmac(getCookie("GRAPHTERM_HOST_LOCAL"), filepath);
     $.get(url, function(data, textStatus, jqXHR) {
 	           callback(""+data) })
@@ -1272,7 +1273,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
 			    $(pageletSelector+' .gterm-togglelink').bindclick(gtermLinkClickHandler);
-			    $(pageletSelector+' .gterm-iframeclose').bindclick(gtermInterruptHandler);
+			    $(pageletSelector+' .gterm-iframeclose').bindclick(CloseIFrame);
 			    GTDropBindings($(pageletSelector+' .droppable'));
 			} catch(err) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
@@ -3382,14 +3383,14 @@ GTFrameDispatcher.prototype.createFrame = function(params, content, url, frameId
 }
 
 GTFrameDispatcher.prototype.open = function(frameController, frameObj) {
-
+    console.log("GTFrameDispatcher.open", frameController, frameObj);
     var frameId = $(frameObj).attr("id");
-    if (frameController && "open" in frameController && (frameId in this.frameProps)) {
-	this.frameControllers[frameController.frameName] = {controller: frameController, props: this.frameProps[frameId]};
-	frameController.open(this.frameProps[frameId]);
+    var props = (frameId in this.frameProps) ? this.frameProps[frameId] : {id: frameId, params: {}};
+    if (frameController && "open" in frameController) {
+	this.frameControllers[frameController.frameName] = {controller: frameController, props: props};
+	frameController.open(props);
     }
-    if (!gMobileBrowser) {
-	$("#"+frameId).addClass("noheader");
+    if ($("#"+frameId).hasClass("gterm-noheader")) {
 	$("#"+frameId).attr("height", "100%");
 	$(".gterm-iframeheader").hide();
     }
@@ -3449,7 +3450,7 @@ GTFrameDispatcher.prototype.close = function(frameName, save) {
     delete this.frameControllers[frameName];
     if (gParams.controller)  // Delay sending Control-C so that any data stream sent back by the frame is not pre-empted
 	setTimeout(gtermInterruptHandler, 200);
-    EndFullpage();
+    EndFullpage(props.id);
 }
 
 var gFrameDispatcher = new GTFrameDispatcher();
@@ -3973,7 +3974,13 @@ GTNotebook.prototype.receive = function(fromUser, toUser, cellIndex, msg) {
 }
 
 
-function EndFullpage() {
+function CloseIFrame(evt) {
+    if (gFullpageDisplay)
+	ExitFullpage();
+    gtermInterruptHandler();
+}
+
+function EndFullpage(frameId) {
     //console.log("EndFullpage");
     gFullpageDisplay = null;
     try {
@@ -4289,8 +4296,8 @@ function ScrollTerm() {
 
 function GTermHelp() {
     GTPopAlert('<b>GraphTerm Help</b>'+
-'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/usage.html" target="_blank">General usage information</a>'+
-'<p>\n&nbsp;&nbsp;<a href="/static/docs/html/troubleshooting.html" target="_blank">Troubleshooting</a>'+
+'<p>\n&nbsp;&nbsp;<a href="/_static/docs/html/usage.html" target="_blank">General usage information</a>'+
+'<p>\n&nbsp;&nbsp;<a href="/_static/docs/html/troubleshooting.html" target="_blank">Troubleshooting</a>'+
 '<p>\n&nbsp;&nbsp;<a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> (<b>NEW</b>)',
                true);
 }

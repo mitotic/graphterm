@@ -9,6 +9,7 @@ import mimetypes
 import os
 import random
 import sys
+import termios
 import time
 
 from optparse import OptionParser
@@ -28,8 +29,11 @@ parser.add_option("-f", "--fullscreen",
                   action="store_true", dest="fullscreen", default=False,
                   help="Fullscreen display")
 
-parser.add_option("-n", "--nofooter", action="store_true", dest="nofooter", default=False,
-                  help="Suppress footer")
+parser.add_option("-n", "--noheader", action="store_true", dest="noheader", default=False,
+                  help="Suppress header")
+
+parser.add_option("-e", "--echo", action="store_true", dest="echo", default=False,
+                  help="Do not suppress terminal echo")
 
 (options, args) = parser.parse_args()
 if args:
@@ -61,17 +65,33 @@ if not options.fullscreen:
     headers["autosize"] = True
 
 frameId = "giframe%09d" % random.randrange(0, 10**9)
-frameHeight = 'height="%d%%%%"' % (100 if options.nofooter else 95,) if options.fullscreen else ''
+frameHeight = ' height="%d%%" ' % (100 if options.noheader else 95) if options.fullscreen else ''
 
-IFRAMEFORMAT = '<iframe id="'+frameId+'" class="gterm-iframe" src="%s" width="100%%" '+frameHeight+'"></iframe>' 
-if not options.nofooter:
-    IFRAMEFORMAT = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span>' + IFRAMEFORMAT
+add_class = "gterm-noheader" if options.noheader else ""
+IFRAMEFORMAT = '<iframe id="%s" class="gterm-iframe %s" src="%s" width="100%%" %s></iframe>'
+iframe_html = IFRAMEFORMAT % (frameId, add_class, iframe_url, frameHeight)
+if not options.noheader:
+    iframe_html = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span>' + iframe_html
 
-gtermapi.write_scroll_pagelet(IFRAMEFORMAT % iframe_url, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
+gtermapi.write_scroll_pagelet(iframe_html, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
 
-try:
-    while options.fullscreen:
-        time.sleep(1)
-except KeyboardInterrupt:
-    gtermapi.write_blank()
+if options.fullscreen:
+    if options.echo or not sys.stdout.isatty():
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            gtermapi.write_scroll_blank()
+    else:
+        saved_settings = termios.tcgetattr(sys.stdout.fileno())
+        new_settings = saved_settings[:]
+        new_settings[3] = new_settings[3] & ~termios.ECHO   # Disable terminal echo
+        try:
+            termios.tcsetattr(sys.stdout.fileno(), termios.TCSADRAIN, new_settings)
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            gtermapi.write_scroll_blank()
+        finally:
+            termios.tcsetattr(sys.stdout.fileno(), termios.TCSADRAIN, saved_settings)
 

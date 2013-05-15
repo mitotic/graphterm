@@ -58,7 +58,7 @@ pro gshow, command, vars, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=
 
   params = ""
   if (overwrite) then params = "overwrite=yes"
-  img_html = '<!--gterm pagelet display=block blob='+strtrim(blob_id,2)+' '+params+'--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/blob/local/'+strtrim(blob_id,2)+'"></div>'
+  img_html = '<!--gterm pagelet display=block blob='+strtrim(blob_id,2)+' '+params+'--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/_blob/local/'+strtrim(blob_id,2)+'"></div>'
 
   print, esc_prefix, img_html, esc_suffix, format='(a,a,a,$)'
 end
