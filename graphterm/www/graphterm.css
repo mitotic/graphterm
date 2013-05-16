@@ -480,6 +480,13 @@ textarea.gterm-notecell-markup {
     border-style: dashed;
 }
 
+#terminal.gterm-noteslides.gterm-menubar-hide .gterm-header,
+  #terminal.gterm-noteslides .session-bufscreen .row,
+  #terminal.gterm-noteslides .session-bufscreen .gterm-notecell-buffered,
+  #terminal.gterm-noteslides .pagelet-notebook .gterm-notecell-container:not(.gterm-noteslides-show) {
+    display: none;
+}
+
 /* Screens */
 #session-term:not(.split-screen) .session-screen, .session-altscreen {
     margin-bottom: 1.0em;

@@ -55,15 +55,13 @@ def file2html(filepath, filename, filemode=0):
         filetype = "directory"
     elif os.path.lexists(filepath):
         mimetype, encoding = mimetypes.guess_type(filename)
-        filetype = "plainfile"
+        filetype = ""
         if os.path.isdir(filepath):
             filetype = "directory"
         elif filepath.endswith(".py.md"):
             filetype = "pynotebook"
         elif filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
             filetype = "ipynotebook"
-        elif os.access(filepath, os.X_OK):
-            filetype = "executable"
         elif mimetype:
             if mimetype.startswith("audio/"):
                 filetype = "audiofile"
@@ -77,6 +75,11 @@ def file2html(filepath, filename, filemode=0):
                 filetype = "textfile"
             elif mimetype.startswith("video/"):
                 filetype = "videofile"
+        if not filetype:
+            if os.access(filepath, os.X_OK):
+                filetype = "executable"
+            else:
+                filetype = "plainfile"
     else:
         return "", ""
 

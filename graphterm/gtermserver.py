@@ -611,6 +611,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 elif msg[0] == "osh_stderr":
                     TraceInterface.receive_output("stderr", msg[1], from_user or self.websocket_id, msg[2])
 
+                elif msg[0] == "server_log":
+                    logging.warning("gtermserver_log: %s", msg[1])
                 elif msg[0] == "reconnect_host":
                     if conn:
                         # Close host connection (should automatically reconnect)

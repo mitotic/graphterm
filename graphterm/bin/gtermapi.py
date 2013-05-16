@@ -60,6 +60,8 @@ LANGUAGES    = dict((prog, values[1]) for prog, values in INTERPRETERS.items())
 PROMPTS_LIST = dict((prog, values[2]) for prog, values in INTERPRETERS.items() if values[2])
 MAP_EXTENSIONS = dict((values[0], values[1]) for prog, values in INTERPRETERS.items())
 
+PAGE_BREAK = "---"
+
 BLOB_PATH = "_blob"
 FILE_PATH = "_file"
 STATIC_PATH = "_static"

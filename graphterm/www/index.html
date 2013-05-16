@@ -104,22 +104,43 @@
               <li><a href="#" class="gterm-only-controller gterm-non-notebook" gterm-state="notebook_new">new</a></li>
               <li><a href="#" class="gterm-only-controller gterm-non-notebook" gterm-state="notebook_open">open</a></li>
               <li><a href="#" class="gterm-only-notebook" gterm-state="notebook_save">save</a></li>
-              <li><a href="#" class="gterm-only-controller gterm-only-notebook" gterm-state="notebook_quit">quit</a></li>
-              <hr class="sf-separator">
-              <li><a href="#" class="gterm-only-controller gterm-only-notebook" gterm-state="notebook_run">run cell</a></li>
-              <li><a href="#" class="gterm-only-controller gterm-only-notebook gterm-key-altletter" gterm-state="notebook_execute">r<span class="gterm-key-letter">u</span>n in-place</a></li>
               <li>
-                <a href="#" class="gterm-toggle-link gterm-only-controller gterm-only-notebook" gterm-state="notebook_markdown" gterm-toggle="false">markdown <span class="gterm-toggle-status">&#x2714;</span></a>
+                <a href="#"  class="gterm-only-controller gterm-only-notebook">quit &#x25b9;</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_quit_log">log output</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_quit_clear">clear output</a></li>
+                </ul>
+              </li>
+              <hr class="sf-separator">
+              <li>
+                <a href="#" class="gterm-only-notebook">page &#x25b9;</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_page_previous">previous</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_page_next">next</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_page_first">first</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_page_last">last</a></li>
+                  <li>
+                    <a href="#" class="gterm-toggle-link gterm-only-controller gterm-only-notebook gterm-key-altletter" gterm-state="notebook_page_slide" gterm-toggle="false">s<span class="gterm-key-letter">l</span>ide mode <span class="gterm-toggle-status">&#x2714;</span></a>
+                  </li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_page_break">insert break</a></li>
+                </ul>
               </li>
               <li>
                 <a href="#" class="gterm-only-notebook">cell &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_delete">delete</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_up">up shift</a></li>
+                  <li><a href="#" class="gterm-only-controller gterm-key-altletter" gterm-state="notebook_cell_down">do<span class="gterm-key-letter">w</span>n shift</a></li>
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_split">split</a></li>
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_merge">merge above</a></li>
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_cell_read">read file</a></li>
                   <li><a href="#" gterm-state="notebook_cell_write">write file</a></li>
                 </ul>
+              </li>
+              <li><a href="#" class="gterm-only-controller gterm-only-notebook" gterm-state="notebook_run">run cell</a></li>
+              <li><a href="#" class="gterm-only-controller gterm-only-notebook gterm-key-altletter" gterm-state="notebook_execute">r<span class="gterm-key-letter">u</span>n in-place</a></li>
+              <li>
+                <a href="#" class="gterm-toggle-link gterm-only-controller gterm-only-notebook" gterm-state="notebook_markdown" gterm-toggle="false">markdown <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
               <li>
                 <a href="#" class="gterm-only-controller gterm-only-notebook">insert cell &#x25b9;</a>
@@ -129,14 +150,7 @@
                 </ul>
               </li>
               <li>
-                <a href="#"  class="gterm-only-controller gterm-only-notebook gterm-key-altletter">mo<span class="gterm-key-letter">v</span>e cell &#x25b9;</a>
-                <ul class="gterm-menukey-firstletter">
-                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_move_down">down</a></li>
-                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_move_up">up</a></li>
-                </ul>
-              </li>
-              <li>
-                <a href="#" class="gterm-only-controller gterm-only-notebook gterm-key-altletter">se<span class="gterm-key-letter">l</span>ect cell &#x25b9;</a>
+                <a href="#" class="gterm-only-controller gterm-only-notebook gterm-key-altletter">selec<span class="gterm-key-letter">t</span> cell &#x25b9;</a>
                 <ul class="gterm-menukey-firstletter">
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_select_previous">previous</a></li>
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_select_next">next</a></li>
@@ -149,7 +163,21 @@
                   <li><a href="#" class="gterm-only-controller" gterm-state="notebook_erase_all">all</a></li>
                 </ul>
               </li>
-              <li><a href="#" class="gterm-only-controller gterm-only-notebook">keyboard shortcuts &#x25b9;</a>
+            </ul>
+          </li>
+
+          <li>
+            <a href="#">help</a>
+            <ul class="gterm-menukey-firstletter">
+              <li><a href="#" gterm-state="help_about">about</a></li>
+              <li><a href="#" gterm-state="help_updates">updates</a></li>
+              <li><a href="#" gterm-state="help_info">info</a></li>
+              <li><a href="#" >menu shortcut key &#x25b9;</a>
+                <ul>
+                  <li>Type Ctrl-j</li>
+                </ul>
+              </li>
+              <li><a href="#" class="gterm-only-notebook">notebook shortcuts &#x25b9;</a>
                 <ul>
                   <li>Shift-Enter: run cell</li>
                   <li>Ctrl-Enter: run in-place</li>
@@ -160,26 +188,13 @@
                   <li>Ctrl-m d: delete cell</li>
                   <li>Ctrl-m j: move up</li>
                   <li>Ctrl-m k: move down</li>
+                  <li>Ctrl-m l: toggle slide mode</li>
                   <li>Ctrl-m m: markdown cell</li>
                   <li>Ctrl-m n: next cell</li>
                   <li>Ctrl-m p: previous cell</li>
                   <li>Ctrl-m r: read cell</li>
                   <li>Ctrl-m s: save notebook</li>
                   <li>Ctrl-m w: write cell</li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-
-          <li>
-            <a href="#">help</a>
-            <ul class="gterm-menukey-firstletter">
-              <li><a href="#" gterm-state="help_about">about</a></li>
-              <li><a href="#" gterm-state="help_updates">updates</a></li>
-              <li><a href="#" gterm-state="help_info">info</a></li>
-              <li><a href="#" >menu shortcut &#x25b9;</a>
-                <ul>
-                  <li>Type Ctrl-j</li>
                 </ul>
               </li>
             </ul>

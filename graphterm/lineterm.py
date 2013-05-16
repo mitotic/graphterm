@@ -840,6 +840,7 @@ class Terminal(object):
         self.note_dir = ""
         self.note_command = ""
         self.note_start = None
+        self.note_slide = None
 
     def init(self):
         self.esc_seq={
@@ -1025,25 +1026,26 @@ class Terminal(object):
         if not self.note_cells["curIndex"]:
             self.add_cell("")
 
-    def close_notebook(self):
+    def close_notebook(self, clear):
         logging.warning("ABCclose_notebook: ")
         self.note_start = None
         self.leave_cell()
-        for cell_index in self.note_cells["cellIndices"]:
-            # Copy all cellInput and cellOutput to scroll buffer
-            cell = self.note_cells["cells"][cell_index]
-            if cell["cellType"] in MARKUP_TYPES:
-                if cell["cellInput"]:
-                    row_params = ["markdown", {}]
-                    self.screen_buf.scroll_buf_up("", "", row_params=row_params, add_class="gterm-cell-input",
-                                                  markup="\n".join(cell["cellInput"]))
-            else:
-                if cell["cellInput"]:
-                    for line in cell["cellInput"]:
-                        self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
-                    if not cell["cellOutput"]:
-                        self.screen_buf.scroll_buf_up(" ", "")
-                self.screen_buf.append_scroll(cell["cellOutput"])
+        if not clear:
+            for cell_index in self.note_cells["cellIndices"]:
+                # Copy all cellInput and cellOutput to scroll buffer
+                cell = self.note_cells["cells"][cell_index]
+                if cell["cellType"] in MARKUP_TYPES:
+                    if cell["cellInput"]:
+                        row_params = ["markdown", {}]
+                        self.screen_buf.scroll_buf_up("", "", row_params=row_params, add_class="gterm-cell-input",
+                                                      markup="\n".join(cell["cellInput"]))
+                else:
+                    if cell["cellInput"]:
+                        for line in cell["cellInput"]:
+                            self.screen_buf.scroll_buf_up(line, "", add_class="gterm-cell-input")
+                        if not cell["cellOutput"]:
+                            self.screen_buf.scroll_buf_up(" ", "")
+                    self.screen_buf.append_scroll(cell["cellOutput"])
         self.reset_note()
         self.note_screen_buf.set_cur_note(0)
         self.note_screen_buf.clear_buf()
@@ -1191,7 +1193,7 @@ class Terminal(object):
 
 
     def read_md(self, content):
-        cur_cell = None
+        code_cell = None
         code_lines = None
         raw_lines = []
         leaving_block = False
@@ -1206,15 +1208,15 @@ class Terminal(object):
                         leaving_block = False
                         if raw_lines:
                             # Add raw cell
-                            if cur_cell:
+                            if code_cell:
                                 self.update()
-                                cur_cell = None
+                                code_cell = None
                             self.add_cell("markdown", init_text="\n".join(raw_lines))
                             raw_lines = []
                         state = lang
                         if state == "output":
                             # New output block
-                            if not cur_cell:
+                            if not code_cell:
                                 # Ignore orphan output block
                                 pass
                         else:
@@ -1231,13 +1233,13 @@ class Terminal(object):
                             self.update()
                             self.add_cell(state, init_text="\n".join(code_lines))
                             code_lines = None
-                            cur_cell = self.note_cells["cells"][self.note_cells["curIndex"]]
+                            code_cell = self.note_cells["cells"][self.note_cells["curIndex"]]
                         state = None
                 elif state is not None:
                     # Within fenced block
                     if state == "output":
                         # Within output block
-                        if cur_cell:
+                        if code_cell:
                             self.note_screen_buf.scroll_buf_up(line, None)
                         else:
                             # Ignore orphan output block
@@ -1254,7 +1256,7 @@ class Terminal(object):
                     ref_id = match.group(2).strip()
                     blob_id = str(uuid.uuid4())
                     blob_ids[ref_id] = blob_id
-                    if cur_cell:
+                    if code_cell:
                         markup = BLOCKIMGFORMAT % (blob_id, gtermapi.BLOB_PREFIX, blob_id, alt)
                         self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                            row_params=["pagelet", {"blob": blob_id}])
@@ -1275,20 +1277,27 @@ class Terminal(object):
                 elif line or not leaving_block:
                     # Non-blank line or not leaving block; handle raw line
                     leaving_block = False
-                    if cur_cell:
+                    if code_cell:
                         if line:
                             # New raw block (if not blank line)
                             self.update()
-                            cur_cell = None
+                            code_cell = None
                             raw_lines = [line]
+                    elif line.rstrip() == gtermapi.PAGE_BREAK:
+                        # Page break
+                        if raw_lines:
+                            # Split raw block
+                            self.add_cell("markdown", init_text="\n".join(raw_lines))
+                        self.add_cell("markdown", init_text=gtermapi.PAGE_BREAK)
+                        raw_lines = []
                     elif line or raw_lines:
                         raw_lines.append(line)
 
             if raw_lines:
                 # Add raw cell
-                if cur_cell:
+                if code_cell:
                     self.update()
-                    cur_cell = None
+                    code_cell = None
                 self.add_cell("markdown", init_text="\n".join(raw_lines))
                 raw_lines = []
         except Exception, excp:
@@ -1352,6 +1361,10 @@ class Terminal(object):
 
         return 0
 
+    def is_page_break(self, cell_index):
+        cell = self.note_cells["cells"][cell_index]
+        return cell["cellType"] in MARKUP_TYPES and "\n".join(cell["cellInput"]).rstrip() == gtermapi.PAGE_BREAK
+
     def leave_cell(self, delete=False, move_up=False):
         """Leave current cell, deleting it if requested. Return index of new cell, or 0"""
         cur_index = self.note_cells["curIndex"]
@@ -1398,6 +1411,76 @@ class Terminal(object):
         if cur_index != select_cell_index:
             self.screen_callback(self.term_name, "", "note_select_cell", [select_cell_index])
 
+    def select_page(self, move=0, endpoint=False, slide=False):
+        """Select page
+        move = -1(up) or 0 (none) or 1 (down).
+        If endpoint, move to endpoints (first/last)
+        If slide, display page as slide.
+        """
+        if not self.note_cells:
+            return
+        cur_index = self.note_cells["curIndex"]
+        select_cell_index = self.find_page_cell_index(move=move, endpoint=endpoint)
+        if cur_index != select_cell_index:
+            self.switch_cell(select_cell_index)
+        last_cell_index = self.find_page_cell_index(last=True)
+        logging.warning("ABCselect_page: %s %s move=%s, end=%s, slide=%s", select_cell_index, last_cell_index, move, endpoint, slide)
+        if slide:
+            self.note_slide = [select_cell_index, last_cell_index]
+        else:
+            self.note_slide = None
+        self.screen_callback(self.term_name, "", "note_select_page", [select_cell_index, last_cell_index, slide])
+
+    def find_page_cell_index(self, move=0, last=False, endpoint=False):
+        """Locate first cell in page
+        move = -1(up) or 0 (none) or 1 (down).
+        If last, locate last cell in page.
+        If endpoint, move to endpoints (first/last)
+        """
+        cur_index = self.note_cells["curIndex"]
+        ncells = len(self.note_cells["cellIndices"])
+        if not cur_index or ncells < 2:
+            return cur_index
+
+        if move == -1 and endpoint:
+            return self.note_cells["cellIndices"][0]
+
+        if move == 1 and endpoint and last:
+            return self.note_cells["cellIndices"][-1]
+
+        cur_location = self.note_cells["cellIndices"].index(cur_index)
+        select_index = cur_index
+        if move == 1 or last:
+            first_index = None
+            start_page = False
+            for cell_index in self.note_cells["cellIndices"][cur_location+1:]:
+                if self.is_page_break(cell_index):
+                    start_page = True
+                    if not endpoint and last:
+                        return select_index
+                else:
+                    select_index = cell_index
+                    if start_page:
+                        first_index = cell_index
+                        start_page = False
+                        if not endpoint:
+                            break
+            if not last:
+                if first_index is None:
+                    return self.find_page_cell_index(0, last=False, endpoint=endpoint)
+                else:
+                    return first_index
+        else:
+            match_remaining = 1 if move else 0
+            for cell_index in reversed(self.note_cells["cellIndices"][:cur_location]):
+                if self.is_page_break(cell_index):
+                    if not endpoint and not match_remaining:
+                        return select_index
+                    match_remaining = 0
+                else:
+                    select_index = cell_index
+        return select_index
+
     def update_type(self, cell_type):
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
@@ -1423,6 +1506,7 @@ class Terminal(object):
     def delete_cell(self, move_up=False):
         cur_index = self.note_cells["curIndex"]
         select_cell_index = self.switch_cell(delete=True, move_up=move_up)
+        logging.warning("ABCdelete_cell: up=%s, del=%s sw=%s", move_up, cur_index, select_cell_index)
         self.screen_callback(self.term_name, "", "note_delete_cell", [cur_index, select_cell_index])
 
     def merge_above(self):
@@ -1464,7 +1548,7 @@ class Terminal(object):
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return
-        logging.warning("ABCupdate_cell: %s %s %s '%s'", cur_index, cell_index, execute, input_data)
+        logging.warning("ABCupdate_cell: %s %s %s '%s'", cur_index, cell_index, execute, len(input_data))
         assert cell_index == cur_index
         cur_cell = self.note_cells["cells"][cur_index]
         cur_cell["cellInput"] = split_lines(input_data)
@@ -1613,6 +1697,8 @@ class Terminal(object):
                                               self.width, self.height,
                                               0, 0,
                                               [], cell["cellOutput"]])
+                if self.note_slide:
+                    self.screen_callback(self.term_name, "", "note_select_page", self.note_slide+[True])
                 self.screen_callback(self.term_name, "", "note_select_cell", [self.note_cells["curIndex"]])
 
             full_update, update_rows, update_scroll = self.note_screen_buf.update(self.active_rows, self.width, self.height,
@@ -2911,12 +2997,12 @@ class Multiplex(object):
                 return ""
             return term.open_notebook(filepath, prompts, content)
 
-    def close_notebook(self, term_name):
+    def close_notebook(self, term_name, clear):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.close_notebook()
+            return term.close_notebook(clear)
 
     def save_notebook(self, term_name, filepath, input_data, params):
         with self.lock:
@@ -2938,6 +3024,13 @@ class Multiplex(object):
             if not term:
                 return ""
             return term.select_cell(cell_index, move_up)
+
+    def select_page(self, term_name, move_up, endpoint, slide):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.select_page(move_up, endpoint, slide)
 
     def move_cell(self, term_name, move_up):
         with self.lock:

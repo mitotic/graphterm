@@ -34,8 +34,11 @@ Headers["x_gterm_parameters"] = {}
 
 gtermapi.wrap_write(js, headers=Headers, stderr=True)
 
-lines = sys.stdin.readlines()
+try:
+    lines = sys.stdin.readlines()
+    if not sys.stdout.isatty():
+        print "".join(lines)
+except KeyboardInterrupt:
+    pass
 
-if not sys.stdout.isatty():
-    print "".join(lines)
     

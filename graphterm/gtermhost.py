@@ -261,10 +261,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           get_finder <kind> <directory>
           save_data <save_params> <filedata>
           open_notebook <filepath> <prompts> <content>
-          close_notebook
+          close_notebook <clear>
           save_notebook <filepath> <input_data> <params>
           add_cell <new_cell_type> <init_text> <before_cell_index>
           select_cell <cell_index> <move_up>
+          select_page <move_up> <endpoint> <slide>
           move_cell <move_up>
           delete_cell <move_up>
           merge_above
@@ -336,9 +337,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.open_notebook(term_name, cmd[0], cmd[1], cmd[2])
 
                 elif action == "close_notebook":
-                    # close_notebook
+                    # close_notebook <clear>
                     if self.lineterm:
-                        self.lineterm.close_notebook(term_name)
+                        self.lineterm.close_notebook(term_name, cmd[0])
 
                 elif action == "save_notebook":
                     # save_notebook <filepath> <input_data> <params>
@@ -354,6 +355,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     # select_cell <cell_index> <move_up>
                     if self.lineterm:
                         self.lineterm.select_cell(term_name, cmd[0], cmd[1])
+
+                elif action == "select_page":
+                    # select_page <move_up> <endpoint> <slide>
+                    if self.lineterm:
+                        self.lineterm.select_page(term_name, cmd[0], cmd[1], cmd[2])
 
                 elif action == "move_cell":
                     # move_cell <move_up>
