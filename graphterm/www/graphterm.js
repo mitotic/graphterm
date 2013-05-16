@@ -1303,14 +1303,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var note_file = cmd_arg[0];
 		    var note_dir = cmd_arg[1];
 		    var shell_prompt = cmd_arg[2];
-		    console.log("ABCnote_aopen", note_file, note_dir, shell_prompt);
 		    if (!gNotebook) {
 			gNotebook = new GTNotebook(note_file, note_dir, !shell_prompt);
 			$("#terminal").addClass("gterm-notebook");
 		    }
 
 		} else if (cmd_type == "note_close") {
-		    console.log("ABCnote_close");
 		    if (gNotebook)
 			gNotebook.close();
 
@@ -1319,13 +1317,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var cellType = cmd_arg[1];
 		    var beforeCellIndex = cmd_arg[2];
 		    var cellInput = cmd_arg[3];
-		    console.log("ABCnote_add_cell", cellIndex, cellType, beforeCellIndex, cellInput);
 		    if (gNotebook)
 			gNotebook.addCell(cellIndex, cellType, beforeCellIndex, cellInput.join("\n"));
 
 		} else if (cmd_type == "note_select_cell") {
 		    var cellIndex = cmd_arg[0];
-		    console.log("ABCnote_select_cell", cellIndex);
 		    if (gNotebook)
 			gNotebook.selectCell(cellIndex);
 
@@ -1333,41 +1329,35 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    var cellIndex = cmd_arg[0];
 		    var lastIndex = cmd_arg[1];
 		    var slide = cmd_arg[2];
-		    console.log("ABCnote_select_page", cellIndex, lastIndex, slide);
 		    if (gNotebook)
 			gNotebook.selectPage(cellIndex, lastIndex, slide);
 
 		} else if (cmd_type == "note_move_cell") {
 		    var cellIndex = cmd_arg[0];
 		    var moveUp = cmd_arg[1];
-		    console.log("ABCnote_move_cell", cellIndex, moveUp);
 		    if (gNotebook)
 			gNotebook.moveCell(cellIndex, moveUp);
 
 		} else if (cmd_type == "note_update_type") {
 		    var cellIndex = cmd_arg[0];
 		    var cellType = cmd_arg[1];
-		    console.log("ABCnote_update_type", cellIndex, cellType);
 		    if (gNotebook)
 			gNotebook.updateType(cellIndex, cellType);
 
 		} else if (cmd_type == "note_delete_cell") {
 		    var deleteIndex = cmd_arg[0];
 		    var switchIndex = cmd_arg[1];
-		    console.log("ABCnote_delete_cell", deleteIndex, switchIndex);
 		    if (gNotebook)
 			gNotebook.deleteCell(deleteIndex, switchIndex);
 
 		} else if (cmd_type == "note_cell_value") {
 		    var inputData = cmd_arg[0];
 		    var cellIndex = cmd_arg[1];
-		    console.log("ABCnote_cell_value", inputData, cellIndex);
 		    if (gNotebook)
 			gNotebook.cellValue(inputData, cellIndex);
 
 		} else if (cmd_type == "note_erase_output") {
 		    var cellIndex = cmd_arg[0];
-		    console.log("ABCnote_erase_output", cellIndex);
 		    if (gNotebook)
 			gNotebook.eraseOutput(cellIndex);
 
@@ -1375,7 +1365,6 @@ GTWebSocket.prototype.onmessage = function(evt) {
                     var update_opts = cmd_arg[0];
 		    var update_rows = cmd_arg[5];
 		    var update_scroll = cmd_arg[6];
-		    console.log("ABCnote_row_update", update_opts, update_rows, update_scroll);
 		    if (gNotebook)
 			gNotebook.output(update_opts, update_rows, update_scroll);
 
@@ -3582,7 +3571,7 @@ GTNotebook.prototype.close = function() {
 }
 
 GTNotebook.prototype.handleFocus = function(evt) {
-    console.log("GTNotebook.handleFocus: ", this.focusing);
+    //console.log("GTNotebook.handleFocus: ", this.focusing);
     if (this.closed || this.focusing)
 	return;
     var cellId = $(evt.target).attr("id");
@@ -3590,7 +3579,6 @@ GTNotebook.prototype.handleFocus = function(evt) {
 	return;
     try {
 	var cellIndex = parseInt(cellId.split("-")[4]);
-	console.log("GTNotebook.handleFocus: cell", cellIndex);
 	gWebSocket.write([["select_cell", cellIndex, false]]);
     } catch(err) {
 	console.log("GTNotebook.handleFocus: ERROR "+err);
@@ -3620,7 +3608,6 @@ GTNotebook.prototype.getLastIndex = function() {
 
 GTNotebook.prototype.handleOutput = function(evt) {
     var parent = $(evt.target).hasClass("gterm-notecell-markdown") ? $(evt.target) : $(evt.target).parents("div.gterm-notecell-markdown");
-    console.log("GTNotebook.handleOutput: ", evt.target, parent);
     if (this.closed || !parent.length)
 	return;
     var cellId = parent.attr("id");
@@ -3628,7 +3615,6 @@ GTNotebook.prototype.handleOutput = function(evt) {
 	return;
     try {
 	var cellIndex = parseInt(cellId.split("-")[4]);
-	console.log("GTNotebook.handleOutput: cell", cellIndex);
 	if (cellIndex == this.curIndex) {
 	    this.renderCell(true, true);
 	} else {
@@ -3642,7 +3628,6 @@ GTNotebook.prototype.handleOutput = function(evt) {
 }
 
 GTNotebook.prototype.handleKey = function(ch) {
-    console.log("GTNotebook.handleKey: ", ch);
     if (!gWebSocket || !gParams.controller)
 	return;
     if (ch == "a") {
@@ -3681,7 +3666,6 @@ GTNotebook.prototype.handleKey = function(ch) {
 }
 
 GTNotebook.prototype.handleCommand = function(command, newValue) {
-    console.log("GTNotebook.handleCommand: ", command);
     if (!gWebSocket || !gParams.controller)
 	return;
     var cellParams = this.cellParams[this.curIndex];
@@ -3800,11 +3784,9 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
 }
 
 GTNotebook.prototype.renderCell = function(showInput, hideOutput) {
-    console.log("GTNotebook.renderCell: ", showInput, hideOutput);
     var cellParams = this.cellParams[this.curIndex];
     var inputElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     var outputElem = $("#"+this.getCellId(this.curIndex)+"-output");
-    console.log("GTNotebook.renderCell: ", cellParams.cellType, inputElem, outputElem);
     if (cellParams.cellType in MARKUP_TYPES) {
 	outputElem.addClass("gterm-notecell-markdown");
 	var text = inputElem.val();
@@ -3913,7 +3895,6 @@ GTNotebook.prototype.cellValue = function(inputData, cellIndex) {
 }
 
 GTNotebook.prototype.cellFocus = function(focus, selectAll, noScroll) {
-    console.log("GTNotebook.cellFocus: ", focus, noScroll);
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     this.focusing = true;
     if (focus) {
@@ -3978,7 +3959,6 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
     var cellParams = this.cellParams[this.curIndex];
     if (cellParams.cellType in MARKUP_TYPES)
 	return;
-    console.log("ABCGTNotebook.output: ", this.curIndex, this.curIndex, update_opts, update_rows, update_scroll);
     var outElem = $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-output");
     if (update_opts.reset)
 	outElem.html("");
@@ -4071,7 +4051,6 @@ GTNotebook.prototype.write = function(text) {
 }
 
 GTNotebook.prototype.receive = function(fromUser, toUser, cellIndex, msg) {
-    console.log("ABCGTNotebook.receive: ", fromUser, toUser, cellIndex, msg);
     try {
 	if (msg[0] == "cell_input") {
 	    if (cellIndex == this.curIndex)
@@ -4496,7 +4475,7 @@ function GTHideSplash(animate, rotate) {
 }
 
 function GTEndSplashAnimate() {
-    console.log("GTEndSplashAnimate: ");
+    //console.log("GTEndSplashAnimate: ");
     $("#gtermsplash").addClass("noshow");
     //$("#gtermsplash").hide();
     $("#gtermsplashdiv").removeClass("gtermsplashanchor");

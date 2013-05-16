@@ -989,7 +989,6 @@ class Terminal(object):
                         prompts += ["... "]
             except Exception:
                 raise
-        logging.warning("ABCopen_notebook: file=%s, cmd=%s, dir=%s, shell=%s, prompts=%s", filepath, self.command_path, self.note_dir, at_shell, prompts)
 
         self.scroll_screen(self.active_rows)
         self.update()
@@ -1027,7 +1026,6 @@ class Terminal(object):
             self.add_cell("")
 
     def close_notebook(self, clear):
-        logging.warning("ABCclose_notebook: ")
         self.note_start = None
         self.leave_cell()
         if not clear:
@@ -1060,7 +1058,6 @@ class Terminal(object):
         fullpath = fullname if fullname.startswith("/") else self.note_dir+"/"+fullname
         fig_suffix = safe_filename(os.path.splitext(os.path.basename(fullpath))[0])
         format = params.get("format", "")
-        logging.warning("ABCsave_notebook: file=%s, params=%s", fullpath, params)
         if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
             format = "ipynb"
             ipy_format = filepath.endswith(".ipynb")
@@ -1321,7 +1318,6 @@ class Terminal(object):
         self.leave_cell()
         self.note_cells["maxIndex"] += 1
         cell_index = self.note_cells["maxIndex"]
-        logging.warning("ABCadd_cell: %s %s %s %s", new_cell_type, before_cell_number, cell_index, prev_index)
         new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellFile": filename, "cellInput": [], "cellOutput": []}
         new_cell["cellInput"] = split_lines(init_text) if init_text else []
         self.note_cells["cells"][cell_index] = new_cell
@@ -1385,12 +1381,10 @@ class Terminal(object):
             del self.note_cells["cells"][cur_index]
             self.note_cells["cellIndices"].remove(cur_index)
 
-        logging.warning("ABCleave_cell: %s %s", cur_index, select_cell_index)
         return select_cell_index
 
     def switch_cell(self, cell_index=0, delete=False, move_up=False):
         """Switch to cell with cell_index (if zero, move up/down one cell)"""
-        logging.warning("ABCswitch_cell: %s delete=%s up=%s", cell_index, delete, move_up)
         next_cell_index = self.leave_cell(delete=delete, move_up=move_up)
         if not cell_index:
             cell_index = next_cell_index
@@ -1424,7 +1418,6 @@ class Terminal(object):
         if cur_index != select_cell_index:
             self.switch_cell(select_cell_index)
         last_cell_index = self.find_page_cell_index(last=True)
-        logging.warning("ABCselect_page: %s %s move=%s, end=%s, slide=%s", select_cell_index, last_cell_index, move, endpoint, slide)
         if slide:
             self.note_slide = [select_cell_index, last_cell_index]
         else:
@@ -1485,7 +1478,6 @@ class Terminal(object):
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return
-        logging.warning("ABCupdate_type: %s", cell_type)
         cur_cell = self.note_cells["cells"][cur_index]
         cur_cell["cellType"] = cell_type
         cur_cell["cellOutput"] = []
@@ -1494,7 +1486,6 @@ class Terminal(object):
     def move_cell(self, move_up=False):
         cur_index = self.note_cells["curIndex"]
         next_cell_index = self.next_index(move_up=move_up)
-        logging.warning("ABCmove_cell: up=%s, next=%s", move_up, next_cell_index)
         if not next_cell_index:
             return
         cur_location = self.note_cells["cellIndices"].index(cur_index)
@@ -1506,14 +1497,12 @@ class Terminal(object):
     def delete_cell(self, move_up=False):
         cur_index = self.note_cells["curIndex"]
         select_cell_index = self.switch_cell(delete=True, move_up=move_up)
-        logging.warning("ABCdelete_cell: up=%s, del=%s sw=%s", move_up, cur_index, select_cell_index)
         self.screen_callback(self.term_name, "", "note_delete_cell", [cur_index, select_cell_index])
 
     def merge_above(self):
         next_cell_index = self.next_index(move_up=True)
         if not next_cell_index:
             return
-        logging.warning("ABCmerge_above:")
         cur_index = self.note_cells["curIndex"]
         cur_cell = self.note_cells["cells"][cur_index]
         next_cell = self.note_cells["cells"][next_cell_index]
@@ -1548,7 +1537,6 @@ class Terminal(object):
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return
-        logging.warning("ABCupdate_cell: %s %s %s '%s'", cur_index, cell_index, execute, len(input_data))
         assert cell_index == cur_index
         cur_cell = self.note_cells["cells"][cur_index]
         cur_cell["cellInput"] = split_lines(input_data)
@@ -1685,7 +1673,6 @@ class Terminal(object):
                 self.screen_callback(self.term_name, response_id, "note_open", [self.current_dir, self.note_shell])
                 for cell_index in self.note_cells["cellIndices"]:
                     cell = self.note_cells["cells"][cell_index]
-                    logging.warning("ABCnote_add_cell: %s %s %s inp=%s out=%s", cell["cellIndex"], cell["cellType"], cell["cellFile"], cell["cellInput"], cell["cellOutput"])
                     self.screen_callback(self.term_name, response_id, "note_add_cell",
                                          [cell["cellIndex"], cell["cellType"], 0,
                                           cell["cellInput"], cell["cellOutput"]])
@@ -1710,7 +1697,6 @@ class Terminal(object):
 
             update_scroll = strip_prompt_lines(update_scroll, self.note_prompts)
 
-            logging.warning("ABCnote_row_update: %s %s %s", full_update, update_rows, update_scroll)
             self.screen_callback(self.term_name, response_id, "note_row_update",
                                  [dict(alt_mode=False, reset=full_update,                                                                                    active_rows=self.active_rows, pre_offset=0,
                                        note_prompt=self.note_found_prompt),
@@ -2399,7 +2385,6 @@ class Terminal(object):
         self.screen_callback(self.term_name, response_id, "graphterm_output", self.gterm_output_buf)
 
     def save_data(self, save_params, filedata):
-        logging.warning("ABCsave_data: params=%s", save_params)
         params = save_params.copy()
         status = ""
         location = params.get("x_gterm_location", "")
