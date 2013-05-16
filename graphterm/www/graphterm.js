@@ -2302,9 +2302,8 @@ function gtermMenuClickHandler(event) {
 	    HideFinder();
 	break;
     }
-    if (text.length && gWebSocket) {
-	gWebSocket.term_input(text);
-    }
+    if (text.length)
+	GTTerminalInput(text, false);
     return false;
 }
 
@@ -2473,9 +2472,8 @@ function gtermBottomSelectHandler(event) {
 	    text = String.fromCharCode(26);
 	break;
     }
-    if (text.length && gWebSocket) {
-	gWebSocket.term_input(text);
-    }
+    if (text.length)
+	GTTerminalInput(text, false);
     return false;
 }
 
@@ -2960,18 +2958,25 @@ function AjaxKeypress(evt) {
 	return false;
     }
 	    
+    if (GTTerminalInput(k, true))
+	return true;
+    evt.cancelBubble = true;
+    return GTPreventHandler(evt);
+}
+
+function GTTerminalInput(chr, type_ahead) {
     if (gNotebook && !gNotebook.passthru_stdin && gNotebook.prefix_key) {
 	gNotebook.prefix_key = false;
-	gNotebook.handleKey(k);
+	gNotebook.handleKey(chr);
 	return false;
     }
 
-    if (!gMacPlatform && k == String.fromCharCode(22)) {
+    if (!gMacPlatform && chr == String.fromCharCode(22)) {
 	// Ctrl-V passthru
 	return true
     }
 
-    if (k == String.fromCharCode(3)) {
+    if (chr == String.fromCharCode(3)) {
 	// Ctrl-C handling
 	if (gPopupType) {
 	    // Exit from popup
@@ -2998,28 +3003,27 @@ function AjaxKeypress(evt) {
 	return true;
     }
 
-    if (k.length) {
-	if (evt.ctrlKey && k.charCodeAt(0) == gPasteSpecialKeycode) {
+    if (chr.length) {
+	if (chr.charCodeAt(0) == gPasteSpecialKeycode) {
 	    // Paste Special shortcut
 	    GTPasteSpecialBegin();
-            k = "";
-	} else if (k.charCodeAt(k.length-1) == 13) {
+            chr = "";
+	} else if (chr.charCodeAt(chr.length-1) == 13) {
 	    // Enter key
 	    if (gShowingFinder)
 		HideFinder();
 	    if (gCommandMatchPrev) {
 		// Simulate right arrow for command completion
 		if (!CompleteCommand(true))
-		    k = "";
+		    chr = "";
 	    } else if (gAndroid) {
-		k = GetCursorText() + k;
+		chr = GetCursorText() + chr;
 	    }
 	}
-	if (k)
-	    gWebSocket.term_input(k, true);
+	if (chr)
+	    gWebSocket.term_input(chr, type_ahead);
     }
-    evt.cancelBubble = true;
-    return GTPreventHandler(evt);
+    return false;
 }
 
 function GTShortcutHandler(ch) {
