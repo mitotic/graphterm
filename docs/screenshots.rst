@@ -81,10 +81,10 @@ Inline HTML document display
    :width: 90%
    :figwidth: 85%
 
-   Showing the screen for the command ``rs2html README.rst | giframe`` to
+   Showing the screen for the command ``rs2html README.rst | gframe`` to
    illustrate inline HTML document display. The ``rs2html README.rst``
    command converts a *ReStructured Text* doument to HTML, writing the output
-   to ``stdout``. The ``giframe`` command wraps the HTML in an *iframe*
+   to ``stdout``. The ``gframe`` command wraps the HTML in an *iframe*
    and displays it inline.
 
    ..
@@ -215,7 +215,7 @@ Web slideshows using `Landslide <https://github.com/adamzap/landslide>`_
    :width: 90%
    :figwidth: 85%
 
-   Showing the output of ``glandslide -o graphterm-talk1.md | giframe``
+   Showing the output of ``glandslide -o graphterm-talk1.md | gframe``
    command, which displays a HTML5-based slideshow using
    `Markdown <http://daringfireball.net/projects/markdown/>`_.
    The displayed slide has an ``iframe`` with another

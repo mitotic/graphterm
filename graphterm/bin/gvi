@@ -1,54 +1,31 @@
-#!/bin/bash
-# gvi: a GraphTerm shell wrapper for editing files
-# Usage: gvi <filename>
+#!/usr/bin/env python
+#
 
-options=""
-file=""
-editor=""
-for arg in $*; do
-   if [ "$arg" == "--ace" ]; then
-      editor="ace"
-   elif [ "$arg" == "--ckeditor" ]; then
-      editor="ckeditor"
-   elif [[ "$arg" == -* ]]; then
-      options="$options $arg"
-   else
-      file="$arg"
-   fi
-done
+"""
+gvi: graphterm-aware visual editor
+"""
 
-if [ "$file" == "" ]; then
-    echo "Usage: gvi [--ace|--ckeditor] <filename>"
-    exit 1
-fi
+import os
+import sys
 
-if [[ "$file" == /* ]]; then
-    # Absolute path
-    file="$file"
-else
-    # Relative path
-    file="$PWD/$file"
-fi
+from optparse import OptionParser
 
-tailname=$(basename "$file")
-filename="${tailname%.*}"
-extension="${tailname##*.}"
+import gtermapi
 
-echocmd1="echo -n"
-##echocmd1="/bin/echo -e"
-echocmd2="echo"
+Work_dir = os.getenv("PWD", "") or os.getcwd()
 
-headers='{"content_type": "text/html", "x_gterm_response": "edit_file", "x_gterm_parameters": {"filepath": "'"${file}"'", "editor": "'"${editor}"'", "modify": "true", "command": "", "current_directory": "'"${PWD}"'"}}'
+usage = "usage: %prog [-e ace/ckeditor] filename"
+parser = OptionParser(usage=usage)
+parser.add_option("-e", "--editor", dest="editor", default="ace",
+                  help="Editor: ace/ckeditor")
 
-esc=`printf "\033"`
-nl=`printf "\012"`
-cr=`printf "\015"`
-gterm_code="1155"
-gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
-$echocmd1 "${esc}[?${gterm_code};${gterm_cookie}h"
+(options, args) = parser.parse_args()
 
-$echocmd1 "$headers"
-$echocmd2 ""
-$echocmd2 ""
-$echocmd1 "${esc}[?${gterm_code}l"
-echo
+if len(args) != 1:
+    print >> sys.stderr, parser.get_usage()
+    sys.exit(1)
+
+if gtermapi.Export_host:
+    assert sys.stdin.isatty()
+
+gtermapi.edit_file(args[0], dir=Work_dir, create=True, editor=options.editor)

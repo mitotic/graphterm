@@ -126,7 +126,7 @@ page for more advanced usage.
 
 You can also use the following command::
 
-  glandslide -o graphterm-talk1.md | giframe -f
+  glandslide -o graphterm-talk1.md | gframe -f
 
 to view a slideshow about GraphTerm within GraphTerm (type ``h`` for
 help and ``q`` to quit)..

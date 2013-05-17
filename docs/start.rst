@@ -62,7 +62,7 @@ You can use the command ``which gls`` to determine the directory
 containing graphterm-aware commands, to browse
 for other commands, which include:
 
-   ``giframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) in
+   ``gframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) in
    inline *iframe*
 
    ``gimage [-f] [filenames]``     To view images inline, or as a
@@ -136,16 +136,17 @@ Themes, selected using the top menu, are a work in progress, especially the 3-D 
 Copy/paste
 ================================================================
 
-For certain browsers (e.g., desktop Chrome/Safari),
+For certain browsers (e.g., desktop Chrome/Firefox),
 the usual *Command-V* or *Control-V* key sequence should directly
 paste text from the clipboard. If that doesn't work, there are a couple
 of other ways to paste text.
-First, you can use the keyboard shortcut *Control-T* to open a
+First, you can use the keyboard shortcut *Control-O* to open a
 popup window, paste the text into the popup window using the
 browser's paste menu command or a keyboard shortcut,
-such as *Command/Control-V*, and then type *Control-T* again to
+such as *Command/Control-V*, and then type *Control-O* again to
 insert the text at the GraphTerm cursor location.
-(The popup paste window can also be accessed from the *Actions* menu.)
+(The popup paste window can also be accessed using the *terminal/paste
+special* menu item.)
 Alternatively, for some browsers, and on the iPad, you can *click on the cursor*
 before beginning the paste operation and then paste the text directly.
 This second technique may not always work well for text copied from non-plain
@@ -307,7 +308,7 @@ Text (.rst) files. A few sample ``.md`` files are provided in the
 ``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
 GraphTerm, type::
 
-  glandslide -o graphterm-talk1.md | giframe -f
+  glandslide -o graphterm-talk1.md | gframe -f
 
 Type ``h`` for help and ``q`` to quit the slideshow. (The unmodified
 Landslide program can also be used, with the ``-i`` option, but remote sharing will not work.)
@@ -330,10 +331,10 @@ Command-line version of pythontutor.com
 
 The command ``gtutor`` implements a command-line version of the
 Online Python Tutorial from `pythontutor.com <http://pythontutor.com>`_.
-It produces HTML output that can be piped to ``giframe`` for inline display.
+It produces HTML output that can be piped to ``gframe`` for inline display.
 To trace the execution of a sample program ``example.py``, use it as follows::
 
-  gtutor example.py | giframe -f
+  gtutor example.py | gframe -f
 
 More sample programs may be found in the directory ``$GRAPHTERM_DIR/bin/pytutor/example-code``.
 Of course, you can use ``gtutor`` to trace any other (small) python program as well.
@@ -351,7 +352,7 @@ presentation by including an ``iframe`` HTML element in the
 presentation file, with the ``src`` attribute set to a graphterm
 URL, such as ``http://localhost:8900/local/tutorial``. This will open
 up a graphterm window where you can either run ``gtutor`` interactively or
-use ``giframe -f`` to display an HTML file created previously using ``gtutor``.
+use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
 
 .. index:: sockets, widgets
 
@@ -369,7 +370,7 @@ address is stored in the environment variable ``GRAPHTERM_SOCKET``.
 For example, the following command will run a background job
 to open a new terminal in an overlay *iframe*::
 
-  giframe -f --opacity=0.2 http://localhost:8900/local/new > $GRAPHTERM_SOCKET &
+  gframe -f --opacity=0.2 http://localhost:8900/local/new > $GRAPHTERM_SOCKET &
 
 You can use the overlay terminal just like a regular terminal, including
 having recursive overlays within the overlay!
