@@ -3,6 +3,8 @@
 
 """
 greveal: reveal.js in graphterm
+
+Type "bbb" to exit
 """
 
 import json
@@ -13,8 +15,8 @@ import sys
 import gtermapi
 
 usage = "usage: %prog [markdown_file] ..."
-form_parser = gtermapi.FormParser(usage=usage, title="Display markdown presentation", command="greveal")
-form_parser.add_argument(label="", help="Markdown filename")
+form_parser = gtermapi.FormParser(usage=usage, title="Display markdown presentation", command="greveal %(args) | gframe -f -n")
+form_parser.add_argument(label="Markdown file: ", help="File containing presentation in markdown format")
 form_parser.add_option("controls", True, help="Display navigation controls")
 form_parser.add_option("progress", True, help="Show progress bar")
 form_parser.add_option("theme", ("default", "beige", "sky", "night", "serif", "simple"), help="Presentation theme")

@@ -87,6 +87,7 @@ def koch_snowflake(name):
     imgx = 512
     imgy = 512
 
+    overwrite = False
     for stop_val in (256., 128., 64., 32., 16., 8.):
         # create a new drawing
         dwg = svgwrite.Drawing(name, (imgx, imgy), profile='tiny', debug=True)
@@ -126,7 +127,8 @@ def koch_snowflake(name):
         dwg.add(use_snowflake)
 
         # and save the drawing
-        write_svg(dwg, overwrite=True)
+        write_svg(dwg, overwrite=overwrite)
+        overwrite = True
         time.sleep(0.5)
 
 if __name__ == '__main__':

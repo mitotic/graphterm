@@ -9,11 +9,11 @@ Original version of OPT: pgbovine-OnlinePythonTutor-v-Aug8-for-DeNero-389-gd1cb3
 Place this script in the directory containing pg_logger.py and pg_encoder.py (or run it from that directory)
 
 Typical interactive usage:
-   gtutor.py [options] example.py | giframe -f
+   gtutor.py [options] example.py | gframe -f
 
-For delayed "tracing", save the command output to a file and load it later using giframe:
+For delayed "tracing", save the command output to a file and load it later using gframe:
    gtutor.py example.py > example_trace.html
-   giframe -f example_trace.html
+   gframe -f example_trace.html
 """
 
 import cgi

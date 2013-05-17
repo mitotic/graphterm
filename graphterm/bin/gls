@@ -185,5 +185,5 @@ Table_list.append('</table>')
 
 html = "\n".join(Table_list) + "\n"
 
-gtermapi.write_scroll_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=Work_dir)
+gtermapi.write_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=Work_dir)
 

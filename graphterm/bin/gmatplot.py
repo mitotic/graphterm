@@ -123,8 +123,8 @@ def display(fig, overwrite=False, format="png", title=""):
     finally:
         pyplot_dict["drawing"] = False
     blob_url = outbuf.close()
-    ##gtermapi.display_blockimg(blob_url, overwrite=overwrite, alt=title)
-    gtermapi.display_blockhtml_img(blob_url, overwrite=overwrite, alt=title, toggle=True)
+    ##gtermapi.display_blockimg_old(blob_url, overwrite=overwrite, alt=title)
+    gtermapi.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
 
 def resize(dimensions=""):
     """Resize matplotlib default window for terminal

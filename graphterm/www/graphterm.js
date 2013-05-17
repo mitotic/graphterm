@@ -30,7 +30,7 @@ var gAltPasteImpl = !gMobileBrowser;  // Alternative paste implemention (using h
 var gPasteDebug = false;
 var gPasteActive = false;
 
-var gPasteSpecialKeycode = 19;  // Control-S shortcut for Paste Special
+var gPasteSpecialKeycode = 15;  // Control-O shortcut for Paste Special
 
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
@@ -323,6 +323,7 @@ function AuthPage(need_user, need_code, msg) {
     $(document).unbind("keypress");
 
     $("#authenticate").rebind("submit", Authenticate);
+    $("#authuser").focus();
 }
 
 function Authenticate(evt) {
@@ -633,7 +634,7 @@ function GTClearTerminal() {
 }
 
 function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
-    //console.log("GTAppendPagelet:", row_params);
+    console.log("GTAppendPagelet:", row_params);
     var row_opts = row_params[JOPTS];
     var overwrite = !!row_opts.overwrite;
     var pagelet_id = row_opts.pagelet_id || "";
@@ -716,7 +717,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     scrollElem.find('td .gterm-link').bindclick(gtermPageletClickHandler);
     scrollElem.find('td img').bind("dragstart", function(evt) {evt.preventDefault();});
     scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
-    scrollElem.find('.gterm-iframeclose').bindclick(CloseIFrame);
+    scrollElem.find('.gterm-iframeheader').bindclick(CloseIFrame);
     GTDropBindings(scrollElem.find(' .droppable'));
     return scrollElem;
 }
@@ -776,8 +777,11 @@ function GTWebSocket(auth_user, auth_code) {
 
     var protocol = (window.location.protocol.indexOf("https") == 0) ? "wss" : "ws";
     this.ws_url = protocol+":/"+"/"+window.location.host+"/_websocket"+window.location.pathname; // Split the double slash to avoid confusing the JS minifier
-    if (this.auth_user || this.auth_code)
-	this.ws_url += "?" + $.param({user: auth_user, code: auth_code});
+    var query_params = (this.auth_user || this.auth_code) ? {user: auth_user, code: auth_code} : {};
+    if (location.search.indexOf("nomenubar=1") >= 0)
+	query_params["nomenubar"] = 1;
+    if (!$.isEmptyObject(query_params))
+	this.ws_url += "?" + $.param(query_params);
     console.log("GTWebSocket url", this.ws_url);
     this.ws = new WebSocket(this.ws_url);
     this.ws.onopen = bind_method(this, this.onopen);
@@ -838,7 +842,7 @@ GTWebSocket.prototype.onopen = function(evt) {
 function GTAutosizeIFrame(elem) {
     // After a delay, adjust size of all iframe child elements to match actual size
     setTimeout( function() { $(elem).find("iframe").each( function() {
-	$(this).height($(this).contents().find('body').height() + 25);} ) }, 500 );
+	$(this).height($(this).contents().find('body').height() + 25);} ) }, 1000 );
 }
 
 function GTRepeatCommand() {
@@ -895,7 +899,6 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	// Validate
 	this.opened = true;
     }
-
     try {
 	var payload_obj = JSON.parse(payload);
 	for (var j=0; j<payload_obj.length; j++) {
@@ -1157,7 +1160,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 					  window.open(response_params.url, (response_params.target || "_blank"), specList.join(","));
 
 		    } else if (response_type == "menu_op") {
-			GTMenuTrigger(response_params.target, response_params.value, true);
+			GTMenuTrigger(response_params.target, response_params.value);
 
 		    } else if (response_type == "preload_images") {
 			GTPreloadImages(response_params.urls);
@@ -1292,7 +1295,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
 			    $(pageletSelector+' .gterm-togglelink').bindclick(gtermLinkClickHandler);
-			    $(pageletSelector+' .gterm-iframeclose').bindclick(CloseIFrame);
+			    $(pageletSelector+' .gterm-iframeheader').bindclick(CloseIFrame);
 			    GTDropBindings($(pageletSelector+' .droppable'));
 			} catch(err) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
@@ -1903,6 +1906,9 @@ function GTMenuStateUpdate(stateValues, prefix) {
 	else
 	    GTMenuUpdateToggle(prefix+key, val);
     }
+    // Float menubar for embedded terminal
+    if (location.search.indexOf("nomenubar=1") >= 0 || window.parent)
+	GTMenuTrigger("appearance_menubar", false);
 }
 
 function GTMenuRefresh() {
@@ -1973,14 +1979,15 @@ function GTMenuHandler(evt) {
     return false;
 }
 
-function GTMenuTrigger(stateKey, setValue, force) {
-    GTReceivedUserInput("menutrigger");
+function GTMenuTrigger(stateKey, setValue, inputReceived) {
+    if (inputReceived)
+	GTReceivedUserInput("menutrigger");
     // Check for exact match
     var elem = $('#gterm-menu a[gterm-state="'+stateKey+'"]');
     if (!elem.length)
 	elem = $('#gterm-menu a[gterm-state$="'+stateKey+'"]');
     if (elem.length == 1)
-	return GTMenuEvent(elem, setValue, force);
+	return GTMenuEvent(elem, setValue, true);
 
     if (elem.length > 1) {
 	alert("Ambiguous menu selection: "+stateKey);
@@ -2193,6 +2200,9 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	    gWebSocket.write([["clear_term"]]);
 	//text = "\x01\x0B";  // Ctrl-A Ctrl-K
 	break;
+    case "resize":
+	handle_resize();
+	break;
     case "home":
 	if (gWebSocket)
 	    gWebSocket.term_input("cd; gls\n");
@@ -2320,7 +2330,7 @@ function GTPasteSpecialEnd(buttonElem) {
     popupClose();
     var keyEvent = gFirefoxBrowser ? "keypress" : "keydown";
     $("#gterm-pastearea-content").unbind(keyEvent, pasteKeyHandler);
-    ScrollTop(null);
+    setTimeout(ScrollTop, 200);
 }
 
 function gtermFeedbackStatus(status) {
@@ -2540,7 +2550,6 @@ function GTExpandCurEntry(expand) {
 	$(".open-expanded").removeClass("open-expanded");
     }
 }
-
 
 function GTShortcutPrefixKey(evt) {
     // Control-J prefix: menu shortcuts
@@ -2981,7 +2990,7 @@ function GTTerminalInput(chr, type_ahead) {
 	    return false;
 	} else if (gNotebook && !gNotebook.passthru_stdin) {
 	    // Close notebook
-	    if (window.confirm("Exit notebook mode?"))
+	    if (window.confirm("Exit notebook mode and display output?"))
 		GTCloseNotebook();
 	    return false;
 	}
@@ -3312,7 +3321,8 @@ function GTFormSubmit(evt) {
     } else {
 	inputElems = formElem.find("input, select");
     }
-    var argStr = "";
+    var optStr = "";
+    var argStr = ""
     var formValues = {};
     for (var j=0; j<inputElems.length; j++) {
 	var inputElem = $(inputElems[j]);
@@ -3339,9 +3349,9 @@ function GTFormSubmit(evt) {
 		} else {
 		    // Command options
 		    if (inputElem.attr("type") == "checkbox")
-			formCommand += ' --' + inputName;
+			optStr += ' --' + inputName;
 		    else
-			formCommand += ' --' + inputName + '=' + inputValue;
+			optStr += ' --' + inputName + '=' + inputValue;
 		}
 	    }
 	} else {
@@ -3350,12 +3360,17 @@ function GTFormSubmit(evt) {
 	    formValues[inputName] = inputValue;
 	}
     }
-    if (formCommand)
-	formCommand += argStr;
-    else
-	formCommand = JSON.stringify(formValues);
-    console.log("GTFormSubmit", this, formElem, formCommand, evt);
-    GTEndForm(formCommand);
+    var sendLine;
+    if (formCommand) {
+	if (formCommand.indexOf("%(args)") >= 0)
+	    sendLine = formCommand.replace(/%\(args\)/g, optStr+argStr);
+	else
+	    sendLine = formCommand+optStr+argStr;
+    } else {
+	sendLine = JSON.stringify(formValues);
+    }
+    console.log("GTFormSubmit", this, formElem, sendLine, evt);
+    GTEndForm(sendLine);
 }
 
 // From http://www.sitepoint.com/html5-full-screen-api
@@ -3380,9 +3395,10 @@ function RunPrefixMethod(obj, method) {
 
 var gFullpageDisplay = null;
 function StartFullpage(display, split) {
+    console.log("StartFullpage: ", display, split);
     gFullpageDisplay = display;
+    $("#session-bufscreen").addClass(gFullpageDisplay)
     if (display == "fullpage") {
-	$("#session-bufscreen").addClass("fullpage");
 	if (split) {
 	    $("#session-bufellipsis").show();
 	    if (gAlwaysSplitScreen && !gSplitScreen)
@@ -3669,11 +3685,11 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
     if (!gWebSocket || !gParams.controller)
 	return;
     var cellParams = this.cellParams[this.curIndex];
-    if (command == "quit_log") {
-	if (window.confirm("Exit notebook mode?"))
+    if (command == "quit_preserve") {
+	if (window.confirm("Exit notebook mode and display output?"))
 	    GTCloseNotebook();
-    } else if (command == "quit_clear") {
-	if (window.confirm("Exit notebook mode and clear output?"))
+    } else if (command == "quit_discard") {
+	if (window.confirm("Exit notebook mode and discard all data?"))
 	    GTCloseNotebook(true);
     } else if (command == "save") {
 	var filepath = $.trim(window.prompt("Save as: ", this.note_file));
@@ -4065,12 +4081,15 @@ GTNotebook.prototype.receive = function(fromUser, toUser, cellIndex, msg) {
 function CloseIFrame(evt) {
     if (gFullpageDisplay)
 	ExitFullpage();
-    gtermInterruptHandler();
+    var containerId = $(evt.target).attr("gterm-iframe-container");
+    if (containerId)
+	$("#"+containerId).remove();
+    else
+	gtermInterruptHandler();
 }
 
 function EndFullpage(frameId) {
     //console.log("EndFullpage");
-    gFullpageDisplay = null;
     try {
 	if (RunPrefixMethod(document, "FullScreen") || RunPrefixMethod(document, "IsFullScreen")) {
 	    RunPrefixMethod(document, "CancelFullScreen");
@@ -4078,10 +4097,11 @@ function EndFullpage(frameId) {
     } catch(err) {}
 
     $("#session-bufellipsis").hide();
-    $("#session-bufscreen").removeClass("fullpage");
+    if (gFullpageDisplay)
+	$("#session-bufscreen").removeClass(gFullpageDisplay);
+    gFullpageDisplay = null;
     if (gSplitScreen)
 	MergeScreen("fullpage");
-
     $("#session-bufscreen .pagelet.gterm-fullwindow").removeClass("gterm-fullwindow");
 }
 

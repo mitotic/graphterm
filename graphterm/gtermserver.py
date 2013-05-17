@@ -78,7 +78,7 @@ Cache_files = False                     # Controls caching of files (blobs are a
 
 MAX_COOKIE_STATES = 100
 MAX_WEBCASTS = 500
-MAX_RECURSION = 5
+MAX_RECURSION = 10
 
 MAX_CACHE_TIME = 86400
 
@@ -402,9 +402,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 term_name = comps[1].lower()
                 if term_name == "new":
                     term_name = conn.remote_terminal_update(parent=option)
-                    self.write_json([["redirect", "/"+host+"/"+term_name]])
+                    redir_url = "/"+host+"/"+term_name
+                    if self.request_query:
+                        redir_url += "/?" + self.request_query
+                    self.write_json([["redirect", redir_url]])
                     self.close()
-
+                    return
+                
                 if not gtermhost.SESSION_RE.match(term_name):
                     self.write_json([["abort", "Invalid characters in terminal name"]])
                     self.close()
@@ -440,7 +444,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if option == "kill":
                 if not wildhost and (super_user or terminal_params["state_id"] == self.authorized["state_id"]):
-                    kill_remote(path)
+                    kill_remote(path, user)
                 self.close()
                 return
 
@@ -490,7 +494,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             display_splash = controller and self._counter[0] <= 2
             normalized_host, host_secret = "", ""
             if not self.wildcard:
-                TerminalConnection.send_to_connection(host, "request", term_name, [["reconnect", self.websocket_id]])
+                TerminalConnection.send_to_connection(host, "request", term_name, user, [["reconnect", self.websocket_id]])
                 normalized_host = gtermhost.get_normalized_host(host)
                 if self.authorized["auth_type"] in ("null_auth", "code_auth"):
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
@@ -714,7 +718,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.last_output = None
             for matchpath in matchpaths:
                 matchhost, matchterm = matchpath.split("/")
-                TerminalConnection.send_to_connection(matchhost, "request", matchterm, req_list)
+                TerminalConnection.send_to_connection(matchhost, "request", matchterm, from_user, req_list)
 
         except Exception, excp:
             logging.warning("GTSocket.on_message: ERROR %s", excp)
@@ -780,14 +784,14 @@ def xterm(command="", name=None, host="localhost", port=gtermhost.DEFAULT_HTTP_P
     """Create new terminal"""
     pass
 
-def kill_remote(path):
+def kill_remote(path, user):
     if path == "*":
         TerminalClient.shutdown_all()
         return
     host, term_name = path.split("/")
     if term_name == "*": term_name = ""
     try:
-        TerminalConnection.send_to_connection(host, "request", term_name, [["kill_term"]])
+        TerminalConnection.send_to_connection(host, "request", term_name, user, [["kill_term"]])
     except Exception, excp:
         pass
 
@@ -855,7 +859,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 except Exception, excp:
                     errmsg = "gtermserver: Failed version compatibility check: %s" % excp
                     logging.error(errmsg)
-                    self.send_request("request", "", [["shutdown", errmsg]])
+                    self.send_request("request", "", "", [["shutdown", errmsg]])
                     raise Exception(errmsg)
                 
                 self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
@@ -1013,7 +1017,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
         self.timeout_callback = IO_loop.add_timeout(time.time()+REQUEST_TIMEOUT, functools.partial(self.complete_request, self.async_id))
 
-        TerminalConnection.send_to_connection(host, "request", "", [["file_request", self.async_id, self.request.method, self.file_path, if_mod_since]])
+        TerminalConnection.send_to_connection(host, "request", "", "", [["file_request", self.async_id, self.request.method, self.file_path, if_mod_since]])
 
     def finish_write(self, headers, content, cache=False):
         for name, value in headers:

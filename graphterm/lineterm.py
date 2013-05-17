@@ -210,6 +210,11 @@ def uclean(ustr, trim=False, encoded=False):
 
     return ustr.encode(ENCODING, "replace") if encoded else ustr
 
+def base64encode(s):
+    if not isinstance(s, str):
+        s = s.encode("utf-8", "replace")
+    return base64.b64encode(s)
+
 def shlex_split_str(line):
     # Avoid NULs introduced by shlex.split when splitting unicode
     return shlex.split(line if isinstance(line, str) else line.encode("utf-8", "replace"))
@@ -330,14 +335,31 @@ def getcwd(pid):
         logging.warning("getcwd: ERROR %s", excp)
         return ""
 
+
+ANGLE_BRACKET_RE = re.compile(r"^\s*<")
 def parse_headers(text):
     """Parse gterm output and return (headers, content)"""
-    if text.startswith("<"):
-        # Raw HTML
+    if ANGLE_BRACKET_RE.match(text):
+        # Raw HTML (starts with <...)
         headers = {"content_type": "text/html",
                    "x_gterm_response": "",
                    "x_gterm_parameters": {}}
-        return (headers, text)
+        offset, directive, opt_dict = gtermapi.parse_gterm_directive(text)
+        if offset:
+            # gterm comment directive
+            content = text[offset:]
+            headers["x_gterm_parameters"] = opt_dict
+            if directive == "data":
+                headers["x_gterm_response"] = "create_blob"
+                headers["content_length"] = len(content)
+            else:
+                headers["x_gterm_response"] = directive
+                if "content_length" in headers:
+                    headers["content_length"] = len(content)
+        else:
+            # Plain HTML
+            content = text
+        return (headers, content)
 
     # "MIME headers"
     headers = {}
@@ -1025,10 +1047,10 @@ class Terminal(object):
         if not self.note_cells["curIndex"]:
             self.add_cell("")
 
-    def close_notebook(self, clear):
+    def close_notebook(self, discard=False):
         self.note_start = None
         self.leave_cell()
-        if not clear:
+        if not discard:
             for cell_index in self.note_cells["cellIndices"]:
                 # Copy all cellInput and cellOutput to scroll buffer
                 cell = self.note_cells["cells"][cell_index]
@@ -2270,7 +2292,7 @@ class Terminal(object):
                             if response_type == "create_blob":
                                 # Encode create blob content to Base64
                                 headers["x_gterm_encoding"] = "base64"
-                                content = base64.b64encode(content)
+                                content = base64encode(content)
 
                         # TODO: use content to determine MIME type
                         basename, extension = os.path.splitext(filepath)
@@ -2289,35 +2311,18 @@ class Terminal(object):
                         headers["x_gterm_parameters"] = {}
                         headers["content_type"] = "text/plain"
 
-                if not response_type:
-                    # Raw html display
-                    if "content_type" not in headers:
-                        headers["content_type"] = "text/html"
+                if not response_type or response_type == "pagelet":
+                    # Raw html display; append to scroll buffer
+                    row_params = ["pagelet", headers["x_gterm_parameters"] or {}]
+                    screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                     offset, directive, opt_dict = gtermapi.parse_gterm_directive(content)
-                    if offset:
-                        # gterm comment directive
-                        content = content[offset:]
-                        if "content_length" in headers:
-                            headers["content_length"] = len(content)
-                        if directive == "data":
-                            blob_id = opt_dict.get("blob")
-                            if blob_id:
-                                # Note: blob content should be Base64 encoded
-                                self.create_blob(blob_id, content)
-                            else:
-                                logging.warning("No blob_id for data")
-                        else:
-                            row_params = [directive, opt_dict]
-                            screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
-                    else:
-                        row_params = ["pagelet", {}]
-                        screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                 elif response_type == "create_blob":
+                    # Note: blob content should be Base64 encoded
                     del headers["x_gterm_response"]
                     del headers["x_gterm_parameters"]
                     blob_id = response_params.get("blob")
                     if not blob_id:
-                        logging.warning("No blob_id for create_blob")
+                        logging.warning("No blob_id for blob data")
                     elif "content_length" not in headers:
                         logging.warning("No content_length specified for create_blob")
                     else:
@@ -2379,7 +2384,7 @@ class Terminal(object):
 
     def graphterm_output(self, params={}, content="", response_id="", from_buffer=False):
         if not from_buffer:
-            self.gterm_output_buf = [params, base64.b64encode(content) if content else ""]
+            self.gterm_output_buf = [params, base64encode(content) if content else ""]
         elif not self.gterm_output_buf:
             return
         self.screen_callback(self.term_name, response_id, "graphterm_output", self.gterm_output_buf)
@@ -2410,7 +2415,7 @@ class Terminal(object):
                 params["x_gterm_status"] = status
                 self.pty_write(json.dumps(params)+"\n\n")
         else:
-            send_data = filedata if encoded else base64.b64encode(filedata)
+            send_data = filedata if encoded else base64encode(filedata)
             params["x_gterm_length"] = len(send_data)
             if send_data:
                 params["x_gterm_digest"] = hashlib.md5(send_data).hexdigest()
@@ -2982,12 +2987,12 @@ class Multiplex(object):
                 return ""
             return term.open_notebook(filepath, prompts, content)
 
-    def close_notebook(self, term_name, clear):
+    def close_notebook(self, term_name, discard):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.close_notebook(clear)
+            return term.close_notebook(discard)
 
     def save_notebook(self, term_name, filepath, input_data, params):
         with self.lock:

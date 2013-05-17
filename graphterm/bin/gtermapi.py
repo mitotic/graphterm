@@ -119,6 +119,10 @@ def write(data, stderr=False):
         sys.stdout.write(data)
         sys.stdout.flush()
 
+def raw_wrap_write(html, stderr=False):
+    """Wrap and write html, without headers, between escape sequences"""
+    write(Html_escapes[0]+html+Html_escapes[1], stderr=stderr)
+
 def wrap_write(content, headers={}, stderr=False):
     """Wrap content, with headers, and write to stdout"""
     write(wrap(content, headers=headers), stderr=stderr)
@@ -151,7 +155,7 @@ def write_html(html, stderr=False):
     html_headers = {"content_type": "text/html"}
     wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_pagelet(html, display="block", dir="", add_headers={}, stderr=False):
+def write_pagelet_old(html, display="block", dir="", add_headers={}, stderr=False):
     """Write html pagelet to stdout"""
     params = {"display": display,
               "scroll": "top",
@@ -163,8 +167,8 @@ def write_pagelet(html, display="block", dir="", add_headers={}, stderr=False):
                     }
     wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_scroll_pagelet(html, display="block", overwrite=False, dir="", add_headers={}, stderr=False):
-    """Write scrollable html pagelet to stdout"""
+def write_pagelet(html, display="block", overwrite=False, dir="", add_headers={}, stderr=False):
+    """Write scrollable and overwriteable html pagelet to stdout"""
     params = "scroll=top"
     if display:
         params += " display=" + urllib.quote(display)
@@ -177,7 +181,7 @@ def write_scroll_pagelet(html, display="block", overwrite=False, dir="", add_hea
 
     PAGELETFORMAT = '<!--gterm pagelet %s-->'
     prefix = PAGELETFORMAT % (params,)
-    write_html(prefix+html, stderr=stderr)
+    raw_wrap_write(prefix+html, stderr=stderr)
 
 def write_form(html, command="", dir="", stderr=False):
     """Write form pagelet to stdout"""
@@ -188,15 +192,15 @@ def write_form(html, command="", dir="", stderr=False):
                     }
     wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_blank(display="fullpage", stderr=False):
+def write_blank_old(display="fullpage", stderr=False):
     """Write blank pagelet to stdout"""
-    write_pagelet("", display=display, stderr=stderr)
+    write_pagelet_old("", display=display, stderr=stderr)
 
-def write_scroll_blank(display="fullpage", stderr=False):
-    """Write blank scroll pagelet to stdout"""
-    write_scroll_pagelet("", display=display, overwrite=True, stderr=stderr)
+def write_blank(display="fullpage", stderr=False):
+    """Write blank scrollable pagelet to stdout"""
+    write_pagelet("", display=display, overwrite=True, stderr=stderr)
 
-def display_blockimg(url, overwrite=False, alt="", stderr=False):
+def display_blockimg_old(url, overwrite=False, alt="", stderr=False):
     """Display block image in a sequence.
     New image display causes previous images to be hidden.
     Display of hidden images can be toggled by clicking.
@@ -206,10 +210,11 @@ def display_blockimg(url, overwrite=False, alt="", stderr=False):
     add_headers = {"classes": "gterm-blockseq"}
     if overwrite:
         add_headers["block"] = "overwrite"
-    write_pagelet(IMGFORMAT % url, add_headers=add_headers, stderr=stderr)
+    write_pagelet_old(IMGFORMAT % url, add_headers=add_headers, stderr=stderr)
 
-def display_blockhtml_img(url, overwrite=False, toggle=False, alt="", stderr=False):
+def display_blockimg(url, overwrite=False, toggle=False, alt="", stderr=False):
     """Display image from url, overwriting previous image, if desired.
+    toggle allows images to be hidden by clicking.
     """
     blob_id = get_blob_id(url)
     params = ""
@@ -225,7 +230,7 @@ def display_blockhtml_img(url, overwrite=False, toggle=False, alt="", stderr=Fal
     BLOCKIMGFORMAT = '<!--gterm pagelet %s--><div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
     html = BLOCKIMGFORMAT % (params, url)
         
-    write_html(html, stderr=stderr)
+    raw_wrap_write(html, stderr=stderr)
 
 def open_url(url, target="_blank", stderr=False):
     """Open url in new window"""
@@ -530,7 +535,7 @@ class FormParser(object):
             short = "-" + short if short else ""
             if isinstance(default, bool):
                 self.parser.add_option(short, "--"+name, dest=name, default=default,
-                                  help=help, action=("store_true" if default else "store_false"))
+                                  help=help, action=("store_false" if default else "store_true"))
             else:
                 self.parser.add_option(short, "--"+name, dest=name, default=default,
                                        help=help)

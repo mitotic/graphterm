@@ -248,7 +248,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     def remote_response(self, term_name, websocket_id, message_list):
         self.send_request_threadsafe("response", term_name, websocket_id, message_list)
 
-    def remote_request(self, term_name, req_list):
+    def remote_request(self, term_name, from_user, req_list):
         """
         Setup commands:
           reconnect
@@ -261,7 +261,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           get_finder <kind> <directory>
           save_data <save_params> <filedata>
           open_notebook <filepath> <prompts> <content>
-          close_notebook <clear>
+          close_notebook <discard>
           save_notebook <filepath> <input_data> <params>
           add_cell <new_cell_type> <init_text> <before_cell_index>
           select_cell <cell_index> <move_up>
@@ -316,9 +316,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.term_write(term_name, cmd[0].encode(self.term_encoding, "ignore"))
 
                 elif action == "feedback":
+                    msg = from_user + ": " + cmd[0] if from_user else cmd[0]
                     widget_stream = WidgetStream.get_feedback_connection(lterm_cookie)
                     if widget_stream:
-                        widget_stream.send_packet(cmd[0].encode(self.term_encoding, "ignore"))
+                        widget_stream.send_packet(msg.encode(self.term_encoding, "ignore"))
 
                 elif action == "save_data":
                     # save_data <save_params> <filedata>
@@ -337,7 +338,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.open_notebook(term_name, cmd[0], cmd[1], cmd[2])
 
                 elif action == "close_notebook":
-                    # close_notebook <clear>
+                    # close_notebook <discard>
                     if self.lineterm:
                         self.lineterm.close_notebook(term_name, cmd[0])
 
@@ -646,7 +647,7 @@ class WidgetStream(object):
         if not term_info:
             return
         host_connection, term_name = term_info
-        host_connection.send_request_threadsafe("response", term_name, [["terminal", "graphterm_feedback", active]])
+        host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_feedback", active]])
 
     def next_packet(self):
         if self.stream:
@@ -693,7 +694,7 @@ class WidgetStream(object):
 
         else:
             params = {"validated": True, "headers": headers}
-            host_connection.send_request_threadsafe("response", term_name, [["terminal", "graphterm_widget", [params,
+            host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_widget", [params,
                                                  base64.b64encode(content) if content else ""]]])
         self.cookie = None
         self.next_packet()

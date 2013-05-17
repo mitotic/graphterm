@@ -3,6 +3,9 @@
 
 """
 gfeed: Display input lines as a "feed"
+
+Example:
+  gfeedback 2> $GRAPHTERM_SOCKET 0<&2 | gfeed > $GRAPHTERM_SOCKET
 """
 
 import csv
@@ -46,20 +49,15 @@ parser.add_option("", "--opacity", dest="opacity", default=1.0,
 
 (options, args) = parser.parse_args()
 
-params = {"scroll": "top", "current_directory": os.getcwd()}
-params["display"] = "fullscreen"
+add_headers = {}
 if options.opacity:
-    params["opacity"] = options.opacity
-
-Headers = {"content_type": "text/html"}
-Headers["x_gterm_response"] = "pagelet"
-Headers["x_gterm_parameters"] = params
+    add_headers["opacity"] = options.opacity
 
 Json_headers = {"content_type": "text/json"}
 Json_headers["x_gterm_response"] = "pagelet_json"
 Json_headers["x_gterm_parameters"] = {}
 
-gtermapi.wrap_write(pagelet_html, headers=Headers)
+gtermapi.write_pagelet(pagelet_html, display="fullscreen", dir=os.getcwd(), add_headers=add_headers)
 while True:
     try:
         line = sys.stdin.readline()

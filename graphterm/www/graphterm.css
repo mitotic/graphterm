@@ -460,6 +460,10 @@ input.gterm-input-arg[type=text] {
     padding-bottom: 3px;
 }
 
+.gterm-iframe.gterm-border {
+    border: 2px solid gray;
+}
+
 #terminal:not(.showicons) .pagelet .gterm-rowimg {
     display: none;
 }
@@ -567,8 +571,26 @@ textarea.gterm-notecell-markup {
     color: red;
 }
 
-.gterm-iframe:not(.gterm-noheader) {
-    margin-top: 1em;
+#session-bufscreen.fullscreen .gterm-iframe:not(.gterm-noheader) {
+    margin-top: 1.5em;
+}
+
+span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
+    position: absolute;
+    top: 0px;
+    right: 5px;
+    padding: 5px;
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+span.gterm-iframedelete {
+    font-size: 1.3em;
+    font-weight: bold;
+    float: right;
+    cursor: pointer;
+    padding: 0;
 }
 
 /* Paste pop styles */
@@ -630,16 +652,6 @@ textarea.gterm-notecell-markup {
     moz-box-shadow: 0 0 10px rgba(0,0,0,.4);
     webkit-box-shadow: 0 0 10px rgba(0,0,0,.4);
     -box-shadow: 0 0 10px rgba(0,0,0,.4);
-}
-
-span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
-    position: absolute;
-    top: 0px;
-    right: 5px;
-    padding: 5px;
-    font-size: 1.5em;
-    font-weight: bold;
-    cursor: pointer;
 }
 
 /* Splash style */

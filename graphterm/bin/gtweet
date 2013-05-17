@@ -3,6 +3,10 @@
 
 """
 gtweet: Send or receive tweets, and display them
+
+To runs as a widget:
+
+  gtweet -w -f -s topic > $GRAPHTERM_SOCKET &
 """
 
 import binascii
@@ -88,8 +92,6 @@ function GTPageletJSON(pageletElem, tweet) {
 </ul>
 </div>
 """
-
-Tty_out = sys.stdout.isatty()
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 def parsedate(rfc822_time):
@@ -270,7 +272,7 @@ class TwitterStreamReader(object):
                 tweet_html = cgi.escape(message["text"])
             else:
                 tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
-            gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers, stderr=(not Tty_out))
+            gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers, stderr=(not Out_tty))
 
 def read_twitter_user_stream(Auth_tokens, keywords=[], recv=False):
     global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
@@ -312,11 +314,10 @@ def twitter_stream_watcher():
         Twitter_stream_restart_time = 0
         read_twitter_user_stream()
 
-
 def check_auth_file(auth_file):
     auth_file = os.path.expanduser(auth_file)
     if not os.path.isfile(auth_file):
-        if not sys.stdout.isatty():
+        if not Out_tty:
             print >> sys.stderr, "Authentication file %s not found!\n\n%s%s" % (auth_file, CONFIG_HELP, AUTH_HELP)
             sys.exit(1)
         try:
@@ -356,6 +357,7 @@ form_parser.add_option("recv", False, short="r", help="Receive tweets mentioning
 form_parser.add_option("anon", False, short="a", help="Anonymize (hide user names in public display)")
 
 form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display", raw=True)
+form_parser.add_option("widget", False, short="w", help="Widget display", raw=True)
 form_parser.add_option("csv", False, short="c", help="CSV output", raw=True)
 form_parser.add_option("json", False, short="j", help="JSON output", raw=True)
 form_parser.add_option("text", False, short="t", help="Text output", raw=True)
@@ -367,8 +369,10 @@ form_parser.add_option("auth_file", Default_auth_file, raw=True,
 
 (options, args) = form_parser.parse_args()
 
+Out_tty = sys.stdout.isatty() or options.widget
+
 if not options.fullscreen and not options.csv and not options.json and not options.text:
-    if Tty_out:
+    if Out_tty:
         options.fullscreen = True
     else:
         options.text = True
@@ -390,7 +394,7 @@ Json_headers["x_gterm_response"] = "pagelet_json"
 Json_headers["x_gterm_parameters"] = {}
 
 if options.fullscreen:
-    gtermapi.wrap_write(pagelet_html, headers=Headers, stderr=(not Tty_out))
+    gtermapi.wrap_write(pagelet_html, headers=Headers, stderr=(not Out_tty))
 
 if options.search or options.recv:
     try:
@@ -401,4 +405,4 @@ else:
     update_status(" ".join(args))
 
 if options.fullscreen:
-    gtermapi.write_blank(stderr=(not Tty_out))
+    gtermapi.write_blank(stderr=(not Out_tty))
