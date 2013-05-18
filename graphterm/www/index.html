@@ -39,6 +39,7 @@
 
 <body>
   <form id="authenticate" method="get" action="/unknown">
+    <p>
     <span id="authmessage"></span>
     <p>
     <span id="authusercontainer">User: <input id="authuser" name="user" type="text"/><br></span>
@@ -96,6 +97,13 @@
               <li><a href="#" class="gterm-only-controller" gterm-state="terminal_home">home folder</a></li>
               <li><a href="#" class="gterm-only-controller" gterm-state="terminal_export">export environment</a></li>
               <li><a href="#" class="gterm-only-controller" gterm-state="terminal_paste">paste special</a></li>
+              <li>
+                <a href="#"  class="gterm-only-controller">send &#x25b9;</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_send_interrupt">interrupt</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_send_parent">parent interrupt</a></li>
+                </ul>
+              </li>
             </ul>
           </li>
 

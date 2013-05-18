@@ -21,7 +21,6 @@ import subprocess
 import sys
 import threading
 import time
-import traceback
 import urllib
 import urlparse
 import uuid
@@ -87,7 +86,10 @@ COOKIE_TIMEOUT = 10800
 
 REQUEST_TIMEOUT = 15
 
-HEX_DIGITS = 16
+HEX_DIGITS = 16     # User authentication code hex-digits
+
+AUTH_DIGITS = 12    # Form authentication code hex-digits
+                    # Note: Less than half of the 32 hex-digit state id should be used for form authentication
 
 PROTOCOL = "http"
 
@@ -209,7 +211,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _webcast_paths = OrderedDict()
     _cookie_states = OrderedDict()
     _auth_users = OrderedDict()
+    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, CODE_AUTH = range(4)
     _auth_code = uuid.uuid4().hex[:HEX_DIGITS]
+    _auth_type = CODE_AUTH
     _wildcards = {}
     _super_users = set()
 
@@ -220,7 +224,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     @classmethod
     def set_auth_code(cls, value):
         cls._auth_code = value
-    
+        if not value:
+            cls._auth_type = cls.NULL_AUTH
+        elif value == "name":
+            cls._auth_type = cls.NAME_AUTH
+        else:
+            cls._auth_type = cls.CODE_AUTH
+            
     @classmethod
     def get_auth_code(cls):
         return cls._auth_code
@@ -268,10 +278,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return None
 
     @classmethod
-    def add_state(cls, user, auth_type, webcast=False):
-        state_id = "" if webcast else uuid.uuid4().hex[:HEX_DIGITS]
-        authorized = {"user": user, "auth_type": auth_type, "state_id": state_id, "time": time.time()}
-        if webcast:
+    def drop_state(cls, state_id):
+        cls._cookie_states.pop(state_id, None)
+
+    @classmethod
+    def add_state(cls, user, auth_type):
+        state_id = "" if auth_type == cls.WEBCAST_AUTH else uuid.uuid4().hex
+        authorized = {"user": user, "auth_type": auth_type, "state_id": state_id,
+                      "time": time.time()}
+        if not state_id:
             return authorized
         if len(cls._cookie_states) >= MAX_COOKIE_STATES:
             cls._cookie_states.pop(last=False)
@@ -279,72 +294,90 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return authorized
 
     def open(self):
-        need_code = bool(self._auth_code and self._auth_code != "name")
-        need_user = bool(self._auth_code)     ##bool(self._auth_users)
+        need_user = self._auth_type >= self.NAME_AUTH
+        need_code = self._auth_type >= self.CODE_AUTH
 
         user = ""
         try:
+            auth_message = "Please authenticate"
             if COOKIE_NAME in self.request.cookies:
                 state_value = self.get_state(self.request.cookies[COOKIE_NAME].value)
                 if state_value:
-                    self.authorized = state_value
-                    user = self.authorized["user"]
+                    if state_value["auth_type"] == self._auth_type:
+                        self.authorized = state_value
+                        user = self.authorized["user"]
+                    else:
+                        # Note: webcast auth will always be dropped
+                        self.drop_state(self.request.cookies[COOKIE_NAME].value)
+                        auth_message = "Authentication expired"
 
-            if not self.authorized and not self._auth_code:
-                # No authorization code
-                self.authorized = self.add_state("", "null_auth")
+            query_data = {}
+            if self.request_query:
+                try:
+                    query_data = urlparse.parse_qs(self.request_query)
+                except Exception:
+                    pass
 
-            webcast_auth = False
             if not self.authorized:
-                query_data = {}
-                if self.request_query:
-                    try:
-                        query_data = urlparse.parse_qs(self.request_query)
-                    except Exception:
-                        pass
+                if self._auth_type == self.NULL_AUTH:
+                    # No authorization code needed
+                    self.authorized = self.add_state("", self.NULL_AUTH)
+                else:
+                    user = query_data.get("user", [""])[0].lower()
+                    code = query_data.get("code", [""])[0]
 
-                user = query_data.get("user", [""])[0].lower()
-                code = query_data.get("code", [""])[0]
+                    if user and not gtermhost.USER_RE.match(user):
+                        self.write_json([["abort", "Invalid characters in user name '%s'; must start with letter and include only letters/digits/hyphen" % user]])
+                        self.close()
+                        return
 
-                if user and not gtermhost.USER_RE.match(user):
-                    self.write_json([["abort", "Invalid characters in user name '%s'; must start with letter and include only letters/digits/hyphen" % user]])
+                    if self._auth_type == self.NAME_AUTH:
+                        if user and user not in self._all_users:
+                            # New named user
+                            self.authorized = self.add_state(user, self.NAME_AUTH)
+                        else:
+                            errmsg = "User name %s already in use" % user if user else "Please specify user name (letters/digits/hyphens, starting with letter)"
+                            self.write_json([["authenticate", need_user, need_code, errmsg]])
+                            self.close()
+                            return
+                    else:
+                        expect_code = self._auth_code
+                        if self._auth_users:
+                            if user in self._auth_users:
+                                expect_code = self._auth_users[user]
+                            else:
+                                self.write_json([["authenticate", need_user, need_code, "Invalid user" if user else ""]])
+                                self.close()
+                                return
+
+                        if code: 
+                            auth_message = "Authentication failed; check user/code"
+                        if code == self._auth_code or code == expect_code:
+                            # User auth code matched
+                            self.authorized = self.add_state(user, self.CODE_AUTH)
+
+            if not self.authorized:
+                if self.req_path in self._webcast_paths:
+                    self.authorized = self.add_state(user, self.WEBCAST_AUTH)
+                else:
+                    self.write_json([["authenticate", need_user, need_code, auth_message]])
                     self.close()
                     return
 
-                if self._auth_code == "name":
-                    if user and user not in self._all_users:
-                        # New named user
-                        self.authorized = self.add_state(user, "name_auth")
-                    else:
-                        errmsg = "User name %s already in use" % user if user else "Please specify user name (letters/digits/hyphens, starting with letter)"
-                        self.write_json([["authenticate", need_user, need_code, errmsg]])
-                        self.close()
-                        return
-                else:
-                    expect_code = self._auth_code
-                    if self._auth_users:
-                        if user in self._auth_users:
-                            expect_code = self._auth_users[user]
-                        else:
-                            self.write_json([["authenticate", need_user, need_code, "Invalid user" if user else ""]])
-                            self.close()
-                            return
+            qauth = query_data.get("qauth", [""])[0]
+            if not qauth or qauth != self.authorized["state_id"][:AUTH_DIGITS]:
+                # Invalid query auth; clear any form data (always cleared for webcasts and when user is first authorized)
+                query_data = {}
 
-                    if code == self._auth_code or code == expect_code:
-                        self.authorized = self.add_state(user, "code_auth")
-                    elif self.req_path in self._webcast_paths:
-                        self.authorized = self.add_state(user, "webcast_auth", webcast=True)
-                        webcast_auth = True
-
-            if not self.authorized:
-                self.write_json([["authenticate", need_user, need_code, "Authentication failed; retry"]])
-                self.close()
-                return
+            if not query_data and self.req_path not in self._webcast_paths:
+                # Clear path, if no form data and not webcasting
+                path_comps = []
+            else:
+                path_comps = self.req_path.split("/")
 
             super_user = self.authorized["user"] in self._super_users
 
-            comps = self.req_path.split("/")
-            if len(comps) < 1 or not comps[0]:
+            if len(path_comps) < 1 or not path_comps[0]:
                 host_list = TerminalConnection.get_connection_ids()
                 if self._auth_users and not super_user:
                     if LOCAL_HOST in host_list:
@@ -354,7 +387,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            host = comps[0].lower()
+            host = path_comps[0].lower()
             if not host or not gtermhost.HOST_RE.match(host):
                 self.write_json([["abort", "Invalid characters in host name"]])
                 self.close()
@@ -369,17 +402,17 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             term_feedback = False
             conn = None
             
-            option = comps[2] if len(comps) > 2 else ""
+            option = path_comps[2] if len(path_comps) > 2 else ""
             if wildhost:
                 if not super_user:
                     self.write_json([["abort", "User not authorized for wildcard host"]])
                     self.close()
                     return
-                if len(comps) < 2 or not comps[1] or comps[1].lower() == "new":
+                if len(path_comps) < 2 or not path_comps[1] or path_comps[1].lower() == "new":
                     self.write_json([["abort", "Must specify terminal name for wildcard host"]])
                     self.close()
                     return
-                term_name = comps[1].lower()
+                term_name = path_comps[1].lower()
             else:
                 conn = TerminalConnection.get_connection(host)
                 if not conn:
@@ -387,7 +420,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
-                if len(comps) < 2 or not comps[1]:
+                if len(path_comps) < 2 or not path_comps[1]:
                     term_list = []
                     for term_name in conn.term_dict:
                         path = host + "/" + term_name
@@ -399,12 +432,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
-                term_name = comps[1].lower()
+                term_name = path_comps[1].lower()
                 if term_name == "new":
                     term_name = conn.remote_terminal_update(parent=option)
-                    redir_url = "/"+host+"/"+term_name
+                    redir_url = "/"+host+"/"+term_name+"/"
                     if self.request_query:
-                        redir_url += "/?" + self.request_query
+                        redir_url += "?"+self.request_query
+                    else:
+                        redir_url += "&qauth="+self.authorized["state_id"][:AUTH_DIGITS]
                     self.write_json([["redirect", redir_url]])
                     self.close()
                     return
@@ -430,7 +465,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if path not in self._control_params:
                 # Initialize parameters for new terminal
-                assert not webcast_auth and self.authorized["state_id"]
+                assert self.authorized["auth_type"] > self.WEBCAST_AUTH
                 terminal_params = {"sharing_locked": False, "sharing_private": True, "sharing_tandem": False, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params
@@ -466,7 +501,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             assert self.websocket_id not in self._watch_dict[path]
 
             controller = False
-            if webcast_auth:
+            if self.authorized["auth_type"] == self.WEBCAST_AUTH:
                 controller = False
             elif self.wildcard:
                 controller = True
@@ -496,7 +531,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if not self.wildcard:
                 TerminalConnection.send_to_connection(host, "request", term_name, user, [["reconnect", self.websocket_id]])
                 normalized_host = gtermhost.get_normalized_host(host)
-                if self.authorized["auth_type"] in ("null_auth", "code_auth"):
+                if self.authorized["auth_type"] > self.WEBCAST_AUTH:
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
 
             parent_term = conn.term_dict.get(term_name, "") if conn else ""
@@ -514,7 +549,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "apps_url": APPS_URL, "feedback": term_feedback,
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
-            logging.warning("GTSocket.open: ERROR (%s:%s) %s", self.remote_path, get_user(self), excp)
+            import traceback
+            errmsg = "%s\n%s" % (excp, traceback.format_exc())
+            logging.warning("GTSocket.open: ERROR (%s:%s) %s", self.remote_path, get_user(self), errmsg)
             self.close()
 
     def broadcast(self, path, msg, controller=False, include_self=False):

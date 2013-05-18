@@ -196,9 +196,12 @@ def write_blank_old(display="fullpage", stderr=False):
     """Write blank pagelet to stdout"""
     write_pagelet_old("", display=display, stderr=stderr)
 
-def write_blank(display="fullpage", stderr=False):
+def write_blank(display="fullpage", exit_page=False, stderr=False):
     """Write blank scrollable pagelet to stdout"""
-    write_pagelet("", display=display, overwrite=True, stderr=stderr)
+    add_headers = {}
+    if exit_page:
+        add_headers["exit_page"] = "yes"
+    write_pagelet("", display=display, overwrite=True, add_headers=add_headers, stderr=stderr)
 
 def display_blockimg_old(url, overwrite=False, alt="", stderr=False):
     """Display block image in a sequence.

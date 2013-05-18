@@ -571,7 +571,7 @@ textarea.gterm-notecell-markup {
     color: red;
 }
 
-#session-bufscreen.fullscreen .gterm-iframe:not(.gterm-noheader) {
+#session-bufscreen.fullscreen .gterm-iframe.gterm-iframe-firstrow:not(.gterm-noheader) {
     margin-top: 1.5em;
 }
 

@@ -32,6 +32,8 @@ var gPasteActive = false;
 
 var gPasteSpecialKeycode = 15;  // Control-O shortcut for Paste Special
 
+var AUTH_DIGITS = 12;
+
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
 
@@ -185,7 +187,7 @@ var gConverter = new Markdown.getSanitizingConverter();
 
 function cgi_unescape(escaped_str) {
   // Reverses python cgi.escape
-    return escaped_str ? ("" +escaped_str).replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&") : escaped_str;
+    return escaped_str ? ("" +escaped_str).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&") : escaped_str;
 }
 
 function split_lines(text) {
@@ -299,6 +301,11 @@ function setCookie(name, value, exp_days) {
     $.cookie(name, cookie_value, options);
 }
 
+
+function getAuth() {
+    return getCookie("GRAPHTERM_AUTH").substr(0,AUTH_DIGITS);
+}
+
 function AuthPage(need_user, need_code, msg) {
     gAuthenticating = true;
     $("#authcode").val("");
@@ -352,6 +359,7 @@ function setupTerminal() {
 }
 
 function handle_resize() {
+    console.log("handle_resize:");
     gRows = Math.max(2, Math.floor($(window).height()/gRowHeight)-1);
     gCols = Math.max(3, Math.floor($(window).width()/gColWidth)-1);
     if (gWebSocket && gParams.controller)
@@ -624,8 +632,7 @@ function GTUpdateController() {
 	window.name = "";
     GTMenuUpdateToggle("sharing_control", gParams.controller);
     $("#terminal").toggleClass("gterm-controller", gParams.controller);
-    if (gParams.controller)
-	handle_resize();
+    handle_resize();
     gFrameDispatcher.updateControl(gParams.controller);
 }
 
@@ -667,6 +674,8 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
 	// Non-full pagelet entry; show previous entries
 	    EndFullpage();
     }
+    // Use query authentication
+    markup = markup.replace(/qauth=%\(qauth\)/g, "qauth="+getAuth());
     if (row_opts.iframe) {
 	markup = gFrameDispatcher.createFrame(row_opts, markup, row_opts.url, "gterm-iframe"+pagelet_id);
     }
@@ -719,6 +728,9 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
     scrollElem.find('.gterm-iframeheader').bindclick(CloseIFrame);
     GTDropBindings(scrollElem.find(' .droppable'));
+
+    if (row_opts.exit_page)
+	setTimeout(ExitFullpage, 200);
     return scrollElem;
 }
 
@@ -777,12 +789,12 @@ function GTWebSocket(auth_user, auth_code) {
 
     var protocol = (window.location.protocol.indexOf("https") == 0) ? "wss" : "ws";
     this.ws_url = protocol+":/"+"/"+window.location.host+"/_websocket"+window.location.pathname; // Split the double slash to avoid confusing the JS minifier
-    var query_params = (this.auth_user || this.auth_code) ? {user: auth_user, code: auth_code} : {};
-    if (location.search.indexOf("nomenubar=1") >= 0)
-	query_params["nomenubar"] = 1;
-    if (!$.isEmptyObject(query_params))
-	this.ws_url += "?" + $.param(query_params);
-    console.log("GTWebSocket url", this.ws_url);
+    if (location.search)
+	this.ws_url += location.search;
+    var add_params = (this.auth_user || this.auth_code) ? {user: auth_user, code: auth_code} : {};
+    if (!$.isEmptyObject(add_params))
+	this.ws_url += (location.search ? "&" : "?") + $.param(add_params);
+    console.log("GTWebSocket url: "+this.ws_url);
     this.ws = new WebSocket(this.ws_url);
     this.ws.onopen = bind_method(this, this.onopen);
     this.ws.onmessage = bind_method(this, this.onmessage);
@@ -971,12 +983,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    setCookie("GRAPHTERM_AUTH", command[1]);
 		var user = command[2];
 		var hosts = command[3];
-		var host_html = "";
+		var host_html = "<p>";
 		if (user)
-		    host_html += "User: "+user + "<br>\n";
+		    host_html += "User: <b>"+user + "</b><p>\n";
 		host_html += 'Hosts available:<p><ol>';
 		for (var j=0; j<hosts.length; j++)
-		    host_html += '<li><a href="/'+hosts[j]+'">'+hosts[j]+'</a></li>';
+		    host_html += '<li><a href="/'+hosts[j]+'/?qauth='+getAuth()+'">'+hosts[j]+'</a></li>';
 		host_html += '</ol> <p><a href="#" onclick="SignOut();">Sign out</a>';
 		$("body").html(host_html);
 
@@ -986,14 +998,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var user = command[2];
 		var host = command[3];
 		var terms = command[4];
-		var term_html = "@" + host + "<p>\n";
-		if (user)
-		    term_html = user + term_html;
-		term_html += 'Connect to session:<p><ol>';
+		var term_html = '<p><b>' + (user ? user : '') + "@" + host + "</b>\n";
+		term_html += '<p>Connect to session:<p><ol>';
 		for (var j=0; j<terms.length; j++)
-		    term_html += '<li><a href="/'+host+'/'+terms[j]+'">'+terms[j]+'</a></li>';
-		term_html += '<li><a href="/'+host+'/new"><b><em>new</em></b></a></li>';
-		term_html += '</ol> <p><a href="#" onclick="SignOut();">Sign out</a>';
+		    term_html += '<li><a href="/'+host+'/'+terms[j]+'/?qauth='+getAuth()+'">'+terms[j]+'</a></li>';
+		term_html += '<li><a href="/'+host+'/new/?qauth='+getAuth()+'"><b><em>new</em></b></a></li>';
+		term_html += '</ol> <p><a href="/">Hosts available</a> <p><a href="#" onclick="SignOut();">Sign out</a>';
 		$("body").html(term_html);
 
             } else if (action == "log") {
@@ -1907,7 +1917,7 @@ function GTMenuStateUpdate(stateValues, prefix) {
 	    GTMenuUpdateToggle(prefix+key, val);
     }
     // Float menubar for embedded terminal
-    if (location.search.indexOf("nomenubar=1") >= 0 || window.parent)
+    if (window.parent)
 	GTMenuTrigger("appearance_menubar", false);
 }
 
@@ -2212,6 +2222,14 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	break;
     case "paste":
 	GTPasteSpecialBegin();
+	break;
+    case "send_interrupt":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput(String.fromCharCode(3));
+	break;
+    case "send_parent":
+	if (window.parent && window.parent.gWebSocket && window.parent.gWebSocket.terminal)
+	    window.parent.GTTerminalInput(String.fromCharCode(3));
 	break;
     }
 }
@@ -3067,7 +3085,7 @@ function OpenNew(host, term_name, options) {
     var path = host + "/" + term_name;
     if (term_name == "new" && gParams && gParams.term)
 	path += "/"+gParams.term;
-    var new_url = window.location.protocol+"/"+"/"+window.location.host+"/"+path; // Split the double slash to avoid confusing the JS minifier
+    var new_url = window.location.protocol+"/"+"/"+window.location.host+"/"+path+"/?qauth="+getAuth(); // Split the double slash to avoid confusing the JS minifier
     console.log("open", new_url);
     var target = (term_name == "new") ? "_blank" : path;
     window.open(new_url, target=target);
@@ -4076,7 +4094,6 @@ GTNotebook.prototype.receive = function(fromUser, toUser, cellIndex, msg) {
 	console.log("GTNotebook.receive: "+err);
     }
 }
-
 
 function CloseIFrame(evt) {
     if (gFullpageDisplay)

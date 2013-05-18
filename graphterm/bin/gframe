@@ -5,10 +5,10 @@
 gframe: Display file (or HTML from stdin) in inline iframe
 
 For multiplexed display use:
-   gframe --height 300 --lheight 50 -c 4 -b -u -p /local/tty a b c d '[abcd]'
+   gframe --height 300 --lheight 50 -c 4 -b -t -p /local/tty a b c d '[abcd]'
 
 To recursively display terminal /local/tty1, use:
-   gframe --height 300 -b -n -u /local/tty1/watch
+   gframe --height 300 -b -n -t /local/tty1/watch
 """
 
 import math
@@ -37,7 +37,7 @@ form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display"
 form_parser.add_option("border", False, short="b", help="Include border")
 form_parser.add_option("noheader", False, short="n", help="Suppress header")
 form_parser.add_option("echo", False, short="e", help="Do not suppress terminal echo")
-form_parser.add_option("url", False, short="u", help="Interpret all arguments as URLs")
+form_parser.add_option("terminal", False, short="t", help="Interpret all arguments as terminal URLs")
 
 (options, args) = form_parser.parse_args()
 
@@ -45,7 +45,11 @@ if args:
     iframe_urls = []
     for arg in args:
         arg = options.prefix + arg
-        if options.url or (arg.startswith("http:") or arg.startswith("https:")):
+        if arg.startswith("http:") or arg.startswith("https:"):
+            iframe_urls.append(arg)
+        elif options.terminal:
+            arg += "/&" if "?" in arg else "/?"
+            arg += "qauth=%(qauth)"
             iframe_urls.append(arg)
         else:
             if gtermapi.Export_host:
@@ -72,11 +76,6 @@ headers = {"opacity": options.opacity}
 if not options.fullscreen:
     headers["autosize"] = True
 
-if options.height:
-    frameHeight = ' height="%s" ' % options.height
-else:
-    frameHeight = ' height="%d%%" ' % (100 if options.noheader else 95) if options.fullscreen else ''
-
 add_class = "gterm-noheader" if options.noheader else ""
 if options.border:
     add_class += " gterm-border"
@@ -88,8 +87,26 @@ nframes = len(iframe_urls)
 ncols = int(options.columns) or nframes
 nrows = ((nframes-1) // ncols) + 1
 
+max_percent = 100.0 if options.noheader else 95.0
+if options.height:
+    frameHeight = ' height="%s" ' % options.height
+elif options.columns:
+    if options.lheight and nrows > 1:
+        if options.lheight.endswith("%"):
+            lheight_percent = float(options.lheight[:-1])
+        else:
+            termx, termy = os.getenv("GRAPHTERM_DIMENSIONS").split(";")[1].split("x")
+            lheight_percent = 100.0*float(options.lheight)/float(termy)
+        height_percent = (max_percent - 5 - lheight_percent) / (nrows - 1)
+    else:
+        height_percent = (max_percent - 5) / nrows
+    frameHeight = ' height="%d%%" ' % height_percent
+else:
+    frameHeight = ' height="%d%%" ' % max_percent if options.fullscreen else ''
+
 for j, url in enumerate(iframe_urls):
-    if j//ncols == nrows-1:
+    irow = j//ncols
+    if irow == nrows-1:
         # Last row
         n = ((nframes-1) % ncols)+1
         if options.lheight:
@@ -98,7 +115,7 @@ for j, url in enumerate(iframe_urls):
         n = ncols
     width = 100 if nframes == 1 else math.floor(96.0/n)
     frameId = "gframe%09d" % random.randrange(0, 10**9)
-    iframe_html += IFRAMEFORMAT % (frameId, add_class, url, width, frameHeight)
+    iframe_html += IFRAMEFORMAT % (frameId, add_class+("" if irow else " gterm-iframe-firstrow"), url, width, frameHeight)
 
 if not options.noheader:
     if options.fullscreen:
@@ -118,7 +135,7 @@ if options.fullscreen:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            gtermapi.write_blank()
+            gtermapi.write_blank(exit_page=True)
     else:
         saved_settings = termios.tcgetattr(sys.stdout.fileno())
         new_settings = saved_settings[:]
@@ -128,7 +145,7 @@ if options.fullscreen:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            gtermapi.write_blank()
+            gtermapi.write_blank(exit_page=True)
         finally:
             termios.tcsetattr(sys.stdout.fileno(), termios.TCSADRAIN, saved_settings)
 
