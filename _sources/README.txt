@@ -39,18 +39,21 @@ applications for GraphTerm, such as:
    GUI operations like navigating folders, file drag-and-drop,
    displaying images etc.
 
+ - an **inline data visualization tool** to view output from plotting
+   libraries like ``matplotlib``
+
+ - a **notebook interface** for data analysis and documentation (like
+   the *Mathematica* or *iPython* Notebook interface, but at the shell
+   level).
+
+ - a **collaborative terminal** that can be remotely accessed
+   by multiple users simultaneously, to run programs, edit files etc.
+
  - a web-based **remote desktop** that supports a simple GUI
    without the need for installing VNC or X-windows on the remote host
 
  - a **detachable terminal multiplexer**, sort of like GNU ``screen`` or
    ``tmux``
-
- - an **inline data visualization tool** to view output from plotting
-   libraries like ``matplotlib`` (like the *Mathematica* or *iPython* Notebook interface,
-   but at the shell level).
-
- - a **collaborative terminal** that can be remotely accessed
-   by multiple users simultaneously, to run programs, edit files etc.
 
  - a **simple presentation tool** for webcasting images as slideshows
    (and receiving live feedback)
@@ -126,7 +129,7 @@ page for more advanced usage.
 
 You can also use the following command::
 
-  glandslide -o graphterm-talk1.md | giframe -f
+  glandslide -o graphterm-talk1.md | gframe -f
 
 to view a slideshow about GraphTerm within GraphTerm (type ``h`` for
 help and ``q`` to quit)..
@@ -174,10 +177,23 @@ The ``gls`` command uses icons from the `Tango Icon Library
 The 3D perspective mode was inspired by Sean Slinsky's `Star Wars
 Opening Crawl with CSS3 <http://www.seanslinsky.com/star-wars-crawl-with-css3>`_.
 
-Other packaged open source components include the
-`Landslide <https://github.com/adamzap/landslide>`_
-presentation program and portions of the Online Python Tutorial from
-`pythontutor.com <http://pythontutor.com>`_
+Other packaged open source components include:
+
+ - `d3.js <http://d3js.org/>`_  Data driven documents
+
+ - `Landslide <https://github.com/adamzap/landslide>`_ presentation
+   program
+
+ - Online Python Tutorial from `pythontutor.com <http://pythontutor.com>`_
+
+ - `Pagedown <http://code.google.com/p/pagedown/>`_ Javascript
+   Markdown converter
+
+ - `Superfish <http://users.tpg.com.au/j_birch/plugins/superfish/>`_
+   menu plugin
+
+ - `underscore.js <http://underscorejs.org/>`_ utility library
+
 
 ``GraphTerm`` was developed as part of the `Mindmeldr <http://mindmeldr.com>`_ project, which is aimed at improving classroom interaction.
 

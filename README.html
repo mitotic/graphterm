@@ -201,15 +201,17 @@ applications for GraphTerm, such as:</p>
 <li>an <strong>enhanced terminal</strong> that combines the command line with basic
 GUI operations like navigating folders, file drag-and-drop,
 displaying images etc.</li>
+<li>an <strong>inline data visualization tool</strong> to view output from plotting
+libraries like <tt class="docutils literal"><span class="pre">matplotlib</span></tt></li>
+<li>a <strong>notebook interface</strong> for data analysis and documentation (like
+the <em>Mathematica</em> or <em>iPython</em> Notebook interface, but at the shell
+level).</li>
+<li>a <strong>collaborative terminal</strong> that can be remotely accessed
+by multiple users simultaneously, to run programs, edit files etc.</li>
 <li>a web-based <strong>remote desktop</strong> that supports a simple GUI
 without the need for installing VNC or X-windows on the remote host</li>
 <li>a <strong>detachable terminal multiplexer</strong>, sort of like GNU <tt class="docutils literal"><span class="pre">screen</span></tt> or
 <tt class="docutils literal"><span class="pre">tmux</span></tt></li>
-<li>an <strong>inline data visualization tool</strong> to view output from plotting
-libraries like <tt class="docutils literal"><span class="pre">matplotlib</span></tt> (like the <em>Mathematica</em> or <em>iPython</em> Notebook interface,
-but at the shell level).</li>
-<li>a <strong>collaborative terminal</strong> that can be remotely accessed
-by multiple users simultaneously, to run programs, edit files etc.</li>
 <li>a <strong>simple presentation tool</strong> for webcasting images as slideshows
 (and receiving live feedback)</li>
 <li>a <strong>management console</strong> for a cluster of real or virtual hosts,
@@ -266,7 +268,7 @@ Begin with <a class="reference external" href="http://code.mindmeldr.com/graphte
 and see the <a class="reference external" href="http://code.mindmeldr.com/graphterm/tutorials.html">Tutorials and Talks</a>
 page for more advanced usage.</p>
 <p>You can also use the following command:</p>
-<div class="highlight-python"><pre>glandslide -o graphterm-talk1.md | giframe -f</pre>
+<div class="highlight-python"><pre>glandslide -o graphterm-talk1.md | gframe -f</pre>
 </div>
 <p>to view a slideshow about GraphTerm within GraphTerm (type <tt class="docutils literal"><span class="pre">h</span></tt> for
 help and <tt class="docutils literal"><span class="pre">q</span></tt> to quit)..</p>
@@ -311,10 +313,20 @@ It borrows many of the ideas from <em>XMLTerm</em> and re-uses chunks of code fr
 <a class="reference external" href="http://ckeditor.com">CKEditor</a></p>
 <p>The 3D perspective mode was inspired by Sean Slinsky&#8217;s <a class="reference external" href="http://www.seanslinsky.com/star-wars-crawl-with-css3">Star Wars
 Opening Crawl with CSS3</a>.</p>
-<p>Other packaged open source components include the
-<a class="reference external" href="https://github.com/adamzap/landslide">Landslide</a>
-presentation program and portions of the Online Python Tutorial from
-<a class="reference external" href="http://pythontutor.com">pythontutor.com</a></p>
+<p>Other packaged open source components include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="http://d3js.org/">d3.js</a>  Data driven documents</li>
+<li><a class="reference external" href="https://github.com/adamzap/landslide">Landslide</a> presentation
+program</li>
+<li>Online Python Tutorial from <a class="reference external" href="http://pythontutor.com">pythontutor.com</a></li>
+<li><a class="reference external" href="http://code.google.com/p/pagedown/">Pagedown</a> Javascript
+Markdown converter</li>
+<li><a class="reference external" href="http://users.tpg.com.au/j_birch/plugins/superfish/">Superfish</a>
+menu plugin</li>
+<li><a class="reference external" href="http://underscorejs.org/">underscore.js</a> utility library</li>
+</ul>
+</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> was developed as part of the <a class="reference external" href="http://mindmeldr.com">Mindmeldr</a> project, which is aimed at improving classroom interaction.</p>
 </div>
 <div class="section" id="license">

@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting started with GraphTerm &mdash; GraphTerm 0.34.0 documentation</title>
+    <title>Using GraphTerm &mdash; GraphTerm 0.34.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -29,8 +29,6 @@
           title="Search within GraphTerm 0.34.0 documentation"
           href="_static/opensearch.xml"/>
     <link rel="top" title="GraphTerm 0.34.0 documentation" href="index.html" />
-    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
-    <link rel="prev" title="README" href="README.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -97,12 +95,6 @@ code.mindmeldr.com
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="troubleshooting.html" title="Troubleshooting"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="README.html" title="README"
-             accesskey="P">previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
@@ -113,7 +105,7 @@ code.mindmeldr.com
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Getting started with GraphTerm</a><ul>
+<li><a class="reference internal" href="#">Using GraphTerm</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#visual-cues">Visual cues</a></li>
 <li><a class="reference internal" href="#navigating-folders-opening-files">Navigating folders/opening files</a></li>
@@ -139,15 +131,9 @@ code.mindmeldr.com
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="README.html"
-                        title="previous chapter">README</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="troubleshooting.html"
-                        title="next chapter">Troubleshooting</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/start.txt"
+    <li><a href="_sources/usage.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -171,12 +157,12 @@ code.mindmeldr.com
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="getting-started-with-graphterm">
-<h1><a class="toc-backref" href="#id3">Getting started with GraphTerm</a><a class="headerlink" href="#getting-started-with-graphterm" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="using-graphterm">
+<h1><a class="toc-backref" href="#id3">Using GraphTerm</a><a class="headerlink" href="#using-graphterm" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#getting-started-with-graphterm" id="id3">Getting started with GraphTerm</a><ul>
+<li><a class="reference internal" href="#using-graphterm" id="id3">Using GraphTerm</a><ul>
 <li><a class="reference internal" href="#introduction" id="id4">Introduction</a></li>
 <li><a class="reference internal" href="#visual-cues" id="id5">Visual cues</a></li>
 <li><a class="reference internal" href="#navigating-folders-opening-files" id="id6">Navigating folders/opening files</a></li>
@@ -204,14 +190,7 @@ code.mindmeldr.com
 </div>
 <div class="section" id="introduction">
 <h2><a class="toc-backref" href="#id4">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>To install <tt class="docutils literal"><span class="pre">GraphTerm</span></tt>, you need to have Python 2.6+ and the Bash
-shell on your Mac/Linux/Unix computer. For a quick install, if the python
-<tt class="docutils literal"><span class="pre">setuptools</span></tt> module is already installed on your system,
-use the following two commands:</p>
-<div class="highlight-python"><pre>sudo easy_install graphterm
-sudo gterm_setup</pre>
-</div>
-<p>(See the <a class="reference internal" href="README.html#installation"><em>Installation</em></a> section of the <a class="reference internal" href="README.html"><em>README</em></a> file for more options on installing GraphTerm.)</p>
+<p>(See the README file for information on installing GraphTerm.)</p>
 <p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_code</span><span class="o">=</span><span class="n">none</span>
 </pre></div>
@@ -238,7 +217,7 @@ Firefox, or Safari (Chrome works best), and enter the following URL:</p>
 </div>
 <p>Once within the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the host you
 wish to connect to and create a new terminal session on the host.</p>
-<p id="index-0">Once you have a terminal, try out the following commands:</p>
+<p>Once you have a terminal, try out the following commands:</p>
 <div class="highlight-python"><pre>gls &lt;directory&gt;
 gvi &lt;text-filename&gt;</pre>
 </div>
@@ -274,7 +253,7 @@ the terminal</p>
 separately from its <a class="reference external" href="https://github.com/mitotic/gcowsay">Github repository</a>)</p>
 </div>
 <div class="section" id="visual-cues">
-<span id="index-1"></span><h2><a class="toc-backref" href="#id5">Visual cues</a><a class="headerlink" href="#visual-cues" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Visual cues</a><a class="headerlink" href="#visual-cues" title="Permalink to this headline">¶</a></h2>
 <p>In the default theme, <em>blue</em> color denotes text that can be <em>clicked</em>
 or <em>tapped</em>. The action triggered by clicking depends upon two
 factors, whether there is text in the current command line,
@@ -285,7 +264,7 @@ output (unless the Control modifier is used, in which case the
 entire command line is copied and pasted.)</p>
 </div>
 <div class="section" id="navigating-folders-opening-files">
-<span id="index-2"></span><h2><a class="toc-backref" href="#id6">Navigating folders/opening files</a><a class="headerlink" href="#navigating-folders-opening-files" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Navigating folders/opening files</a><a class="headerlink" href="#navigating-folders-opening-files" title="Permalink to this headline">¶</a></h2>
 <p>You can navigate folders in GraphTerm just like you would do in a GUI,
 while retaining the ability to drop back to the CLI at any time.
 <em>If the current command line is empty,</em>
@@ -299,17 +278,17 @@ command being executed. You can edit the pasted text, then press the
 Enter key to execute it.</p>
 </div>
 <div class="section" id="icon-display">
-<span id="index-3"></span><h2><a class="toc-backref" href="#id7">Icon display</a><a class="headerlink" href="#icon-display" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Icon display</a><a class="headerlink" href="#icon-display" title="Permalink to this headline">¶</a></h2>
 <p>Select <tt class="docutils literal"><span class="pre">icons</span></tt> in the top menu to activate icon display for commands like
 <tt class="docutils literal"><span class="pre">gls</span></tt>.</p>
 </div>
 <div class="section" id="themes">
-<span id="index-4"></span><h2><a class="toc-backref" href="#id8">Themes</a><a class="headerlink" href="#themes" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">Themes</a><a class="headerlink" href="#themes" title="Permalink to this headline">¶</a></h2>
 <p>Themes, selected using the top menu, are a work in progress, especially the 3-D perspective theme
 (which only works on Chrome/Safari).</p>
 </div>
 <div class="section" id="copy-paste">
-<span id="index-5"></span><h2><a class="toc-backref" href="#id9">Copy/paste</a><a class="headerlink" href="#copy-paste" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">Copy/paste</a><a class="headerlink" href="#copy-paste" title="Permalink to this headline">¶</a></h2>
 <p>For certain browsers (e.g., desktop Chrome/Firefox),
 the usual <em>Command-V</em> or <em>Control-V</em> key sequence should directly
 paste text from the clipboard. If that doesn&#8217;t work, there are a couple
@@ -327,7 +306,7 @@ This second technique may not always work well for text copied from non-plain
 text sources, such as a web page.</p>
 </div>
 <div class="section" id="drag-and-drop">
-<span id="index-6"></span><h2><a class="toc-backref" href="#id10">Drag and drop</a><a class="headerlink" href="#drag-and-drop" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id10">Drag and drop</a><a class="headerlink" href="#drag-and-drop" title="Permalink to this headline">¶</a></h2>
 <p>Sort of works! You can drag a filename (<em>grabbing the icon does not
 work</em>) and drop it on a folder, an executable, or the command line.
 For drag-and-drop between two GraphTerm windows running on the same
@@ -337,7 +316,7 @@ on two different hosts, the file will be copied.
 this time. Look at the command line for the feedback.)</p>
 </div>
 <div class="section" id="command-recall">
-<span id="index-7"></span><h2><a class="toc-backref" href="#id11">Command recall</a><a class="headerlink" href="#command-recall" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id11">Command recall</a><a class="headerlink" href="#command-recall" title="Permalink to this headline">¶</a></h2>
 <p>If the command line is empty, <em>up/down arrows</em> will use the underlying
 shell for command recall (like Control-P and Control-N). If the
 command line contains any text, including whitespace,
@@ -349,7 +328,7 @@ to execute it. Typing any other key, including the <em>left arrow</em>,
 will cancel the command recall process.</p>
 </div>
 <div class="section" id="inline-plots-using-matplotlib">
-<span id="index-8"></span><h2><a class="toc-backref" href="#id12">Inline plots using matplotlib</a><a class="headerlink" href="#inline-plots-using-matplotlib" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Inline plots using matplotlib</a><a class="headerlink" href="#inline-plots-using-matplotlib" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">gpylab</span></tt> module in the <tt class="docutils literal"><span class="pre">bin</span></tt> directory can be used to start
 up the python interpreter in the <tt class="docutils literal"><span class="pre">pylab</span></tt> mode for inline graphics
 within a notebook:</p>
@@ -358,7 +337,7 @@ within a notebook:</p>
 </div>
 </div>
 <div class="section" id="notebook-mode">
-<span id="index-9"></span><h2><a class="toc-backref" href="#id13">Notebook mode</a><a class="headerlink" href="#notebook-mode" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id13">Notebook mode</a><a class="headerlink" href="#notebook-mode" title="Permalink to this headline">¶</a></h2>
 <p>To enter the notebook mode, select <em>notebook/new</em> on the top menu, or
 type <em>Shift-Enter</em> (or <em>Control-Enter</em>, if you wish to read a notebook
 file and customize the prompts). You can exit the notebook mode using
@@ -368,14 +347,14 @@ use <em>Shift-Enter</em> to execute a cell and move to the next, or
 in the <em>help</em> menu.</p>
 </div>
 <div class="section" id="ipad-android-tablet-usage">
-<span id="index-10"></span><h2><a class="toc-backref" href="#id14">iPad/Android tablet usage</a><a class="headerlink" href="#ipad-android-tablet-usage" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id14">iPad/Android tablet usage</a><a class="headerlink" href="#ipad-android-tablet-usage" title="Permalink to this headline">¶</a></h2>
 <p>Tap on the cursor to display virtual keyboard on the tablet. The
 <em>Bottom menu</em>, exposed by clicking on the last displayed prompt, can be
 quite useful on a tablet. (On Android, you may need to tap a couple of
 more times on the cursor after the keyboard is displayed.)</p>
 </div>
 <div class="section" id="choosing-the-terminal-type">
-<span id="index-11"></span><h2><a class="toc-backref" href="#id15">Choosing the terminal type</a><a class="headerlink" href="#choosing-the-terminal-type" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id15">Choosing the terminal type</a><a class="headerlink" href="#choosing-the-terminal-type" title="Permalink to this headline">¶</a></h2>
 <p>The default terminal type is set to <tt class="docutils literal"><span class="pre">xterm</span></tt>, but it may not always
 work properly. You can also try out the terminal types <tt class="docutils literal"><span class="pre">screen</span></tt> or
 <tt class="docutils literal"><span class="pre">linux</span></tt>,  which may work better for some purposes.
@@ -384,7 +363,7 @@ the default terminal type, or use the <tt class="docutils literal"><span class="
 (Fully supporting these terminal types is a work in progress.)</p>
 </div>
 <div class="section" id="multiple-hosts">
-<span id="index-12"></span><h2><a class="toc-backref" href="#id16">Multiple hosts</a><a class="headerlink" href="#multiple-hosts" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id16">Multiple hosts</a><a class="headerlink" href="#multiple-hosts" title="Permalink to this headline">¶</a></h2>
 <p>More than one host can connect to the GraphTerm server. The local
 host is connected by default (but this can be disabled using the
 <tt class="docutils literal"><span class="pre">--nolocal</span></tt> option). To connect an additional host, run the
@@ -405,7 +384,7 @@ connect directly to the GraphTerm server as a &#8220;host&#8221;, allowing it to
 be dynamically introspected and debugged using <a class="reference external" href="http://code.mindmeldr.com/otrace">otrace</a>.)</p>
 </div>
 <div class="section" id="sessions-and-screensharing">
-<span id="index-13"></span><h2><a class="toc-backref" href="#id17">Sessions and &#8220;screensharing&#8221;</a><a class="headerlink" href="#sessions-and-screensharing" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id17">Sessions and &#8220;screensharing&#8221;</a><a class="headerlink" href="#sessions-and-screensharing" title="Permalink to this headline">¶</a></h2>
 <p>For each host, sessions are assigned default names like <tt class="docutils literal"><span class="pre">tty1</span></tt>
 etc. You can also create unique session names simply by using it in an
 URL, e.g.:</p>
@@ -418,17 +397,17 @@ to connect to it. This is like &#8220;screensharing&#8221;, but more efficient,
 because only the content is shared, not the graphical themes.
 The first user to create a session &#8220;owns&#8221; it, until they detach from
 it. Others connecting to the same session have read-only access,
-unless they &#8220;steal&#8221; the session (see the <em>Action</em> menu).
+unless they &#8220;steal&#8221; the session (see the top menu).
 For example, if you forgot to detach your session at work, you can
 <tt class="docutils literal"><span class="pre">ssh</span></tt> to your desktop from home, use SSH port forwarding (see below)
 to securely access your work desktop, and then steal the
 session using your home browser.</p>
 <p>NOTE: Although GraphTerm supports multiple users, it currently
-assumes a cooperative environment, where everyone trusts everyone
+assumes a mostly cooperative environment, where everyone trusts everyone
 else. (This may change in the future.)</p>
 </div>
 <div class="section" id="wildcard-sessions-and-multiplexing">
-<span id="index-14"></span><h2><a class="toc-backref" href="#id18">Wildcard sessions and multiplexing</a><a class="headerlink" href="#wildcard-sessions-and-multiplexing" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id18">Wildcard sessions and multiplexing</a><a class="headerlink" href="#wildcard-sessions-and-multiplexing" title="Permalink to this headline">¶</a></h2>
 <p>A session path is of the form <tt class="docutils literal"><span class="pre">session_host/session_name</span></tt>. You can
 use the shell wildcard patterns <tt class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></tt> in the session path. For
 example, you can open a wildcard session for multiple hosts using the URL:</p>
@@ -449,16 +428,16 @@ See the <em>otrace</em> integration section for more information.</p>
 regular shell terminals.</p>
 </div>
 <div class="section" id="webcasting">
-<span id="index-15"></span><h2><a class="toc-backref" href="#id19">Webcasting</a><a class="headerlink" href="#webcasting" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id19">Webcasting</a><a class="headerlink" href="#webcasting" title="Permalink to this headline">¶</a></h2>
 <p>If you enable the <em>Webcast</em> in the top menu, anyone can use the
 session URL to view the session, without the need for
 authentication, but will not be able to steal it. <em>Use this feature
-with caution to avoid exposing sensitive data.</em></p>
+with caution to avoid exposing exposing sensitive data.</em></p>
 </div>
 <div class="section" id="slideshows">
-<span id="index-16"></span><h2><a class="toc-backref" href="#id20">Slideshows</a><a class="headerlink" href="#slideshows" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id20">Slideshows</a><a class="headerlink" href="#slideshows" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">glandslide</span></tt> command, which is a slightly modified version of the
-web-based slideshow program <a class="reference external" href="https://github.com/adamzap/landslide">Landslide</a>,
+web-based slide slideshow program <a class="reference external" href="https://github.com/adamzap/landslide">Landslide</a>,
 can be used to create a slideshow from Markdown (.md) or reStructured
 Text (.rst) files. A few sample <tt class="docutils literal"><span class="pre">.md</span></tt> files are provided in the
 <tt class="docutils literal"><span class="pre">graphterm/bin/landslide</span></tt> directory of the distribution. To view a slideshow about
@@ -477,7 +456,7 @@ that has the images for a slideshow, and type:</p>
 pattern. For publicly webcasting a slideshow, use the <tt class="docutils literal"><span class="pre">-b</span></tt> option.</p>
 </div>
 <div class="section" id="command-line-version-of-pythontutor-com">
-<span id="index-17"></span><h2><a class="toc-backref" href="#id21">Command-line version of pythontutor.com</a><a class="headerlink" href="#command-line-version-of-pythontutor-com" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id21">Command-line version of pythontutor.com</a><a class="headerlink" href="#command-line-version-of-pythontutor-com" title="Permalink to this headline">¶</a></h2>
 <p>The command <tt class="docutils literal"><span class="pre">gtutor</span></tt> implements a command-line version of the
 Online Python Tutorial from <a class="reference external" href="http://pythontutor.com">pythontutor.com</a>.
 It produces HTML output that can be piped to <tt class="docutils literal"><span class="pre">gframe</span></tt> for inline display.
@@ -502,7 +481,7 @@ up a graphterm window where you can either run <tt class="docutils literal"><spa
 use <tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">-f</span></tt> to display an HTML file created previously using <tt class="docutils literal"><span class="pre">gtutor</span></tt>.</p>
 </div>
 <div class="section" id="widgets-sockets-and-interactivity">
-<span id="index-18"></span><h2><a class="toc-backref" href="#id22">Widgets, sockets, and interactivity</a><a class="headerlink" href="#widgets-sockets-and-interactivity" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id22">Widgets, sockets, and interactivity</a><a class="headerlink" href="#widgets-sockets-and-interactivity" title="Permalink to this headline">¶</a></h2>
 <p>A widget appears as an overlay on the terminal (like
 <em>picture-in-picture</em> for TVs, or dashboard widgets on the Mac). This is an
 experimental feature that allows programs running in the background to
@@ -535,7 +514,7 @@ gimage -f</pre>
 </div>
 </div>
 <div class="section" id="security">
-<span id="index-19"></span><h2><a class="toc-backref" href="#id23">Security</a><a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id23">Security</a><a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h2>
 <p><em>The GraphTerm is not yet ready to be executed with root privileges</em>.
 Run it logged in as a regular user. The <tt class="docutils literal"><span class="pre">--auth_code</span></tt> option can be
 used to specify an authentication code required for users connecting
@@ -550,7 +529,7 @@ the use of SSL certificates and server/client authentication.
 it, although it is not yet ready for everyday use.)</p>
 </div>
 <div class="section" id="ssh-and-port-forwarding">
-<span id="index-20"></span><h2><a class="toc-backref" href="#id24">SSH and port forwarding</a><a class="headerlink" href="#ssh-and-port-forwarding" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id24">SSH and port forwarding</a><a class="headerlink" href="#ssh-and-port-forwarding" title="Permalink to this headline">¶</a></h2>
 <p>If you login to a remote computer using SSH, you can use the
 <em>Action -&gt; Export Environment</em>  menu option to set the Bash shell
 environment variables on the remote computer. This will allow
@@ -585,12 +564,6 @@ on your home computer to access GraphTerm running on your work computer.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="troubleshooting.html" title="Troubleshooting"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="README.html" title="README"
-             >previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>

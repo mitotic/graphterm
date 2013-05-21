@@ -197,7 +197,7 @@ file for basic instructions on installing and starting up GraphTerm.</p>
 <div class="section" id="accessing-graphterm-features-across-ssh-logins">
 <h2><a class="toc-backref" href="#id4">Accessing GraphTerm features across SSH logins</a><a class="headerlink" href="#accessing-graphterm-features-across-ssh-logins" title="Permalink to this headline">¶</a></h2>
 <p>If you login to a remote computer using SSH, you can use the
-<em>Action -&gt; Export Environment</em>  menu option to set the Bash shell
+<em>terminal/export environment</em>  menu option to set the Bash shell
 environment variables on the remote computer. This will allow
 some, but not all, of GraphTerm&#8217;s features to work on the remote
 session. If you wish to use more features, set the <tt class="docutils literal"><span class="pre">PATH</span></tt> environment
@@ -216,8 +216,13 @@ to connect remote hosts to the GraphTerm server, use:</p>
 </pre></div>
 </div>
 <p>At work, you will use the URL <tt class="docutils literal"><span class="pre">http://localhost:8900/local/tty1</span></tt> to access
-your terminal session <tt class="docutils literal"><span class="pre">tty1</span></tt>.</p>
-<p>To access your work terminal from home, connect to your work computer using SSH:</p>
+your terminal session <tt class="docutils literal"><span class="pre">tty1</span></tt>. Now disable the <em>terminal/private</em> menu
+option, to allow others to share your terminal. To disable privacy by
+default, start the server as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_code</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">term_settings</span><span class="o">=</span><span class="s">&#39;{&quot;sharing_private&quot;: false}&#39;</span>
+</pre></div>
+</div>
+<p>You can then access your work terminal from home, by connecting to your work computer using SSH:</p>
 <div class="highlight-python"><pre>ssh -L 8901:localhost:8900 user@work-computer</pre>
 </div>
 <p>The above command maps your work computer port 8900 to your home computer port 8901.
@@ -230,7 +235,7 @@ home using the URL:</p>
 <div class="highlight-python"><pre>http://localhost:8901/local/tty1</pre>
 </div>
 <p>(If you forgot to detach your work terminal before leaving, use the
-<em>Action-&gt;Steal session</em> menu option to steal control of the session.)</p>
+<em>steal</em> menu button to steal control of the session.)</p>
 <p>If you have multiple terminals open, use the URL <tt class="docutils literal"><span class="pre">http://localhost:8901/local</span></tt> to
 see a list of all the available terminal sessions.</p>
 </div>
@@ -260,9 +265,12 @@ example, you can open a wildcard session for multiple hosts using the URL:</p>
 </div>
 <p>For normal shell terminals, a wildcard session will open a &#8220;blank&#8221; window,
 but any input you type in it will be broadcast to all sessions
-matching the pattern. (To receive visual feedback,
+matching the pattern. To receive visual feedback,
 you will need to view one or more of the matching sessions at the
-same time.)</p>
+same time. You can use the <tt class="docutils literal"><span class="pre">gframe</span></tt> command to open up a group of
+terminals simultaneously, e.g.:</p>
+<div class="highlight-python"><pre>gframe --height 300 --lheight 50 -c 4 -b -t -p /local/tty a b c d '[abcd]'</pre>
+</div>
 <p>For <tt class="docutils literal"><span class="pre">otrace</span></tt> debugging sessions of the form <tt class="docutils literal"><span class="pre">*/osh</span></tt>, GraphTerm
 will multiplex the input and output in wildcard terminals. Your input
 will be echoed and broadcast, and output from each of the matching

@@ -33,7 +33,7 @@ Accessing GraphTerm features across SSH logins
 ======================================================================================
 
 If you login to a remote computer using SSH, you can use the
-*Action -> Export Environment*  menu option to set the Bash shell
+*terminal/export environment*  menu option to set the Bash shell
 environment variables on the remote computer. This will allow
 some, but not all, of GraphTerm's features to work on the remote
 session. If you wish to use more features, set the ``PATH`` environment
@@ -54,9 +54,13 @@ Assume that you will be running ``gtermserver`` on your ``work-computer`` as
   gtermserver --auth_code=none
 
 At work, you will use the URL ``http://localhost:8900/local/tty1`` to access
-your terminal session ``tty1``.
+your terminal session ``tty1``. Now disable the *terminal/private* menu
+option, to allow others to share your terminal. To disable privacy by
+default, start the server as::
 
-To access your work terminal from home, connect to your work computer using SSH::
+  gtermserver --auth_code=none --term_settings='{"sharing_private": false}'
+
+You can then access your work terminal from home, by connecting to your work computer using SSH::
 
   ssh -L 8901:localhost:8900 user@work-computer
 
@@ -72,7 +76,7 @@ home using the URL::
   http://localhost:8901/local/tty1
 
 (If you forgot to detach your work terminal before leaving, use the
-*Action->Steal session* menu option to steal control of the session.)
+*steal* menu button to steal control of the session.)
 
 If you have multiple terminals open, use the URL ``http://localhost:8901/local`` to
 see a list of all the available terminal sessions.
@@ -109,9 +113,13 @@ example, you can open a wildcard session for multiple hosts using the URL::
 
 For normal shell terminals, a wildcard session will open a "blank" window,
 but any input you type in it will be broadcast to all sessions
-matching the pattern. (To receive visual feedback,
+matching the pattern. To receive visual feedback,
 you will need to view one or more of the matching sessions at the
-same time.)
+same time. You can use the ``gframe`` command to open up a group of
+terminals simultaneously, e.g.::
+
+    gframe --height 300 --lheight 50 -c 4 -b -t -p /local/tty a b c d '[abcd]'
+
 
 For ``otrace`` debugging sessions of the form ``*/osh``, GraphTerm
 will multiplex the input and output in wildcard terminals. Your input
