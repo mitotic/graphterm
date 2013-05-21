@@ -116,7 +116,10 @@ but any input you type in it will be broadcast to all sessions
 matching the pattern. To receive visual feedback,
 you will need to view one or more of the matching sessions at the
 same time. You can use the ``gframe`` command to open up a group of
-terminals simultaneously.
+terminals simultaneously, e.g.::
+
+    gframe --height 300 --lheight 50 -c 4 -b -t -p /local/tty a b c d '[abcd]'
+
 
 For ``otrace`` debugging sessions of the form ``*/osh``, GraphTerm
 will multiplex the input and output in wildcard terminals. Your input
