@@ -3,6 +3,61 @@ Release Notes
 .. contents::
 
 
+0.35.0 (May 20, 2013)
+---------------------------------------------------------------------------------
+
+  - New generic notebook mode with code/markdown cell and paging/slide
+    options, interoperable with IPython notebook
+
+  - New menu bar that can float or be anchored; with Ctrl-J for
+    keyboard shortcuts
+
+  - Improved access control options for session sharing
+
+  - Scrollable pagelets to work with session sharing
+
+  - Improved platform compatibility (Android, IE10)
+
+  - Locale export hack to work across SSH logins
+
+  - Form authentication to disallow CSRF
+
+  - Further streamlined copy/paste to work seamlessly on
+    Chrome/Firefix on Mac/Linux
+
+  - New logo and fancier splash screen
+
+  - **Toolchain updates:**
+
+  - Introduced *d3cloud* command for inline word clouds using *d3.js*
+
+  - Renamed *giframe* command to *gframe*, with expanded capabilities
+    for creating split frames and embedded terminals.
+
+  - Updated *gls* from bash to Python for opening notebooks etc.
+
+  - Introduced *gjs* to execute Javscript in client browser
+
+  - Introduced *gmenu* for command-line access to the new menu bar
+
+  - Introduced *gprofile* for appending to the user's ``.bash_profile``
+
+  - Introduced *gpylab.py* for the monkey-patched ``pylab`` mode
+
+  - Introduced *gqrcode* for inline display of QR codes
+
+  - Introduced *greveal* command for inline presentations of Markdown
+    files using *reveal.js*
+
+  - Example script *gshow.ncl* for inline graphics with NCL
+
+  - Example script *gshow.pro* for inline graphics with IDL
+
+  - Updated *gtermapi.py* for scrollable pagelets and stderr output option
+
+  - Introduced *gupload* for drag-and-drop file upload
+
+
 0.34.0 (Jan. 6, 2013)
 ---------------------------------------------------------------------------------
 

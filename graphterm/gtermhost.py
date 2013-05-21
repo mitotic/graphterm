@@ -33,7 +33,10 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
-import tornado.netutil
+try:
+    from tornado.tcpserver import TCPServer   # Tornado 3.0+
+except ImportError:
+    from tornado.netutil import TCPServer     # Tornado 3.0-
 
 from bin import gtermapi
 
@@ -63,6 +66,7 @@ SESSION_RE = re.compile(r"^[a-zA-Z\*\?\[\]][\w\*\?\[\]]*$")   # Allowed session 
 Host_secret = None
 IO_loop = None
 IO_loop_control = False
+Widget_server = None
 
 def get_normalized_host(host):
     """Return identifier version of hostname"""
@@ -158,13 +162,14 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         super(TerminalClient, self).shutdown()
 
     def handle_connect(self):
+        global Widget_server
         normalized_host = get_normalized_host(self.connection_id)
         self.remote_response("", "", [["term_params", {"version": about.version,
                                                   "min_version": about.min_version,
                                                   "host_secret": self.host_secret,
                                                   "normalized_host": normalized_host,
                                                   "term_names": self.terms.keys()}]])
-        if self.widget_port:
+        if self.widget_port and not Widget_server:
             Widget_server = WidgetServer()
             Widget_server.listen(self.widget_port, address="localhost")
             print >> sys.stderr, "GraphTerm widgets listening on %s:%s" % ("localhost", self.widget_port)
@@ -309,7 +314,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "export_environment":
                     if self.lineterm:
-                        self.lineterm.export_environment(term_name)
+                        self.lineterm.export_environment(term_name, cmd[0])
 
                 elif action == "keypress":
                     if self.lineterm:
@@ -704,7 +709,7 @@ class WidgetStream(object):
             self.stream.write(data)
         
 
-class WidgetServer(tornado.netutil.TCPServer):
+class WidgetServer(TCPServer):
     def handle_stream(self, stream, address):
         widget_stream = WidgetStream(stream, address)
         widget_stream.next_packet()

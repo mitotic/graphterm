@@ -1585,8 +1585,6 @@ class Terminal(object):
             while self.note_input:
                 os.write(self.fd, self.note_input.pop(0)+"\n")
 
-        os.fsync(self.fd)
-
     def erase_output(self, all_cells):
         cur_index = self.note_cells["curIndex"]
         for cell in self.note_cells["cells"].itervalues():
@@ -2666,7 +2664,6 @@ class Terminal(object):
                     if self.note_input:
                         # transmit buffered notebook cell line
                         os.write(self.fd, self.note_input.pop(0)+"\n")
-                        os.fsync(self.fd)
                         self.note_expect_prompt = not self.note_input
                     else:
                         self.note_expect_prompt = False
@@ -2764,7 +2761,7 @@ class Multiplex(object):
                     if var not in NO_COPY_ENV:
                         val = os.getenv(var)
                         env[var] = val
-                        if var == "PATH":
+                        if var == "PATH" and Exec_path not in env[var]:
                             # Prepend app bin directory to path
                             env[var] = Exec_path + ":" + env[var]
                 env["COLUMNS"] = str(width)
@@ -2841,9 +2838,17 @@ class Multiplex(object):
                     env.append( ("LC_"+name, env_dict[name]) )
         return env
 
-    def export_environment(self, term_name):
+    def export_environment(self, term_name, profile=False):
         term = self.proc.get(term_name)
         if term:
+            if profile:
+                try:
+                    with open(Exec_path+"/gprofile") as f:
+                        content = f.read()
+                    term.pty_write('''[[ "$PATH" != */graphterm/* ]] && cat << 'END_OF_FILE' >> ~/.bash_profile\n%s\nEND_OF_FILE\n''' % content)
+                except Exception:
+                    term.pty_write('## Failed to read file %s\n' % (Exec_path+"/gprofile"))
+                return
             term.pty_write('[ "$GRAPHTERM_COOKIE" ] || export GRAPHTERM_EXPORT="%s"\n' % (socket.getfqdn() or "unknown",))
             for name, value in self.term_env(term_name, term.cookie, term.height, term.width,
                                              term.winheight, term.winwidth, export=True):

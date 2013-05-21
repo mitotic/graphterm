@@ -1,19 +1,16 @@
 #!/bin/bash
-# helloworld.sh: a Hello World program illustrating GraphTerm escape sequences
+# A Hello World program using the GraphTerm API
 
-imgurl=https://github.com/mitotic/graphterm/raw/master/doc-images/helloworld1.png
-
+prefix=https://raw.github.com/mitotic/graphterm
+url=$prefix/master/graphterm/www/GTYY500.png
 esc=`printf "\033"`
-gterm_code="1155"
-gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
-echo -n "${esc}[?${gterm_code};${gterm_cookie}h"
-
-# Display text with markup
-echo '<b>Hello</b> <em style="color: red;">World!</em><p>'
-
+code="1155"
+# Prefix escape sequence
+echo "${esc}[?${code};${GRAPHTERM_COOKIE}h"
+# Display text with HTML markup
+echo '<b>Hello</b>'
+echo '<b style="color: red;">World!</b><p>'
 # Display inline image
-echo '<a href="https://github.com/mitotic/graphterm" target="_blank">'
-echo '<img width="400" height="200" src="'$imgurl'"></img>'
-echo '</a>'
-
-echo -n "${esc}[?${gterm_code}l"
+echo "<a><img width="200" src=\"$url\"></a>"
+# Suffix escape sequence
+echo "${esc}[?${code}l"

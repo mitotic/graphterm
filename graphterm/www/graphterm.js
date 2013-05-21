@@ -696,7 +696,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
 
     } else {
 	// Element with same id does not exist
-	var prevBlockElem = parentElem.find(".gterm-blockhtml:not(.gterm-blockclosed)");
+	var prevBlockElem = parentElem.find(".pagelet:not(.oldentry) .gterm-blockhtml:not(.gterm-blockclosed)");
 
 	if (overwrite && innerBlockElem.length == 1 && prevBlockElem.length == 1) {
 	    // Modify single previous element
@@ -1868,9 +1868,9 @@ function GTAltPasteHandlerAux() {
     //setTimeout(function() { ScrollTop(null); }, 100);
 }
 
-function GTExportEnvironment() {
+function GTExportEnvironment(profile) {
     if (gWebSocket && gWebSocket.terminal)
-	gWebSocket.write([["export_environment"]]);
+	gWebSocket.write([["export_environment", profile]]);
 }
 
 var gSharedCount = 0;
@@ -1917,7 +1917,7 @@ function GTMenuStateUpdate(stateValues, prefix) {
 	    GTMenuUpdateToggle(prefix+key, val);
     }
     // Float menubar for embedded terminal
-    if (window.parent)
+    if (window.frameElement && window.parent)
 	GTMenuTrigger("appearance_menubar", false);
 }
 
@@ -2192,14 +2192,17 @@ function GTMenuTerminal(selectKey, newValue, force) {
     case "new":
 	OpenNew();
 	break;
-    case "reconnect":
-	ReconnectHost();
+    case "reload":
+	window.location.reload();
 	break;
     case "steal":
 	StealSession();
 	break;
     case "detach":
 	window.location = "/";
+	break;
+    case "reconnect":
+	ReconnectHost();
 	break;
     case "clear":
 	if (newValue && !force && !window.confirm('Clear screen?')) {
@@ -2218,7 +2221,10 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	    gWebSocket.term_input("cd; gls\n");
 	break;
     case "export":
-	GTExportEnvironment();
+	GTExportEnvironment(false);
+	break;
+    case "append":
+	GTExportEnvironment(true);
 	break;
     case "paste":
 	GTPasteSpecialBegin();
@@ -2228,7 +2234,7 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	    GTTerminalInput(String.fromCharCode(3));
 	break;
     case "send_parent":
-	if (window.parent && window.parent.gWebSocket && window.parent.gWebSocket.terminal)
+	if (window.frameElement && window.parent && window.parent.gWebSocket && window.parent.gWebSocket.terminal)
 	    window.parent.GTTerminalInput(String.fromCharCode(3));
 	break;
     }

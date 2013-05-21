@@ -24,18 +24,19 @@ gterm_user = "ubuntu"
 
 usage = "usage: %prog [-h ... ] <instance-tag|full-domain-name>"
 
-form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance with the following hostname: ", command="ec2launch -f")
+form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname (e.g., tagname.graphterm.net): ", command="ec2launch -f")
 form_parser.add_argument(label="", help="Instance hostname")
 form_parser.add_option("type", ("t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
-form_parser.add_option("auth_code", "none", help="User authentication code")
+form_parser.add_option("auth_code", "none", help="User authentication code (single space to suppress graphterm startup)")
 form_parser.add_option("server_secret", "", help="Server secret for host authentication (to connect from anywhere)")
 form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
 form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
+form_parser.add_option("verbose", False, help="Verbose")
 
 form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
 form_parser.add_option("text", False, short="t", help="Text only", raw=True)
@@ -116,12 +117,14 @@ startup_commands = ["#!/bin/bash",
 "easy_install tornado",
 ]
 
-if options.auth_code.strip() or options.connect_to_gterm:
+install_gterm = not install_basename.startswith("graphterm")
+
+if install_gterm:
     startup_commands += ["easy_install graphterm",
                          "gterm_setup"]
 
 if options.pylab:
-    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific libnetcdf-dev netcdf-bin"]
+    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific libnetcdf-dev netcdf-bin ipython"]
     startup_commands += ["easy_install pil qrcode"]
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
@@ -146,7 +149,7 @@ else:
     host_domain = instance_tag if instance_domain else "`curl http://169.254.169.254/latest/meta-data/public-hostname`"
     fwall_command = "iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"
     startup_commands += [ fwall_command ]
-    if options.auth_code.strip():
+    if install_gterm and options.auth_code.strip():
         init_command = (command_format % "gtermserver") + ' --auth_code="'+options.auth_code+'" --host='+host_domain
         startup_commands += [ init_command ]
 
@@ -159,6 +162,9 @@ if init_command or fwall_command:
 startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
 
 startup_script = "\n".join(startup_commands) + "\n"
+
+if options.verbose:
+    print >> sys.stderr, "Startup_commands:\n   "+ "\n   ".join(startup_commands) + "\n\n"
 
 # Connect to EC2
 ec2 = boto.connect_ec2()
@@ -260,7 +266,7 @@ if options.text:
 while status == "pending":
     timesec = int(time.time() - start_time)
     if not options.text:
-        gtermapi.write_pagelet(Status_template % (instance_tag, status, timesec), display="fullpage")
+        gtermapi.write_pagelet(Status_template % (instance_tag, status, timesec), overwrite=True, display="fullpage")
     time.sleep(3)
     status = instance.update()
 
@@ -289,7 +295,12 @@ if hosted_zone:
     # Create new CNAME entry pointing to instance public DNS
     ec2common.cname(route53conn, hosted_zone, instance_tag, public_dns_name)
 
-print "Created EC2 instance %s: id=%s, public=%s" % (instance_tag, instance_id, public_dns_name)
+print >> sys.stderr, "Created EC2 instance %s: id=%s, public=%s" % (instance_tag, instance_id, public_dns_name)
+if options.verbose:
+    print >> sys.stderr, "To check status, type:"
+    print >> sys.stderr, "   ec2ssh ubuntu@"+(instance_tag if instance_domain else public_dns_name)
+    print >> sys.stderr, "   sudo su -"
+    print >> sys.stderr, "   tail -f /var/log/dpkg.log"
 
 ssh_cmd_args = ["ssh", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
                 "-o", "StrictHostKeyChecking=no", gterm_user+"@"+public_dns_name]
