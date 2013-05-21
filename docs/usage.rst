@@ -1,5 +1,5 @@
 *********************************************************************************
- Getting started with GraphTerm
+ Using GraphTerm
 *********************************************************************************
 .. contents::
 
@@ -7,15 +7,7 @@
 Introduction
 ====================================================
 
-To install ``GraphTerm``, you need to have Python 2.6+ and the Bash
-shell on your Mac/Linux/Unix computer. For a quick install, if the python
-``setuptools`` module is already installed on your system,
-use the following two commands::
-
-   sudo easy_install graphterm
-   sudo gterm_setup 
-
-(See the :ref:`installation` section of the :doc:`README` file for more options on installing GraphTerm.)
+(See the README file for information on installing GraphTerm.)
 
 To start the ``GraphTerm`` server, use the command::
 
@@ -44,9 +36,6 @@ Firefox, or Safari (Chrome works best), and enter the following URL::
 
 Once within the ``graphterm`` browser page, select the host you
 wish to connect to and create a new terminal session on the host.
-
-
-.. index:: graphterm-aware commands
 
 Once you have a terminal, try out the following commands::
 
@@ -98,7 +87,6 @@ for other commands, which include:
 (There is also a sample ``gcowsay`` command which can be downloaded
 separately from its `Github repository <https://github.com/mitotic/gcowsay>`_)
 
-.. index:: visual cues
 
 Visual cues
 ================================================================
@@ -112,7 +100,6 @@ menu*. Clicking on other prompts toggles display of the command
 output (unless the Control modifier is used, in which case the
 entire command line is copied and pasted.)
 
-.. index:: folders, opening files, navigating folders
 
 Navigating folders/opening files
 ================================================================
@@ -129,15 +116,12 @@ pasted into the command line, without any
 command being executed. You can edit the pasted text, then press the
 Enter key to execute it.
 
-.. index:: icon display
-
 Icon display
 ================================================================
 
 Select ``icons`` in the top menu to activate icon display for commands like
 ``gls``.
 
-.. index:: themes
 
 Themes
 ================================================================
@@ -146,7 +130,6 @@ Themes
 Themes, selected using the top menu, are a work in progress, especially the 3-D perspective theme
 (which only works on Chrome/Safari).
 
-.. index:: copy/paste, paste
 
 Copy/paste
 ================================================================
@@ -167,7 +150,6 @@ before beginning the paste operation and then paste the text directly.
 This second technique may not always work well for text copied from non-plain
 text sources, such as a web page.
 
-.. index:: drag and drop
 
 Drag and drop
 ================================================================
@@ -180,11 +162,8 @@ on two different hosts, the file will be copied.
 (Graphical feedback for this operation is not properly implemented at
 this time. Look at the command line for the feedback.)
 
-.. index:: command history
-
 Command recall
 ================================================================
-
 
 If the command line is empty, *up/down arrows* will use the underlying
 shell for command recall (like Control-P and Control-N). If the
@@ -194,9 +173,7 @@ previous commands that begin with the text already typed (ignoring
 any leading whitespace). You can use the *right arrow* to
 complete the recalled command (for editing) or use the *Enter* key
 to execute it. Typing any other key, including the *left arrow*,
-will cancel the command recall process. 
-
-.. index:: inline graphics
+will cancel the command recall process.
 
 Inline plots using matplotlib
 ===============================================================
@@ -208,8 +185,6 @@ within a notebook::
     python -i $GRAPHTERM_DIR/bin/gpylab.py
     >>> plot([1,2,4])
 
-.. index:: notebook
- 
 Notebook mode
 ===============================================================
 
@@ -221,8 +196,6 @@ use *Shift-Enter* to execute a cell and move to the next, or
 *Control-Enter* for in-place execution. Additional keyboard shortcuts are listed
 in the *help* menu.
 
-.. index:: ipad, android, tablet
-
 iPad/Android tablet usage
 ================================================================
 
@@ -231,11 +204,9 @@ Tap on the cursor to display virtual keyboard on the tablet. The
 quite useful on a tablet. (On Android, you may need to tap a couple of
 more times on the cursor after the keyboard is displayed.)
 
-
-.. index:: terminal type
-
 Choosing the terminal type
 ================================================================
+
 
 The default terminal type is set to ``xterm``, but it may not always
 work properly. You can also try out the terminal types ``screen`` or
@@ -244,7 +215,6 @@ You can use the ``--term_type`` option when running the server to set
 the default terminal type, or use the ``export TERM=screen`` command.
 (Fully supporting these terminal types is a work in progress.)
 
-.. index:: multiple hosts
 
 Multiple hosts
 ================================================================
@@ -270,7 +240,6 @@ on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a "host", allowing it to
 be dynamically introspected and debugged using `otrace <http://code.mindmeldr.com/otrace>`_.)
 
-.. index:: sessions, screensharing
 
 Sessions and "screensharing"
 ================================================================
@@ -288,17 +257,16 @@ to connect to it. This is like "screensharing", but more efficient,
 because only the content is shared, not the graphical themes.
 The first user to create a session "owns" it, until they detach from
 it. Others connecting to the same session have read-only access,
-unless they "steal" the session (see the *Action* menu).
+unless they "steal" the session (see the top menu).
 For example, if you forgot to detach your session at work, you can
 ``ssh`` to your desktop from home, use SSH port forwarding (see below)
 to securely access your work desktop, and then steal the
 session using your home browser.
 
 NOTE: Although GraphTerm supports multiple users, it currently
-assumes a cooperative environment, where everyone trusts everyone
+assumes a mostly cooperative environment, where everyone trusts everyone
 else. (This may change in the future.)
 
-.. index:: multiplexing, wildcard sessions
 
 Wildcard sessions and multiplexing
 ================================================================
@@ -326,8 +294,6 @@ See the *otrace* integration section for more information.
 NOTE: Multiplexed input/output display cannot be easily implemented for
 regular shell terminals.
 
-.. index:: webcasting
-
 Webcasting
 ================================================================
 
@@ -335,16 +301,14 @@ Webcasting
 If you enable the *Webcast* in the top menu, anyone can use the
 session URL to view the session, without the need for
 authentication, but will not be able to steal it. *Use this feature
-with caution to avoid exposing sensitive data.*
-
-.. index:: slides, slideshows
+with caution to avoid exposing exposing sensitive data.*
 
 Slideshows
 ================================================================
 
 
 The ``glandslide`` command, which is a slightly modified version of the
-web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
+web-based slide slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
 can be used to create a slideshow from Markdown (.md) or reStructured
 Text (.rst) files. A few sample ``.md`` files are provided in the
 ``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
@@ -363,9 +327,6 @@ that has the images for a slideshow, and type::
 
 To select a subset of images in the directory, you can use a wildcard
 pattern. For publicly webcasting a slideshow, use the ``-b`` option.
-
-
-.. index:: execution tracing, online python tutor, python tutor
 
 Command-line version of pythontutor.com
 ================================================================
@@ -395,8 +356,6 @@ presentation file, with the ``src`` attribute set to a graphterm
 URL, such as ``http://localhost:8900/local/tutorial``. This will open
 up a graphterm window where you can either run ``gtutor`` interactively or
 use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
-
-.. index:: sockets, widgets
 
  
 Widgets, sockets, and interactivity
@@ -438,7 +397,6 @@ To display a live twitter feed as an overlay on a presentation, you can use the 
    gtweet -f -s topic > $GRAPHTERM_SOCKET &
    gimage -f
 
-.. index:: security
 
 Security
 ================================================================
@@ -457,7 +415,6 @@ the use of SSL certificates and server/client authentication.
 (SSL/https support is already built in. Feel free to experiment with
 it, although it is not yet ready for everyday use.)
 
-.. index:: ssh, port forwarding
 
 SSH and port forwarding
 ================================================================

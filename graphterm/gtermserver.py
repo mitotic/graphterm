@@ -375,7 +375,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             else:
                 path_comps = self.req_path.split("/")
 
-            super_user = self.authorized["user"] in self._super_users
+            super_user = (not self._super_users and self._auth_type <= self.NAME_AUTH) or self.authorized["user"] in self._super_users
 
             if len(path_comps) < 1 or not path_comps[0]:
                 host_list = TerminalConnection.get_connection_ids()

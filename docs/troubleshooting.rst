@@ -53,7 +53,7 @@ When  I log into another computer using SSH from my GraphTerm window, why do man
 This is normal behavior. Many GraphTerm features only work on the
 computer that the ``gtermhost`` program is running on. By default, SSH is treated
 like any other program that accesses the terminal for
-input/output. However, you can use the *Actions-.Export environment*
+input/output. However, you can use the *terminal/export environment*
 menu command to set shell environment variables on the remote computer
 to restore some, but not all, of GraphTerm features.
 
@@ -117,7 +117,7 @@ Does GraphTerm work on Windows?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The GraphTerm client should work on a Windows browser that supports Websockets,
-like the  latest versions of Chrome/Firefox/Safari or possibly IE10. The
+like the  latest versions of Chrome/Firefox/Safari or IE10. The
 GraphTerm server is currently not supported on Windows. (Although the
 server is written in pure python, it needs access to the
 pseudo-terminal device that is only supported on Unix/Linux.)
@@ -127,14 +127,14 @@ GraphTerm fails to load properly on Windows?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Ensure that you are using a browser that supports Websockets, like the
-latest versions of Chrome/Firefox/Safari or possibly IE10.
+latest versions of Chrome/Firefox/Safari or IE10.
 Some Anti-virus programs block Websockets on the browser. You may need to
 turn them off, or allow access to the domain where the GraphTerm
 server is running.
 
-.. index:: ipad, virtual keyboard
+.. index:: ipad, android, virtual keyboard
 
-Using GraphTerm on the iPad
+Using GraphTerm on tablets
 -------------------------------------------------------------------------------
 
 How do I access the virtual keyboard on the iPad?
@@ -143,5 +143,13 @@ How do I access the virtual keyboard on the iPad?
 *Tap the cursor* access the virtual keyboard on the iPad. If the
 command line ends up behind the keyboard, retract the keyboard
 and tap the cursor again.
+
+How do I access the virtual keyboard on Android?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+GraphTerm currently works on Android devices, but not very well.  *Tap
+the cursor* to activate the virtual keyboard on Android tablets. Then
+tap it two more times and then start typing. Use the bottom menu bar
+for convenience, especially the *Enter* option.
 
 

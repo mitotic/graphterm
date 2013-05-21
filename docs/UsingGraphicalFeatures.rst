@@ -110,10 +110,10 @@ Scrolling to the top/bottom quickly
 
 Expose the bottom menu bar by clicking on the lowest displayed
 prompt, and then click *Top* in the menu bar to scroll to the top.
-To scroll back to the bottom, click *Bottom* on the top menubar.
+To scroll back to the bottom, select *appearance/bottom* on the top menubar.
 
 
-Sending special characters on the iPad
+Sending special characters on an iPad/Android tablet
 ==========================================================================
 
 Expose the bottom menu bar (by clicking on the last prompt) and use *Key*
@@ -172,7 +172,7 @@ By default, the Twitter client displays tweets graphically using
 the fullscreen (``-f``) option, although it also has text (``--text``)
 and CSV format (``--csv``) output options. You can also combine the
 the fullscreen and the text/csv options to save a copy of all the displayed
-tweets by redirecting ``stderr`` to a file, as follows::
+tweets as follows::
 
-  gtweet -f --csv --search python 2> tweets.csv
+  gtweet -f --csv --search python > tweets.csv
 
