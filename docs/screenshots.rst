@@ -21,6 +21,55 @@ ls vs. gls
    <hr style="margin-bottom: 3em;">
 
 
+Inline word cloud using *d3.js*
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-d3cloud.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Inline word cloud display using ``d3.js``
+
+   ..
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+GraphTerm Notebook mode running Python
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Showing notebook mode for Python. Note the use of ``raw_input`` to
+   read data from the terminal within notebook mode.
+
+   ..
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+GraphTerm Notebook mode running R
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Showing notebook mode for R
+
+   ..
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
 stars3d theme, with icons enabled
 ==================================================
 
@@ -230,6 +279,16 @@ Web slideshows using `Landslide <https://github.com/adamzap/landslide>`_
 
 Miscellaneous screenshots
 ==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-idl.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ncl.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-ec2launch1.png
    :align: center
