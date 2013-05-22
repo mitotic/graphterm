@@ -52,6 +52,7 @@ INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
                 "idl": ("pro", "idl", ("IDL> ",)),
                 "ncl": ("ncl", "ncl", ("ncl ",)),
                 "node": ("js", "javascript", ("> ", "... ")),
+                "r": ("r", "r", ("> ", "+ ")),
                 "bash": ("sh", "bash", ()),
             }
 

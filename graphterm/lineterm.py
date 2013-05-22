@@ -351,7 +351,12 @@ def parse_headers(text):
             headers["x_gterm_parameters"] = opt_dict
             if directive == "data":
                 headers["x_gterm_response"] = "create_blob"
-                headers["content_length"] = len(content)
+                content_type, sep, tail = content.partition(";")
+                encoding, sep2, content = tail.partition(",")
+                headers["content_type"] = content_type
+                assert encoding == "base64", "Invalid data URI encoding: "+encoding
+                headers["x_gterm_encoding"] = encoding
+                headers["content_length"] = len(base64.b64decode(content))
             else:
                 headers["x_gterm_response"] = directive
                 if "content_length" in headers:
@@ -958,14 +963,14 @@ class Terminal(object):
         self.winwidth = winwidth
         self.winheight = winheight
         if reset_flag:
-            self.scroll_screen()
             min_width = min(self.width, width)
             saved_line = None
             if self.active_rows:
-                # Check first active line for prompt
+                if self.active_rows > 1:
+                    self.scroll_screen(self.active_rows-1)
+                # Save last line
                 line = dump(self.main_screen.data[:min_width])
-                if prompt_offset(line, self.pdelim, self.main_screen.meta[0]):
-                    saved_line = [len(line.rstrip(u'\x00')), self.main_screen.meta[0], self.main_screen.data[:min_width]]
+                saved_line = [len(line.rstrip(u'\x00')), self.main_screen.meta[0], self.main_screen.data[:min_width]]
             self.width = width
             self.height = height
             self.reset()
@@ -2264,7 +2269,7 @@ class Terminal(object):
                                 raise Exception("File digest mismatch for %s: %s" % (response_type, filepath))
 
                             if response_type == "create_blob":
-                                assert not content or encoding == "base64"
+                                assert not content or encoding == "base64", "Invalid blob encoding"
                             else:
                                 if encoding == "base64":
                                     # Only create blob content needs to remain encoded as Base64
@@ -2303,7 +2308,8 @@ class Terminal(object):
                             else:
                                 response_params["filetype"] = ""
                     except Exception, excp:
-                        content = "ERROR in opening file '%s': %s" % (filepath, excp)
+                        ##traceback.print_exc()
+                        content = "ERROR in reading data from file '%s': %s" % (filepath, excp)
                         response_type = "error_message"
                         headers["x_gterm_response"] = response_type
                         headers["x_gterm_parameters"] = {}

@@ -1,7 +1,7 @@
-pro gshow, command, vars, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=_EXTRA
+pro gshow, command, v, invert=invert, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=_EXTRA
   ;; Derived from http://moonlets.org/Code/plot2png.pro
-  ;; vars is structure for use in command.
-  ;; Example: gshow,'plot,vars.x,vars.y', {x:[1,2], y:[5,9]}
+  ;; v is a structure for use in the command.
+  ;; Example: gshow,'plot,v.x,v.y', {x:[1,2], y:[5,9]}, /invert
   esc = string(27B)
   lf = string(10B)
   gterm_code = 1155
@@ -13,9 +13,9 @@ pro gshow, command, vars, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=
   esc_suffix = esc+'[?'+strtrim(gterm_code,2)+'l'
   ;;print, esc_prefix, '<b>Hello</b> World!', esc_suffix, format='(a,a,a,$)'
 
-  if(not keyword_set(overwrite)) then overwrite=0
-  if(not keyword_set(xsize)) then xsize=640
-  if(not keyword_set(ysize)) then ysize=480
+  if (not keyword_set(overwrite)) then overwrite=0
+  if (not keyword_set(xsize)) then xsize=400
+  if (not keyword_set(ysize)) then ysize=300
 
   old_dev = !d.name
 
@@ -24,6 +24,14 @@ pro gshow, command, vars, overwrite=overwrite, xsize=xsize, ysize=ysize, _EXTRA=
 
   ;; Color table
   tvlct, r, g, b, /get
+
+  if (keyword_set(invert)) then begin
+    tvlct, r, g, b, /get
+    tvlct, Reverse(r), Reverse(g), Reverse(b)
+    temcolor = !P.Color
+    !P.Color = !P.Background
+    !P.Background = temcolor
+  endif
 
   result = execute(command)
 

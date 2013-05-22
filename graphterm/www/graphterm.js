@@ -3582,6 +3582,7 @@ function GTNotebook(note_file, note_dir, fullpage) {
     this.last_poll_time = epoch_time();
     this.passthru_stdin = false;
     this.handling_tab = null;
+    this.handled_tab = false;
     this.lastTextValue = null;
 
     this.focusing = false;
@@ -3816,7 +3817,6 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     textElem.autoResize({extraSpace: 6});
     //if (!gParams.controller)
     //	textElem.attr("disabled", "disabled");
-    this.lastTextValue = null;
     $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();
     $("#"+this.getCellId(this.curIndex)+"-output").bind("click", bind_method(this, this.handleOutput));
     this.renderCell(this.splitting, this.splitting);
@@ -3929,12 +3929,16 @@ GTNotebook.prototype.deleteCell = function(deleteIndex, switchIndex) {
 }
 
 GTNotebook.prototype.cellValue = function(inputData, cellIndex) {
+    inputData = inputData || "";
     cellIndex = cellIndex || this.curIndex;
+    if (cellIndex == this.curIndex)
+	this.lastTextValue = inputData;
     var textElem = $("#"+this.getCellId(cellIndex)+"-textarea");
-    textElem.val(inputData || "");
+    textElem.val(inputData);
 }
 
 GTNotebook.prototype.cellFocus = function(focus, selectAll, noScroll) {
+    //console.log("GTNotebook.cellFocus: ", focus, selectAll, noScroll);
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     this.focusing = true;
     if (focus) {
@@ -3994,6 +3998,9 @@ GTNotebook.prototype.poll = function(force) {
 }
 
 GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) {
+    //console.log("GTNotebook.output:", this.handled_tab);
+    var selectAll = !this.handling_tab && !this.handled_tab;
+    this.handled_tab = false;
     if (!this.curIndex)
 	return;
     var cellParams = this.cellParams[this.curIndex];
@@ -4060,10 +4067,10 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 		gWebSocket.write([["select_cell", 0, false]]);
 	} else if (this.curIndex == this.getLastIndex()) {
 	    // Last cell
-	    this.cellFocus(true, true, true);
+	    this.cellFocus(true, selectAll, true);
 	    setTimeout(ScrollTerm, 200);
 	} else {
-	    this.cellFocus(true, true);
+	    this.cellFocus(true, selectAll);
 	}
     } else {
 	// Scroll on output
@@ -4075,7 +4082,9 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 }
 
 GTNotebook.prototype.cancelCompletion = function() {
+    //console.log("GTNotebook.cancelCompletion:");
     this.handling_tab = null;
+    this.handled_tab = true;
     if (gWebSocket)
 	gWebSocket.write([["complete_cell", null]]);
 }
