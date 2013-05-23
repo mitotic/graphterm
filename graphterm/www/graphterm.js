@@ -1904,7 +1904,7 @@ function GTJoin(user, joining, setup) {
 
 var gMenuState = {appearance: {menubar: true, icons: false, theme: ""},
                   sharing: {control: true, private: true, locked: false, tandem: false, webcast: false},
-                  notebook: {markdown: false, slide: false}};
+                  notebook: {markdown: false, page: {slide: false}} };
 var gMenuObj = null;
 
 function GTMenuSetup() {
@@ -2484,7 +2484,7 @@ function gtermPageletClickHandler(event) {
     GTReceivedUserInput("click");
     var text = $(this).text();
     var pagelet = $(this).closest(".pagelet");
-    var href = $(this).attr("href")
+    var href = $(this).attr("href");
     var file_url = makeFileURL(href);
 
     if (contextMenu) {
@@ -3947,6 +3947,7 @@ GTNotebook.prototype.selectCell = function(cellIndex, nofocus) {
 }
 
 GTNotebook.prototype.selectPage = function(cellIndex, lastIndex, slide) {
+    //console.log("GTNotebook.selectPage: ", cellIndex, lastIndex, slide);
     $("#terminal").toggleClass("gterm-noteslides", slide);
     this.selectCell(cellIndex, slide);
     this.slide_mode = slide;
