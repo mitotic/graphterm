@@ -32,7 +32,7 @@ if not gtermapi.Lterm_cookie or not sys.stdout.isatty():
     options.output = True
 
 if options.terminal and gtermapi.Lterm_cookie:
-    text = os.getenv("GRAPHTERM_URL", "")
+    text = gtermapi.env("URL", "")
 else:
     if not args or not args[0]:
         gtermapi.write_form(form_parser.create_form(), command="gqrcode")

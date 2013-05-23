@@ -44,7 +44,7 @@ esc=`printf "\033"`
 nl=`printf "\012"`
 cr=`printf "\015"`
 gterm_code="1155"
-gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
+gterm_cookie=${GTERM_COOKIE:-${LC_GTERM_COOKIE}}
 $echocmd1 "${esc}[?${gterm_code};${gterm_cookie}h"
 
 $echocmd1 "$headers"

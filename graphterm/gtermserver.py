@@ -740,7 +740,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 # Change command and add from_user
                                 ws.write_message(json.dumps([["receive_msg", from_user] + msg[1:]]))
                             except Exception, excp:
-                                logging.error("edit_broadcast: ERROR %s", excp)
+                                logging.error("send_msg: ERROR %s", excp)
                                 try:
                                     # Close websocket on write error
                                     ws.close()
@@ -1078,9 +1078,13 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
         IO_loop.remove_timeout(self.timeout_callback)
 
-        if status[0] == 304 and self.cached_copy and self.request.method != "HEAD":
-            # Not modified since cached copy was created; return cached copy
-            self.finish_write(self.cached_copy[1], self.cached_copy[2])
+        if status[0] == 304:
+            if self.cached_copy and self.request.method != "HEAD":
+                # Not modified since cached copy was created; return cached copy
+                self.finish_write(self.cached_copy[1], self.cached_copy[2])
+                return
+            self.set_status(status[0])
+            self.finish()
             return
 
         if status[0] != 200:

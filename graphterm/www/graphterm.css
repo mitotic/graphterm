@@ -176,6 +176,12 @@ hr {
     opacity: 0.35;
 }
 
+#terminal.gterm-notebook .sf-menu .gterm-non-notebook-show,
+ #terminal:not(.gterm-notebook) .sf-menu .gterm-only-notebook-show
+{
+    display: none;
+}
+
 #terminal .sf-menu li {
     background-color: rgb(225,225,225);
     color: black;
@@ -296,6 +302,11 @@ hr.sf-separator {
 
 #session-bufscreen.fullpage .oldentry {
     display: none;
+}
+
+/* Show click styles */
+.gterm-show-click {
+    background-color: red;
 }
 
 #session-headermenu,

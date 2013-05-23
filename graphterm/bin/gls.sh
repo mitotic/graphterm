@@ -36,9 +36,9 @@ echocmd2="echo"
 rowimg=""
 rowtxt=""
 
-gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
+gterm_cookie=${GTERM_COOKIE:-${LC_GTERM_COOKIE}}
 
-if [ -z $GRAPHTERM_PROMPT ]; then
+if [ -z $GTERM_PROMPT ]; then
    glscmd="~/meldr-hg/xmlterm/bin/gls"
    gvicmd="~/meldr-hg/xmlterm/bin/gvi"
 else

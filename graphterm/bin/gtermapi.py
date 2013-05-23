@@ -29,19 +29,26 @@ import uuid
 
 from optparse import OptionParser
 
-API_VERSION = "0.34.0"
-API_MIN_VERSION = "0.31"
+API_VERSION = "0.35.0"
+API_MIN_VERSION = "0.35"
 
 HEX_DIGITS = 16
 
-Version_str, sep, Min_version_str = os.getenv("GRAPHTERM_API", "").partition("/")
+GT_PREFIX = "GTERM_"
 
-Lterm_cookie = os.getenv("GRAPHTERM_COOKIE", "") or os.getenv("LC_GRAPHTERM_COOKIE", "")
-Export_host = os.getenv("GRAPHTERM_EXPORT", "") or (not os.getenv("GRAPHTERM_COOKIE", "") and os.getenv("LC_GRAPHTERM_EXPORT", ""))
-Path = os.getenv("GRAPHTERM_PATH", "") or os.getenv("LC_GRAPHTERM_PATH", "")
-Dimensions = os.getenv("GRAPHTERM_DIMENSIONS", "") or os.getenv("LC_GRAPHTERM_DIMENSIONS", "") # colsxrows[;widthxheight]
-Shared_secret = os.getenv("GRAPHTERM_SHARED_SECRET", "") or os.getenv("LC_GRAPHTERM_SHARED_SECRET", "")
-URL = os.getenv("GRAPHTERM_URL", "http://localhost:8900")
+def env(name, default="", lc=False):
+    if not lc:
+        return os.getenv(GT_PREFIX+name, default)
+    return os.getenv(GT_PREFIX+name, "") or os.getenv("LC_"+GT_PREFIX+name, default)
+
+Version_str, sep, Min_version_str = env("API").partition("/")
+
+Lterm_cookie = env("COOKIE", lc=True)
+Export_host = env("EXPORT") or (not env("COOKIE") and os.getenv("LC_"+GT_PREFIX+"EXPORT", ""))
+Path = env("PATH", lc=True)
+Dimensions = env("DIMENSIONS", lc=True) # colsxrows[;widthxheight]
+Shared_secret = env("SHARED_SECRET", lc=True)
+URL = env("URL", "http://localhost:8900")
 
 Host, Session = Path.split("/") if Path else ("", "") 
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
@@ -59,7 +66,8 @@ INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
 EXTENSIONS   = dict((prog, values[0]) for prog, values in INTERPRETERS.items())
 LANGUAGES    = dict((prog, values[1]) for prog, values in INTERPRETERS.items())
 PROMPTS_LIST = dict((prog, values[2]) for prog, values in INTERPRETERS.items() if values[2])
-MAP_EXTENSIONS = dict((values[0], values[1]) for prog, values in INTERPRETERS.items())
+EXTN2LANG    = dict((values[0], values[1]) for prog, values in INTERPRETERS.items())
+EXTN2PROG    = dict((values[0], prog) for prog, values in INTERPRETERS.items() if prog != "ipython")
 
 PAGE_BREAK = "---"
 

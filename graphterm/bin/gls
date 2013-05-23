@@ -7,6 +7,7 @@ gls: graphterm-aware ls
 
 import mimetypes
 import os
+import random
 import sys
 import xml.dom.minidom
 from optparse import OptionParser
@@ -15,30 +16,35 @@ import gtermapi
 
 SPECIAL_FILES = set(["..", ".", "~"])
 
-gbrowsecmd = os.getenv("GRAPHTERM_BROWSE_CMD", "") or "gbrowse"
-gimagecmd = os.getenv("GRAPHTERM_IMAGE_CMD", "") or "gimage"
-glscmd = os.getenv("GRAPHTERM_LS_CMD", "") or "gls"
-gopencmd = os.getenv("GRAPHTERM_OPEN_CMD", "") or "gopen"
-gvicmd = gbrowsecmd if gtermapi.Export_host else os.getenv("GRAPHTERM_VI_CMD", "") or "gvi"
-pynbcmd = "python -i gtermapi.py"
-ipynbcmd = "ipython -i gpylab.py"
+gbrowsecmd = gtermapi.env("BROWSE_CMD", "") or "gbrowse"
+gimagecmd = gtermapi.env("IMAGE_CMD", "") or "gimage"
+glscmd = gtermapi.env("LS_CMD", "") or "gls"
+gopencmd = gtermapi.env("OPEN_CMD", "") or "gopen"
+gvicmd = gbrowsecmd if gtermapi.Export_host else gtermapi.env("VI_CMD", "") or "gvi"
+
+NB2CMD = {"py": "python -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
+          "ipynb": "ipython -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
+          "js": "node %[notebook]",
+          "r": "r -q %[notebook]> +",
+          "sh": " %[notebook]",
+          }
+
+GENERIC_ICON = "/_static/images/tango-text-x-generic-template.png"
 
 FILE_TYPES = {"directory": ("/_static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
               "executable": ("/_static/images/tango-application-x-executable.png", ""),
-              "pynotebook": ("/_static/images/tango-text-x-generic-template.png", pynbcmd),
-              "ipynotebook": ("/_static/images/tango-text-x-generic-template.png", ipynbcmd),
               "audiofile": ("/_static/images/tango-audio-x-generic.png", gbrowsecmd),
               "htmlfile": ("/_static/images/tango-text-html.png", gopencmd),
               "imagefile": ("/_static/images/tango-image-x-generic.png", gimagecmd),
-              "pdffile": ("/_static/images/tango-text-x-generic-template.png", gbrowsecmd),
-              "plainfile": ("/_static/images/tango-text-x-generic-template.png", gopencmd),
               "textfile": ("/_static/images/tango-text-x-generic.png", gvicmd),
               "videofile": ("/_static/images/tango-video-x-generic.png", gopencmd),  # Need to implement streaming...
+              "pdffile": (GENERIC_ICON, gbrowsecmd),
+              "plainfile": (GENERIC_ICON, gopencmd),
 }
 
-IMGFORMAT = '<td><a class="gterm-link gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img" src="%(fileicon)s"></img></a>'
+IMGFORMAT = '<td><a id="glsimg%(id)s" class="gterm-link gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img" src="%(fileicon)s"></img></a>'
 
-TXTFORMAT = '<td><a class="gterm-link %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
+TXTFORMAT = '<td><a id="glstxt%(id)s" class="gterm-link %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
 
 Home_dir = os.path.expanduser("~")
 Work_dir = os.getenv("PWD", "") or os.getcwd()
@@ -48,50 +54,72 @@ Special_dirs = [(Parent_dir, ".."),
                 (Work_dir, "."),
                 (Home_dir, "~")]
 
+Id_prefix = "1%09d" % random.randrange(0, 10**9)
+Id_count = 0
 
 def file2html(filepath, filename, filemode=0):
+    global Id_count;
     mimetype = None
+    fileicon = GENERIC_ICON
+    filecmd = ""
+    filetype = ""
     if filename in SPECIAL_FILES:
         filetype = "directory"
+    elif os.path.isdir(filepath):
+        filetype = "directory"
     elif os.path.lexists(filepath):
-        mimetype, encoding = mimetypes.guess_type(filename)
-        filetype = ""
-        if os.path.isdir(filepath):
-            filetype = "directory"
-        elif filepath.endswith(".py.md"):
-            filetype = "pynotebook"
-        elif filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
-            filetype = "ipynotebook"
-        elif mimetype:
-            if mimetype.startswith("audio/"):
-                filetype = "audiofile"
-            elif mimetype == "text/html":
-                filetype = "htmlfile"
-            elif mimetype.startswith("image/"):
-                filetype = "imagefile"
-            elif mimetype == "application/pdf":
-                filetype = "pdffile"
-            elif mimetype.startswith("text/") or mimetype == "application/javascript":
-                filetype = "textfile"
-            elif mimetype.startswith("video/"):
-                filetype = "videofile"
+        basename = os.path.basename(filepath)
+        prefix, ext = os.path.splitext(basename)
+        if ext in (".ipynb", ".json"):
+            if ext != ".ipynb":
+                prefix, ext = os.path.splitext(prefix)
+            if ext == ".ipynb":
+                filecmd = NB2CMD["ipynb"]
+                filetype = "ipynb"
+        elif ext in (".gnb", ".md", ".txt"):
+            if ext != ".gnb":
+                prefix, ext = os.path.splitext(prefix)
+            if ext == ".gnb":
+                prefix, langext = os.path.splitext(prefix)
+                langext = langext[1:]
+                filecmd = NB2CMD.get(langext,"")
+                if filecmd:
+                    filetype = langext+"nb"
+
         if not filetype:
-            if os.access(filepath, os.X_OK):
-                filetype = "executable"
-            else:
-                filetype = "plainfile"
+            mimetype, encoding = mimetypes.guess_type(filename)
+            if mimetype:
+                if mimetype.startswith("audio/"):
+                    filetype = "audiofile"
+                elif mimetype == "text/html":
+                    filetype = "htmlfile"
+                elif mimetype.startswith("image/"):
+                    filetype = "imagefile"
+                elif mimetype == "application/pdf":
+                    filetype = "pdffile"
+                elif mimetype.startswith("text/") or mimetype == "application/javascript":
+                    filetype = "textfile"
+                elif mimetype.startswith("video/"):
+                    filetype = "videofile"
+            if not filetype:
+                if os.access(filepath, os.X_OK):
+                    filetype = "executable"
+                else:
+                    filetype = "plainfile"
     else:
         return "", ""
 
     classes = "droppable" if filetype in ("directory", "executable") else ""
-    fileicon, filecmd = FILE_TYPES[filetype]
+    if not filecmd:
+        fileicon, filecmd = FILE_TYPES[filetype]
 
     fileurl = gtermapi.get_file_url(filepath, relative=(filetype != "htmlfile"))
     if options.images and mimetype and mimetype.startswith("image/"):
         fileicon = fileurl
 
+    Id_count += 1;
     params = {"classes": classes, "fileurl": fileurl, "filename": filename, "filetype": filetype,
-              "fileicon": fileicon, "filecmd": filecmd}
+              "fileicon": fileicon, "filecmd": filecmd, "id": Id_prefix+"-"+str(Id_count)}
     
     return IMGFORMAT % params, TXTFORMAT % params
 

@@ -6,7 +6,7 @@ url=$prefix/master/graphterm/www/GTYY500.png
 esc=`printf "\033"`
 code="1155"
 # Prefix escape sequence
-echo "${esc}[?${code};${GRAPHTERM_COOKIE}h"
+echo "${esc}[?${code};${GTERM_COOKIE}h"
 # Display text with HTML markup
 echo '<b>Hello</b>'
 echo '<b style="color: red;">World!</b><p>'

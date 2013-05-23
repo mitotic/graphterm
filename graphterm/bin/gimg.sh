@@ -3,7 +3,7 @@
 
 esc=`printf "\033"`
 gterm_code="1155"
-gterm_cookie=${GRAPHTERM_COOKIE:-${LC_GRAPHTERM_COOKIE}}
+gterm_cookie=${GTERM_COOKIE:-${LC_GTERM_COOKIE}}
 
 # Create blob
 blob_id="${RANDOM}${RANDOM}"

@@ -34,30 +34,33 @@ Notes: Use ioff() to disable interactive mode
        Use autoprint(True) to re-enable default expression printing behaviour
 """
 
-import gmatplot as gm
-gm.setup()    # Sets up gmatplot and patches pylab
-from pylab import *
-from gmatplot import display
-import matplotlib
+try:
+    import gmatplot as gm
+    gm.setup()    # Sets up gmatplot and patches pylab
+    from pylab import *
+    from gmatplot import display
+    import matplotlib
 
-import sys
-Saved_displayhook = sys.displayhook
+    import sys
+    Saved_displayhook = sys.displayhook
 
-def gpylab_display_hook(expr):
-    if isinstance(expr, matplotlib.figure.Figure):
-        display(expr, overwrite=True)
+    def gpylab_display_hook(expr):
+        if isinstance(expr, matplotlib.figure.Figure):
+            display(expr, overwrite=True)
 
-def autoprint(enable=True):
-    global Saved_displayhook
-    if enable:
-        sys.displayhook = Saved_displayhook
-    else:
-        # Suppress automatic printing of expressions
-        Saved_displayhook = sys.displayhook
-        sys.displayhook = gpylab_display_hook
+    def autoprint(enable=True):
+        global Saved_displayhook
+        if enable:
+            sys.displayhook = Saved_displayhook
+        else:
+            # Suppress automatic printing of expressions
+            Saved_displayhook = sys.displayhook
+            sys.displayhook = gpylab_display_hook
 
-autoprint(False)
-ion()
+    autoprint(False)
+    ion()
+except ImportError:
+    pass
 
 if __name__ == "__main__":
     import sys

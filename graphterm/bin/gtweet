@@ -6,7 +6,7 @@ gtweet: Send or receive tweets, and display them
 
 To runs as a widget:
 
-  gtweet -w -f -s topic > $GRAPHTERM_SOCKET &
+  gtweet -w -f -s topic > $GTERM_SOCKET &
 """
 
 import binascii

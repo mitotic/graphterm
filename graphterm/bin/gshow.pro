@@ -5,8 +5,8 @@ pro gshow, command, v, invert=invert, overwrite=overwrite, xsize=xsize, ysize=ys
   esc = string(27B)
   lf = string(10B)
   gterm_code = 1155
-  cookie = getenv("GRAPHTERM_COOKIE")
-  if (cookie eq "") then cookie = getenv("LC_GRAPHTERM_COOKIE")
+  cookie = getenv("GTERM_COOKIE")
+  if (cookie eq "") then cookie = getenv("LC_GTERM_COOKIE")
   if (cookie eq "") then message, "No graphterm cookie"
 
   esc_prefix = esc+'[?'+strtrim(gterm_code,2)+';'+strtrim(cookie,2)+'h'

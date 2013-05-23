@@ -32,6 +32,7 @@ except NotImplementedError:
 
 import base64
 import errno
+import glob
 import hashlib
 import hmac
 import pipes
@@ -44,6 +45,8 @@ import uuid
 
 from bin import gtermapi
 
+GT_PREFIX = gtermapi.GT_PREFIX
+
 MAX_SCROLL_LINES = 500
 
 CHUNK_BYTES = 4096            # Chunk size for receiving data in stdin
@@ -54,8 +57,8 @@ IDLE_TIMEOUT = 300      # Idle timeout in seconds
 UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
-NO_COPY_ENV = set(["GRAPHTERM_EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
-LC_EXPORT_ENV = ["GRAPHTERM_API", "GRAPHTERM_COOKIE", "GRAPHTERM_DIMENSIONS", "GRAPHTERM_PATH", "GRAPHTERM_SHARED_SECRET"]
+NO_COPY_ENV = set([GT_PREFIX+"EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
+LC_EXPORT_ENV = [GT_PREFIX+"API", GT_PREFIX+"COOKIE", GT_PREFIX+"DIMENSIONS", GT_PREFIX+"PATH", GT_PREFIX+"SHARED_SECRET"]
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)     # (prompt_escape, pagelet_escape)
@@ -69,6 +72,9 @@ COMMAND_DELIMITERS = "<>;"
 
 MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
 MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
+
+DEFAULT_FILE_PREFIX = "Untitled"
+DEFAULT_FILENUM_RE = re.compile("^(\d+)")
 
 MARKUP_TYPES = set(["markdown"])
 
@@ -152,8 +158,8 @@ Exec_errmsg = False
 ENCODING = "utf-8"  # "utf-8" or "ascii"
 
 # Bash PROMPT CMD variable (and export version)
-BASH_PROMPT_CMD = 'export PS1=$GRAPHTERM_PROMPT; echo -n "\033[?%s;${GRAPHTERM_COOKIE}h$PWD\033[?%s;l"'
-EXPT_PROMPT_CMD = 'export PS1=$GRAPHTERM_PROMPT; echo -n `printf \"\\033\"`\"[?%s;${GRAPHTERM_COOKIE}h$PWD\"`printf \"\\033\"`\"[?%s;l\"'
+BASH_PROMPT_CMD = 'export PS1=$GTERM_PROMPT; echo -n "\033[?%s;${GTERM_COOKIE}h$PWD\033[?%s;l"'
+EXPT_PROMPT_CMD = 'export PS1=$GTERM_PROMPT; echo -n `printf \"\\033\"`\"[?%s;${GTERM_COOKIE}h$PWD\"`printf \"\\033\"`\"[?%s;l\"'
 
 STYLE4 = 4
 UNI24 = 24
@@ -860,12 +866,9 @@ class Terminal(object):
         self.note_prompts = []
         self.note_expect_prompt = False
         self.note_found_prompt = False
+        self.note_params = {}
         self.note_cells = None
         self.note_input = []
-        self.note_file = ""
-        self.note_shell = False
-        self.note_dir = ""
-        self.note_command = ""
         self.note_start = None
         self.note_slide = None
 
@@ -988,16 +991,16 @@ class Terminal(object):
     def open_notebook(self, filepath, prompts=[], content=None):
         self.note_start = None
         self.note_count += 1
-        at_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
-        self.note_dir = self.current_dir
-        if at_shell:
-            self.note_command = "bash"
+        note_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
+        note_dir = self.current_dir
+        if note_shell:
+            note_command = "bash"
         elif self.command_path:
-            self.note_command = os.path.basename(self.command_path)
+            note_command = os.path.basename(self.command_path)
         else:
-            self.note_command = ""
-        if not prompts and self.note_command in gtermapi.PROMPTS_LIST:
-            prompts = gtermapi.PROMPTS_LIST[self.note_command]
+            note_command = ""
+        if not prompts and note_command in gtermapi.PROMPTS_LIST:
+            prompts = gtermapi.PROMPTS_LIST[note_command]
         if not prompts:
             # Search buffer to use current prompt
             try:
@@ -1009,7 +1012,7 @@ class Terminal(object):
                         prompts += gtermapi.PROMPTS_LIST["python"][1:]
                     elif prompts[0] == gtermapi.PROMPTS_LIST["ipython"][0]:
                         prompts += gtermapi.PROMPTS_LIST["ipython"][1:]
-                    elif at_shell:
+                    elif note_shell:
                         prompts += ["> "]
                     elif prompts[-1] == gtermapi.PROMPTS_LIST["node"][0]:
                         # Handles node REPL shell
@@ -1026,23 +1029,34 @@ class Terminal(object):
         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
         self.note_prompts = prompts
 
-        self.note_file = filepath
-        self.note_shell = at_shell
-        self.screen_callback(self.term_name, "", "note_open", [self.note_file, self.note_dir, self.note_shell])
-        self.note_file = filepath
         if content is None:
-            if not filepath:
-                content = ""
-            else:
+            if filepath:
                 fullname = os.path.expanduser(filepath)
-                fullpath = fullname if fullname.startswith("/") else self.note_dir+"/"+fullname
+                fullpath = fullname if fullname.startswith("/") else note_dir+"/"+fullname
                 try:
                     with open(fullpath) as f:
                         content = f.read()
                 except Exception, excp:
                     content = "Error in reading notebook file %s" % fullpath
                     logging.error("Error in reading notebook file %s" % fullpath)
+            else:
+                content = ""
+                fileprefix = (note_dir+"/" if note_dir else "")+DEFAULT_FILE_PREFIX
+                offset = len(fileprefix)
+                filenum = 1+max([int(DEFAULT_FILENUM_RE.match(fname[offset:]).group(1)) for fname in glob.glob(fileprefix+"*") if DEFAULT_FILENUM_RE.match(fname[offset:])] or [0])
+                filepath = DEFAULT_FILE_PREFIX+str(filenum)
+                if note_command == "ipython":
+                    filepath += ".ipynb"
+                elif note_command in gtermapi.EXTENSIONS:
+                    filepath += "." + gtermapi.EXTENSIONS[note_command] + ".gnb.md"
+                else:
+                    filepath += ".gnb.md"
 
+        note_name = os.path.splitext(os.path.basename(filepath))[0]
+        if note_name.endswith(".gnb") or note_name.endswith(".ipynb"):
+            note_name = os.path.splitext(note_name)[0]
+        self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command, "shell": note_shell}
+        self.screen_callback(self.term_name, "", "note_open", [self.note_params])
         if content:
             if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
                 self.read_ipynb(content)
@@ -1051,6 +1065,7 @@ class Terminal(object):
 
         if not self.note_cells["curIndex"]:
             self.add_cell("")
+        self.select_cell(self.note_cells["cellIndices"][0])
 
     def close_notebook(self, discard=False):
         self.note_start = None
@@ -1082,18 +1097,22 @@ class Terminal(object):
 
     def save_notebook(self, filepath, input_data="", params={}):
         fullname = os.path.expanduser(filepath)
-        fullpath = fullname if fullname.startswith("/") else self.note_dir+"/"+fullname
-        fig_suffix = safe_filename(os.path.splitext(os.path.basename(fullpath))[0])
+        fullpath = fullname if fullname.startswith("/") else self.note_params["dir"]+"/"+fullname
+        fname, fext = os.path.splitext(os.path.basename(fullpath))
+        fig_suffix = safe_filename(fname)
         format = params.get("format", "")
-        if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
+        if fext in (".ipynb", ".ipynb.json"):
             format = "ipynb"
             ipy_format = filepath.endswith(".ipynb")
             fig_suffix, sep, tail = fig_suffix.rpartition(".")
+        elif not fext:
+            fullpath += ".gnb.md"
+            fext = ".md"
         md_lines = []
         if format == "ipynb":
             md_lines += [IPYNB_JSON_HEADER % dict(name=fig_suffix, version_major=3, version_minor=0)]
-        elif self.note_command:
-            md_lines.append('<!--gterm notebook command=%s-->' % safe_filename(self.note_command))
+        elif self.note_params["command"]:
+            md_lines.append('<!--gterm notebook command=%s-->' % safe_filename(self.note_params["command"]))
         ref_blobs = OrderedDict()
         prompt_num = 0
         in_prompt = 0
@@ -1213,6 +1232,7 @@ class Terminal(object):
                                                                row_params=["pagelet", {"blob": blob_id}])
                 self.update()
         except Exception, excp:
+            ##traceback.print_exc()
             logging.warning("read_ipynb: %s", excp)
 
 
@@ -1334,7 +1354,7 @@ class Terminal(object):
             If before_cell_number > 0, add new_cell before before_cell_number
         """
         if not new_cell_type:
-            new_cell_type = gtermapi.LANGUAGES.get(self.note_command, "code")
+            new_cell_type = gtermapi.LANGUAGES.get(self.note_params["command"], "code")
         prev_index = self.note_cells["curIndex"]
         if before_cell_number in (-1, 0):
             before_cell_number += 2+self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
@@ -1695,7 +1715,7 @@ class Terminal(object):
 
         if self.note_cells:
             if reconnecting:
-                self.screen_callback(self.term_name, response_id, "note_open", [self.current_dir, self.note_shell])
+                self.screen_callback(self.term_name, response_id, "note_open", [self.note_params])
                 for cell_index in self.note_cells["cellIndices"]:
                     cell = self.note_cells["cells"][cell_index]
                     self.screen_callback(self.term_name, response_id, "note_add_cell",
@@ -2661,7 +2681,7 @@ class Terminal(object):
         if self.note_input or self.note_expect_prompt or self.note_start:
             line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
             if self.note_input or self.note_expect_prompt:
-                if self.note_shell:
+                if self.note_params["shell"]:
                     prompt_found = bool(prompt_offset(line, self.pdelim, self.main_screen.meta[0]))
                 else:
                     prompt_found = any(line.startswith(prompt) for prompt in self.note_prompts)
@@ -2801,22 +2821,22 @@ class Multiplex(object):
     def term_env(self, term_name, cookie, height, width, winheight, winwidth, export=False):
         env = []
         env.append( ("TERM", self.term_type or TERM_TYPE) )
-        env.append( ("GRAPHTERM_COOKIE", str(cookie)) )
-        env.append( ("GRAPHTERM_SHARED_SECRET", self.shared_secret) )
-        env.append( ("GRAPHTERM_PATH", "%s/%s" % (self.host, term_name)) )
+        env.append( (GT_PREFIX+"COOKIE", str(cookie)) )
+        env.append( (GT_PREFIX+"SHARED_SECRET", self.shared_secret) )
+        env.append( (GT_PREFIX+"PATH", "%s/%s" % (self.host, term_name)) )
         dimensions = "%dx%d" % (width, height)
         if winwidth or winheight:
             dimensions += ";%dx%d" % (winwidth, winheight)
-        env.append( ("GRAPHTERM_DIMENSIONS", dimensions) )
+        env.append( (GT_PREFIX+"DIMENSIONS", dimensions) )
 
         if self.server_url:
-            env.append( ("GRAPHTERM_URL", self.server_url) )
+            env.append( (GT_PREFIX+"URL", self.server_url) )
 
         if self.api_version:
-            env.append( ("GRAPHTERM_API", self.api_version) )
+            env.append( (GT_PREFIX+"API", self.api_version) )
 
         if self.widget_port:
-            env.append( ("GRAPHTERM_SOCKET", "/dev/tcp/localhost/%d" % self.widget_port) )
+            env.append( (GT_PREFIX+"SOCKET", "/dev/tcp/localhost/%d" % self.widget_port) )
 
         prompt_fmt, export_prompt_fmt = "", ""
         if self.prompt_list:
@@ -2825,19 +2845,19 @@ class Multiplex(object):
                 export_prompt_fmt = self.prompt_list[0]+self.prompt_list[3]+self.prompt_list[1]+" "
             else:
                 export_prompt_fmt = prompt_fmt
-            env.append( ("GRAPHTERM_PROMPT", export_prompt_fmt if export else prompt_fmt) )
-            ##env.append( ("PROMPT_COMMAND", "export PS1=$GRAPHTERM_PROMPT; unset PROMPT_COMMAND") )
+            env.append( (GT_PREFIX+"PROMPT", export_prompt_fmt if export else prompt_fmt) )
+            ##env.append( ("PROMPT_COMMAND", "export PS1=$GTERM_PROMPT; unset PROMPT_COMMAND") )
             cmd_fmt = EXPT_PROMPT_CMD if export else BASH_PROMPT_CMD
             env.append( ("PROMPT_COMMAND", cmd_fmt % (GRAPHTERM_SCREEN_CODES[0], GRAPHTERM_SCREEN_CODES[0]) ) )
 
-        env.append( ("GRAPHTERM_DIR", File_dir) )
+        env.append( (GT_PREFIX+"DIR", File_dir) )
 
         if self.lc_export:
             # Export some environment variables as LC_* (hack to enable SSH forwarding)
             env_dict = dict(env)
-            env.append( ("LC_GRAPHTERM_EXPORT", socket.getfqdn() or "unknown") )
+            env.append( ("LC_"+GT_PREFIX+"EXPORT", socket.getfqdn() or "unknown") )
             if export_prompt_fmt:
-                env.append( ("LC_GRAPHTERM_PROMPT", export_prompt_fmt) )
+                env.append( ("LC_"+GT_PREFIX+"PROMPT", export_prompt_fmt) )
                 env.append( ("LC_PROMPT_COMMAND", env_dict["PROMPT_COMMAND"]) )
             for name in LC_EXPORT_ENV:
                 if name in env_dict:
@@ -2855,18 +2875,18 @@ class Multiplex(object):
                 except Exception:
                     term.pty_write('## Failed to read file %s\n' % (Exec_path+"/gprofile"))
                 return
-            term.pty_write('[ "$GRAPHTERM_COOKIE" ] || export GRAPHTERM_EXPORT="%s"\n' % (socket.getfqdn() or "unknown",))
+            term.pty_write('[ "$GTERM_COOKIE" ] || export GTERM_EXPORT="%s"\n' % (socket.getfqdn() or "unknown",))
             for name, value in self.term_env(term_name, term.cookie, term.height, term.width,
                                              term.winheight, term.winwidth, export=True):
                 try:
-                    if name in ("GRAPHTERM_DIR",):
+                    if name in (GT_PREFIX+"DIR",):
                         term.pty_write( ('[ "$%s" ] || ' % name) + ("export %s='%s'\n" % (name, value)) )
                     else:
                         term.pty_write( "export %s='%s'\n" % (name, value) )  # Keep inner single quotes to handle PROMPT_COMMAND
                 except Exception:
                     print >> sys.stderr, "lineterm: Error exporting environment to %s" % term_name
                     break
-            term.pty_write('[[ "$PATH" != */graphterm/* ]] && [ -d "$GRAPHTERM_DIR" ] && export PATH="$GRAPHTERM_DIR/%s:$PATH"\n' % BINDIR)
+            term.pty_write('[[ "$PATH" != */graphterm/* ]] && [ -d "$GTERM_DIR" ] && export PATH="$GTERM_DIR/%s:$PATH"\n' % BINDIR)
 
     def set_size(self, term_name, height, width, winheight=0, winwidth=0):
         # python bug http://python.org/sf/1112949 on amd64

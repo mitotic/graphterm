@@ -1,28 +1,28 @@
 ############ start of gprofile #######################
 # gprofile: graphterm bash setup file
 # Execute as
-#   source $GRAPHTERM_DIR/bin/gprofile
+#   source $GTERM_DIR/bin/gprofile
 # or append to .bash_profile
 
-if [[ -z "$GRAPHTERM_COOKIE" ]] && [[ -n "$LC_GRAPHTERM_COOKIE" ]]; then
-   export GRAPHTERM_COOKIE="$LC_GRAPHTERM_COOKIE"
+if [[ -z "$GTERM_COOKIE" ]] && [[ -n "$LC_GTERM_COOKIE" ]]; then
+   export GTERM_COOKIE="$LC_GTERM_COOKIE"
 fi
 
-if [[ -z "$GRAPHTERM_EXPORT" ]] && [[ -n "$LC_GRAPHTERM_EXPORT" ]]; then
-   export GRAPHTERM_EXPORT="$LC_GRAPHTERM_EXPORT"
+if [[ -z "$GTERM_EXPORT" ]] && [[ -n "$LC_GTERM_EXPORT" ]]; then
+   export GTERM_EXPORT="$LC_GTERM_EXPORT"
 fi
 
-if [[ -z "$PROMPT_COMMAND" ]] && [[ -n "$LC_PROMPT_COMMAND" ]] && [[ -n "$LC_GRAPHTERM_PROMPT" ]]; then
+if [[ -z "$PROMPT_COMMAND" ]] && [[ -n "$LC_PROMPT_COMMAND" ]] && [[ -n "$LC_GTERM_PROMPT" ]]; then
    # Set prompt command
-   export GRAPHTERM_PROMPT="$LC_GRAPHTERM_PROMPT"
+   export GTERM_PROMPT="$LC_GTERM_PROMPT"
    export PROMPT_COMMAND="$LC_PROMPT_COMMAND"
 fi
 
 ## To access the graphterm toolchain across SSH, install graphterm on the remote machine and then
-## uncomment the following lines and set GRAPHTERM_DIR to the graphterm installation directory
-# export GRAPHTERM_DIR=unknown
-# [[ "$PATH" != */graphterm/* ]] && PATH="$GRAPHTERM_DIR/bin:$PATH"
-# alias gpython="python -i $GRAPHTERM_DIR/bin/gpylab.py"
-# alias gipython="ipython -i $GRAPHTERM_DIR/bin/gpylab.py"
+## uncomment the following lines and set GTERM_DIR to the graphterm installation directory
+# export GTERM_DIR=unknown
+# [[ "$PATH" != */graphterm/* ]] && PATH="$GTERM_DIR/bin:$PATH"
+# alias gpython="python -i $GTERM_DIR/bin/gpylab.py"
+# alias gipython="ipython -i $GTERM_DIR/bin/gpylab.py"
 
 ############# end of gprofile #####################

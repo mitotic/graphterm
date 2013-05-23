@@ -18,7 +18,7 @@ response, preceded and followed by
   \x1b[?1155l
 
 where ``<cookie>`` denotes a numeric value stored in the environment
-variable ``GRAPHTERM_COOKIE``. (The random cookie is a security
+variable ``GTERM_COOKIE``. (The random cookie is a security
 measure that prevents malicious files from accessing GraphTerm.)
 The opening escape sequence is followed by a *dictionary* of header
 names and values, using JSON format. This is followed by a blank line,

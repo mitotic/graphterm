@@ -3,7 +3,7 @@ require("Cairo")
 require("png")
 
 gsave <- function(pngdata, overwrite=FALSE, test=False) {
-  prefix <- paste("\x1b[?1155;", Sys.getenv("GRAPHTERM_COOKIE"), "h", sep="")
+  prefix <- paste("\x1b[?1155;", Sys.getenv("GTERM_COOKIE"), "h", sep="")
   suffix <- "\x1b[?1155;l"
 
   image64 <- base64(pngdata)

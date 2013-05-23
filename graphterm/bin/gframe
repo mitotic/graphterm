@@ -95,7 +95,7 @@ elif options.columns:
         if options.lheight.endswith("%"):
             lheight_percent = float(options.lheight[:-1])
         else:
-            termx, termy = os.getenv("GRAPHTERM_DIMENSIONS").split(";")[1].split("x")
+            termx, termy = gtermapi.env("DIMENSIONS").split(";")[1].split("x")
             lheight_percent = 100.0*float(options.lheight)/float(termy)
         height_percent = (max_percent - 5 - lheight_percent) / (nrows - 1)
     else:
