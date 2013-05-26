@@ -60,7 +60,7 @@ INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
                 "idl": ("pro", "idl", ("IDL> ",)),
                 "ncl": ("ncl", "ncl", ("ncl ",)),
                 "node": ("js", "javascript", ("> ", "... ", ".... ", "..... ", "...... ", "....... ", "........ ", "......... ")),
-                "r": ("r", "r", ("> ", "+ ")),
+                "R": ("R", "R", ("> ", "+ ")),
                 "bash": ("sh", "bash", ()),
             }
 
@@ -405,6 +405,7 @@ def get_blob_id(blob_url):
 
 def get_blob_url(blob_id, host=""):
     host = host or Host
+    assert host, "Null host for blob url"
     if "*" in Blob_server:
         subdomain = "blob-"+hmac.new("wildcard", blob_id, digestmod=hashlib.md5).hexdigest()[:12]
         return Blob_server.replace("*", subdomain)+BLOB_PREFIX+host+"/"+blob_id

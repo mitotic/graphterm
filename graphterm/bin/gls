@@ -25,7 +25,7 @@ gvicmd = gbrowsecmd if gtermapi.Export_host else gtermapi.env("VI_CMD", "") or "
 NB2CMD = {"py": "python -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
           "ipynb": "ipython -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
           "js": "node %[notebook]",
-          "r": "r -q %[notebook]> +",
+          "R": "R -q %[notebook]> +",
           "sh": " %[notebook]",
           }
 
@@ -70,18 +70,22 @@ def file2html(filepath, filename, filemode=0):
     elif os.path.lexists(filepath):
         basename = os.path.basename(filepath)
         prefix, ext = os.path.splitext(basename)
+        langext = ""
         if ext in (".ipynb", ".json"):
             if ext != ".ipynb":
                 prefix, ext = os.path.splitext(prefix)
             if ext == ".ipynb":
                 filecmd = NB2CMD["ipynb"]
                 filetype = "ipynb"
-        elif ext in (".gnb", ".md", ".txt"):
+        elif ext in (".gnb", ".md") or (ext == ".txt" and prefix.endswith(".gnb")):
             if ext != ".gnb":
                 prefix, ext = os.path.splitext(prefix)
             if ext == ".gnb":
                 prefix, langext = os.path.splitext(prefix)
                 langext = langext[1:]
+            elif ext in (".py", ".R",):
+                langext = ext[1:]
+            if langext:
                 filecmd = NB2CMD.get(langext,"")
                 if filecmd:
                     filetype = langext+"nb"

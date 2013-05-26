@@ -185,7 +185,7 @@ def join_lines(lines):
     if isinstance(lines, basestring):
         return lines
     else:
-        return "".join(line if line.endswith("\n") else line+"\n" for line in lines[:-1])+lines[-1]
+        return "".join(line if line.endswith("\n") else line+"\n" for line in lines[:-1]) + (lines[-1] if lines else "")
 
 def nb_json(lines, ipy_raw=False):
     if not ipy_raw:
@@ -1119,7 +1119,7 @@ class Terminal(object):
             fullpath += ".gnb.md"
             fext = ".md"
         fig_suffix = safe_filename(fname)
-        curly_fence = fname.endswith(".r") or self.note_params["command"] == "r"
+        curly_fence = fname.endswith(".R") or self.note_params["command"] == "R"
         md_lines = []
         if format == "ipynb":
             md_lines += [IPYNB_JSON_HEADER % dict(name=fig_suffix, version_major=3, version_minor=0)]
@@ -1242,12 +1242,12 @@ class Terminal(object):
                             blob_id = str(uuid.uuid4())
                             data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
                             self.create_blob(blob_id, data_uri[len("data:"):])
-                            markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id), "image")
+                            markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id, host=self.host), "image")
                             self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                                row_params=["pagelet", {"blob": blob_id}])
                 self.update()
         except Exception, excp:
-            ##traceback.print_exc()
+            traceback.print_exc()
             logging.warning("read_ipynb: %s", excp)
 
 
@@ -1316,11 +1316,11 @@ class Terminal(object):
                     blob_id = str(uuid.uuid4())
                     blob_ids[ref_id] = blob_id
                     if code_cell:
-                        markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id), alt)
+                        markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id, host=self.host), alt)
                         self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                            row_params=["pagelet", {"blob": blob_id}])
                     else:
-                        raw_lines.append("![%s](%s)" % (alt, gtermapi.get_blob_url(blob_id)))
+                        raw_lines.append("![%s](%s)" % (alt, gtermapi.get_blob_url(blob_id, host=self.host)))
 
                 elif MD_REF_RE.match(line):
                     # Reference list
