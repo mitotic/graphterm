@@ -361,7 +361,7 @@ form_parser.add_option("widget", False, short="w", help="Widget display", raw=Tr
 form_parser.add_option("csv", False, short="c", help="CSV output", raw=True)
 form_parser.add_option("json", False, short="j", help="JSON output", raw=True)
 form_parser.add_option("text", False, short="t", help="Text output", raw=True)
-form_parser.add_option("opacity", 1.0, help="Feed opacity (default: 1.0)")
+form_parser.add_option("opacity", 1.0, short="o", help="Feed opacity (default: 1.0)")
 form_parser.add_option("timeout", 0.0, help="Timeout in sec (default: 0 => no timeout)")
 
 form_parser.add_option("auth_file", Default_auth_file, raw=True,
@@ -405,4 +405,4 @@ else:
     update_status(" ".join(args))
 
 if options.fullscreen:
-    gtermapi.write_blank(stderr=(not Out_tty))
+    gtermapi.write_blank(exit_page=True, stderr=(not Out_tty))

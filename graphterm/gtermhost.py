@@ -132,7 +132,8 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
     all_cookies = {}
     def __init__(self, host, port, host_secret="", oshell=False, io_loop=None, ssl_options={},
-                 command="", term_type="", term_encoding="utf-8", widget_port=0, prompt_list=[], lc_export=False, lterm_logfile="", key_secret=None, key_version=None):
+                 command="", term_type="", term_encoding="utf-8", widget_port=0, prompt_list=[],
+                 blob_host="", lc_export=False, lterm_logfile="", key_secret=None, key_version=None):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
                                              reconnect_sec=RETRY_SEC, server_type="frame",
@@ -151,6 +152,12 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.terms = {}
         self.lineterm = None
         self.server_url = ("https" if ssl_options else "http") + "://" + host + ":" + str(port+1)
+        if blob_host == "wildcard":
+            self.blob_server = ("https" if ssl_options else "http") + "://*." + host + ":" + str(port+1)
+        elif blob_host:
+            self.blob_server = ("https" if ssl_options else "http") + "://" + blob_host + ":" + str(port+1)
+        else:
+            self.blob_server = blob_host
         self.osh_cookie = lineterm.make_lterm_cookie()
         self.blob_cache = BlobCache()
 
@@ -211,8 +218,8 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                                                shared_secret=self.host_secret, host=self.connection_id,
                                                server_url=self.server_url, term_type=self.term_type,
                                                api_version=version_str, widget_port=self.widget_port,
-                                               prompt_list=self.prompt_list, lc_export=self.lc_export,
-                                               logfile=self.lterm_logfile)
+                                               prompt_list=self.prompt_list, blob_server=self.blob_server,
+                                               lc_export=self.lc_export, logfile=self.lterm_logfile)
         term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width,
                                                          winheight=winheight, winwidth=winwidth,
                                                          parent=parent)

@@ -95,6 +95,10 @@ if options.kill or options.killall:
                 if hosted_zone:
                     try:
                         ec2common.cname(route53conn, hosted_zone, instance_tag, props["public_dns"], remove=True)
+                        try:
+                            ec2common.cname(route53conn, hosted_zone, "*."+instance_tag, props["public_dns"], remove=True)
+                        except Exception:
+                            pass
                     except Exception:
                         print >> sys.stderr, "Failed to remove DNS record for ", instance_tag
             

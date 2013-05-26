@@ -33,10 +33,12 @@ form_parser.add_option("auth_code", "none", help="User authentication code (sing
 form_parser.add_option("server_secret", "", help="Server secret for host authentication (to connect from anywhere)")
 form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
 form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
+form_parser.add_option("copy_files", "", help="List of files to copy (space separated, e.g., .twitter_auth)")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
 form_parser.add_option("verbose", False, help="Verbose")
+form_parser.add_option("wildcard", False, help="Enable wildcard subdomains")
 
 form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
 form_parser.add_option("text", False, short="t", help="Text only", raw=True)
@@ -67,6 +69,7 @@ if not os.path.exists(ssh_dir):
     sys.exit(1)
 
 install_file, install_cmd, install_basename, install_baseroot, unarch_cmd = "", "", "", "", ""
+copy_files = []
 if options.install:
     install_file, sep, install_cmd = options.install.partition(";")
     if not os.path.isfile(install_file):
@@ -86,6 +89,10 @@ if options.install:
         unarch_cmd = "unzip"
     else:
         raise Exception("Invalid extension for install file: "+install_file)
+    copy_files.append(install_file)
+
+if options.copy_files:
+    copy_files += options.copy_files.split()
 
 GroupRule = collections.namedtuple("GroupRule",
                                    ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
@@ -151,6 +158,8 @@ else:
     startup_commands += [ fwall_command ]
     if install_gterm and options.auth_code.strip():
         init_command = (command_format % "gtermserver") + ' --auth_code="'+options.auth_code+'" --host='+host_domain
+        if options.wildcard:
+            init_command += " --blob_host=wildcard"
         startup_commands += [ init_command ]
 
 if init_command or fwall_command:
@@ -294,6 +303,8 @@ public_dns_name = instance_obj.public_dns_name
 if hosted_zone:
     # Create new CNAME entry pointing to instance public DNS
     ec2common.cname(route53conn, hosted_zone, instance_tag, public_dns_name)
+    if options.wildcard:
+        ec2common.cname(route53conn, hosted_zone, "*."+instance_tag, public_dns_name)
 
 print >> sys.stderr, "Created EC2 instance %s: id=%s, public=%s" % (instance_tag, instance_id, public_dns_name)
 if options.verbose:
@@ -314,18 +325,18 @@ if nameservers:
 print >> sys.stderr, "Waiting for remote setup to complete..."
 time.sleep(30)
 
-if install_file:
-    scp_cmd_args = ["scp", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
-                    "-o", "StrictHostKeyChecking=no", install_file, gterm_user+"@"+public_dns_name+":"]
+if copy_files:
+    scp_cmd_args = ["scp", "-i", os.path.expanduser("~/.ssh/ec2key.pem"), "-o", "StrictHostKeyChecking=no"] + copy_files + [gterm_user+"@"+public_dns_name+":"]
     print >> sys.stderr, " ".join(scp_cmd_args)
     out, err = gtermapi.command_output(scp_cmd_args, timeout=60)
     if out:
         print out
     if err:
         print err
-    wait_cmd += "; "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install"
-    if install_cmd:
-        wait_cmd += "; "+install_cmd
+    if options.install:
+        wait_cmd += "; "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install"
+        if install_cmd:
+            wait_cmd += "; "+install_cmd
 
 print >> sys.stderr, " ".join(ssh_cmd_args)
 print >> sys.stderr, wait_cmd

@@ -11,11 +11,16 @@ from optparse import OptionParser
 
 import gtermapi
 
-usage = "usage: %prog <javascript>"
+usage = "usage: %prog [-f file] [-e js_string] [js_func arg1 ...]"
 parser = OptionParser(usage=usage)
 parser.add_option("-f", "--file",
                   action="store_true", dest="file", default=False,
                   help="Read from file")
+parser.add_option("-v", "--verbose",
+                  action="store_true", dest="verbose", default=False,
+                  help="Verbose output")
+parser.add_option("-e", "--eval", dest="eval", default="",
+                  help="Evaluate string")
 
 (options, args) = parser.parse_args()
 
@@ -25,8 +30,19 @@ if options.file:
         sys.exit(1)
     with open(args[0], "r") as f:
         js = "".join(f.readlines())
+elif options.eval:
+    js = options.eval
+elif args:
+    if "=" in args[0] or (len(args) >= 2 and args[1].startswith("=")):
+        js = " ".join(args)
+    else:
+        js = args[0] + "(" + ", ".join(arg if arg.isdigit() else '"'+arg+'"' for arg in args[1:]) + ")"
 else:
-    js = " ".join(args)
+    print >> sys.stderr, parser.get_usage()
+    sys.exit(1)
+    
+if options.verbose:
+    print js
 
 Headers = {"content_type": "text/plain"}
 Headers["x_gterm_response"] = "eval_js"

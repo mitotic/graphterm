@@ -5,7 +5,7 @@
 gframe: Display file (or HTML from stdin) in inline iframe
 
 For multiplexed display use:
-   gframe --height 300 --lheight 50 -c 4 -b -t -p /local/tty a b c d '[abcd]'
+   gframe -r 300 -l 50 -c 4 -b -t -p tty a b c d '[abcd]'
 
 To recursively display terminal /local/tty1, use:
    gframe --height 300 -b -n -t /local/tty1/watch
@@ -31,8 +31,9 @@ form_parser.add_argument(label="URL/filename: ", help="URL/filename to display (
 form_parser.add_option("prefix", "", short="p", help="URL/path prefix")
 form_parser.add_option("opacity", 1.0, short="o", help="Frame opacity (default: 1.0)")
 form_parser.add_option("columns", 0, short="c", help="Columns")
-form_parser.add_option("height", "", help="Frame height")
-form_parser.add_option("lheight", "", help="Last row frame height")
+form_parser.add_option("width", "", short="w", help="Frame width (pixels/%)")
+form_parser.add_option("rowheight", "", short="r", help="Frame row height")
+form_parser.add_option("lastheight", "", short="l", help="Last row height")
 form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display")
 form_parser.add_option("border", False, short="b", help="Include border")
 form_parser.add_option("noheader", False, short="n", help="Suppress header")
@@ -48,6 +49,11 @@ if args:
         if arg.startswith("http:") or arg.startswith("https:"):
             iframe_urls.append(arg)
         elif options.terminal:
+            if "/" not in arg:
+                arg = "/" + gtermapi.env("PATH").split("/")[1] + "/" + arg
+            elif not arg.startswith("/"):
+                print >> sys.stderr, "Invalid terminal path %s; must begin with /" % arg
+                sys.exit(1)
             arg += "/&" if "?" in arg else "/?"
             arg += "qauth=%(qauth)"
             iframe_urls.append(arg)
@@ -73,13 +79,13 @@ else:
     iframe_urls = [gtermapi.create_blob(content, content_type="text/html")]
 
 headers = {"opacity": options.opacity}
-if not options.fullscreen:
+if not options.fullscreen and not options.rowheight:
     headers["autosize"] = True
 
 add_class = "gterm-noheader" if options.noheader else ""
 if options.border:
     add_class += " gterm-border"
-IFRAMEFORMAT = '<iframe id="%s" class="gterm-iframe %s" src="%s" width="%d%%" %s></iframe>'
+IFRAMEFORMAT = '<iframe id="%s" class="gterm-iframe %s" src="%s" width="%s" %s></iframe>'
 
 iframe_html = ""
 
@@ -88,16 +94,16 @@ ncols = int(options.columns) or nframes
 nrows = ((nframes-1) // ncols) + 1
 
 max_percent = 100.0 if options.noheader else 95.0
-if options.height:
-    frameHeight = ' height="%s" ' % options.height
+if options.rowheight:
+    frameHeight = ' height="%s" ' % options.rowheight
 elif options.columns:
-    if options.lheight and nrows > 1:
-        if options.lheight.endswith("%"):
-            lheight_percent = float(options.lheight[:-1])
+    if options.lastheight and nrows > 1:
+        if options.lastheight.endswith("%"):
+            lh_precent = float(options.lastheight[:-1])
         else:
             termx, termy = gtermapi.env("DIMENSIONS").split(";")[1].split("x")
-            lheight_percent = 100.0*float(options.lheight)/float(termy)
-        height_percent = (max_percent - 5 - lheight_percent) / (nrows - 1)
+            lh_precent = 100.0*float(options.lastheight)/float(termy)
+        height_percent = (max_percent - 5 - lh_precent) / (nrows - 1)
     else:
         height_percent = (max_percent - 5) / nrows
     frameHeight = ' height="%d%%" ' % height_percent
@@ -109,17 +115,20 @@ for j, url in enumerate(iframe_urls):
     if irow == nrows-1:
         # Last row
         n = ((nframes-1) % ncols)+1
-        if options.lheight:
-            frameHeight = ' height="%s" ' % options.lheight
+        if options.lastheight:
+            frameHeight = ' height="%s" ' % options.lastheight
     else:
         n = ncols
-    width = 100 if nframes == 1 else math.floor(96.0/n)
+    if options.width:
+        width = options.width
+    else:
+        width = str(100 if nframes == 1 else math.floor(96.0/n)) + "%"
     frameId = "gframe%09d" % random.randrange(0, 10**9)
     iframe_html += IFRAMEFORMAT % (frameId, add_class+("" if irow else " gterm-iframe-firstrow"), url, width, frameHeight)
 
 if not options.noheader:
     if options.fullscreen:
-        iframe_html = '<span class="gterm-iframeclose gterm-iframeheader">&#215;</span>' + iframe_html
+        iframe_html = '<span class="gterm-iframeexpand gterm-iframeheader">&#x29c9;</span><span class="gterm-iframeclose gterm-iframeheader">&#x2a2f;</span>' + iframe_html
     else:
         container_id = "gframecontainer%09d" % random.randrange(0, 10**9)
         iframe_html = '<div id="'+container_id+'"> <span class="gterm-iframeheader gterm-iframedelete" gterm-iframe-container="'+container_id+'">&#215;</span>' + iframe_html + '</div>'

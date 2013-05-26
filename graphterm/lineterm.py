@@ -73,12 +73,14 @@ COMMAND_DELIMITERS = "<>;"
 MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
 MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
 
+MD_FENCE_RE = re.compile(r"^\s*{(\S+)(\s.*)?}")
+
 DEFAULT_FILE_PREFIX = "Untitled"
 DEFAULT_FILENUM_RE = re.compile("^(\d+)")
 
 MARKUP_TYPES = set(["markdown"])
 
-BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="%slocal/%s" alt="%s"></div>'
+BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="%s" alt="%s"></div>'
 
 IPYNB_JSON_HEADER = """{
  "metadata": {
@@ -185,8 +187,8 @@ def join_lines(lines):
     else:
         return "".join(line if line.endswith("\n") else line+"\n" for line in lines[:-1])+lines[-1]
 
-def nb_json(lines, ipy_format=False):
-    if not ipy_format:
+def nb_json(lines, ipy_raw=False):
+    if not ipy_raw:
         return json.dumps("\n".join(lines))
     return json.dumps([line+"\n" for line in lines[:-1]] + lines[-1:])
 
@@ -1098,16 +1100,26 @@ class Terminal(object):
     def save_notebook(self, filepath, input_data="", params={}):
         fullname = os.path.expanduser(filepath)
         fullpath = fullname if fullname.startswith("/") else self.note_params["dir"]+"/"+fullname
-        fname, fext = os.path.splitext(os.path.basename(fullpath))
-        fig_suffix = safe_filename(fname)
         format = params.get("format", "")
-        if fext in (".ipynb", ".ipynb.json"):
-            format = "ipynb"
-            ipy_format = filepath.endswith(".ipynb")
-            fig_suffix, sep, tail = fig_suffix.rpartition(".")
+        fname, fext = os.path.splitext(os.path.basename(fullpath))
+        ipy_raw = False
+        if fext in (".ipynb", ".json"):
+            if fext == ".ipynb":
+                ipy_raw = True
+            else:
+                fname, fext = os.path.splitext(fname)
+            if fext == ".ipynb":
+                format = "ipynb"
+        elif fext in (".gnb", ".md", ".txt"):
+            if fext != ".gnb":
+                fname, fext = os.path.splitext(fname)
+            if fext == ".gnb":
+                format = ""
         elif not fext:
             fullpath += ".gnb.md"
             fext = ".md"
+        fig_suffix = safe_filename(fname)
+        curly_fence = fname.endswith(".r") or self.note_params["command"] == "r"
         md_lines = []
         if format == "ipynb":
             md_lines += [IPYNB_JSON_HEADER % dict(name=fig_suffix, version_major=3, version_minor=0)]
@@ -1128,7 +1140,7 @@ class Terminal(object):
             if format == "ipynb":
                 if j:
                     md_lines[-1] += ","
-                input_json = nb_json(cell["cellInput"], ipy_format)
+                input_json = nb_json(cell["cellInput"], ipy_raw)
                 if cell["cellType"] in MARKUP_TYPES:
                     md_lines += [IPYNB_JSON_MARKDOWN % dict(source=input_json)]
                 else:
@@ -1137,7 +1149,10 @@ class Terminal(object):
                     md_lines += [IPYNB_JSON_CODE0 % dict(input=input_json, lang="python")]
             elif cell["cellInput"]:
                 if cell["cellType"] not in MARKUP_TYPES:
-                    md_lines.append("```"+cell["cellType"])
+                    if curly_fence or cell["cellTypeExtra"] is not None:
+                        md_lines.append("```{"+cell["cellType"]+(cell["cellTypeExtra"] or "")+"}")
+                    else:
+                        md_lines.append("```"+cell["cellType"])
                 for line in cell["cellInput"]:
                     md_lines.append(line)
                 if cell["cellType"] not in MARKUP_TYPES:
@@ -1155,7 +1170,7 @@ class Terminal(object):
                                 if cell_out:
                                     md_lines[-1] += ","
                                 prompt_num += 1
-                                out_json = nb_json(out_lines, ipy_format)
+                                out_json = nb_json(out_lines, ipy_raw)
                                 md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=out_json)]
                             else:
                                 md_lines += ["```output"] + out_lines + ["```"] + [""]
@@ -1182,7 +1197,7 @@ class Terminal(object):
                         if cell_out:
                             md_lines[-1] += ","
                         prompt_num += 1
-                        out_json = nb_json(out_lines, ipy_format)
+                        out_json = nb_json(out_lines, ipy_raw)
                         md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=out_json)]
                     else:
                         md_lines += ["```output"] + out_lines + ["```"] + [""]
@@ -1227,7 +1242,7 @@ class Terminal(object):
                             blob_id = str(uuid.uuid4())
                             data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
                             self.create_blob(blob_id, data_uri[len("data:"):])
-                            markup = BLOCKIMGFORMAT % (blob_id, gtermapi.BLOB_PREFIX, blob_id, "image")
+                            markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id), "image")
                             self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                                row_params=["pagelet", {"blob": blob_id}])
                 self.update()
@@ -1301,11 +1316,11 @@ class Terminal(object):
                     blob_id = str(uuid.uuid4())
                     blob_ids[ref_id] = blob_id
                     if code_cell:
-                        markup = BLOCKIMGFORMAT % (blob_id, gtermapi.BLOB_PREFIX, blob_id, alt)
+                        markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id), alt)
                         self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                            row_params=["pagelet", {"blob": blob_id}])
                     else:
-                        raw_lines.append("![%s](%slocal/%s)" % (alt, gtermapi.BLOB_PREFIX, blob_id))
+                        raw_lines.append("![%s](%s)" % (alt, gtermapi.get_blob_url(blob_id)))
 
                 elif MD_REF_RE.match(line):
                     # Reference list
@@ -1355,6 +1370,13 @@ class Terminal(object):
         """
         if not new_cell_type:
             new_cell_type = gtermapi.LANGUAGES.get(self.note_params["command"], "code")
+        fmatch = MD_FENCE_RE.match(new_cell_type)
+        if fmatch:
+            new_cell_type = fmatch.group(1)
+            new_cell_extra = fmatch.group(2) or ""
+        else:
+            new_cell_extra = None
+        
         prev_index = self.note_cells["curIndex"]
         if before_cell_number in (-1, 0):
             before_cell_number += 2+self.note_cells["cellIndices"].index(prev_index) if prev_index else 1+len(self.note_cells["cellIndices"])
@@ -1365,7 +1387,8 @@ class Terminal(object):
         self.leave_cell()
         self.note_cells["maxIndex"] += 1
         cell_index = self.note_cells["maxIndex"]
-        new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellFile": filename, "cellInput": [], "cellOutput": []}
+        new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellFile": filename,
+                    "cellInput": [], "cellOutput": [], "cellTypeExtra": new_cell_extra}
         new_cell["cellInput"] = split_lines(init_text) if init_text else []
         self.note_cells["cells"][cell_index] = new_cell
         self.note_cells["curIndex"] = cell_index
@@ -2186,6 +2209,8 @@ class Terminal(object):
 
     def csi_r(self, l):
         """Set scrolling region [top;bottom]"""
+        if self.note_cells:
+            return
         if len(l)<2: l = [1, self.height]
         self.scroll_top = min(self.height-1, l[0]-1)
         self.scroll_bot = min(self.height-1, l[1]-1)
@@ -2355,6 +2380,9 @@ class Terminal(object):
                 elif response_type == "frame_msg":
                     self.screen_callback(self.term_name, "", "frame_msg",
                      [response_params.get("user",""), response_params.get("frame",""), content])
+                elif response_type == "remote_command":
+                    self.screen_callback(self.term_name, "", "remote_command",
+                     [response_params.get("include_self",""), response_params.get("path",""), response_params.get("command","")])
                 elif response_type == "save_notebook":
                     if self.note_cells:
                         filepath = response_params.get("filepath", "")
@@ -2700,7 +2728,7 @@ class Terminal(object):
 class Multiplex(object):
     def __init__(self, screen_callback, command=None, shared_secret="",
                  host="", server_url="", term_type="linux", api_version="",
-                 widget_port=0, prompt_list=[], lc_export=False, logfile="", app_name="graphterm"):
+                 widget_port=0, prompt_list=[], blob_server="", lc_export=False, logfile="", app_name="graphterm"):
         """ prompt_list = [prefix, suffix, format, remote_format]
         """
         ##signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -2714,6 +2742,7 @@ class Multiplex(object):
         self.term_type = term_type
         self.api_version = api_version
         self.widget_port = widget_port
+        self.blob_server = blob_server
         self.lc_export = lc_export
         self.logfile = logfile
         self.app_name = app_name
@@ -2823,7 +2852,7 @@ class Multiplex(object):
         env.append( ("TERM", self.term_type or TERM_TYPE) )
         env.append( (GT_PREFIX+"COOKIE", str(cookie)) )
         env.append( (GT_PREFIX+"SHARED_SECRET", self.shared_secret) )
-        env.append( (GT_PREFIX+"PATH", "%s/%s" % (self.host, term_name)) )
+        env.append( (GT_PREFIX+"PATH", "/%s/%s" % (self.host, term_name)) )
         dimensions = "%dx%d" % (width, height)
         if winwidth or winheight:
             dimensions += ";%dx%d" % (winwidth, winheight)
@@ -2837,6 +2866,9 @@ class Multiplex(object):
 
         if self.widget_port:
             env.append( (GT_PREFIX+"SOCKET", "/dev/tcp/localhost/%d" % self.widget_port) )
+
+        if self.blob_server:
+            env.append( (GT_PREFIX+"BLOB_SERVER", self.blob_server) )
 
         prompt_fmt, export_prompt_fmt = "", ""
         if self.prompt_list:

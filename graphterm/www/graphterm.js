@@ -85,6 +85,8 @@ var gAlwaysSplitScreen = gMobileBrowser;
 var gSplitScreen = false;
 var gShowingFinder = false;
 
+var gDelayedPageExit = false;
+
 var gShowingSplash = false;
 var gAnimatingSplash = false;
 var gProgrammaticScroll = false;
@@ -626,9 +628,9 @@ function GTUpdateController() {
     var label_text = gParams.host+"/"+gParams.term;
     if (gParams.user)
 	label_text = gParams.user+"@"+label_text;
-    $("#menubar-sessionlabel").text(label_text);
+    $("#menubar-sessionlabel").text("/"+label_text);
     if (gParams.controller)
-	window.name = gParams.host+"/"+gParams.term;
+	window.name = "/"+gParams.host+"/"+gParams.term;
     else
 	window.name = "";
     GTMenuUpdateToggle("sharing_control", gParams.controller);
@@ -727,12 +729,22 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     scrollElem.find('td .gterm-link').bindclick(gtermPageletClickHandler);
     scrollElem.find('td img').bind("dragstart", function(evt) {evt.preventDefault();});
     scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
-    scrollElem.find('.gterm-iframeheader').bindclick(CloseIFrame);
+    scrollElem.find('.gterm-iframeclose').bindclick(CloseIFrame);
+    scrollElem.find('.gterm-iframeexpand').bindclick(ExpandIFrame);
     GTDropBindings(scrollElem.find(' .droppable'));
 
-    if (row_opts.exit_page)
-	setTimeout(ExitFullpage, 200);
+    gDelayedPageExit = !!row_opts.exit_page;
+    if (gDelayedPageExit)
+	setTimeout(DelayedExitFullpage, 200);
     return scrollElem;
+}
+
+function DelayedExitFullpage() {
+    if (!gDelayedPageExit)
+	return;
+    gDelayedPageExit = false;
+    EndFullpage();
+    ScrollTop(null);
 }
 
 function GTPreloadImages(urls) {
@@ -793,6 +805,8 @@ function GTWebSocket(auth_user, auth_code) {
     if (location.search)
 	this.ws_url += location.search;
     var add_params = (this.auth_user || this.auth_code) ? {user: auth_user, code: auth_code} : {};
+    if (self.location.hostname != top.location.hostname)
+	add_params.embedded = "1"
     if (!$.isEmptyObject(add_params))
 	this.ws_url += (location.search ? "&" : "?") + $.param(add_params);
     console.log("GTWebSocket url: "+this.ws_url);
@@ -929,6 +943,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    this.evalCommand(command[1]);
 		}
 
+            } else if (action == "body") {
+		$("body").text(command[1]);
+
             } else if (action == "abort") {
 		alert(command[1]);
 		window.location = "/";
@@ -976,7 +993,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    setCookie("GRAPHTERM_AUTH", gParams.state_id);
 		if (!gParams.oshell)
 		    openTerminal();
-		if (gParams.controller && gParams.display_splash && gParams.term != "osh")
+		if (gParams.controller && gParams.display_splash && gParams.term != "osh" && !(window.frameElement && window.parent))
 		    GTShowSplash(true, true);
 
             } else if (action == "host_list") {
@@ -1308,7 +1325,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
 			    $(pageletSelector+' .gterm-togglelink').bindclick(gtermLinkClickHandler);
-			    $(pageletSelector+' .gterm-iframeheader').bindclick(CloseIFrame);
+			    $(pageletSelector+' .gterm-iframeclose').bindclick(CloseIFrame);
+			    $(pageletSelector+' .gterm-iframeexpand').bindclick(ExpandIFrame);
 			    GTDropBindings($(pageletSelector+' .droppable'));
 			} catch(err) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
@@ -1925,8 +1943,10 @@ function GTMenuStateUpdate(stateValues, prefix) {
 	    GTMenuUpdateToggle(prefix+key, val);
     }
     // Float menubar for embedded terminal
-    if (window.frameElement && window.parent)
+    if (window.frameElement && window.parent) {
+	$("#terminal").addClass("gterm-embed");
 	GTMenuTrigger("appearance_menubar", false);
+    }
 }
 
 function GTMenuRefresh() {
@@ -2203,6 +2223,9 @@ function GTMenuTerminal(selectKey, newValue, force) {
     case "new":
 	OpenNew();
 	break;
+    case "full":
+	gterm("full");
+	break;
     case "reload":
 	window.location.reload();
 	break;
@@ -2403,15 +2426,12 @@ function gtermShowClickEnd() {
 }
 
 function gtermShowClickPaste(text, file_url, options, targetId) {
-    if (!targetId) {
-	return;
-    }
-    if (targetId) {
-	var msg = {targetId: targetId};
-	gtermShowClick(msg);
-	if (gSharedCount > 1 && gWebSocket && gParams.controller)
-	    gWebSocket.write([["send_msg", "*", "showclick", msg]]);
-    }
+    //console.log("gtermShowClickPaste: ", text, file_url, options, targetId);
+    var msg = {targetId: targetId};
+    gtermShowClick(msg);
+    if (gSharedCount > 1 && gWebSocket && gParams.controller)
+	gWebSocket.write([["send_msg", "*", "showclick", msg]]);
+
     if (targetId && gSharedCount > 1) {
 	setTimeout(function() {gtermClickPaste(text, file_url, options);}, gShowClickInterval);
     } else {
@@ -2523,8 +2543,12 @@ function gtermPageletClickHandler(event) {
 	}
     }
 
-    gtermShowClickPaste("", file_url, options, targetId);
     //console.log("gtermPageletClickHandler", file_url, options);
+    if (targetId) {
+	gtermShowClickPaste("", file_url, options, targetId);
+    } else {
+	gtermClickPaste(text, file_url, options);
+    }
     return false;
 }
 
@@ -3157,6 +3181,17 @@ function OpenNew(host, term_name, options) {
     console.log("open", new_url);
     var target = (term_name == "new") ? "_blank" : path;
     window.open(new_url, target=target);
+}
+
+function gterm(path) {
+    if (path == "full") {
+	top.location = "/"+gParams.host+"/"+gParams.term+"/?qauth="+getAuth();
+	return;
+    }
+    if (path.indexOf("/") == -1)
+	path = "/" + gParams.host + "/" + path;
+    console.log("gterm", path);
+    window.location = path+"/?qauth="+getAuth();
 }
 
 function CheckUpdates() {
@@ -4183,13 +4218,18 @@ GTNotebook.prototype.receive = function(fromUser, toUser, cellIndex, msg) {
 }
 
 function CloseIFrame(evt) {
-    if (gFullpageDisplay)
-	ExitFullpage();
+    if (gFullpageDisplay) {
+	EndFullpage();
+	ScrollTop(null);
+    }
     var containerId = $(evt.target).attr("gterm-iframe-container");
     if (containerId)
 	$("#"+containerId).remove();
     else
 	gtermInterruptHandler();
+}
+function ExpandIFrame(evt) {
+    gterm("full");
 }
 
 function EndFullpage(frameId) {
@@ -4207,11 +4247,6 @@ function EndFullpage(frameId) {
     if (gSplitScreen)
 	MergeScreen("fullpage");
     $("#session-bufscreen .pagelet.gterm-fullwindow").removeClass("gterm-fullwindow");
-}
-
-function ExitFullpage() {
-    EndFullpage();
-    ScrollTop(null);
 }
 
 function SplitScreen(code) {

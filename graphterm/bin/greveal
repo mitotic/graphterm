@@ -17,12 +17,13 @@ import gtermapi
 usage = "usage: %prog [markdown_file] ..."
 form_parser = gtermapi.FormParser(usage=usage, title="Display markdown presentation", command="greveal %(args) | gframe -f -n")
 form_parser.add_argument(label="Markdown file: ", help="File containing presentation in markdown format")
-form_parser.add_option("controls", True, help="Display navigation controls")
-form_parser.add_option("progress", True, help="Show progress bar")
+form_parser.add_option("controls", True, short="c", help="Display navigation controls")
+form_parser.add_option("loop", False, short="l", help="Loop the presentation")
+form_parser.add_option("progress", False, help="Show progress bar")
 form_parser.add_option("theme", ("default", "beige", "sky", "night", "serif", "simple"), help="Presentation theme")
 form_parser.add_option("transition", ("default", "concave", "cube", "fade", "linear", "none", "page", "zoom"), help="Slide transition")
 form_parser.add_option("transpeed", ("default", "fast", "slow"), help="Slide transition speed")
-form_parser.add_option("transtime", 0, help="Automatic transition interval (millisec)")
+form_parser.add_option("transtime", 0, short="t", help="Automatic transition interval (millisec)")
 
 reveal_format = """
 <!DOCTYPE html>
@@ -66,6 +67,7 @@ reveal_format = """
     // https://github.com/hakimel/reveal.js#configuration
     Reveal.initialize({
         controls: %(controls)s,
+        loop: %(loop)s,
         progress: %(progress)s,
         keyboard: true,
         history: true,
@@ -91,6 +93,7 @@ reveal_format = """
 
         // initialize
         var gPresenter = null;
+        var gDebug = false;
         function GTermPresenter(frameDispatcher) {
             this.frameDispatcher = frameDispatcher;
             this.frameName = "presenter";
@@ -209,7 +212,7 @@ def jsbool(value):
     return "true" if value else "false"
 
 params = {"title": title, "content": content,
-          "controls": jsbool(options.controls), "progress": jsbool(options.progress),
+          "controls": jsbool(options.controls), "loop": jsbool(options.loop), "progress": jsbool(options.progress),
           "theme": options.theme, "autoSlide": int(options.transtime),
           "transition": options.transition, "transitionSpeed": options.transpeed,
           }

@@ -49,8 +49,9 @@ Path = env("PATH", lc=True)
 Dimensions = env("DIMENSIONS", lc=True) # colsxrows[;widthxheight]
 Shared_secret = env("SHARED_SECRET", lc=True)
 URL = env("URL", "http://localhost:8900")
+Blob_server = env("BLOB_SERVER", "")
 
-Host, Session = Path.split("/") if Path else ("", "") 
+_, Host, Session = Path.split("/") if Path else ("", "", "") 
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
 
@@ -58,7 +59,7 @@ INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
                 "ipython": ("py", "python", ("In ", "   ...: ", "   ....: ", "   .....: ", "   ......: ")), # Works up to 10,000 prompts
                 "idl": ("pro", "idl", ("IDL> ",)),
                 "ncl": ("ncl", "ncl", ("ncl ",)),
-                "node": ("js", "javascript", ("> ", "... ")),
+                "node": ("js", "javascript", ("> ", "... ", ".... ", "..... ", "...... ", "....... ", "........ ", "......... ")),
                 "r": ("r", "r", ("> ", "+ ")),
                 "bash": ("sh", "bash", ()),
             }
@@ -384,15 +385,31 @@ def get_file_url(filepath, relative=False, exists=False, plain=False):
     else:
         return "file://" + ("" if Host == "local" else Host) + filepath + filehmac
 
-def make_blob_url(blob_id=""):
+def make_blob_url(blob_id="", host=""):
     blob_id = blob_id or str(uuid.uuid4())
-    return (blob_id, BLOB_PREFIX+Host+"/"+blob_id)
+    return blob_id, get_blob_url(blob_id, host=host)
 
 def get_blob_id(blob_url):
-    if blob_url.startswith(BLOB_PREFIX):
-        return blob_url.split("/")[3]
+    if blob_url.startswith("/"):
+        path = blob_url
+    else:
+        try:
+            scheme, netloc, path, query, fragment = urlparse.urlsplit(import_url)
+        except Exception, excp:
+            return ""
+
+    if path.startswith(BLOB_PREFIX):
+        return path.split("/")[3]
     else:
         return ""
+
+def get_blob_url(blob_id, host=""):
+    host = host or Host
+    if "*" in Blob_server:
+        subdomain = "blob-"+hmac.new("wildcard", blob_id, digestmod=hashlib.md5).hexdigest()[:12]
+        return Blob_server.replace("*", subdomain)+BLOB_PREFIX+host+"/"+blob_id
+    else:
+        return Blob_server+BLOB_PREFIX+host+"/"+blob_id
 
 def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=False):
     """Create blob and returns URL to blob"""

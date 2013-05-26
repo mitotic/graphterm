@@ -60,7 +60,10 @@ form_template =  """<div class="gterm-form">Please specify location for weather 
 
 usage = "usage: %prog [-f] <location>"
 parser = OptionParser(usage=usage)
-parser.add_option("-f", "--fullpage",
+parser.add_option("-f", "--fullwindow",
+                  action="store_true", dest="fullwindow", default=False,
+                  help="Fullwindow display")
+parser.add_option("-p", "--fullpage",
                   action="store_true", dest="fullpage", default=False,
                   help="Fullpage display")
 parser.add_option("-t", "--text",
@@ -77,7 +80,7 @@ if not options.fullpage and not sys.stdout.isatty():
     options.text = True
 
 params = {"scroll": "top", "current_directory": os.getcwd()}
-params["display"] = "fullpage" if options.fullpage else "block"
+params["display"] = "fullwindow" if options.fullwindow else "fullpage" if options.fullpage else "block"
 
 headers = {"content_type": "text/html"}
 headers["x_gterm_response"] = "pagelet"

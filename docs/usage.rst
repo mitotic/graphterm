@@ -394,7 +394,7 @@ slideshow.)
 
 To display a live twitter feed as an overlay on a presentation, you can use the commands::
 
-   gtweet -f -s topic > $GTERM_SOCKET &
+   gtweet -w -f -s topic > $GTERM_SOCKET &
    gimage -f
 
 

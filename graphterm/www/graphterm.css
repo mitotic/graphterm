@@ -172,6 +172,8 @@ hr {
  #terminal:not(.gterm-locked) .sf-menu .gterm-only-locked,
  #terminal.gterm-notebook .sf-menu .gterm-non-notebook,
  #terminal:not(.gterm-notebook) .sf-menu .gterm-only-notebook,
+ #terminal.gterm-embed .sf-menu .gterm-non-embed,
+ #terminal:not(.gterm-embed) .sf-menu .gterm-only-embed,
  .menu-disabled {
     opacity: 0.35;
 }
@@ -579,19 +581,33 @@ textarea.gterm-notecell-markup {
 }
 
 .gterm-iframeheader {
-    color: red;
+    color: gray;
 }
 
 #session-bufscreen.fullscreen .gterm-iframe.gterm-iframe-firstrow:not(.gterm-noheader) {
-    margin-top: 1.5em;
+    margin-top: 0.0em;
+}
+
+#terminal:not(.gterm-embed) span.gterm-iframeexpand {
+    display: none;
+}
+
+span.gterm-iframeexpand {
+    position: absolute;
+    top: 0px;
+    left: 5px;
+    padding: 2px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
 }
 
 span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
     position: absolute;
     top: 0px;
     right: 5px;
-    padding: 5px;
-    font-size: 1.5em;
+    padding: 2px;
+    font-size: 1.3em;
     font-weight: bold;
     cursor: pointer;
 }
@@ -742,7 +758,7 @@ span.gterm-splashclose {
 
 /* Editor style */
 #gterm-editframe {
-    margin-top: 1.3em;
+    /* margin-top: 1.3em; */
 }
 
 /* Tilting 3D perspective style */

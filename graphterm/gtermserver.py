@@ -318,6 +318,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 except Exception:
                     pass
 
+            if not Server_settings["allow_embed"] and "embedded" in query_data:
+                self.write_json([["body", "Terminal cannot be embedded in web page on different host"]])
+                self.close()
+                return
+
             if not self.authorized:
                 if self._auth_type == self.NULL_AUTH:
                     # No authorization code needed
@@ -365,17 +370,17 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
             qauth = query_data.get("qauth", [""])[0]
-            if not qauth or qauth != self.authorized["state_id"][:AUTH_DIGITS]:
+            if not Server_settings["no_formcheck"] and (not qauth or qauth != self.authorized["state_id"][:AUTH_DIGITS]):
                 # Invalid query auth; clear any form data (always cleared for webcasts and when user is first authorized)
                 query_data = {}
 
-            if not query_data and self.req_path not in self._webcast_paths:
+            if not Server_settings["no_formcheck"] and not query_data and self.req_path not in self._webcast_paths:
                 # Clear path, if no form data and not webcasting
                 path_comps = []
             else:
                 path_comps = self.req_path.split("/")
 
-            super_user = (not self._super_users and self._auth_type <= self.NAME_AUTH) or self.authorized["user"] in self._super_users
+            super_user = (not self._super_users and self._auth_type <= self.NAME_AUTH) or user in self._super_users
 
             if len(path_comps) < 1 or not path_comps[0]:
                 host_list = TerminalConnection.get_connection_ids()
@@ -394,11 +399,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 return
 
             if host == LOCAL_HOST and self._auth_users and not super_user: 
-                self.write_json([["abort", "Local host access not allowed for user %s" % self.authorized["user"]]])
+                self.write_json([["abort", "Local host access not allowed for user %s" % user]])
                 self.close()
                 return
 
-            wildhost = "?" in host or "*" in host or "[" in host
+            wildhost = is_wildcard(host)
             term_feedback = False
             conn = None
             
@@ -459,14 +464,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
                 if self._watch_dict[path].values().count(self.authorized["state_id"]) > MAX_RECURSION:
-                    self.write_json([["abort", "Max recursion level exceeded"]])
+                    self.write_json([["body", "Max recursion level exceeded!"]])
                     self.close()
                     return
 
             if path not in self._control_params:
                 # Initialize parameters for new terminal
                 assert self.authorized["auth_type"] > self.WEBCAST_AUTH
-                terminal_params = {"sharing_locked": False, "sharing_private": True, "sharing_tandem": False, "state_id": self.authorized["state_id"]}
+                terminal_params = {"sharing_locked": False, "sharing_private": True, "sharing_tandem": False,
+                                   "owner": user, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params
             else:
@@ -488,12 +494,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self._counter[0] += 1
             self.websocket_id = str(self._counter[0])
 
-            if "?" in path or "*" in path or "[" in path:
+            if is_wildcard(path):
                 if not super_user:
                     self.write_json([["abort", "User not authorized for wildcard path"]])
                     self.close()
                     return
-                self.wildcard = re.compile("^"+path.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")+"$")
+                self.wildcard = wildcard2re(path)
                 self._wildcards[self.websocket_id] = self.wildcard
                 terminal_params["sharing_private"] = True
                 terminal_params["sharing_locked"] = True
@@ -724,6 +730,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         raise Exception("Invalid setting: %s" % key)
                             
                 elif msg[0] == "send_msg":
+                    # Send message to other watchers for this session
                     if self.wildcard:
                         continue
                     to_user = msg[1]
@@ -832,6 +839,12 @@ def kill_remote(path, user):
     except Exception, excp:
         pass
 
+def is_wildcard(path):
+    return "?" in path or "*" in path or "[" in path
+
+def wildcard2re(path):
+    return re.compile("^"+path.replace("+", "\\+").replace(".", "\\.").replace("?", ".?").replace("*", ".*")+"$")
+
 class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     _all_connections = {}
     host_secrets = {}
@@ -881,6 +894,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
 
     def remote_response(self, term_name, websocket_id, msg_list):
         fwd_list = []
+        path = self.connection_id + "/" + term_name
+        control_params = GTSocket._control_params.get(path)
         for msg in msg_list:
             if msg[0] == "term_params":
                 client_version = msg[1]["version"]
@@ -903,6 +918,21 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 self.term_dict = dict((key, "") for key in msg[1]["term_names"])
             elif msg[0] == "file_response":
                 ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
+            elif  msg[0] == "terminal" and msg[1] == "remote_command":
+                # Send input to matching paths, if created by same user or session
+                include_self = msg[2][0]
+                remote_path = msg[2][1]
+                remote_command = msg[2][2]
+                matchpaths = TerminalConnection.get_matching_paths(wildcard2re(remote_path)) if is_wildcard(remote_path) else [remote_path]
+                for matchpath in matchpaths:
+                    if not include_self and matchpath == path:
+                        continue
+                    match_params = GTSocket._control_params.get(matchpath)
+                    if match_params and ((match_params["owner"] and match_params["owner"] == control_params["owner"]) or
+                               (not match_params["owner"] and match_params["state_id"] == control_params["state_id"])):
+                        matchhost, matchterm = matchpath.split("/")
+                        TerminalConnection.send_to_connection(matchhost, "request", matchterm, "", [["keypress", remote_command]])
+
             else:
                 fwd_list.append(msg)
                 if msg[0] == "terminal" and msg[1] == "graphterm_feedback":
@@ -911,7 +941,6 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     else:
                         self.allow_feedback.discard(term_name)
 
-        path = self.connection_id + "/" + term_name
         if websocket_id:
             ws_set = set([websocket_id])
         else:
@@ -1128,7 +1157,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
 
 def run_server(options, args):
-    global IO_loop, Http_server, Local_client, Host_secret, Term_settings, Trace_shell
+    global IO_loop, Http_server, Local_client, Host_secret, Server_settings, Term_settings, Trace_shell
     import signal
 
     def auth_token(secret, connection_id, client_nonce, server_nonce):
@@ -1162,6 +1191,7 @@ def run_server(options, args):
             # Protect App directory
             os.chmod(App_dir, 0700)
 
+    Server_settings = {"allow_embed": options.allow_embed, "no_formcheck": options.no_formcheck}
     try:
         Term_settings = json.loads(options.term_settings or "{}")
     except Exception, excp:
@@ -1281,6 +1311,7 @@ def run_server(options, args):
                                                                      "key_secret": options.server_secret or None,
                                                                      "prompt_list": prompt_list,
                                                                      "lc_export": options.lc_export,
+                                                                     "blob_host": options.blob_host,
                                                                      "lterm_logfile": options.lterm_logfile,
                                                                      "widget_port":
                                                                        (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
@@ -1370,6 +1401,8 @@ def main():
                       help="internal host name (or IP address) (default: external host name)")
     parser.add_option("", "--internal_port", dest="internal_port", default=0,
                       help="internal port (default: PORT-1)", type="int")
+    parser.add_option("", "--blob_host", dest="blob_host", default="",
+                      help="blob server host name (or IP address) (default: same as server)")
 
     parser.add_option("", "--nolocal", dest="nolocal", action="store_true",
                       help="Disable connection to localhost")
@@ -1392,6 +1425,10 @@ def main():
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
     parser.add_option("", "--lc_export", dest="lc_export", action="store_true",
                       help="Export environment as locale (ssh hack)")
+    parser.add_option("", "--allow_embed", dest="allow_embed", action="store_true",
+                      help="Allow iframe embedding of terminal on other domains (possibly insecure)")
+    parser.add_option("", "--no_formcheck", dest="no_formcheck", action="store_true",
+                      help="Disable form checking (INSECURE)")
     parser.add_option("", "--client_cert", dest="client_cert", default="",
                       help="Path to client CA cert (or '.')")
     parser.add_option("", "--term_type", dest="term_type", default="",
