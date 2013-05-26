@@ -4726,6 +4726,7 @@ function GTReady() {
     setupTerminal();
     popupSetup();
     $("#session-bufellipsis").hide();
+    $("#session-bufellipsis").bindclick(EndFullpage);
     $("#session-findercontainer").hide();
     $("#session-widgetcontainer").hide();  // IMPORTANT (else top menu will be invisibly blocked)
     $("#session-footermenu select").change(gtermBottomSelectHandler);

@@ -13,3 +13,6 @@ build/*
 dist/*
 graphterm.egg-info/*
 local/*
+gterm-local
+BAK
+IGNORE

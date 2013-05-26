@@ -24,3 +24,5 @@ gsh snowwin gsnowflake.py
 # Animate inline matplotlib graph
 gsh -c matplotwin sleep 10
 gsh matplotwin gmatplot.py --animate
+gsh matplotwin sleep 5
+gsh matplotwin python -i '$GTERM_DIR/bin/gpylab.py' '$GTERM_DIR/notebooks/SineWave.ipynb'

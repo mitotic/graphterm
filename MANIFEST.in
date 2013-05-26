@@ -3,4 +3,6 @@ recursive-include graphterm *.py *.js *.css *.html *.md *.rst *.txt *.gif *.jpg 
 recursive-include docs *.md *.rst
 graft graphterm/bin
 graft graphterm/certs
+prune gterm-local BAK
+prune graphterm/bin/IGNORE
 global-exclude *~ *.pyc test*
