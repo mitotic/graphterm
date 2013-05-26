@@ -991,6 +991,8 @@ class Terminal(object):
         self.needs_updating = True
 
     def open_notebook(self, filepath, prompts=[], content=None):
+        if prompts:
+            prompts = [str(p) for p in prompts]
         self.note_start = None
         self.note_count += 1
         note_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
@@ -2327,12 +2329,15 @@ class Terminal(object):
                         else:
                             # Read local file content
                             if filepath:
-                                if not os.path.exists(filepath) or not os.path.isfile(filepath):
-                                    raise Exception("File %s not found" % filepath)
-                                filestats = os.stat(filepath)
+                                fpath = filepath
+                                if not fpath.startswith("/") and self.current_dir:
+                                    fpath = os.path.join(self.current_dir, fpath)
+                                if not os.path.exists(fpath) or not os.path.isfile(fpath):
+                                    raise Exception("File %s not found" % fpath)
+                                filestats = os.stat(fpath)
                                 if filestats.st_size > MAX_PAGELET_BYTES:
-                                    raise Exception("File size (%d bytes) exceeds pagelet limit (%d bytes) for %s" % (filestats.st_size,  MAX_PAGELET_BYTES, filepath))
-                                with open(filepath) as f:
+                                    raise Exception("File size (%d bytes) exceeds pagelet limit (%d bytes) for %s" % (filestats.st_size,  MAX_PAGELET_BYTES, fpath))
+                                with open(fpath) as f:
                                     content = f.read()
                             else:
                                 content = ""

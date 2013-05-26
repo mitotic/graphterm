@@ -25,7 +25,7 @@ gvicmd = gbrowsecmd if gtermapi.Export_host else gtermapi.env("VI_CMD", "") or "
 NB2CMD = {"py": "python -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
           "ipynb": "ipython -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
           "js": "node %[notebook]",
-          "R": "R -q %[notebook]> +",
+          "R": "R -q %[notebook]> |+ ",
           "sh": " %[notebook]",
           }
 

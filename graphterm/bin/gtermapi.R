@@ -1,19 +1,22 @@
-# Convenience functions to display inline graphics within GraphTerm
+# gtermapi.R: Convenience functions to display inline graphics within GraphTerm
 
-# Typical usage:
-#   g <- gcairo()          # Initialize cairo device for output
+# Plotting example:
+#   g <- gcairo()          # Initialize Cairo device for GraphTerm output
 #   x <- rnorm(100,0,1)
 #   hist(x, col="blue")
 #   g$frame()              # Display plot as inline image
-
-require("RCurl")
-require("Cairo")
-require("png")
+#   hist(x, col="red")
+#   g$frame(TRUE)          # Overwrite previous plot
+#
+# Initialize notebook mode, using R-markdown file:
+#   gnotebook("R-example1.R.md")
+#
 
 gcairo <- function(width=400, height=300, test=FALSE) {
   # Initialized window using Cairo graphics device with specified width/height
   # Returns list object with function gframe to display plot.
   #   gframe(overwrite=FALSE)
+  grequired()
   gcat <- FALSE
   goverwrite <- FALSE
   cdev <- Cairo(width, height, type='raster')
@@ -33,6 +36,32 @@ gcairo <- function(width=400, height=300, test=FALSE) {
   })
 }
 
+gnotebook <- function(filepath="") {
+  gwrite(paste('{"x_gterm_response": "open_notebook",',
+               '"x_gterm_parameters": {"filepath": "', filepath, '",',
+               '"prompts": [], "current_directory": "', Sys.getenv("PWD"),'"} }\n\n', sep=""))
+}
+
+gwrite <- function(data) {
+  # Displays text data wrapped with GraphTerm prefix and suffix
+  prefix <- paste("\x1b[?1155;", Sys.getenv("GTERM_COOKIE"), "h", sep="")
+  suffix <- "\x1b[?1155;l"
+  cat(prefix, data, suffix, sep="")
+}
+
+grequired <- function() {
+  install = ''
+  if (!require("RCurl", quietly=TRUE))
+    install = paste(install, "RCurl")
+  if (!require("Cairo", quietly=TRUE))
+    install = paste(install, "Cairo")
+  if (!require("png", quietly=TRUE))
+    install = paste(install, "png")
+
+  if (nchar(install)) 
+    stop(paste("Please install the following R packages to display inline graphics:", install))
+}
+
 gsave <- function(pngdata, overwrite=FALSE, test=False) {
   # Displays PNG image data within a GtaphTerm pagelet
   prefix <- paste("\x1b[?1155;", Sys.getenv("GTERM_COOKIE"), "h", sep="")
@@ -43,7 +72,7 @@ gsave <- function(pngdata, overwrite=FALSE, test=False) {
   # Create image blob
   blobid = paste(sample(1:1000000,1), sample(1:1000000,1), sep="")
   imagepfx <- paste('<!--gterm data blob=', blobid, '-->image/png;base64,', sep='')
-  cat(prefix, imagepfx, image64, suffix, sep="")
+  gwrite(paste(imagepfx, image64, sep=""))
 
   if (overwrite) {
     overs = ' overwrite=yes'
@@ -56,7 +85,7 @@ gsave <- function(pngdata, overwrite=FALSE, test=False) {
   if (test) {
     cat(pagelet, " page=", page, sep="")
   } else {
-    cat(prefix, pagelet, suffix, sep="")
+    gwrite(pagelet)
   }
 }
   

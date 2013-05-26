@@ -35,6 +35,7 @@ form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTe
 form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
 form_parser.add_option("copy_files", "", help="List of files to copy (space separated, e.g., .twitter_auth)")
 form_parser.add_option("pylab", False, help="Install PyLab")
+form_parser.add_option("R", False, help="Install R")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
 form_parser.add_option("verbose", False, help="Verbose")
@@ -133,6 +134,9 @@ if install_gterm:
 if options.pylab:
     startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific libnetcdf-dev netcdf-bin ipython"]
     startup_commands += ["easy_install pil qrcode"]
+
+if options.R:
+    startup_commands += ["apt-get install -y r-base libcurl4-openssl-dev libcairo2-dev libxt-dev"]
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
 if options.oshell:

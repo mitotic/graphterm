@@ -2529,7 +2529,7 @@ function gtermPageletClickHandler(event) {
 	if (qindex > -1)
 	    filepath = filepath.substr(0,qindex);
 
-	var prompts = options.command.substr(noffset+" %[notebook]".length).split(/\s+/);
+	var prompts = options.command.substr(noffset+" %[notebook]".length).split(/\|/);
 	options.command = options.command.substr(0,noffset) + "  # Notebook: "
 	if (noffset == 0) {
 	    // Shell notebook
