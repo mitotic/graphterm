@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+#
+
+"""
+gsh: Execute remote command
+
+Example:
+   gsh tty1 pwd
+   gsh /local/tty[ab] ls
+"""
+
+import os
+import sys
+
+import gtermapi
+
+usage = "usage: %prog [-n] path command_name arg1 ..."
+
+form_parser = gtermapi.FormParser(usage=usage, title="Send command input to terminal", command="gsh")
+
+form_parser.add_argument(label="Terminal path: ", help="Terminal path [/host/]tty")
+form_parser.add_argument(label="Command: ", help="Command to be executed on terminal")
+form_parser.add_option("noline", False, short="n", help="Suppress newline appended after command")
+form_parser.add_option("multiple", False, short="m", help="Multiple paths specified (command via stdin)")
+form_parser.add_option("ctrlc", False, short="c", help="Interrupt")
+form_parser.add_option("ctrld", False, short="d", help="End of file")
+form_parser.add_option("self", False, short="s", help="Self included")
+
+offset = 0
+for arg in sys.argv[1:]:
+    if not arg.startswith("-"):
+        break
+    offset += 1
+
+args = sys.argv[1:2+offset]
+cmd_args  = sys.argv[2+offset:]
+
+(options, pargs) = form_parser.parse_args(args=args or None)
+
+if options.multiple:
+    paths = pargs + cmd_args
+    cmd_args = []
+else:
+    paths = [pargs[0]]
+
+command = ""
+if cmd_args:
+    command = " ".join(cmd_args)
+    if not options.noline:
+        command += "\n"
+elif not options.ctrlc and not options.ctrld:
+    try:
+        command = sys.stdin.read()
+    except (EOFError, KeyboardInterrupt):
+        command = ""
+
+    if not command:
+        print >> sys.stderr, "Error in reading from stdin"
+        sys.exit(1)
+
+if options.ctrld:
+    command = "\x04" + command
+
+# NOTE: A leading space seems to be required on Linux after Ctrl-C, because the first character is chewed up
+
+if options.ctrlc:
+    command = "\x03" + (" "+command if command else "")
+
+for path in paths:
+    if "/" not in path:
+        path = "/" + gtermapi.env("PATH").split("/")[1] + "/" + path
+    elif not path.startswith("/"):
+        print >> sys.stderr, "Invalid terminal path %s; must begin with /" % path
+        sys.exit(1)
+
+    params = {"include_self": "yes" if options.self else "", "path": path[1:], "command": command}
+
+    headers = {"x_gterm_response": "remote_command",
+               "x_gterm_parameters": params
+               }
+
+    gtermapi.wrap_write("", headers=headers)
+

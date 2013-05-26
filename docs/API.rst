@@ -24,11 +24,11 @@ The opening escape sequence is followed by a *dictionary* of header
 names and values, using JSON format. This is followed by a blank line,
 and then any data (such as the HTML fragment to be displayed).
 
-.. index:: helloworld.sh
+.. index:: hello_gterm.sh
  
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 can be written in any language, much like a CGI script.
-The program `helloworld.sh <https://github.com/mitotic/graphterm/blob/master/helloworld.sh>`_
+The program `hello_gterm.sh <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/hello_gterm.sh>`_
 is a simple example.
 See also the programs ``gls``, ``gimage``, ``gframe``, ``gvi``, ``gfeed``,
 ``yweather``, ``ec2launch`` and ``ec2list`` for examples
