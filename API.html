@@ -160,14 +160,14 @@ response, preceded and followed by
 \x1b[?1155l</pre>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">&lt;cookie&gt;</span></tt> denotes a numeric value stored in the environment
-variable <tt class="docutils literal"><span class="pre">GRAPHTERM_COOKIE</span></tt>. (The random cookie is a security
+variable <tt class="docutils literal"><span class="pre">GTERM_COOKIE</span></tt>. (The random cookie is a security
 measure that prevents malicious files from accessing GraphTerm.)
 The opening escape sequence is followed by a <em>dictionary</em> of header
 names and values, using JSON format. This is followed by a blank line,
 and then any data (such as the HTML fragment to be displayed).</p>
 <p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
 can be written in any language, much like a CGI script.
-The program <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/helloworld.sh">helloworld.sh</a>
+The program <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/hello_gterm.sh">hello_gterm.sh</a>
 is a simple example.
 See also the programs <tt class="docutils literal"><span class="pre">gls</span></tt>, <tt class="docutils literal"><span class="pre">gimage</span></tt>, <tt class="docutils literal"><span class="pre">gframe</span></tt>, <tt class="docutils literal"><span class="pre">gvi</span></tt>, <tt class="docutils literal"><span class="pre">gfeed</span></tt>,
 <tt class="docutils literal"><span class="pre">yweather</span></tt>, <tt class="docutils literal"><span class="pre">ec2launch</span></tt> and <tt class="docutils literal"><span class="pre">ec2list</span></tt> for examples

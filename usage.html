@@ -332,7 +332,7 @@ will cancel the command recall process.</p>
 <p>The <tt class="docutils literal"><span class="pre">gpylab</span></tt> module in the <tt class="docutils literal"><span class="pre">bin</span></tt> directory can be used to start
 up the python interpreter in the <tt class="docutils literal"><span class="pre">pylab</span></tt> mode for inline graphics
 within a notebook:</p>
-<div class="highlight-python"><pre>python -i $GRAPHTERM_DIR/bin/gpylab.py
+<div class="highlight-python"><pre>python -i $GTERM_DIR/bin/gpylab.py
 &gt;&gt;&gt; plot([1,2,4])</pre>
 </div>
 </div>
@@ -463,7 +463,7 @@ It produces HTML output that can be piped to <tt class="docutils literal"><span 
 To trace the execution of a sample program <tt class="docutils literal"><span class="pre">example.py</span></tt>, use it as follows:</p>
 <div class="highlight-python"><pre>gtutor example.py | gframe -f</pre>
 </div>
-<p>More sample programs may be found in the directory <tt class="docutils literal"><span class="pre">$GRAPHTERM_DIR/bin/pytutor/example-code</span></tt>.
+<p>More sample programs may be found in the directory <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/pytutor/example-code</span></tt>.
 Of course, you can use <tt class="docutils literal"><span class="pre">gtutor</span></tt> to trace any other (small) python program as well.
 Type <tt class="docutils literal"><span class="pre">gtutor</span> <span class="pre">-h</span></tt> to display the command line options.
 <em>Note:</em> By default, <tt class="docutils literal"><span class="pre">gtutor</span></tt> accesses the browser CSS/JS files from
@@ -471,7 +471,7 @@ Type <tt class="docutils literal"><span class="pre">gtutor</span> <span class="p
 To use <tt class="docutils literal"><span class="pre">gtutor</span></tt> in an offline-mode, you will need to specify the
 <tt class="docutils literal"><span class="pre">--offline</span></tt> option and also download the Online Python Tutorial
 code from GitHub and copy/rename the main source directory
-(currently <tt class="docutils literal"><span class="pre">v3</span></tt>) as <tt class="docutils literal"><span class="pre">$GRAPHTERM_DIR/www/pytutor</span></tt> so that GraphTerm
+(currently <tt class="docutils literal"><span class="pre">v3</span></tt>) as <tt class="docutils literal"><span class="pre">$GTERM_DIR/www/pytutor</span></tt> so that GraphTerm
 can serve the CSS/JS files locally.</p>
 <p><em>Advanced usage:</em> You can embed tutorials within a Landslide/Markdown
 presentation by including an <tt class="docutils literal"><span class="pre">iframe</span></tt> HTML element in the
@@ -487,29 +487,29 @@ use <tt class="docutils literal"><span class="pre">gframe</span> <span class="pr
 experimental feature that allows programs running in the background to
 display information overlaid on the terminal. The widget is accessed
 by redirecting <tt class="docutils literal"><span class="pre">stdout</span></tt> to a Bash <tt class="docutils literal"><span class="pre">tcp</span></tt> socket device whose
-address is stored in the environment variable <tt class="docutils literal"><span class="pre">GRAPHTERM_SOCKET</span></tt>.
+address is stored in the environment variable <tt class="docutils literal"><span class="pre">GTERM_SOCKET</span></tt>.
 For example, the following command will run a background job
 to open a new terminal in an overlay <em>iframe</em>:</p>
-<div class="highlight-python"><pre>gframe -f --opacity=0.2 http://localhost:8900/local/new &gt; $GRAPHTERM_SOCKET &amp;</pre>
+<div class="highlight-python"><pre>gframe -f --opacity=0.2 http://localhost:8900/local/new &gt; $GTERM_SOCKET &amp;</pre>
 </div>
 <p>You can use the overlay terminal just like a regular terminal, including
 having recursive overlays within the overlay!</p>
 <p>A specific example of widget use is to display live feedback on the
 screen during a presentation. You can try it out in a directory that
 contains your presentation slides as images:</p>
-<div class="highlight-python"><pre>gfeedback 2&gt; $GRAPHTERM_SOCKET 0&lt;&amp;2 | gfeed &gt; $GRAPHTERM_SOCKET &amp;
+<div class="highlight-python"><pre>gfeedback 2&gt; $GTERM_SOCKET 0&lt;&amp;2 | gfeed &gt; $GTERM_SOCKET &amp;
 gimage -f</pre>
 </div>
 <p>The first command uses <tt class="docutils literal"><span class="pre">gfeedback</span></tt> to capture feedback from others
 viewing the terminal session as a stream of lines from
-$GRAPHTERM_SOCKET. The viewers use the overlaid <em>feedback</em> button
+$GTERM_SOCKET. The viewers use the overlaid <em>feedback</em> button
 to provide feedback. The <tt class="docutils literal"><span class="pre">stdout</span></tt> from <tt class="docutils literal"><span class="pre">gfeedback</span></tt> is piped to
 <tt class="docutils literal"><span class="pre">gfeed</span></tt> which displays its <tt class="docutils literal"><span class="pre">stdin</span></tt> stream as a  &#8220;live feed&#8221;
-overlay, also via $GRAPHTERM_SOCKET.
+overlay, also via $GTERM_SOCKET.
 (The <tt class="docutils literal"><span class="pre">gimage</span> <span class="pre">-f</span></tt> command displays all the images in the directory as a
 slideshow.)</p>
 <p>To display a live twitter feed as an overlay on a presentation, you can use the commands:</p>
-<div class="highlight-python"><pre>gtweet -f -s topic &gt; $GRAPHTERM_SOCKET &amp;
+<div class="highlight-python"><pre>gtweet -w -f -s topic &gt; $GTERM_SOCKET &amp;
 gimage -f</pre>
 </div>
 </div>

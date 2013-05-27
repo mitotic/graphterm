@@ -37,11 +37,11 @@ install`` command automatically sets permissions.)
 I get the error message "bash: gls: No such file or directory" on the terminal?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The environment variable ``GRAPHTERM_DIR`` contains the directory
+The environment variable ``GTERM_DIR`` contains the directory
 where ``gls`` and other commands are located. GraphTerm tries to set
 the ``PATH`` variable to automatically include this directory. But
 sometimes this may fail, in which case you would need to modify you
-shell initialization files to include ``$GRAPHTERM_DIR`` in ``$PATH``.
+shell initialization files to include ``$GTERM_DIR`` in ``$PATH``.
 (The menu command *Actions-.Export environment* may also help in this
 situation.)
 

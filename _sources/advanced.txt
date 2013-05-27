@@ -6,6 +6,7 @@ Advanced topics
 
    API
    cloud
+   R
    tracing
 
 
