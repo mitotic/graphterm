@@ -13,5 +13,5 @@ installed: ``RCurl``, ``Cairo``, and ``png``.
 may need to be installed: ``libcurl4-openssl-dev libcairo2-dev
 libxt-dev``)
 
-The R-markdown file ``$GTERM_DIR/notebooks/R-histogram.R.md" contains
+The R-markdown file ``$GTERM_DIR/notebooks/R-histogram.R.md`` contains
 a sample notebook.

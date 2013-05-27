@@ -3,6 +3,22 @@ Release Notes
 .. contents::
 
 
+0.36.0 (May 26, 2013)
+---------------------------------------------------------------------------------
+
+  - Follow-up release to 0.35.0
+
+  - Many fixes to notebook mode
+
+  - Now notebooks/graphics work with R
+
+  - Introduced *metro.sh* to demo/test multiple terminals simultaneously
+
+  - Introduced *gsh* to execute commands remotely on any accessible terminal
+
+  - Renamed environment variables GRAPHTERM_* to GTERM_*
+
+
 0.35.0 (May 20, 2013)
 ---------------------------------------------------------------------------------
 

@@ -1,8 +1,9 @@
 include COPYING LICENSE.txt *.rst *.html
-recursive-include graphterm *.py *.js *.css *.html *.md *.rst *.txt *.gif *.jpg *.png
+recursive-include graphterm *.py *.js *.css *.html *.ipynb *.ipynb.json *.md *.rst *.txt *.gif *.jpg *.png
 recursive-include docs *.md *.rst
 graft graphterm/bin
 graft graphterm/certs
-prune gterm-local BAK
+prune gterm-local
+prune BAK
 prune graphterm/bin/IGNORE
 global-exclude *~ *.pyc test*
