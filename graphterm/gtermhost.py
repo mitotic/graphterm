@@ -276,7 +276,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           close_notebook <discard>
           save_notebook <filepath> <input_data> <params>
           add_cell <new_cell_type> <init_text> <before_cell_index>
-          select_cell <cell_index> <move_up>
+          select_cell <cell_index> <move_up> <next_code>
           select_page <move_up> <endpoint> <slide>
           move_cell <move_up>
           delete_cell <move_up>
@@ -284,7 +284,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           erase_output <all_cells>
           update_type <cell_type>
           complete_cell <incomplete_line>
-          update_cell <cellIndex> <execute> <input_data>
+          update_cell <cellIndex> <execute> <save> <input_data>
 
         Output commands:
           completed_input <line>
@@ -365,9 +365,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.add_cell(term_name, cmd[0], cmd[1], cmd[2])
 
                 elif action == "select_cell":
-                    # select_cell <cell_index> <move_up>
+                    # select_cell <cell_index> <move_up> <next_code>
                     if self.lineterm:
-                        self.lineterm.select_cell(term_name, cmd[0], cmd[1])
+                        self.lineterm.select_cell(term_name, cmd[0], cmd[1], cmd[2])
 
                 elif action == "select_page":
                     # select_page <move_up> <endpoint> <slide>
@@ -405,9 +405,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.complete_cell(term_name, cmd[0])
 
                 elif action == "update_cell":
-                    # update_cell <cellIndex> <execute> <input_data>
+                    # update_cell <cellIndex> <execute> <save>, <input_data>
                     if self.lineterm:
-                        self.lineterm.update_cell(term_name, cmd[0], cmd[1], cmd[2])
+                        self.lineterm.update_cell(term_name, cmd[0], cmd[1], cmd[2], cmd[3])
 
                 elif action == "paste_command":
                     # paste_command: command_line

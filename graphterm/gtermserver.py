@@ -1316,6 +1316,7 @@ def run_server(options, args):
                                                                      "widget_port":
                                                                        (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
+                                                         oshell_init="gtermserver.trc",
                                                          oshell_unsafe=True,
                                                          oshell_thread=(not options.oshell_input),
                                                          oshell_no_input=(not options.oshell_input),

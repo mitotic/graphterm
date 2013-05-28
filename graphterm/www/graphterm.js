@@ -1384,8 +1384,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		} else if (cmd_type == "note_cell_value") {
 		    var inputData = cmd_arg[0];
 		    var cellIndex = cmd_arg[1];
+		    var render = cmd_arg[2];
 		    if (gNotebook)
-			gNotebook.cellValue(inputData, cellIndex);
+			gNotebook.cellValue(inputData, cellIndex, render);
 
 		} else if (cmd_type == "note_erase_output") {
 		    var cellIndex = cmd_arg[0];
@@ -3721,7 +3722,7 @@ GTNotebook.prototype.handleFocus = function(evt) {
 	return;
     try {
 	var cellIndex = parseInt(cellId.split("-")[4]);
-	gWebSocket.write([["select_cell", cellIndex, false]]);
+	gWebSocket.write([["select_cell", cellIndex, false, false]]);
     } catch(err) {
 	console.log("GTNotebook.handleFocus: ERROR "+err);
 	this.cellFocus(true);
@@ -3761,7 +3762,7 @@ GTNotebook.prototype.handleOutput = function(evt) {
 	    this.renderCell(true, true);
 	} else {
 	    parent.hide();  // Hide markdown output for target
-	    gWebSocket.write([["select_cell", cellIndex, false]]);
+	    gWebSocket.write([["select_cell", cellIndex, false, false]]);
 	}
     } catch(err) {
 	console.log("GTNotebook.handleOutput: ERROR "+err);
@@ -3831,7 +3832,7 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    if (this.curIndex == this.getLastIndex())
 		gWebSocket.write([["add_cell", "", "", 0]]);
 	    else
-		gWebSocket.write([["select_cell", 0, false]]);
+		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else {
 	    this.update_text(true, true, createNew);
 	}
@@ -3877,9 +3878,9 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
     } else if (command == "cell_down") {
 	gWebSocket.write([["move_cell", false]]);
     } else if (command == "select_previous") {
-	gWebSocket.write([["select_cell", 0, true]]);
+	gWebSocket.write([["select_cell", 0, true, false]]);
     } else if (command == "select_next") {
-	gWebSocket.write([["select_cell", 0, false]]);
+	gWebSocket.write([["select_cell", 0, false, false]]);
     } else if (command == "page_previous") {
 	gWebSocket.write([["select_page", -1, false, this.slide_mode]]);
     } else if (command == "page_next") {
@@ -3925,14 +3926,15 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     this.splitting = false;
 }
 
-GTNotebook.prototype.renderCell = function(showInput, hideOutput) {
-    var cellParams = this.cellParams[this.curIndex];
-    var inputElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
-    var outputElem = $("#"+this.getCellId(this.curIndex)+"-output");
+GTNotebook.prototype.renderCell = function(showInput, hideOutput, cellIndex) {
+    cellIndex = cellIndex || this.curIndex;
+    var cellParams = this.cellParams[cellIndex];
+    var inputElem = $("#"+this.getCellId(cellIndex)+"-textarea");
+    var outputElem = $("#"+this.getCellId(cellIndex)+"-output");
     if (cellParams.cellType in MARKUP_TYPES) {
 	outputElem.addClass("gterm-notecell-markdown");
 	var text = inputElem.val();
-	if (!$.trim(text))
+	if (!$.trim(text) && !this.note_params.fill)
 	    text = "EMPTY MARKDOWN CELL";
 	outputElem.html(md2html(text));
 	if (hideOutput)
@@ -4031,13 +4033,16 @@ GTNotebook.prototype.deleteCell = function(deleteIndex, switchIndex) {
 	$("#"+this.getCellId(this.curIndex)+"-output").hide();
 }
 
-GTNotebook.prototype.cellValue = function(inputData, cellIndex) {
+GTNotebook.prototype.cellValue = function(inputData, cellIndex, render) {
+    //console.log("GTNotebook.cellValue: ", render, inputData);
     inputData = inputData || "";
     cellIndex = cellIndex || this.curIndex;
     if (cellIndex == this.curIndex)
 	this.lastTextValue = inputData;
     var textElem = $("#"+this.getCellId(cellIndex)+"-textarea");
     textElem.val(inputData);
+    if (render)
+	this.renderCell(false, false, cellIndex)
 }
 
 GTNotebook.prototype.cellFocus = function(focus, selectAll, noScroll) {
@@ -4084,7 +4089,8 @@ GTNotebook.prototype.update_text = function(execute, openNext, createNew) {
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     var text = textElem.val();
     if (gWebSocket && gParams.controller) {
-	gWebSocket.write([["update_cell", this.curIndex, execute, text]]);
+	var save = !this.note_params.fill||openNext;
+	gWebSocket.write([["update_cell", this.curIndex, execute, save, text]]);
 	this.send("*", this.curIndex, ["cell_input", text]);
 	this.lastTextValue = text;
     }
@@ -4171,7 +4177,7 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 	    if (this.curIndex == this.getLastIndex())
 		gWebSocket.write([["add_cell", "", "", 0]]);
 	    else
-		gWebSocket.write([["select_cell", 0, false]]);
+		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else if (this.curIndex == this.getLastIndex()) {
 	    // Last cell
 	    this.cellFocus(true, selectAll, true);

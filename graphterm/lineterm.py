@@ -51,7 +51,7 @@ MAX_SCROLL_LINES = 500
 
 CHUNK_BYTES = 4096            # Chunk size for receiving data in stdin
 
-MAX_PAGELET_BYTES = 1000000  # Max size for pagelet buffer
+MAX_PAGELET_BYTES = 2500000  # Max size for pagelet buffer
 
 IDLE_TIMEOUT = 300      # Idle timeout in seconds
 UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
@@ -78,6 +78,7 @@ MD_FENCE_RE = re.compile(r"^\s*{(\S+)(\s.*)?}")
 DEFAULT_FILE_PREFIX = "Untitled"
 DEFAULT_FILENUM_RE = re.compile("^(\d+)")
 
+CORRECT_PREFIX = "#correct:"
 MARKUP_TYPES = set(["markdown"])
 
 BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="%s" alt="%s"></div>'
@@ -1056,10 +1057,17 @@ class Terminal(object):
                 else:
                     filepath += ".gnb.md"
 
-        note_name = os.path.splitext(os.path.basename(filepath))[0]
+        note_name, note_tail = os.path.splitext(os.path.basename(filepath))
         if note_name.endswith(".gnb") or note_name.endswith(".ipynb"):
-            note_name = os.path.splitext(note_name)[0]
-        self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command, "shell": note_shell}
+            note_name, ext = os.path.splitext(note_name)
+            note_tail = ext + note_tail
+        prefix, ext = os.path.splitext(note_name)
+        note_tail = ext + note_tail
+        note_fill = prefix.endswith("-fill")
+        if note_fill:
+            filepath = os.path.join(os.path.basename(filepath), prefix+"ed"+note_tail)
+        self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
+                            "shell": note_shell, "fill": note_fill}
         self.screen_callback(self.term_name, "", "note_open", [self.note_params])
         if content:
             if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
@@ -1120,6 +1128,7 @@ class Terminal(object):
         elif not fext:
             fullpath += ".gnb.md"
             fext = ".md"
+        save_fill = os.path.splitext(fname)[0].endswith("-fill")
         fig_suffix = safe_filename(fname)
         curly_fence = fname.endswith(".R") or self.note_params["command"] == "R"
         md_lines = []
@@ -1155,8 +1164,20 @@ class Terminal(object):
                         md_lines.append("```{"+cell["cellType"]+(cell["cellTypeExtra"] or "")+"}")
                     else:
                         md_lines.append("```"+cell["cellType"])
+
                 for line in cell["cellInput"]:
                     md_lines.append(line)
+                    if cell["cellType"] in MARKUP_TYPES and MD_IMAGE_RE.match(line):
+                        # Inline image
+                        match = MD_IMAGE_RE.match(line)
+                        alt = match.group(1).strip() or "image"
+                        ref_id = match.group(2).strip()
+                        blob_id = gtermapi.get_blob_id(ref_id)
+                        if blob_id:
+                            data_uri = self.note_screen_buf.get_blob_uri(blob_id)
+                            if data_uri:
+                                ref_blobs[ref_id] = data_uri
+
                 if cell["cellType"] not in MARKUP_TYPES:
                     md_lines.append("```")
                 md_lines.append ("")
@@ -1174,6 +1195,8 @@ class Terminal(object):
                                 prompt_num += 1
                                 out_json = nb_json(out_lines, ipy_raw)
                                 md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=out_json)]
+                            elif save_fill:
+                                md_lines += ["```expect"] + out_lines + ["```"] + [""]
                             else:
                                 md_lines += ["```output"] + out_lines + ["```"] + [""]
                             cell_out = True
@@ -1188,7 +1211,8 @@ class Terminal(object):
                                 md_lines += [IPYNB_JSON_DATA % dict(format=content_type.split("/")[1], base64=content)]
                                 cell_out = True
                             else:
-                                ref_id = "fig%d-%s" % (len(ref_blobs)+1, fig_suffix)
+                                fig_prefix = "expect" if save_fill else "output"
+                                ref_id = "%s-fig%d-%s" % (fig_prefix, len(ref_blobs)+1, fig_suffix)
                                 ref_blobs[ref_id] = data_uri
                                 md_lines.append("![image][%s]" % ref_id)
                                 md_lines.append ("")
@@ -1278,8 +1302,10 @@ class Terminal(object):
                         if state == "output":
                             # New output block
                             if not code_cell:
-                                # Ignore orphan output block
-                                pass
+                                # Orphan output block
+                                raw_lines += [""]
+                        elif state == "expect":
+                            raw_lines += [""]
                         else:
                             # New code block
                             code_lines = []
@@ -1287,8 +1313,11 @@ class Terminal(object):
                         # Leaving fenced block
                         leaving_block = True
                         if state == "output":
-                            # Ignore orphan output block
-                            pass
+                            if not code_cell:
+                                # Orphan output block
+                                raw_lines += [""]
+                        elif state == "expect":
+                            raw_lines += [""]
                         else:
                             # Leaving code block
                             self.update()
@@ -1303,8 +1332,11 @@ class Terminal(object):
                         if code_cell:
                             self.note_screen_buf.scroll_buf_up(line, None)
                         else:
-                            # Ignore orphan output block
-                            pass
+                            # Orphan output block
+                            raw_lines += ["    "+line]
+                    elif state == "expect":
+                        # Within expect block
+                        raw_lines += ["    "+line]
                     else:
                         # Within code block
                         code_lines.append(line)
@@ -1315,17 +1347,25 @@ class Terminal(object):
                     match = MD_IMAGE_RE.match(line)
                     alt = match.group(1).strip() or "image"
                     ref_id = match.group(2).strip()
-                    blob_id = str(uuid.uuid4())
+                    blob_id = blob_ids.get(ref_id, "") or str(uuid.uuid4())
                     blob_ids[ref_id] = blob_id
+                    blob_url = gtermapi.get_blob_url(blob_id, host=self.host)
                     if code_cell:
-                        markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id, host=self.host), alt)
-                        self.note_screen_buf.scroll_buf_up("", None, markup=markup,
-                                                           row_params=["pagelet", {"blob": blob_id}])
+                        if ref_id.startswith("output"):
+                            # Output image
+                            markup = BLOCKIMGFORMAT % (blob_id, blob_url, alt)
+                            self.note_screen_buf.scroll_buf_up("", None, markup=markup,
+                                                               row_params=["pagelet", {"blob": blob_id}])
+                        else:
+                            # Non-output image; new raw block
+                            self.update()
+                            code_cell = None
+                            raw_lines += ["![%s](%s)" % (alt, blob_url)]
                     else:
-                        raw_lines.append("![%s](%s)" % (alt, gtermapi.get_blob_url(blob_id, host=self.host)))
+                        raw_lines.append("![%s](%s)" % (alt, blob_url))
 
                 elif MD_REF_RE.match(line):
-                    # Reference list
+                    # Reference data URI
                     match = MD_REF_RE.match(line)
                     ref_id = match.group(1).strip()
                     if ref_id in blob_ids:
@@ -1337,6 +1377,7 @@ class Terminal(object):
 
                 elif line or not leaving_block:
                     # Non-blank line or not leaving block; handle raw line
+                    # (Ignore blank lines following fenced block or output image, unless already in markdown block)
                     leaving_block = False
                     if code_cell:
                         if line:
@@ -1389,8 +1430,10 @@ class Terminal(object):
         self.leave_cell()
         self.note_cells["maxIndex"] += 1
         cell_index = self.note_cells["maxIndex"]
+        cell_params = {"filled": False, "hidden": False}
         new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellFile": filename,
-                    "cellInput": [], "cellOutput": [], "cellTypeExtra": new_cell_extra}
+                    "cellInput": [], "cellOutput": [], "cellTypeExtra": new_cell_extra,
+                    "cellParams": cell_params}
         new_cell["cellInput"] = split_lines(init_text) if init_text else []
         self.note_cells["cells"][cell_index] = new_cell
         self.note_cells["curIndex"] = cell_index
@@ -1402,8 +1445,20 @@ class Terminal(object):
             before_cell_index = self.note_cells["cellIndices"][before_cell_number-1]
             self.note_cells["cellIndices"].insert(before_cell_number-1, cell_index)
 
+        if self.note_params["fill"]:
+            page_cell_index = self.find_page_cell_index()
+            start_num = self.note_cells["cellIndices"].index(page_cell_index)
+            cur_num = self.note_cells["cellIndices"].index(cell_index)
+            if cur_num and new_cell_type in MARKUP_TYPES:
+                # Do not check immediately preceding cell for code if markup (usually expect output)
+                cur_num = cur_num - 1
+            for cindex in self.note_cells["cellIndices"][start_num:cur_num]:
+                if self.note_cells["cells"][cindex]["cellType"] not in MARKUP_TYPES:
+                    # Code cell encountered before new cell on this page; hide new cell
+                    self.note_cells["cells"][cell_index]["cellParams"]["hidden"] = True
+
         self.screen_callback(self.term_name, "", "note_add_cell",
-                             [cell_index, new_cell_type, before_cell_index, new_cell["cellInput"]])
+                             [cell_index, new_cell_type, before_cell_index, self.get_cell_input()])
 
         return new_cell
 
@@ -1469,10 +1524,19 @@ class Terminal(object):
         next_cell["cellOutput"] = []
         return cell_index
 
-    def select_cell(self, cell_index=0, move_up=False):
+    def select_cell(self, cell_index=0, move_up=False, next_code=False):
+        """Select cell. If next_code, find next code cell"""
         if not self.note_cells:
             return
         cur_index = self.note_cells["curIndex"]
+        if not cell_index and next_code:
+            cur_num = self.note_cells["cellIndices"].index(cur_index)
+            for cindex in self.note_cells["cellIndices"][cur_num+1:]:
+                if self.note_cells["cells"][cindex]["cellType"] not in MARKUP_TYPES:
+                    cell_index = cindex
+            if not cell_index:
+                return
+
         select_cell_index = self.switch_cell(cell_index, move_up=move_up)
         if cur_index != select_cell_index:
             self.screen_callback(self.term_name, "", "note_select_cell", [select_cell_index])
@@ -1583,7 +1647,7 @@ class Terminal(object):
             return
         next_cell["cellInput"] += cur_cell["cellInput"]
         next_cell["cellOutput"] = []
-        self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(next_cell["cellInput"]), next_cell_index])
+        self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(next_cell["cellInput"]), next_cell_index, False])
         self.delete_cell(move_up=True)
 
     def complete_cell(self, incomplete):
@@ -1605,18 +1669,45 @@ class Terminal(object):
         except Exception, excp:
             pass
 
-    def update_cell(self, cell_index, execute, input_data):
+    def update_cell(self, cell_index, execute, save, input_data):
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return
         assert cell_index == cur_index
         cur_cell = self.note_cells["cells"][cur_index]
-        cur_cell["cellInput"] = split_lines(input_data)
+        input_lines = split_lines(input_data)
+        if save:
+            # Update cell input
+            if not self.note_params["fill"]:
+                cur_cell["cellInput"] = input_lines
+            else:
+                # Notebook form mode
+                cur_cell["cellInput"] = self.filled_cell_input(input_lines)
+                cur_cell["cellParams"]["filled"] = True
+                self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input()), cur_index, False])
+                cur_num = self.note_cells["cellIndices"].index(cur_index)
+                break_next = False
+                for j, cindex in enumerate(self.note_cells["cellIndices"][cur_num+1:]):
+                    # Unhide all cells up to, and including, the next code cell in current page
+                    if self.is_page_break(cindex):
+                        break
+                    cell = self.note_cells["cells"][cindex]
+                    cell["cellParams"]["hidden"] = False
+                    cell_input = "\n".join(self.get_cell_input(cindex))
+                    self.screen_callback(self.term_name, "", "note_cell_value", [cell_input, cindex, cell["cellType"] in MARKUP_TYPES])
+                    if break_next:
+                        break
+                    if cell["cellType"] not in MARKUP_TYPES:
+                        if cur_num+1+j+1 < len(self.note_cells["cellIndices"]) and self.note_cells["cells"][self.note_cells["cellIndices"][cur_num+1+j+1]]["cellType"] in MARKUP_TYPES:
+                            # Unhide markdown cell immediately following code cell
+                            break_next = True
+                        else:
+                            break
 
         if not execute:
             return
 
-        self.note_input = cur_cell["cellInput"][:]   # Must be a copy
+        self.note_input = input_lines[:]   # Must be a copy for future modification
         if self.note_input[-1]:
             # Add blank line to clear any indentation level
             self.note_input.append("")
@@ -1633,7 +1724,29 @@ class Terminal(object):
         if not self.note_prompts:
             # No prompt; transmit all input data
             while self.note_input:
-                os.write(self.fd, self.note_input.pop(0)+"\n")
+                os.write(self.fd, uclean(self.note_input.pop(0), encoded=True)+"\n")
+
+    def filled_cell_input(self, new_input):
+        cell = self.note_cells["cells"][self.note_cells["curIndex"]]
+        old_lines = cell["cellInput"]
+        nold = len(old_lines)
+        nmatch = len(new_input)
+        for j, new_line in enumerate(new_input):
+            if j >= nold or old_lines[j] != new_line:
+                # Line mismatch between old and new
+                nmatch = j
+                break
+        correct_lines = [line for line in old_lines if line.startswith(CORRECT_PREFIX)]
+        return new_input[:nmatch] + correct_lines + new_input[nmatch:]        
+        
+    def get_cell_input(self, cell_index=0):
+        """ Returns copy of input for cell """
+        cell = self.note_cells["cells"][cell_index or self.note_cells["curIndex"]]
+        if cell["cellParams"]["hidden"]:
+            return []
+        if not self.note_params["fill"] or cell["cellType"] in MARKUP_TYPES or cell["cellParams"]["filled"]:
+            return cell["cellInput"][:]
+        return [line for line in cell["cellInput"] if not line.startswith(CORRECT_PREFIX)]
 
     def erase_output(self, all_cells):
         cur_index = self.note_cells["curIndex"]
@@ -1745,7 +1858,7 @@ class Terminal(object):
                     cell = self.note_cells["cells"][cell_index]
                     self.screen_callback(self.term_name, response_id, "note_add_cell",
                                          [cell["cellIndex"], cell["cellType"], 0,
-                                          cell["cellInput"], cell["cellOutput"]])
+                                         self.get_cell_input(cell_index), cell["cellOutput"]])
                     if cell["cellIndex"] != self.note_cells["curIndex"]:
                         # Current cell will be updated later
                         self.screen_callback(self.term_name, response_id, "note_row_update",
@@ -2447,6 +2560,8 @@ class Terminal(object):
         self.screen_callback(self.term_name, response_id, "graphterm_output", self.gterm_output_buf)
 
     def save_data(self, save_params, filedata):
+        if not isinstance(filedata, str):
+            filedata = filedata.encode(ENCODING, "replace")
         params = save_params.copy()
         status = ""
         location = params.get("x_gterm_location", "")
@@ -2722,7 +2837,7 @@ class Terminal(object):
                     # Prompt found
                     if self.note_input:
                         # transmit buffered notebook cell line
-                        os.write(self.fd, self.note_input.pop(0)+"\n")
+                        os.write(self.fd, uclean(self.note_input.pop(0), encoded=True)+"\n")
                         self.note_expect_prompt = not self.note_input
                     else:
                         self.note_expect_prompt = False
@@ -3076,12 +3191,12 @@ class Multiplex(object):
                 return ""
             return term.add_cell(new_cell_type, init_text, before_cell_number)
 
-    def select_cell(self, term_name, cell_index, move_up):
+    def select_cell(self, term_name, cell_index, move_up, next_code):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.select_cell(cell_index, move_up)
+            return term.select_cell(cell_index, move_up, next_code)
 
     def select_page(self, term_name, move_up, endpoint, slide):
         with self.lock:
@@ -3125,12 +3240,12 @@ class Multiplex(object):
                 return ""
             return term.complete_cell(incomplete)
 
-    def update_cell(self, term_name, cur_index, execute, input_data):
+    def update_cell(self, term_name, cur_index, execute, save, input_data):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.update_cell(cur_index, execute, input_data)
+            return term.update_cell(cur_index, execute, save, input_data)
 
     def erase_output(self, term_name, all_cells):
         with self.lock:
