@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+#
+
+"""
+paginate: Paginate Markdown file by inserting page breaks after output cells
+
+Example:
+   paginate < infile > outfile
+"""
+
+import os
+import re
+import sys
+
+import gtermapi
+
+usage = "usage: %prog file ..."
+
+form_parser = gtermapi.FormParser(usage=usage, title="Paginate Markdown file", command="paginate")
+
+START_FENCE_RE = re.compile(r"^```(expect|output)")
+END_FENCE_RE = re.compile(r"^```\s*$")
+IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[(expect|output)-([^\]]+)\]")
+
+try:
+    fenced = False
+    page = True
+    for line in sys.stdin.readlines():
+        if fenced:
+            if END_FENCE_RE.match(line):
+                fenced = False
+        elif START_FENCE_RE.match(line):
+            fenced = True
+            page = False
+        elif IMAGE_RE.match(line):
+            page = False
+        elif not page and line.strip():
+            # Non-fenced Non-blank non-image line
+            sys.stdout.write("\n---\n\n")
+            page = True
+        sys.stdout.write(line)
+except EOFError:
+    pass

@@ -25,6 +25,7 @@ import threading
 import tty
 import termios
 import urllib
+import urllib2
 import uuid
 
 from optparse import OptionParser
@@ -773,8 +774,24 @@ def receive_data(stderr=False, verbose=False):
     finally:
         termios.tcsetattr(saved_stdin, termios.TCSADRAIN, saved_settings)
 
+def main(args=None):
+    from optparse import OptionParser
+    usage = "usage: %prog notebook.ipynb"
+    parser = OptionParser(usage=usage)
+    (options, my_args) = parser.parse_args(args=args)
+
+    if my_args:
+        filepath = my_args[0]
+        if filepath.endswith(".md") or filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
+            if filepath.startswith("http:") or filepath.startswith("https:"):
+                response = urllib2.urlopen(filepath)
+                content = response.read()
+                filepath = os.path.basename(filepath)
+            else:
+                content = None
+            # Switch to notebook mode (after prompt is displayed)
+            open_notebook(filepath, content=content)
+
+
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1 and (sys.argv[1].endswith(".md") or sys.argv[1].endswith(".ipynb") or sys.argv[1].endswith(".ipynb.json")):
-        # Switch to notebook mode (after prompt is displayed)
-        open_notebook(sys.argv[1])
+    main()

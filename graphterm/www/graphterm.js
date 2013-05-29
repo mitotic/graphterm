@@ -2692,7 +2692,7 @@ function keydownHandler(evt) {
 	return false;
     }
 
-    if (gNotebook && !gNotebook.passthru_stdin && !gNotebook.handling_tab && !gNotebook.prefix_key && evt.which == 77 && evt.ctrlKey) {
+    if (!gFirefoxBrowser && gNotebook && !gNotebook.passthru_stdin && !gNotebook.handling_tab && !gNotebook.prefix_key && evt.which == 77 && evt.ctrlKey) {
 	// Control-M prefix: notebook shortcuts
 	gNotebook.prefix_key = true;
 	return false;
@@ -2830,6 +2830,12 @@ function keypressHandler(evt) {
 
     if (evt.which == 106 && evt.ctrlKey && gShortcutMenus) {
 	// Control-J prefix: ignore duplicate in Firefox
+	return false;
+    }
+
+    if (gFirefoxBrowser && gNotebook && !gNotebook.passthru_stdin && !gNotebook.handling_tab && !gNotebook.prefix_key && evt.which == 109 && evt.ctrlKey) {
+	// Control-M prefix: notebook shortcuts
+	gNotebook.prefix_key = true;
 	return false;
     }
 
@@ -3735,7 +3741,7 @@ GTNotebook.prototype.eraseOutput = function(cellIndex) {
 	$("#"+this.getCellId(cellIndex)+"-output").html("");
 	$("#"+this.getCellId(cellIndex)+"-screen").html("");
     } else {
-	$(this.pagelet).find(".gterm-notecell-output").html("");
+	$(this.pagelet).find(".gterm-notecell-output:not(.gterm-notecell-markdown)").html("");
 	$(this.pagelet).find(".gterm-notecell-screen").html("");
     }
 }

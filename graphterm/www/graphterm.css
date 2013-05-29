@@ -298,7 +298,8 @@ hr.sf-separator {
 }
 
 .row.oldentry.gterm-hideoutput:not(.promptrow),
-  .oldentry.pagelet.gterm-hideoutput {
+  .oldentry.pagelet.gterm-hideoutput,
+  .oldentry.gterm-notecell-buffered.gterm-hideoutput {
     display: none;
 }
 
@@ -495,6 +496,11 @@ textarea.gterm-notecell-text {
 
 textarea.gterm-notecell-markup {
     border-style: dashed;
+}
+
+div.gterm-notecell-output.gterm-notecell-markdown,
+ div.gterm-cell-input.gterm-notecell-markdown {
+    font-family: helvetica, arial, sans-serif;
 }
 
 #terminal.gterm-noteslides.gterm-menubar-hide .gterm-header,

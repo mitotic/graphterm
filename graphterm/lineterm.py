@@ -47,7 +47,7 @@ from bin import gtermapi
 
 GT_PREFIX = gtermapi.GT_PREFIX
 
-MAX_SCROLL_LINES = 500
+MAX_SCROLL_LINES = 1000
 
 CHUNK_BYTES = 4096            # Chunk size for receiving data in stdin
 
@@ -78,7 +78,7 @@ MD_FENCE_RE = re.compile(r"^\s*{(\S+)(\s.*)?}")
 DEFAULT_FILE_PREFIX = "Untitled"
 DEFAULT_FILENUM_RE = re.compile("^(\d+)")
 
-CORRECT_PREFIX = "#correct:"
+ANSWER_PREFIX = "##answer## "
 MARKUP_TYPES = set(["markdown"])
 
 BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="%s" alt="%s"></div>'
@@ -714,7 +714,6 @@ class ScreenBuf(object):
                 old_entry_index, old_offset, old_dir, old_params, old_line, old_markup = self.scroll_lines.pop(0)
                 self.delete_blob(old_params[JOPTS].get("blob"))
                 while self.scroll_lines and self.scroll_lines[0][JINDEX] == old_entry_index:
-                    self.scroll_lines.pop(0)
                     tem_entry_index, tem_offset, tem_dir, tem_params, tem_line, tem_markup = self.scroll_lines.pop(0)
                     self.delete_blob(tem_params[JOPTS].get("blob"))
 
@@ -1077,7 +1076,7 @@ class Terminal(object):
 
         if not self.note_cells["curIndex"]:
             self.add_cell("")
-        self.select_cell(self.note_cells["cellIndices"][0])
+        self.select_cell(self.note_cells["cellIndices"][0], next_code=True)
 
     def close_notebook(self, discard=False):
         self.note_start = None
@@ -1229,6 +1228,10 @@ class Terminal(object):
                         md_lines += ["```output"] + out_lines + ["```"] + [""]
                     cell_out = True
                     out_lines = []
+            elif not cell["cellOutput"] and cell["cellType"] not in MARKUP_TYPES and save_fill:
+                if format != "ipynb":
+                    # Ensure at least one blank line in expect output
+                    md_lines += ["```expect"] + [""] + ["```"] + [""]
 
             if format == "ipynb" and cell["cellType"] not in MARKUP_TYPES:
                 md_lines += [IPYNB_JSON_CODE1 % dict(in_prompt=in_prompt)]
@@ -1281,7 +1284,7 @@ class Terminal(object):
         code_cell = None
         code_lines = None
         raw_lines = []
-        leaving_block = False
+        leaving_block = None
         blob_ids = {}
         try:
             state = None
@@ -1290,31 +1293,43 @@ class Terminal(object):
                     lang = line[len("```"):].strip()
                     if state is None:
                         # Entering fenced block
-                        leaving_block = False
-                        if raw_lines:
-                            # Add raw cell
-                            if code_cell:
-                                self.update()
-                                code_cell = None
-                            self.add_cell("markdown", init_text="\n".join(raw_lines))
-                            raw_lines = []
                         state = lang
-                        if state == "output":
-                            # New output block
-                            if not code_cell:
-                                # Orphan output block
+                        if raw_lines and code_cell:
+                            # Leaving code block
+                            self.update()
+                            code_cell = None
+                        if state in ("output", "expect"):
+                            if raw_lines and leaving_block != state:
+                                # Add raw cell (only if not continuation of previous block)
+                                self.add_cell("markdown", init_text="\n".join(raw_lines))
+                                raw_lines = []
+                            if state == "output":
+                                if code_cell:
+                                    # New output block: lines will be fed to scroll buffer
+                                    pass
+                                else:
+                                    # Append orphaned blank output line
+                                    raw_lines += [""]
+                            elif state == "expect":
+                                # Append expect line(s)
+                                if leaving_block != "expect":
+                                    # Beginning of expect block
+                                    raw_lines += ["", "*Expected output:*"]
                                 raw_lines += [""]
-                        elif state == "expect":
-                            raw_lines += [""]
                         else:
-                            # New code block
+                            # Entering new code block
                             code_lines = []
+                            if raw_lines:
+                                # Add raw cell
+                                self.add_cell("markdown", init_text="\n".join(raw_lines))
+                                raw_lines = []
+                        leaving_block = None
                     else:
                         # Leaving fenced block
-                        leaving_block = True
+                        leaving_block = state
                         if state == "output":
                             if not code_cell:
-                                # Orphan output block
+                                # Orphan output block; treat as raw text
                                 raw_lines += [""]
                         elif state == "expect":
                             raw_lines += [""]
@@ -1332,7 +1347,7 @@ class Terminal(object):
                         if code_cell:
                             self.note_screen_buf.scroll_buf_up(line, None)
                         else:
-                            # Orphan output block
+                            # Orphan output block; treat as raw text
                             raw_lines += ["    "+line]
                     elif state == "expect":
                         # Within expect block
@@ -1343,26 +1358,32 @@ class Terminal(object):
 
                 elif MD_IMAGE_RE.match(line):
                     # Inline image
-                    leaving_block = True
                     match = MD_IMAGE_RE.match(line)
                     alt = match.group(1).strip() or "image"
                     ref_id = match.group(2).strip()
                     blob_id = blob_ids.get(ref_id, "") or str(uuid.uuid4())
                     blob_ids[ref_id] = blob_id
                     blob_url = gtermapi.get_blob_url(blob_id, host=self.host)
-                    if code_cell:
-                        if ref_id.startswith("output"):
-                            # Output image
-                            markup = BLOCKIMGFORMAT % (blob_id, blob_url, alt)
-                            self.note_screen_buf.scroll_buf_up("", None, markup=markup,
-                                                               row_params=["pagelet", {"blob": blob_id}])
-                        else:
-                            # Non-output image; new raw block
+                    fig_prefix, sep, _ = ref_id.partition("-")
+                    if code_cell and fig_prefix == "output":
+                        # Output image
+                        markup = BLOCKIMGFORMAT % (blob_id, blob_url, alt)
+                        self.note_screen_buf.scroll_buf_up("", None, markup=markup,
+                                                           row_params=["pagelet", {"blob": blob_id}])
+                    else:
+                        # Non-output image
+                        if code_cell:
+                            # Leave code block
                             self.update()
                             code_cell = None
-                            raw_lines += ["![%s](%s)" % (alt, blob_url)]
-                    else:
+                        if raw_lines and leaving_block is not None and leaving_block != fig_prefix:
+                            # Add raw cell (figure does not belong to continuation of previous block)
+                            self.add_cell("markdown", init_text="\n".join(raw_lines))
+                            raw_lines = []
+                        # Append image
                         raw_lines.append("![%s](%s)" % (alt, blob_url))
+
+                    leaving_block = fig_prefix if fig_prefix in ("expect", "output") else None
 
                 elif MD_REF_RE.match(line):
                     # Reference data URI
@@ -1375,24 +1396,33 @@ class Terminal(object):
                     # gterm comment directive (currently just ignored)
                     offset, directive, opt_dict = gtermapi.parse_gterm_directive(line)
 
-                elif line or not leaving_block:
-                    # Non-blank line or not leaving block; handle raw line
-                    # (Ignore blank lines following fenced block or output image, unless already in markdown block)
-                    leaving_block = False
+                elif not line and leaving_block is None and raw_lines:
+                    # Append blank line only if other raw lines are already appended
+                    # (Ignore blank lines immediately following fenced block or output image)
+                    raw_lines.append(line)
+
+                elif line:
+                    # Non-blank line outside fenced block
+                    if raw_lines and leaving_block is not None:
+                        # Add raw cell (not continuation)
+                        self.add_cell("markdown", init_text="\n".join(raw_lines))
+                        raw_lines = []
+                    leaving_block = None
+
                     if code_cell:
-                        if line:
-                            # New raw block (if not blank line)
-                            self.update()
-                            code_cell = None
-                            raw_lines = [line]
-                    elif line.rstrip() == gtermapi.PAGE_BREAK:
+                        # Leaving code block
+                        self.update()
+                        code_cell = None
+
+                    if line.rstrip() == gtermapi.PAGE_BREAK:
                         # Page break
                         if raw_lines:
                             # Split raw block
                             self.add_cell("markdown", init_text="\n".join(raw_lines))
                         self.add_cell("markdown", init_text=gtermapi.PAGE_BREAK)
                         raw_lines = []
-                    elif line or raw_lines:
+                    else:
+                        # Append non-blank line to markdown block
                         raw_lines.append(line)
 
             if raw_lines:
@@ -1525,15 +1555,19 @@ class Terminal(object):
         return cell_index
 
     def select_cell(self, cell_index=0, move_up=False, next_code=False):
-        """Select cell. If next_code, find next code cell"""
+        """Select cell. If next_code, select next code cell, if possible, else cell_index, is specified, or do nothing"""
         if not self.note_cells:
             return
         cur_index = self.note_cells["curIndex"]
-        if not cell_index and next_code:
-            cur_num = self.note_cells["cellIndices"].index(cur_index)
-            for cindex in self.note_cells["cellIndices"][cur_num+1:]:
+        if next_code:
+            cur_num = self.note_cells["cellIndices"].index(cell_index or cur_index)
+            if not cell_index:
+                # Start searching from cell next to current
+                cur_num += 1
+            for cindex in self.note_cells["cellIndices"][cur_num:]:
                 if self.note_cells["cells"][cindex]["cellType"] not in MARKUP_TYPES:
                     cell_index = cindex
+                    break
             if not cell_index:
                 return
 
@@ -1736,8 +1770,8 @@ class Terminal(object):
                 # Line mismatch between old and new
                 nmatch = j
                 break
-        correct_lines = [line for line in old_lines if line.startswith(CORRECT_PREFIX)]
-        return new_input[:nmatch] + correct_lines + new_input[nmatch:]        
+        answer_lines = [line for line in old_lines if line.startswith(ANSWER_PREFIX)]
+        return new_input[:nmatch] + answer_lines + new_input[nmatch:]        
         
     def get_cell_input(self, cell_index=0):
         """ Returns copy of input for cell """
@@ -1746,14 +1780,15 @@ class Terminal(object):
             return []
         if not self.note_params["fill"] or cell["cellType"] in MARKUP_TYPES or cell["cellParams"]["filled"]:
             return cell["cellInput"][:]
-        return [line for line in cell["cellInput"] if not line.startswith(CORRECT_PREFIX)]
+        return [line for line in cell["cellInput"] if not line.startswith(ANSWER_PREFIX)]
 
     def erase_output(self, all_cells):
         cur_index = self.note_cells["curIndex"]
         for cell in self.note_cells["cells"].itervalues():
             if not all_cells and cell["cellIndex"] != cur_index:
                 continue
-            cell["cellOutput"] = []
+            if cell["cellType"] not in MARKUP_TYPES:
+                cell["cellOutput"] = []
 
         # Clear screen buffer
         self.scroll_screen(self.active_rows)

@@ -1037,7 +1037,8 @@ class ProxyFileHandler(tornado.web.RequestHandler):
                    if_mod_since_datetime and \
                    if_mod_since_datetime >= last_modified_datetime:
                       # Remote copy is up-to-date
-                      self.send_error(304)  # Not modified status code
+                      self.set_status(304)  # Not modified status code
+                      self.finish()
                       return
                 # Return immutable cached blob
                 self.finish_write(bheaders, bcontent)
@@ -1112,7 +1113,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
                 # Not modified since cached copy was created; return cached copy
                 self.finish_write(self.cached_copy[1], self.cached_copy[2])
                 return
-            self.set_status(status[0])
+            self.set_status(304)
             self.finish()
             return
 

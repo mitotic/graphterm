@@ -46,7 +46,11 @@ try:
 
     def gpylab_display_hook(expr):
         if isinstance(expr, matplotlib.figure.Figure):
-            display(expr, overwrite=True)
+            display(expr, overwrite=False)
+        elif hasattr(expr, "get_figure"):
+            fig = getattr(expr, "get_figure")()
+            if isinstance(fig, matplotlib.figure.Figure):
+                display(fig, overwrite=True)
 
     def autoprint(enable=True):
         global Saved_displayhook
@@ -63,8 +67,5 @@ except ImportError:
     pass
 
 if __name__ == "__main__":
-    import sys
     import gtermapi
-    if len(sys.argv) > 1 and (sys.argv[1].endswith(".md") or sys.argv[1].endswith(".ipynb") or sys.argv[1].endswith(".ipynb.json")):
-        # Switch to notebook mode (after prompt is displayed)
-        gtermapi.open_notebook(sys.argv[1])
+    gtermapi.main()

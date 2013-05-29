@@ -7,7 +7,9 @@ greveal: reveal.js in graphterm
 Type "bbb" to exit
 """
 
+import base64
 import json
+import mimetypes
 import os
 import re
 import sys
@@ -184,29 +186,62 @@ reveal_format = """
 </html>
 """
 
+MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
+MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
+
 (options, args) = form_parser.parse_args()
 
 title = "Title"
 url = ""
-content = ""
+lines = []
 if args:
     title = args[0]
     try:
         with open(args[0]) as f:
-            content = f.read()
+            lines = f.readlines()
     except Exception:
         print >> sys.stderr, "Error in reading markdown content from file", args[0]
         sys.exit(1)
 else:
     title = "stdin"
     try:
-        content = sys.stdin.read()
+        lines = sys.stdin.readlines()
     except (EOFError, KeyboardInterrupt):
         print >> sys.stderr, "Error in reading markdown content from standard input"
 
-if not content:
+if not lines:
       print >> sys.stderr, "No content to process"
       sys.exit(1)
+
+blobs = {}
+for line in lines:
+    match = MD_REF_RE.match(line)
+    if match:
+        ref_id = match.group(1).strip()
+        blobs[ref_id] = line[len(match.group(0)):]
+
+mod_lines = []
+for line in lines:
+    if MD_REF_RE.match(line):
+        continue
+    match = MD_IMAGE_RE.match(line)
+    if match:
+         alt = match.group(1).strip() or "image"
+         uri = match.group(2).strip()
+         if uri in blobs:
+             uri = "data:" + blobs[uri]
+         elif uri.startswith("file://"):
+             filepath = uri[len("file://"):]
+             mimetype, encoding = mimetypes.guess_type(filepath)
+             if mimetype and mimetype.startswith("image/"):
+                 with open(filepath) as f:
+                     fdata = f.read()
+                 uri = "data:" + mimetype, ";base64," + base64.b64encode(fdata)
+         mod_lines.append('<img alt="%s" src="%s">\n' % (alt, uri))
+    else:
+        mod_lines.append(line)
+
+content = "".join(mod_lines)
 
 def jsbool(value):
     return "true" if value else "false"
@@ -218,7 +253,3 @@ params = {"title": title, "content": content,
           }
 
 sys.stdout.write(reveal_format % params)
-
-
-
-

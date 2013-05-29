@@ -33,7 +33,7 @@ for arg in sys.argv[1:]:
     offset += 1
 
 args = sys.argv[1:2+offset]
-cmd_args  = sys.argv[2+offset:]
+cmd_args = sys.argv[2+offset:]
 
 (options, pargs) = form_parser.parse_args(args=args or None)
 
