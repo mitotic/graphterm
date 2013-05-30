@@ -3,6 +3,16 @@ Release Notes
 .. contents::
 
 
+0.37.0 (May 29, 2013)
+---------------------------------------------------------------------------------
+
+  - Follow-up release to 0.36.0
+
+  - Mostly bug fixes and cleanup of notebook mode
+
+  - *gload* to load new terminal in current window
+
+
 0.36.0 (May 26, 2013)
 ---------------------------------------------------------------------------------
 
