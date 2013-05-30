@@ -1,0 +1,10 @@
+#!/bin/bash
+# gload: Load a terminal
+
+if [ $# -lt 1 ]; then
+   echo "Usage: gload terminal_name"
+   exit 1
+fi
+
+gjs load $1
+
