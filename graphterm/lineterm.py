@@ -832,7 +832,7 @@ class Screen(object):
 
 class Terminal(object):
     def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, winheight=0, winwidth=0,
-                 cookie=0, shared_secret="", host="", pdelim=[], logfile=""):
+                 cookie=0, shared_secret="", host="", pdelim=[], term_params={}, logfile=""):
         self.term_name = term_name
         self.fd = fd
         self.pid = pid
@@ -845,6 +845,7 @@ class Terminal(object):
         self.shared_secret = shared_secret
         self.host = host
         self.pdelim = pdelim
+        self.term_params = term_params
         self.logfile = logfile
         self.screen_buf = ScreenBuf(pdelim)
 
@@ -1709,14 +1710,14 @@ class Terminal(object):
             return
         assert cell_index == cur_index
         cur_cell = self.note_cells["cells"][cur_index]
-        input_lines = split_lines(input_data)
+        cell_lines = split_lines(input_data)
         if save:
             # Update cell input
             if not self.note_params["fill"]:
-                cur_cell["cellInput"] = input_lines
+                cur_cell["cellInput"] = cell_lines
             else:
                 # Notebook form mode
-                cur_cell["cellInput"] = self.filled_cell_input(input_lines)
+                cur_cell["cellInput"] = self.filled_cell_input(cell_lines)
                 cur_cell["cellParams"]["filled"] = True
                 self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input()), cur_index, False])
                 cur_num = self.note_cells["cellIndices"].index(cur_index)
@@ -1741,11 +1742,28 @@ class Terminal(object):
         if not execute:
             return
 
-        self.note_input = input_lines[:]   # Must be a copy for future modification
-        if self.note_input[-1]:
-            # Add blank line to clear any indentation level
-            self.note_input.append("")
+        input_lines = cell_lines[:]   # Must be a copy as it is modified later
 
+        if self.note_params["command"] == "python" and not self.term_params.get("no_pyindent"):
+            # For python, need to insert blank lines before reverting back to no indentation
+            tem_lines = []
+            indent = 0
+            for line in input_lines:
+                new_indent = len(line) - len(line.lstrip())
+                if not new_indent and indent:
+                    # Append blank line to clear indent, if need be
+                    comps = line.rstrip().split()
+                    if comps and comps[0] not in ("else:", "elif", "except:", "except", "finally:"):
+                        tem_lines.append("")
+                tem_lines.append(line)
+                indent = new_indent
+            input_lines = tem_lines
+
+        if input_lines[-1]:
+            # Add blank line to clear any indentation level
+            input_lines.append("")
+
+        self.note_input = input_lines
         self.note_screen_buf.clear_buf()
         self.zero_screen()
         self.cursor_x = 0
@@ -1979,15 +1997,18 @@ class Terminal(object):
             self.parse_command()
             q, r = divmod(self.cursor_y+1, self.scroll_bot+1)
             if q:
+                meta = self.screen.meta[self.scroll_top]
                 if self.note_cells:
-                    row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
-                    self.note_screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
-                                                  self.screen.meta[self.scroll_top],
+                    if meta and meta[JCONTINUATION]:
+                        # Do not buffer prompt continuation line
+                        pass
+                    else:
+                        row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
+                        self.note_screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta,
                                     offset=prompt_offset(dump(row), self.pdelim, self.screen.meta[self.scroll_top]))
                 elif not self.alt_mode:
                     row = self.peek(self.scroll_top, 0, self.scroll_top, self.width)
-                    self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True),
-                                                  self.screen.meta[self.scroll_top],
+                    self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta,
                                     offset=prompt_offset(dump(row), self.pdelim, self.screen.meta[self.scroll_top]))
                 self.scroll_up(self.scroll_top, self.scroll_bot)
                 self.cursor_y = self.scroll_bot
@@ -2062,8 +2083,21 @@ class Terminal(object):
                 if self.logchars == MAX_LOG_CHARS:
                     logf.write("\n")
         if self.cursor_eol:
+            nb_prompt = False
+            if self.note_cells and self.note_input:
+                line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
+                if self.note_params["shell"]:
+                    nb_prompt = bool(prompt_offset(line, self.pdelim, self.main_screen.meta[0]))
+                else:
+                    nb_prompt = any(line.startswith(prompt) for prompt in self.note_prompts)
+
             self.cursor_down()
             self.cursor_x = 0
+
+            if nb_prompt:
+                # Mark overflow lines following a notebook prompt
+                self.screen.meta[self.cursor_y] = ("", 1)
+
         self.screen.data[(self.cursor_y*self.width)+self.cursor_x] = self.current_nul | ord(uchar)
         self.cursor_right()
         if not self.alt_mode:
@@ -2451,6 +2485,13 @@ class Terminal(object):
                 else:
                     content_lines = split_lines(content)
                     screen_buf.scroll_buf_up(content_lines[0]+"...", None)
+            elif response_type == "auto_print":
+                # Validated auto print
+                if self.note_cells and len(self.note_input) > 1:
+                    # Ignore auto print output within notebook cell (except for last)
+                    pass
+                else:
+                    retval = content + retval
             else:
                 # Validated data
                 if response_type in ("create_blob", "edit_file", "open_notebook"):
@@ -2883,7 +2924,7 @@ class Terminal(object):
 class Multiplex(object):
     def __init__(self, screen_callback, command=None, shared_secret="",
                  host="", server_url="", term_type="linux", api_version="",
-                 widget_port=0, prompt_list=[], blob_server="", lc_export=False, logfile="", app_name="graphterm"):
+                 widget_port=0, prompt_list=[], blob_server="", term_params={}, logfile="", app_name="graphterm"):
         """ prompt_list = [prefix, suffix, format, remote_format]
         """
         ##signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -2896,9 +2937,9 @@ class Multiplex(object):
         self.pdelim = prompt_list[:2] if len(prompt_list) >= 2 else []
         self.term_type = term_type
         self.api_version = api_version
+        self.term_params = term_params
         self.widget_port = widget_port
         self.blob_server = blob_server
-        self.lc_export = lc_export
         self.logfile = logfile
         self.app_name = app_name
         self.proc = {}
@@ -2995,7 +3036,8 @@ class Multiplex(object):
                                                 winheight=winheight, winwidth=winwidth,
                                                 cookie=cookie, host=self.host,
                                                 shared_secret=self.shared_secret,
-                                                pdelim=self.pdelim, logfile=self.logfile)
+                                                pdelim=self.pdelim, term_params=self.term_params,
+                                                logfile=self.logfile)
                 self.set_size(term_name, height, width, winheight, winwidth)
                 if not is_executable(Gls_path) and not Exec_errmsg:
                     Exec_errmsg = True
@@ -3039,7 +3081,7 @@ class Multiplex(object):
 
         env.append( (GT_PREFIX+"DIR", File_dir) )
 
-        if self.lc_export:
+        if self.term_params.get("lc_export"):
             # Export some environment variables as LC_* (hack to enable SSH forwarding)
             env_dict = dict(env)
             env.append( ("LC_"+GT_PREFIX+"EXPORT", socket.getfqdn() or "unknown") )
@@ -3350,7 +3392,7 @@ class Multiplex(object):
         self.kill_all()
 
 if __name__ == "__main__":
-    ## Code to test LineTerm on reguler terminal
+    ## Code to test LineTerm on regular terminal
     ## Re-size terminal to 80x25 before testing
 
     # Determine terminal width, height

@@ -5,7 +5,7 @@
 gframe -c 3 -b -r 40% -t tweetwin weatherwin slidewin cloudwin snowwin matplotwin
 sleep 5
 
-# Tweet stream, fullscreen, search for keywork "science"
+# Tweet stream, fullscreen, search for keyword "science"
 gsh -c tweetwin gtweet -f -s science
 
 # Display weather for Austin (using Yahoo weather API)
@@ -25,4 +25,6 @@ gsh snowwin gsnowflake.py
 gsh -c matplotwin sleep 10
 gsh matplotwin gmatplot.py --animate
 gsh matplotwin sleep 5
+
+# Start a notebook in the same window
 gsh matplotwin python -i '$GTERM_DIR/bin/gpylab.py' '$GTERM_DIR/notebooks/SineWave.ipynb'

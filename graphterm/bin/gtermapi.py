@@ -253,6 +253,13 @@ def open_url(url, target="_blank", stderr=False):
                    }
     wrap_write("", headers=url_headers, stderr=stderr)
 
+def auto_print(text):
+    """Auto print line output from interpreter shell"""
+    headers = {"x_gterm_response": "auto_print",
+               "x_gterm_parameters": {}
+               }
+    wrap_write(text, headers=headers)
+
 def in_ipython():
     try:
         __IPYTHON__
@@ -774,7 +781,28 @@ def receive_data(stderr=False, verbose=False):
     finally:
         termios.tcsetattr(saved_stdin, termios.TCSADRAIN, saved_settings)
 
-def main(args=None):
+Saved_displayhook = sys.displayhook
+
+def _gterm_display_hook(expr):
+    if "display_hook" in globals():
+        expr = globals()["display_hook"](expr)
+    if expr is not None:
+        auto_print(str(expr)+"\n")
+
+def nbmode(enable=True):
+    global Saved_displayhook
+    if enable:
+        # Control automatic printing of expressions
+        Saved_displayhook = sys.displayhook
+        sys.displayhook = _gterm_display_hook
+        print >> sys.stderr, "NOTE: Enabled notebook mode (affects auto printing of expressions)"
+        print >> sys.stderr, "      To disable, use gtermapi.nbmode(False)"
+    else:
+        print >> sys.stderr, "NOTE: Disabled notebook mode"
+        sys.displayhook = Saved_displayhook
+
+def process_args(args=None):
+    """Process args, returning True if notebook is opened"""
     from optparse import OptionParser
     usage = "usage: %prog notebook.ipynb"
     parser = OptionParser(usage=usage)
@@ -791,7 +819,9 @@ def main(args=None):
                 content = None
             # Switch to notebook mode (after prompt is displayed)
             open_notebook(filepath, content=content)
-
+            return True
+    return False
 
 if __name__ == "__main__":
-    main()
+    nbmode()
+    process_args()

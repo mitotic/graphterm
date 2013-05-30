@@ -133,7 +133,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     all_cookies = {}
     def __init__(self, host, port, host_secret="", oshell=False, io_loop=None, ssl_options={},
                  command="", term_type="", term_encoding="utf-8", widget_port=0, prompt_list=[],
-                 blob_host="", lc_export=False, lterm_logfile="", key_secret=None, key_version=None):
+                 blob_host="", term_params={}, lterm_logfile="", key_secret=None, key_version=None):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
                                              reconnect_sec=RETRY_SEC, server_type="frame",
@@ -146,7 +146,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.term_encoding = term_encoding
         self.widget_port = widget_port
         self.prompt_list = prompt_list
-        self.lc_export = lc_export
+        self.term_params = term_params
         self.lterm_logfile = lterm_logfile
 
         self.terms = {}
@@ -219,7 +219,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                                                server_url=self.server_url, term_type=self.term_type,
                                                api_version=version_str, widget_port=self.widget_port,
                                                prompt_list=self.prompt_list, blob_server=self.blob_server,
-                                               lc_export=self.lc_export, logfile=self.lterm_logfile)
+                                               term_params=self.term_params, logfile=self.lterm_logfile)
         term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width,
                                                          winheight=winheight, winwidth=winwidth,
                                                          parent=parent)

@@ -216,6 +216,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _auth_type = CODE_AUTH
     _wildcards = {}
     _super_users = set()
+    _connect_cookies = OrderedDict()
 
     @classmethod
     def set_super_users(cls, users=[]):
@@ -230,7 +231,19 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             cls._auth_type = cls.NAME_AUTH
         else:
             cls._auth_type = cls.CODE_AUTH
-            
+
+    @classmethod
+    def get_connect_cookie(cls):
+        while len(cls._connect_cookies) > 100:
+            cls._connect_cookies.popitem(last=False)
+        new_cookie = uuid.uuid4().hex[:12]
+        cls._connect_cookies[new_cookie] = 1
+        return new_cookie
+
+    @classmethod
+    def is_valid_connect_cookie(cls, value):
+        return value in cls._connect_cookies
+
     @classmethod
     def get_auth_code(cls):
         return cls._auth_code
@@ -342,7 +355,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             self.authorized = self.add_state(user, self.NAME_AUTH)
                         else:
                             errmsg = "User name %s already in use" % user if user else "Please specify user name (letters/digits/hyphens, starting with letter)"
-                            self.write_json([["authenticate", need_user, need_code, errmsg]])
+                            self.write_json([["authenticate", need_user, need_code, self.get_connect_cookie(), errmsg]])
                             self.close()
                             return
                     else:
@@ -351,7 +364,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if user in self._auth_users:
                                 expect_code = self._auth_users[user]
                             else:
-                                self.write_json([["authenticate", need_user, need_code, "Invalid user" if user else ""]])
+                                self.write_json([["authenticate", need_user, need_code, self.get_connect_cookie(), "Invalid user" if user else ""]])
                                 self.close()
                                 return
 
@@ -365,18 +378,24 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 if self.req_path in self._webcast_paths:
                     self.authorized = self.add_state(user, self.WEBCAST_AUTH)
                 else:
-                    self.write_json([["authenticate", need_user, need_code, auth_message]])
+                    self.write_json([["authenticate", need_user, need_code, self.get_connect_cookie(), auth_message]])
                     self.close()
                     return
 
+            cauth = query_data.get("cauth", [""])[0]
             qauth = query_data.get("qauth", [""])[0]
-            if not Server_settings["no_formcheck"] and (not qauth or qauth != self.authorized["state_id"][:AUTH_DIGITS]):
+            if not Server_settings["no_formcheck"] and not self.is_valid_connect_cookie(cauth) and (not qauth or qauth != self.authorized["state_id"][:AUTH_DIGITS]):
                 # Invalid query auth; clear any form data (always cleared for webcasts and when user is first authorized)
                 query_data = {}
 
             if not Server_settings["no_formcheck"] and not query_data and self.req_path not in self._webcast_paths:
-                # Clear path, if no form data and not webcasting
-                path_comps = []
+                # Confirm path, if no form data and not webcasting
+                if self.req_path:
+                    self.write_json([["confirm_path", self.authorized["state_id"], "/"+self.req_path]])
+                    self.close()
+                    return
+                else:
+                    path_comps = []
             else:
                 path_comps = self.req_path.split("/")
 
@@ -438,14 +457,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
                 term_name = path_comps[1].lower()
-                if term_name == "new":
-                    term_name = conn.remote_terminal_update(parent=option)
+                if term_name == "new" or not qauth:
+                    term_name = conn.remote_terminal_update(parent=option) if term_name == "new" else term_name
                     redir_url = "/"+host+"/"+term_name+"/"
-                    if self.request_query:
+                    if self.request_query and qauth:
                         redir_url += "?"+self.request_query
                     else:
-                        redir_url += "&qauth="+self.authorized["state_id"][:AUTH_DIGITS]
-                    self.write_json([["redirect", redir_url]])
+                        redir_url += "?qauth="+self.authorized["state_id"][:AUTH_DIGITS]
+                    self.write_json([["redirect", redir_url, self.authorized["state_id"]]])
                     self.close()
                     return
                 
@@ -506,12 +525,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             assert self.websocket_id not in self._watch_dict[path]
 
+            is_owner = (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"])
+
             controller = False
             if self.authorized["auth_type"] == self.WEBCAST_AUTH:
                 controller = False
             elif self.wildcard:
                 controller = True
-            elif option == "steal" and not terminal_params["sharing_locked"]:
+            elif option == "steal" and (is_owner or not terminal_params["sharing_locked"]):
                 controller = True
                 if terminal_params["sharing_tandem"]:
                     self._control_set[path].add(self.websocket_id)
@@ -618,10 +639,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
         remote_host, term_name = self.remote_path.split("/")
 
-        controller = self.wildcard or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
         terminal_params = self._control_params[self.remote_path]
 
         from_user = self.authorized["user"] if self.authorized else ""
+
+        is_super_user = from_user and from_user in self._super_users
+
+        is_owner = (from_user and from_user == terminal_params["owner"]) or (not from_user and self.authorized["state_id"] == terminal_params["state_id"])
+
+        controller = self.wildcard or is_super_user or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
+
         conn = None
         allow_feedback_only = False
         if not self.wildcard:
@@ -634,7 +661,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 allow_feedback_only = True
 
         allow_control_request = not terminal_params["sharing_locked"] and not terminal_params["sharing_private"] and not self._webcast_paths.get(self.remote_path)
-        if controller or allow_feedback_only or allow_control_request:
+        if is_owner or controller or allow_feedback_only or allow_control_request:
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
                 if allow_feedback_only:
@@ -683,16 +710,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         raise Exception("Cannot change setting for wildcard terminal: %s" % key)
                     elif key == "sharing_control":
                         if not value:
-                            if len(self._control_set[self.remote_path]) == 1 and terminal_params["sharing_private"]:
-                                # Reset control for lone, private controller
-                                self.broadcast(self.remote_path, ["update_menu", "sharing_control", True],
-                                               controller=True, include_self=True)
-                            else:
-                                self._control_set[self.remote_path].discard(self.websocket_id)
-                        elif not self._control_set[self.remote_path] or not terminal_params["sharing_locked"]:
+                            # Give up control
+                            self._control_set[self.remote_path].discard(self.websocket_id)
+                        elif is_super_user or is_owner or not terminal_params["sharing_locked"]:
+                            # Gain control
                             if terminal_params["sharing_tandem"]:
+                                # Shared control
                                 self._control_set[self.remote_path].add(self.websocket_id)
                             else:
+                                # Sole control
                                 self.broadcast(self.remote_path, ["update_menu", key, False], controller=True)
                                 self._control_set[self.remote_path] = set([self.websocket_id])
                         else:
@@ -700,6 +726,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     elif key == "sharing_tandem":
                         terminal_params["sharing_tandem"] = value
                         if not value:
+                            # No tandem access; restrict control access to self
                             self.broadcast(self.remote_path, ["update_menu", key, False], controller=True)
                             self._control_set[self.remote_path] = set([self.websocket_id])
                         self.broadcast(self.remote_path, ["update_menu", key, value])
@@ -710,6 +737,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if len(self._webcast_paths) > MAX_WEBCASTS:
                                 self._webcast_paths.pop(last=False)
                             if value:
+                                # Join webcast
                                 self._webcast_paths[self.remote_path] = time.time()
                             else:
                                 # Cancel webcast
@@ -721,10 +749,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     elif key == "sharing_private":
                         terminal_params["sharing_private"] = value
                         if not value:
-                            # Share
+                            # Share access to terminal
                             self.broadcast(self.remote_path, ["update_menu", key, value])
-                        elif self.remote_path in self._watch_dict:
-                            # Private
+                        else:
+                            # Revert to private mode; close all watchers, exluding self
                             self.close_watchers()
                     else:
                         raise Exception("Invalid setting: %s" % key)
@@ -1303,6 +1331,7 @@ def run_server(options, args):
     else:
         oshell_globals = globals() if otrace and options.oshell else None
         prompt_list = options.prompts.split(",") if options.prompts else DEFAULT_PROMPTS
+        term_params = {"lc_export": options.lc_export, "no_pyindent": options.no_pyindent}
         Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST, internal_host,
                                                          server_port=internal_port,
                                                          connect_kw={"ssl_options": internal_client_ssl,
@@ -1311,7 +1340,7 @@ def run_server(options, args):
                                                                      "term_encoding": options.term_encoding,
                                                                      "key_secret": options.server_secret or None,
                                                                      "prompt_list": prompt_list,
-                                                                     "lc_export": options.lc_export,
+                                                                     "term_params": term_params,
                                                                      "blob_host": options.blob_host,
                                                                      "lterm_logfile": options.lterm_logfile,
                                                                      "widget_port":
@@ -1427,6 +1456,8 @@ def main():
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
     parser.add_option("", "--lc_export", dest="lc_export", action="store_true",
                       help="Export environment as locale (ssh hack)")
+    parser.add_option("", "--no_pyindent", dest="no_pyindent", action="store_true",
+                      help="Disable auto indentation mods for notebook cells in python interpreter")
     parser.add_option("", "--allow_embed", dest="allow_embed", action="store_true",
                       help="Allow iframe embedding of terminal on other domains (possibly insecure)")
     parser.add_option("", "--no_formcheck", dest="no_formcheck", action="store_true",

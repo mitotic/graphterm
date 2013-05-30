@@ -60,7 +60,7 @@ var gRows = 0;
 var gCols = 0;
 var gWebSocket = null;
 
-var gAuthenticating = false;
+var gAuthenticatingCookie = "";
 var gEditing = null;
 
 var gFeedback = false;
@@ -309,8 +309,8 @@ function getAuth() {
     return getCookie("GRAPHTERM_AUTH").substr(0,AUTH_DIGITS);
 }
 
-function AuthPage(need_user, need_code, msg) {
-    gAuthenticating = true;
+function AuthPage(need_user, need_code, connect_cookie, msg) {
+    gAuthenticatingCookie = connect_cookie;
     $("#authcode").val("");
 
     if (need_user)
@@ -338,12 +338,12 @@ function AuthPage(need_user, need_code, msg) {
 
 function Authenticate(evt) {
     console.log("Authenticate: ", evt);
-    Connect($("#authuser").val(), $("#authcode").val());
+    Connect($("#authuser").val(), $("#authcode").val(), gAuthenticatingCookie);
     return false;
 }
 
-function Connect(auth_user, auth_code) {
-    gWebSocket = new GTWebSocket(auth_user, auth_code);
+function Connect(auth_user, auth_code, connect_cookie) {
+    gWebSocket = new GTWebSocket(auth_user, auth_code, connect_cookie);
 }
 
 function SignOut() {
@@ -783,12 +783,13 @@ function GTGetLocalFile(filepath, current_dir, callback) {
         });
 }
 
-function GTWebSocket(auth_user, auth_code) {
+function GTWebSocket(auth_user, auth_code, connect_cookie) {
     this.failed = false;
     this.opened = false;
     this.closed = false;
     this.auth_user = auth_user || "";
     this.auth_code = auth_code || "";
+    connect_cookie = connect_cookie || "";
 
     this.icons = false;
     this.terminal = false;
@@ -806,7 +807,9 @@ function GTWebSocket(auth_user, auth_code) {
 	this.ws_url += location.search;
     var add_params = (this.auth_user || this.auth_code) ? {user: auth_user, code: auth_code} : {};
     if (self.location.hostname != top.location.hostname)
-	add_params.embedded = "1"
+	add_params.embedded = "1";
+    if (!location.search && connect_cookie)
+	add_params.cauth = connect_cookie;
     if (!$.isEmptyObject(add_params))
 	this.ws_url += (location.search ? "&" : "?") + $.param(add_params);
     console.log("GTWebSocket url: "+this.ws_url);
@@ -956,17 +959,15 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
 		    setCookie("GRAPHTERM_AUTH", null);
-		if (window.location.pathname == "/"){
-		    AuthPage(command[1], command[2], command[3]);
-		} else {
-		    window.location = "/";
-		}
+		AuthPage(command[1], command[2], command[3], command[4]);
 
             } else if (action == "open") {
 		OpenNew(command[1], command[2]);
 
             } else if (action == "redirect") {
 		window.location = command[1];
+		if (command[2])
+		    setCookie("GRAPHTERM_AUTH", command[2]);
 
             } else if (action == "join") {
 		GTJoin(command[1], command[2]);
@@ -995,6 +996,14 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    openTerminal();
 		if (gParams.controller && gParams.display_splash && gParams.term != "osh" && !(window.frameElement && window.parent))
 		    GTShowSplash(true, true);
+
+            } else if (action == "confirm_path") {
+		if (command[1])
+		    setCookie("GRAPHTERM_AUTH", command[1]);
+		var conf_path = command[2];
+		var conf_html = "<p>";
+		conf_html += '<h3>Click to open: <a href="'+conf_path+'/?qauth='+getAuth()+'">'+conf_path+'</a></h3>';
+		$("body").html(conf_html);
 
             } else if (action == "host_list") {
 		if (command[1])
@@ -1187,7 +1196,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    specList.push("width="+response_params.width);
 			if (response_params.width)
 			    specList.push("height="+response_params.height);
-					  window.open(response_params.url, (response_params.target || "_blank"), specList.join(","));
+			window.open(response_params.url, (response_params.target || "_blank"), specList.join(","));
 
 		    } else if (response_type == "menu_op") {
 			GTMenuTrigger(response_params.target, response_params.value);
@@ -2225,7 +2234,7 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	OpenNew();
 	break;
     case "full":
-	gterm("full");
+	load("full");
 	break;
     case "reload":
 	window.location.reload();
@@ -3190,7 +3199,8 @@ function OpenNew(host, term_name, options) {
     window.open(new_url, target=target);
 }
 
-function gterm(path) {
+function load(path) {
+    // Load terminal in current window
     if (path == "full") {
 	top.location = "/"+gParams.host+"/"+gParams.term+"/?qauth="+getAuth();
 	return;
@@ -4241,7 +4251,7 @@ function CloseIFrame(evt) {
 	gtermInterruptHandler();
 }
 function ExpandIFrame(evt) {
-    gterm("full");
+    load("full");
 }
 
 function EndFullpage(frameId) {

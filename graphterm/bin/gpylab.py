@@ -29,43 +29,40 @@ Example 2:
 
 Notes: Use ioff() to disable interactive mode
        Use show() to update image
-       Use show(False) to display new image
+       Use show(False) to display new image (same as show(overwrite=False))
        Use display(fig) to display figure
-       Use autoprint(True) to re-enable default expression printing behaviour
+       Use gtermapi.nbmode(False) to re-enable default expression printing behaviour
 """
 
 try:
     import gmatplot as gm
     gm.setup()    # Sets up gmatplot and patches pylab
     from pylab import *
+    import gtermapi
     from gmatplot import display
     import matplotlib
 
-    import sys
-    Saved_displayhook = sys.displayhook
-
-    def gpylab_display_hook(expr):
+    def _gpylab_display_hook(expr):
         if isinstance(expr, matplotlib.figure.Figure):
-            display(expr, overwrite=False)
-        elif hasattr(expr, "get_figure"):
-            fig = getattr(expr, "get_figure")()
+            display(expr, overwrite=True)
+            return None
+        obj = expr[0] if isinstance(expr, list) and expr else expr
+        if hasattr(obj, "get_figure"):
+            fig = getattr(obj, "get_figure")()
             if isinstance(fig, matplotlib.figure.Figure):
                 display(fig, overwrite=True)
+                return None
+        return expr
 
-    def autoprint(enable=True):
-        global Saved_displayhook
-        if enable:
-            sys.displayhook = Saved_displayhook
-        else:
-            # Suppress automatic printing of expressions
-            Saved_displayhook = sys.displayhook
-            sys.displayhook = gpylab_display_hook
+    gtermapi.display_hook = _gpylab_display_hook
 
-    autoprint(False)
     ion()
+
+    print >> sys.stderr, "NOTE: Enabled interactive plotting mode, ion()"
+    print >> sys.stderr, "      To disable, use ioff()"
 except ImportError:
     pass
 
 if __name__ == "__main__":
-    import gtermapi
-    gtermapi.main()
+    gtermapi.nbmode()
+    gtermapi.process_args()
