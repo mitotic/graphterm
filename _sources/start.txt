@@ -27,7 +27,8 @@ Type  ``gtermserver -h`` to view all options. You can use the
 ``--host=hostname`` option is useful for listening on a public IP address instead
 of the default ``localhost``. The ``--lc_export`` option can be used to
 export the GraphTerm environment across SSH via the locale variables
-(which sometimes works).
+(which sometimes works). Another useful option is ``--auth_code=name``
+to enable simple name-based sharing.
 
 Once the server is running, you can open a GraphTerm terminal window
 using a browser that supports websockets, such as Google Chrome,
@@ -51,8 +52,8 @@ Other ways to open a terminal window are:
 
 Once you have a terminal, try out the following commands::
 
-  gls <directory>
-  gvi <text-filename>
+   gls <directory>
+   gvi <text-filename>
 
 These are commands in the GraphTerm toolchain that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
@@ -82,9 +83,9 @@ Other commands in the toolchain include:
 
    ``gmenu item subitem``   To access the menubar from the command line
 
-   ``gqrcode UR:|text``    Display inline QR code
+   ``gqrcode URL|text``    Display inline QR code
 
-   ``greveal [options] file.md``    A GraphTerm-aware interface to ``reveal.js``, a web-based slideshow program
+   ``greveal [options] file.md``    A GraphTerm-aware interface to `reveal.js <https://github.com/hakimel/reveal.js/>`_, a web-based slideshow program
 
    ``gsh terminal_name command args`` Execute command in the specified terminal (all output appears in terminal_name
 
@@ -243,7 +244,7 @@ with caution to avoid exposing sensitive data.*
 
 .. index:: embedding
 
-Embedding
+Embedding and remote terminal commands
 ================================================================
 
 Additional GraphTerm terminals can be embedded within any GraphTerm
@@ -253,7 +254,19 @@ terminal. For example, the following command::
 
 creates two terminals, ``terma`` and ``termb`` and embeds them within
 the current terminal. The demo script ``$GTERM_DIR/bin/metro.sh``
-illustrates the embedding of multiple terminals, each running a different command.
+illustrates the embedding of multiple terminals, each running a
+different command. The script also demonstrates the use of the ``gsh``
+command to execute commands remotely on a terminal, e.g.::
+
+    gsh terma yweather -f austin
+
+The terminal name argument for ``gsh`` can be a wildcard
+expression, e.g. ``'term*``. Unlike ``ssh``, the ``gsh`` command does
+not display the output of the remote command. You will need to view it
+in the remote terminal. To load a remote terminal in the current
+browser window, you can use::
+
+    gload terma
 
 
 .. index:: multiplexing, wildcard sessions
@@ -263,7 +276,7 @@ Wildcard sessions and multiplexing
 ================================================================
 
 
-A session path is of the form ``session_host/session_name``. You can
+A terminal session path is of the form ``session_host/session_name``. You can
 use the shell wildcard patterns ``*, ?, []`` in the session path. For
 example, you can open a wildcard session for multiple hosts using the URL::
 
@@ -295,13 +308,20 @@ The ``glandslide`` command, which is a slightly modified version of the
 web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
 can be used to create a slideshow from Markdown (.md) or reStructured
 Text (.rst) files. A few sample ``.md`` files are provided in the
-``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
+``$GTERM_DIR/bin/landslide`` directory of the distribution. To view a slideshow about
 GraphTerm, type::
 
-  glandslide -o graphterm-talk1.md | gframe -f
+  glandslide -o $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
 
 Type ``h`` for help and ``q`` to quit the slideshow. (The unmodified
-Landslide program can also be used, with the ``-i`` option, but remote sharing will not work.)
+Landslide program can also be used, but remote sharing will not work.)
+
+The ``greveal`` command can be used to display Markdown files as
+slideshows using `reveal.js <https://github.com/hakimel/reveal.js/>`_::
+
+    greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
+
+Type ``b`` three times in quick succession to exit the slideshow.
 
 The ``gimage`` command, which displays images inline, can also be used for
 slideshows and simple presentations. Just ``cd`` to a directory
@@ -447,47 +467,6 @@ URL, such as ``http://localhost:8900/local/tutorial``. This will open
 up a graphterm window where you can either run ``gtutor`` interactively or
 use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
 
-.. index:: sockets, widgets
-
- 
-Widgets, sockets, and interactivity
-================================================================
-
-
-A widget appears as an overlay on the terminal (like
-*picture-in-picture* for TVs, or dashboard widgets on the Mac). This is an
-experimental feature that allows programs running in the background to
-display information overlaid on the terminal. The widget is accessed
-by redirecting ``stdout`` to a Bash ``tcp`` socket device whose
-address is stored in the environment variable ``GTERM_SOCKET``.
-For example, the following command will run a background job
-to open a new terminal in an overlay *iframe*::
-
-  gframe -f --opacity=0.2 http://localhost:8900/local/new > $GTERM_SOCKET &
-
-You can use the overlay terminal just like a regular terminal, including
-having recursive overlays within the overlay!
-
-A specific example of widget use is to display live feedback on the
-screen during a presentation. You can try it out in a directory that
-contains your presentation slides as images::
-
-  gfeedback 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &
-  gimage -f
-
-The first command uses ``gfeedback`` to capture feedback from others
-viewing the terminal session as a stream of lines from
-$GTERM_SOCKET. The viewers use the overlaid *feedback* button
-to provide feedback. The ``stdout`` from ``gfeedback`` is piped to
-``gfeed`` which displays its ``stdin`` stream as a  "live feed"
-overlay, also via $GTERM_SOCKET.
-(The ``gimage -f`` command displays all the images in the directory as a
-slideshow.)
-
-To display a live twitter feed as an overlay on a presentation, you can use the commands::
-
-   gtweet -w -f -s topic > $GTERM_SOCKET &
-   gimage -f
 
 .. index:: security
 
@@ -508,22 +487,10 @@ the use of SSL certificates and server/client authentication.
 (SSL/https support is already built in. Feel free to experiment with
 it, although it is not yet ready for everyday use.)
 
-.. index:: ssh, port forwarding
+.. index:: ssh, port forwarding, remote access
 
-SSH and port forwarding
+SSH, port forwarding, and remote access
 ================================================================
-
-
-If you login to a remote computer using SSH, you can use the
-*Action -> Export Environment*  menu option to set the Bash shell
-environment variables on the remote computer. This will allow
-some, but not all, of GraphTerm's features to work on the remote
-session. If you wish to use more features, set the ``PATH`` environment
-variable on the remote machine to allow access to ``gls`` and other
-commands, and also use reverse port forwarding to forward your
-local port(s) to the remote computer, e.g.::
-
-   ssh -R 8898:localhost:8898 user@remote-computer
 
 Currently, the most secure way to access the GraphTerm server running
 on a remote computer is to use SSH port forwarding. For example, if
@@ -531,7 +498,46 @@ you are connecting to your work computer from home, and wish to
 connect to the GraphTerm server running as ``localhost`` on your work
 computer, use the command::
 
-   ssh -L 8900:localhost:8900 user@work-computer
+   ssh -L 8901:localhost:8900 user@work-computer
 
-This will allow you to connect to ``http://localhost:8900`` on the browser
+This will allow you to connect to ``http://localhost:8901`` on the browser
 on your home computer to access GraphTerm running on your work computer.
+
+A completely different approach is to install GraphTerm on the remote
+computer and run the ``gtermhost`` program remotely to allow it to
+connect to the ``gtermserver`` running on your local computer using
+SSH reverse port forwarding, e.g.::
+
+   ssh -R 7799:localhost:8899 user@remote-computer
+   gtermhost --server_port=7799 remote-computer    # on remote computer
+
+In this case, the remote computer will appear as another host on your
+local GraphTerm server.
+
+If you do not wish to have a GraphTerm process running on
+the remote machine, you can still use many features though GraphTerm
+running on your local machine, because all communication takes place
+via the standard output of the remote process. One quick solution is
+use the *terminal -> export environment* menu option to set the Bash
+shell environment variables on the remote computer. This will allow
+some, but not all, of GraphTerm's features to work on the remote
+session.
+
+A more permanent solution involves the following three steps:
+
+ - Start the local GraphTerm server using the ``--lc_export``
+   option. which exports the GraphTerm environment via the ``LC-*``
+   environment variables which are often transmitted across SSH
+   tunnels.
+
+ - Copy the ``$GTERM_DIR/bin`` directory to your account on the remote
+   machine to allow the GraphTerm toolchain to be
+   accessed. Alternatively, you could simply install GraphTerm on the
+   remote machine, even if you are never planning to start the server.
+
+ - Append the file ``$GTERM_DIR/bin/gprofile`` to your
+   ``.bash_profile`` on the remote machine, and uncomment/modify the
+   last few lines so that ``$GTERM_DIR`` points to the parent of the
+   directory where the toolchain files are installed. This ensures
+   that the GraphTerm toolchain is included in your ``PATH`` on the remote
+   machine, allowing commands like ``gls`` to work.

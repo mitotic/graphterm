@@ -147,42 +147,68 @@ code.mindmeldr.com
             
   <div class="section" id="graphterm-in-the-cloud">
 <h1>GraphTerm in the cloud<a class="headerlink" href="#graphterm-in-the-cloud" title="Permalink to this headline">¶</a></h1>
-<p id="index-0">The GraphTerm distribution includes the scripts <tt class="docutils literal"><span class="pre">ec2launch,</span> <span class="pre">ec2list,</span> <span class="pre">ec2scp,</span></tt>
-and <tt class="docutils literal"><span class="pre">ec2ssh</span></tt> to launch and monitor Amazon Web Services EC2
-instances. These are the scripts used to test new
-versions of GraphTerm by running them in the &#8220;cloud&#8221;.
-You will need to have an Amazon AWS
-account to use these scripts, and also need to install
-the <tt class="docutils literal"><span class="pre">boto</span></tt> python module.</p>
-<p>To create an instance, use the <tt class="docutils literal"><span class="pre">ec2launch</span></tt> command.
-You will be presented with a &#8220;web form&#8221; to enter details of the instance
-to be launched. Once you fill in the form and submit it, a command
-line will be automatically created, with command options, to launch
-the instance. To launch another instance with slightly different
-properties, you can simply recall the command line and edit it.
-Ensure that the security group associated with the cloud instance
-allows access to inbound TCP port 22 (for SSH access), 8900
-(for GraphTerm users to connect), and
-port 8899 (for GraphTerm hosts to connect).</p>
-<p>To <em>temporarily</em> run a publicly accessible GraphTerm server for
-demonstration or teaching purposes, log in to the instance using
-the command <tt class="docutils literal"><span class="pre">ec2ssh</span> <span class="pre">ubuntu&#64;instance_address</span></tt>, wait a few
-minutes for <tt class="docutils literal"><span class="pre">tornado</span></tt> and <tt class="docutils literal"><span class="pre">graphterm</span></tt> packages to finish
-installing, and then issue the following command:</p>
+<p id="index-0">The GraphTerm distribution includes the scripts <tt class="docutils literal"><span class="pre">ec2launch,</span> <span class="pre">ec2list,</span>
+<span class="pre">ec2scp,</span></tt> and <tt class="docutils literal"><span class="pre">ec2ssh</span></tt> to launch and monitor Amazon Web Services
+(AWS) Elastic Computing Cloud (EC2) instances running a GraphTerm server. These scripts
+are used to test new versions of GraphTerm by running them in the &#8220;cloud&#8221;.
+You will need to have an AWS account to use
+these scripts, and also need to install the <tt class="docutils literal"><span class="pre">boto</span></tt> python module.</p>
+<p>If you do not have an <a class="reference external" href="http://aws.amazon.com/">AWS</a> account, <a class="reference external" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html">get one</a>
+(this will be linked to your standard Amazon account). If you own a
+domain name, say <tt class="docutils literal"><span class="pre">myterm.com</span></tt>, that you wish to use for your
+cloud server, then you should also activate the
+AWS <a class="reference external" href="http://aws.amazon.com/route53/faqs/#Getting_started_with_Route_53">Route 53</a>
+service and create a hosted zone for <tt class="docutils literal"><span class="pre">myterm.com</span></tt>. Ensure that the
+nameserver records for <tt class="docutils literal"><span class="pre">myterm.com</span></tt> at your domain name registrar
+point to the AWS nameservers for the hosted zone. If do not use your
+domain, you will need to use the long public name for your server
+assigned by AWS.</p>
+<p>To create an instance, use the <tt class="docutils literal"><span class="pre">ec2launch</span></tt> command. (The first time
+you do this, you will be asked to enter your AWS security credentials,
+which will then be stored in the file <tt class="docutils literal"><span class="pre">~/boto</span></tt>.)
+You will be presented with a web form to enter details of the instance
+to be launched. You can specify a simple <em>tag name</em> to identify each
+server. If the tag name is of the form <tt class="docutils literal"><span class="pre">subdomain.myterm.com</span></tt>, then
+the newly created server can be automatically accessed using this
+domain name. You can also specify whether to install additional
+packages, like <tt class="docutils literal"><span class="pre">pylab</span></tt> for plotting or <tt class="docutils literal"><span class="pre">R</span></tt> for statistical
+analysis.</p>
+<p>Once setup is completed, a publicly accessible <tt class="docutils literal"><span class="pre">graphterm</span></tt> server
+will be automatically started on the new instance, if an <tt class="docutils literal"><span class="pre">auth_code</span></tt> value is specified
+in the form. Use the value <tt class="docutils literal"><span class="pre">none</span></tt> to launch a password-less public
+server, or leave it blank if you wish to launch the server manually
+later, using the following command:</p>
 <div class="highlight-python"><pre>gtermserver --daemon=start --auth_code=none --host=&lt;primary_domain_or_address&gt;</pre>
 </div>
-<p><em>Note: This is totally insecure and should not be used for handling any sensitive information.</em></p>
-<p>Secondary cloud instances should connect to the GraphTerm server on
+<p><em>Note: Using an auth_code value of &#8216;none&#8217; is totally insecure and
+should not be used when handling any sensitive information.</em> For
+increased security in a publicly-accessible server, you can use a
+cryptic <tt class="docutils literal"><span class="pre">auth_code</span></tt> value, and also use <em>https</em> instead of <em>http</em>,
+with SSL certificates. Since GraphTerm is currently in <em>alpha</em> status,
+security cannot be guaranteed even with these options enabled.  (To
+avoid these issues, use SSH port forwarding to access GraphTerm on
+<tt class="docutils literal"><span class="pre">localhost</span></tt> whenever appropriate.)</p>
+<p>Once you fill in the form for <tt class="docutils literal"><span class="pre">ec2launch</span></tt> and submit it, a command
+line will be automatically generated, with the specified options, to launch
+the instance. You may need to wait several minutes for the instance
+setup to complete, depending upon the compute power of the
+instance. To launch another instance with slightly different
+properties, you can simply recall the command line and edit it.</p>
+<p>Once the instance is running, you can access the GraphTerm server at
+<tt class="docutils literal"><span class="pre">http://subdomain.myterm.com</span></tt>. You can log in to the instance using the
+command <tt class="docutils literal"><span class="pre">ec2ssh</span> <span class="pre">ubuntu&#64;subdomain.myterm.com</span></tt>, or copy files to it
+using <tt class="docutils literal"><span class="pre">ec2scp</span> <span class="pre">file</span> <span class="pre">ubuntu&#64;subdomain.myterm.com:</span></tt></p>
+<p>The <tt class="docutils literal"><span class="pre">ec2list</span></tt> command can be used to list all running instances, and
+also to terminate them.</p>
+<p>Secondary cloud instances can connect to the GraphTerm server on
 the primary instance using the command:</p>
 <div class="highlight-python"><pre>gtermhost --daemon=start --server_addr=&lt;primary_domain_or_address&gt; &lt;secondary_host_name&gt;</pre>
 </div>
-<p>For increased security in a publicly-accessible server,
-you can use a cryptic authentication code,
-and also use <em>https</em> instead of <em>http</em>, with SSL certificates.
-Since GraphTerm is currently in <em>alpha</em> status,
-security cannot be guaranteed even with these options enabled.
-(To avoid these problems, use SSH port forwarding to access GraphTerm
-on <tt class="docutils literal"><span class="pre">localhost</span></tt> whenever possble.)</p>
+<p><em>Note:</em> If you have trouble
+accessing the instance, check to make sure that the AWS <a class="reference external" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html">security group</a>
+associated with the cloud instance allows access to inbound TCP port
+22 (for SSH access), 8900 (for GraphTerm users to connect), and
+possibly port 8899 (for GraphTerm hosts to connect).</p>
 </div>
 
 
