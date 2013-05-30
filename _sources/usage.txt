@@ -89,6 +89,8 @@ Other commands in the toolchain include:
    ``gupload [filename|directory]`` To upload files from desktop into
    the terminal
 
+   ``hello_gterm.sh`` Hello World program that displays inline HTML text and image
+
    ``yweather [location]`` To view weather forecasts
 
 .. index:: visual cues
