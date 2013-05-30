@@ -132,15 +132,6 @@ command being executed. You can edit the pasted text, then press the
 Enter key to execute it.
 
 
-.. index:: icon display
-
-Icon display
-================================================================
-
-Select ``appearance/icons`` in the menubar to activate icon display for commands like
-``gls``.
-
-
 .. index:: inline graphics, matplotlib
 
 Inline plots using matplotlib
@@ -175,10 +166,13 @@ use *Shift-Enter* to execute a cell and move to the next, or
 *Control-Enter* for in-place execution. (Additional keyboard shortcuts are listed
 in the *help* menu.)
 
-You can also start up the python interpreter load a notebook file (in
-``*.ipynb`` or ``*.md`` format) as follows::
+Notebooks can be saved any time using the IPython notebook (``*.ipynb``) or Markdown(``*.md``)
+formats. The filename determines the format.
+You can also start up the python interpreter load a notebook file, in
+``*.ipynb`` or ``*.md``, as follows::
 
     python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb
+
 
 .. index:: command history
 
@@ -364,6 +358,15 @@ host, the file will be moved to the destination folder. For windows
 on two different hosts, the file will be copied.
 (Graphical feedback for this operation is not properly implemented at
 this time. Look at the command line for the feedback.)
+
+.. index:: icon display
+
+Icon display
+================================================================
+
+Select ``appearance/icons`` in the menubar to activate icon display for commands like
+``gls``.
+
 
 .. index:: themes
 
