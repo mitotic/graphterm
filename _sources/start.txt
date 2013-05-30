@@ -13,9 +13,10 @@ shell on your Mac/Linux/Unix computer. For a quick install, if the python
 use the following two commands::
 
    sudo easy_install graphterm
-   sudo gterm_setup 
+   sudo gterm_setup            # Sets up the command toolchain
 
-(See the :ref:`installation` section of the :doc:`README` file for more options on installing GraphTerm.)
+(See the :ref:`installation` section of the :doc:`README` file for
+more installation options.)
 
 To start the ``GraphTerm`` server, use the command::
 
@@ -26,25 +27,25 @@ Type  ``gtermserver -h`` to view all options. You can use the
 ``--host=hostname`` option is useful for listening on a public IP address instead
 of the default ``localhost``. The ``--lc_export`` option can be used to
 export the GraphTerm environment across SSH via the locale variables
-(which sometimes works)
+(which sometimes works).
 
-Once the server is running, you can open a terminal window on the
-localhost in the following ways:
-
- - Specify the ``--terminal`` option when starting ``gtermserver``
-
- - Within a GraphTerm window, you can select the *terminal/new* menu option, or
-   type the command ``gmenu new`` to create a new GraphTerm session
-
-To open a remote terminal window, open up a browser of your
-choice that supports websockets, such as Google Chrome,
-Firefox, or Safari (Chrome works best), and enter the following URL::
+Once the server is running, you can open a GraphTerm terminal window
+using a browser that supports websockets, such as Google Chrome,
+Firefox, Safari, or IE10 (Chrome works best), and entering the following URL::
 
   http://localhost:8900
 
-Once within the ``graphterm`` browser page, select the host you
-wish to connect to and create a new terminal session on the host.
+If the server is listening on a public IP address, change the hostname as appropriate.
+Once within the ``graphterm`` browser page, select the GraphTerm host you
+wish to connect to and create a new terminal session. (Note: The GraphTerm
+host is different from the network hostname for the server)
 
+Other ways to open a terminal window are:
+
+ - Specify the ``--terminal`` option when starting ``gtermserver``
+
+ - Within a GraphTerm window, select the *terminal/new* menu option, or
+   type the command ``gmenu new`` to create a new GraphTerm session
 
 .. index:: graphterm-aware commands
 
@@ -53,21 +54,20 @@ Once you have a terminal, try out the following commands::
   gls <directory>
   gvi <text-filename>
 
-These are graphterm-aware scripts that imitate
+These are commands in the GraphTerm toolchain that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
 To display images as thumbnails, use the ``gls -i ...`` command.
 Use the ``-h`` option to display help information for these commands,
 and read the
 `UsingGraphicalFeatures tutorial <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_ for usage examples.
 
-You can use the command ``which gls`` to determine the directory
-containing graphterm-aware commands, to browse
-for other commands, which include:
+The GraphTerm toolchain commands reside in the directory ``$GTERM_DIR/bin``
+Other commands in the toolchain include:
 
    ``d3cloud [file]`` To display file (or stdin) content as a word cloud
 
-   ``gframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) in
-   inline *iframe*
+   ``gframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) within
+   an inline *iframe*
 
    ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
@@ -76,7 +76,9 @@ for other commands, which include:
 
    ``glandslide [options] file.md``   A GraphTerm-aware version of Landslide, a web-based slideshow program
 
-   ``gmatplot.py``   An inline ``matplotlib`` plotting demo
+   ``gload terminal_name`` Load a new terminal in the current window
+
+   ``gmatplot.py``   An inline ``matplotlib`` plotting package
 
    ``gmenu item subitem``   To access the menubar from the command line
 
@@ -84,9 +86,11 @@ for other commands, which include:
 
    ``greveal [options] file.md``    A GraphTerm-aware interface to ``reveal.js``, a web-based slideshow program
 
+   ``gsh terminal_name command args`` Execute command in the specified terminal (all output appears in terminal_name
+
    ``gsnowflake.py``  An inline plotting demo for the SVG module ``svgwrite``
 
-   ``gtweet [-s keywords]|tweet``  To send, search, or receive tweets
+   ``gtweet [-s keywords] | tweet``  To send, search, or receive tweets
 
    ``gtutor [...] example.py``  A command-line version of the Online Python Tutorial  at `pythontutor.com <http://pythontutor.com>`_
 
@@ -94,9 +98,6 @@ for other commands, which include:
    the terminal
 
    ``yweather [location]`` To view weather forecasts
-
-(There is also a sample ``gcowsay`` command which can be downloaded
-separately from its `Github repository <https://github.com/mitotic/gcowsay>`_)
 
 .. index:: visual cues
 
@@ -111,6 +112,7 @@ Click on the last displayed prompt to toggle display of the *Bottom
 menu*. Clicking on other prompts toggles display of the command
 output (unless the Control modifier is used, in which case the
 entire command line is copied and pasted.)
+
 
 .. index:: folders, opening files, navigating folders
 
@@ -129,22 +131,205 @@ pasted into the command line, without any
 command being executed. You can edit the pasted text, then press the
 Enter key to execute it.
 
+
 .. index:: icon display
 
 Icon display
 ================================================================
 
-Select ``icons`` in the top menu to activate icon display for commands like
+Select ``appearance/icons`` in the menubar to activate icon display for commands like
 ``gls``.
 
-.. index:: themes
 
-Themes
+.. index:: inline graphics, matplotlib
+
+Inline plots using matplotlib
+===============================================================
+
+If you have ``matplotlib`` installed, the ``gpylab`` module in the
+``$GTERM_DIR/bin`` directory can be used to start up the python
+interpreter in the ``pylab`` mode for inline graphics within the
+GraphTerm terminal::
+
+    python -i $GTERM_DIR/bin/gpylab.py
+    >>> plot([1,2,4])
+
+Run ``$GTERM_DIR/bin/gmatplot.py`` for a demo of inline graphics.
+See the function ``main`` in this file for the plotting code.
+
+ - Use ``ioff()`` to disable interactive mode
+ - Use ``show()`` to update image
+ - Use ``show(False)`` to display new image
+ - Use ``display(fig)`` to display figure
+
+.. index:: notebook
+ 
+Notebook mode
+===============================================================
+
+To enter the notebook mode, select *notebook/new* on the top menu, or
+type *Shift-Enter* (or *Control-Enter*, if you wish to read a notebook
+file and customize the prompts). You can exit the notebook mode using
+the top menu bar, or by typing *Control-C*. Within the notebook mode,
+use *Shift-Enter* to execute a cell and move to the next, or
+*Control-Enter* for in-place execution. (Additional keyboard shortcuts are listed
+in the *help* menu.)
+
+You can also start up the python interpreter load a notebook file (in
+``*.ipynb`` or ``*.md`` format) as follows::
+
+    python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb
+
+.. index:: command history
+
+Command recall
 ================================================================
 
 
-Themes, selected using the top menu, are a work in progress, especially the 3-D perspective theme
-(which only works on Chrome/Safari).
+If the command line is empty, *up/down arrows* will use the underlying
+shell for command recall (like Control-P and Control-N). If the
+command line contains any text, including whitespace,
+*up/down arrows* will cause GraphTerm to search for matching
+previous commands that begin with the text already typed (ignoring
+any leading whitespace). You can use the *right arrow* to
+complete the recalled command (for editing) or use the *Enter* key
+to execute it. Typing any other key, including the *left arrow*,
+will cancel the command recall process. 
+
+
+.. index:: sessions, screensharing
+
+Sessions and "screensharing"
+================================================================
+
+For each host, terminal sessions are assigned default names like
+``tty1``, ``tty2`` etc. You can also create unique terminal session names simply by using it in an
+URL, e.g.::
+
+      http://localhost:8900/local/mysession/?qauth=code
+
+The ``qauth`` code is the same for all terminals on the same browser,
+and provides a layer of security.
+Anyone with access to the GraphTerm server can use the session URL
+to connect to it. This is like "screensharing", but more efficient,
+because only the content is shared, not the graphical themes.
+
+The first user to create a session "owns" it, and can make the session
+publicly available by disabling the *sharing/private* menubar option.
+Other users connecting to a public terminal session using its URL
+have read-only access, unless they *steal* session using the menubar
+button (or using the *sharing/control* menu item)l.
+The original user can prevent stealing of sessions by *locking* it.
+
+For example, if you forgot to detach your session at work, you can
+``ssh`` to your desktop from home, use SSH port forwarding (see below)
+to securely access your work desktop, and then steal the
+session using your home browser.
+
+Normally, only a single user has control of a terminal session at a
+time. There is a *sharing/tandem* option that can be enabled to allow
+multiple users to control the terminal session at the same
+time. However, this could sometimes have unpredictable effects.
+
+NOTE: Although GraphTerm supports multiple users, it currently
+assumes a cooperative environment, where everyone trusts everyone
+else. (This may change in the future.)
+
+
+.. index:: webcasting
+
+Webcasting
+================================================================
+
+
+If you enable the *sharinf/webcast* in the menubar, anyone can use the
+session URL to view the session, without the need for
+authentication, but will not be able to steal it. *Use this feature
+with caution to avoid exposing sensitive data.*
+
+.. index:: embedding
+
+Embedding
+================================================================
+
+Additional GraphTerm terminals can be embedded within any GraphTerm
+terminal. For example, the following command::
+
+    gframe -b -t terma termb
+
+creates two terminals, ``terma`` and ``termb`` and embeds them within
+the current terminal. The demo script ``$GTERM_DIR/bin/metro.sh``
+illustrates the embedding of multiple terminals, each running a different command.
+
+
+.. index:: multiplexing, wildcard sessions
+
+
+Wildcard sessions and multiplexing
+================================================================
+
+
+A session path is of the form ``session_host/session_name``. You can
+use the shell wildcard patterns ``*, ?, []`` in the session path. For
+example, you can open a wildcard session for multiple hosts using the URL::
+
+      http://localhost:8900/*/tty1/?qauth=code
+
+For normal shell terminals, a wildcard session will open a "blank" window,
+but any input you type in it will be broadcast to all sessions
+matching the pattern. (To receive visual feedback,
+you will need to view one or more of the matching sessions at the
+same time.)
+
+For ``otrace`` debugging sessions of the form ``*/osh``, GraphTerm
+will multiplex the input and output in wildcard terminals. Your input
+will be echoed and broadcast, and output from each of the matching
+sessions will be displayed, preceded by an identifying header
+(with the special string ``ditto`` used to indicate repeated output).
+See the *otrace* integration section for more information.
+
+NOTE: Multiplexed input/output display cannot be easily implemented for
+regular shell terminals.
+
+.. index:: slides, slideshows
+
+Slideshows
+================================================================
+
+
+The ``glandslide`` command, which is a slightly modified version of the
+web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
+can be used to create a slideshow from Markdown (.md) or reStructured
+Text (.rst) files. A few sample ``.md`` files are provided in the
+``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
+GraphTerm, type::
+
+  glandslide -o graphterm-talk1.md | gframe -f
+
+Type ``h`` for help and ``q`` to quit the slideshow. (The unmodified
+Landslide program can also be used, with the ``-i`` option, but remote sharing will not work.)
+
+The ``gimage`` command, which displays images inline, can also be used for
+slideshows and simple presentations. Just ``cd`` to a directory
+that has the images for a slideshow, and type::
+
+  gimage -f
+
+To select a subset of images in the directory, you can use a wildcard
+pattern. For publicly webcasting a slideshow, use the ``-b`` option.
+
+
+
+.. index:: ipad, android, tablet
+
+iPad/Android tablet usage
+================================================================
+
+Tap on the cursor to display virtual keyboard on the tablet. The
+*Bottom menu*, exposed by clicking on the last displayed prompt, can be
+quite useful on a tablet. (On Android, you may need to tap a couple of
+more times on the cursor after the keyboard is displayed.)
+
 
 .. index:: copy/paste, paste
 
@@ -180,57 +365,14 @@ on two different hosts, the file will be copied.
 (Graphical feedback for this operation is not properly implemented at
 this time. Look at the command line for the feedback.)
 
-.. index:: command history
+.. index:: themes
 
-Command recall
+Themes
 ================================================================
 
 
-If the command line is empty, *up/down arrows* will use the underlying
-shell for command recall (like Control-P and Control-N). If the
-command line contains any text, including whitespace,
-*up/down arrows* will cause GraphTerm to search for matching
-previous commands that begin with the text already typed (ignoring
-any leading whitespace). You can use the *right arrow* to
-complete the recalled command (for editing) or use the *Enter* key
-to execute it. Typing any other key, including the *left arrow*,
-will cancel the command recall process. 
-
-.. index:: inline graphics
-
-Inline plots using matplotlib
-===============================================================
-
-The ``gpylab`` module in the ``bin`` directory can be used to start
-up the python interpreter in the ``pylab`` mode for inline graphics
-within a notebook::
-
-    python -i $GTERM_DIR/bin/gpylab.py
-    >>> plot([1,2,4])
-
-.. index:: notebook
- 
-Notebook mode
-===============================================================
-
-To enter the notebook mode, select *notebook/new* on the top menu, or
-type *Shift-Enter* (or *Control-Enter*, if you wish to read a notebook
-file and customize the prompts). You can exit the notebook mode using
-the top menu bar, or by typing *Control-C*. Within the notebook mode,
-use *Shift-Enter* to execute a cell and move to the next, or
-*Control-Enter* for in-place execution. Additional keyboard shortcuts are listed
-in the *help* menu.
-
-.. index:: ipad, android, tablet
-
-iPad/Android tablet usage
-================================================================
-
-Tap on the cursor to display virtual keyboard on the tablet. The
-*Bottom menu*, exposed by clicking on the last displayed prompt, can be
-quite useful on a tablet. (On Android, you may need to tap a couple of
-more times on the cursor after the keyboard is displayed.)
-
+Themes, selected using the menubar, are a work in progress, especially the 3-D perspective theme
+(which only works on Chrome/Safari).
 
 .. index:: terminal type
 
@@ -249,15 +391,15 @@ the default terminal type, or use the ``export TERM=screen`` command.
 Multiple hosts
 ================================================================
 
-More than one host can connect to the GraphTerm server. The local
-host is connected by default (but this can be disabled using the
+More than one host can connect to the GraphTerm server. The ``localhost``
+is connected by default (but this can be disabled using the
 ``--nolocal`` option). To connect an additional host, run the
 following command on the computer you wish to connect::
 
      gtermhost --server_addr=<serveraddr> <hostname>
 
 where ``serveraddr`` is the address or name of the computer where the
-GraphTerm server is running (which defaults to localhost). You can use the
+GraphTerm server is running. You can use the
 ``--daemon=start`` option to run the ``gtermhost`` command
 in the background. By default, the Graphterm
 server listens for host connections on port 8899. *The multiple host
@@ -265,104 +407,10 @@ feature should only be used within a secure network, not on the public internet.
 
 NOTE: Unlike the ``sshd`` server, the ``gtermhost`` command is designed to
 be run by a normal user, not a privileged user. So different users can
-connect to the GraphTerm server pretending to be different "hosts"
+connect to the GraphTerm server on ``localhost`` pretending to be different "hosts"
 on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a "host", allowing it to
 be dynamically introspected and debugged using `otrace <http://code.mindmeldr.com/otrace>`_.)
-
-.. index:: sessions, screensharing
-
-Sessions and "screensharing"
-================================================================
-
-For each host, sessions are assigned default names like ``tty1``
-etc. You can also create unique session names simply by using it in an
-URL, e.g.::
-
-      http://localhost:8900/local/mysession/?qauth=code
-
-The ``qauth`` code is the same for all terminals on the same browser,
-and provides a layer of security.
-Anyone with access to the GraphTerm server can use the session URL
-to connect to it. This is like "screensharing", but more efficient,
-because only the content is shared, not the graphical themes.
-The first user to create a session "owns" it, until they detach from
-it. Others connecting to the same session have read-only access,
-unless they "steal" the session (see the *Action* menu).
-For example, if you forgot to detach your session at work, you can
-``ssh`` to your desktop from home, use SSH port forwarding (see below)
-to securely access your work desktop, and then steal the
-session using your home browser.
-
-NOTE: Although GraphTerm supports multiple users, it currently
-assumes a cooperative environment, where everyone trusts everyone
-else. (This may change in the future.)
-
-.. index:: multiplexing, wildcard sessions
-
-Wildcard sessions and multiplexing
-================================================================
-
-
-A session path is of the form ``session_host/session_name``. You can
-use the shell wildcard patterns ``*, ?, []`` in the session path. For
-example, you can open a wildcard session for multiple hosts using the URL::
-
-      http://localhost:8900/*/tty1/?qauth=code
-
-For normal shell terminals, a wildcard session will open a "blank" window,
-but any input you type in it will be broadcast to all sessions
-matching the pattern. (To receive visual feedback,
-you will need to view one or more of the matching sessions at the
-same time.)
-
-For ``otrace`` debugging sessions of the form ``*/osh``, GraphTerm
-will multiplex the input and output in wildcard terminals. Your input
-will be echoed and broadcast, and output from each of the matching
-sessions will be displayed, preceded by an identifying header
-(with the special string ``ditto`` used to indicate repeated output).
-See the *otrace* integration section for more information.
-
-NOTE: Multiplexed input/output display cannot be easily implemented for
-regular shell terminals.
-
-.. index:: webcasting
-
-Webcasting
-================================================================
-
-
-If you enable the *Webcast* in the top menu, anyone can use the
-session URL to view the session, without the need for
-authentication, but will not be able to steal it. *Use this feature
-with caution to avoid exposing sensitive data.*
-
-.. index:: slides, slideshows
-
-Slideshows
-================================================================
-
-
-The ``glandslide`` command, which is a slightly modified version of the
-web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
-can be used to create a slideshow from Markdown (.md) or reStructured
-Text (.rst) files. A few sample ``.md`` files are provided in the
-``graphterm/bin/landslide`` directory of the distribution. To view a slideshow about
-GraphTerm, type::
-
-  glandslide -o graphterm-talk1.md | gframe -f
-
-Type ``h`` for help and ``q`` to quit the slideshow. (The unmodified
-Landslide program can also be used, with the ``-i`` option, but remote sharing will not work.)
-
-The ``gimage`` command, which displays images inline, can also be used for
-slideshows and simple presentations. Just ``cd`` to a directory
-that has the images for a slideshow, and type::
-
-  gimage -f
-
-To select a subset of images in the directory, you can use a wildcard
-pattern. For publicly webcasting a slideshow, use the ``-b`` option.
 
 
 .. index:: execution tracing, online python tutor, python tutor

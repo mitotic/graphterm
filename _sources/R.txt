@@ -5,7 +5,8 @@
 .. index:: R
 
 The notebook mode of GraphTerm will work with ``R``, without any
-additional software. GraphTerm can open files in ``R-markdown`` format
+additional software. GraphTerm can open Markdown files (in a format very similar
+to *R-markdown*)
 as a notebook, and also saves notebooks using the same format.
 To display inline graphics, the following ``R`` packages need to be
 installed: ``RCurl``, ``Cairo``, and ``png``.
@@ -14,4 +15,4 @@ may need to be installed: ``libcurl4-openssl-dev libcairo2-dev
 libxt-dev``)
 
 The R-markdown file ``$GTERM_DIR/notebooks/R-histogram.R.md`` contains
-a sample notebook.
+a sample notebook that can be opened by clicking on it in the ``gls`` output.
