@@ -8,5 +8,6 @@ Advanced topics
    cloud
    R
    tracing
+   widgets
 
 

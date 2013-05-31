@@ -787,7 +787,7 @@ def _gterm_display_hook(expr):
     if "display_hook" in globals():
         expr = globals()["display_hook"](expr)
     if expr is not None:
-        auto_print(str(expr)+"\n")
+        auto_print(repr(expr)+"\n")
 
 def nbmode(enable=True):
     global Saved_displayhook

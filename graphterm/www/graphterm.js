@@ -369,7 +369,7 @@ function handle_resize() {
 	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width(), gParams.parent_term||""]]]);
     var isNarrow = $("#terminal").hasClass("gterm-narrow");
     try {
-	$("#terminal").toggleClass("gterm-narrow", $("#menubar-first-item").width()/$(window).width() > 0.14);
+	$("#terminal").toggleClass("gterm-narrow", $("#menubar-first-item").width()/$(window).width() > 0.08);
     } catch(err) {
     }
     if (isNarrow == $("#terminal").hasClass("gterm-narrow"))
@@ -628,12 +628,12 @@ function GTUpdateController() {
     var label_text = gParams.host+"/"+gParams.term;
     if (gParams.user)
 	label_text = gParams.user+"@"+label_text;
-    $("#menubar-sessionlabel").text("/"+label_text);
+    $("#menubar-sessionlabel").text(label_text);
     if (gParams.controller)
-	window.name = "/"+gParams.host+"/"+gParams.term;
+	window.name = gParams.host+"/"+gParams.term;
     else
 	window.name = "";
-    GTMenuUpdateToggle("sharing_control", gParams.controller);
+    GTMenuUpdateToggle("share_control", gParams.controller);
     $("#terminal").toggleClass("gterm-controller", gParams.controller);
     handle_resize();
     gFrameDispatcher.updateControl(gParams.controller);
@@ -1930,8 +1930,8 @@ function GTJoin(user, joining, setup) {
     $('#gterm-menu-users-container').toggleClass("menu-disabled", !$('#gterm-menu-users-list li').length);
 }
 
-var gMenuState = {appearance: {menubar: true, icons: false, theme: ""},
-                  sharing: {control: true, private: true, locked: false, tandem: false, webcast: false},
+var gMenuState = {view: {menubar: true, icons: false, theme: ""},
+                  share: {control: true, private: true, locked: false, tandem: false, webcast: false},
                   notebook: {markdown: false, page: {slide: false}} };
 var gMenuObj = null;
 
@@ -1955,7 +1955,7 @@ function GTMenuStateUpdate(stateValues, prefix) {
     // Float menubar for embedded terminal
     if (window.frameElement && window.parent) {
 	$("#terminal").addClass("gterm-embed");
-	GTMenuTrigger("appearance_menubar", false);
+	GTMenuTrigger("view_menubar", false);
     }
 }
 
@@ -1963,9 +1963,9 @@ function GTMenuRefresh() {
     $("ul.sf-menu a[gterm-toggle]").each(function() {
 	GTMenuRefreshToggle(this);
     });
-    var curTheme = gMenuState.appearance.theme;
+    var curTheme = gMenuState.view.theme;
     if (curTheme)
-	GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="appearance_theme_'+curTheme+'"]'))
+	GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="view_theme_'+curTheme+'"]'))
 }
 
 function GTMenuRefreshToggle(target, update, newValue) {
@@ -1997,9 +1997,9 @@ function GTMenuRefreshToggle(target, update, newValue) {
 	if (update)
 	    menuObj[comps[0]] = (newValue !== null) ? newValue : !menuObj[comps[0]];
 	$(target).attr("gterm-toggle", menuObj[comps[0]] ? "true":"false" );
-	if (stateKey == "sharing_private")
+	if (stateKey == "share_private")
 	    $("#terminal").toggleClass("gterm-private", menuObj[comps[0]]);
-	if (stateKey == "sharing_locked")
+	if (stateKey == "share_locked")
 	    $("#terminal").toggleClass("gterm-locked", menuObj[comps[0]]);
     }
     return menuObj[comps[0]];
@@ -2007,9 +2007,9 @@ function GTMenuRefreshToggle(target, update, newValue) {
 
 function GTMenuUpdateToggle(stateKey, newValue, force) {
     GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="'+stateKey+'"]'), true, newValue);
-    if (stateKey == "sharing_private")
+    if (stateKey == "share_private")
 	$("#terminal").toggleClass("gterm-share", !newValue);
-    if (stateKey == "sharing_webcast")
+    if (stateKey == "share_webcast")
 	$("#terminal").toggleClass("gterm-webcast", newValue);
 }
 
@@ -2050,9 +2050,9 @@ function GTMenuEvent(target, setValue, force) {
 	return false;
     if ($(target).hasClass("gterm-non-controller") && gParams.controller)
 	return false;
-    if ($(target).hasClass("gterm-non-private") && gMenuState.sharing.private)
+    if ($(target).hasClass("gterm-non-private") && gMenuState.share.private)
 	return false;
-    if ($(target).hasClass("gterm-non-locked") && gMenuState.sharing.locked)
+    if ($(target).hasClass("gterm-non-locked") && gMenuState.share.locked)
 	return false;
     if ($(target).hasClass("gterm-only-notebook") && !gNotebook)
 	return false;
@@ -2068,16 +2068,16 @@ function GTMenuEvent(target, setValue, force) {
     var newValue = null;
     if ($(target).hasClass("gterm-toggle-link") || $(target).hasClass("gterm-radio-link"))
 	newValue = GTMenuRefreshToggle(target, true, setValue);
-    if (comps[0] == "appearance")
-	GTMenuAppearance(selectKey, newValue, force);
+    if (comps[0] == "view")
+	GTMenuView(selectKey, newValue, force);
     else if (comps[0] == "terminal")
 	GTMenuTerminal(selectKey, newValue, force);
     else if (comps[0] == "notebook")
 	GTMenuNotebook(selectKey, newValue, force);
     else if (comps[0] == "help")
 	GTMenuHelp(selectKey, newValue, force);
-    else if (comps[0] == "sharing")
-	GTMenuSharing(selectKey, newValue, force);
+    else if (comps[0] == "share")
+	GTMenuShare(selectKey, newValue, force);
     else
 	GTMenuTop(comps[0], force);
     return true;
@@ -2088,27 +2088,27 @@ function GTMenuUpdate(stateKey, newValue) {
     GTMenuUpdateToggle(stateKey, newValue);
 
     switch (stateKey) {
-    case "sharing_control":
+    case "share_control":
 	gParams.controller = newValue;
 	GTUpdateController();
 	break;
 
-    case "sharing_tandem":
+    case "share_tandem":
 	break;
 
-    case "sharing_webcast":
+    case "share_webcast":
 	break;
 
-    case "sharing_locked":
+    case "share_locked":
 	break;
 
-    case "sharing_private":
+    case "share_private":
 	break;
     }
 }
 
-function GTMenuAppearance(selectKey, newValue, force) {
-    console.log("GTMenuAppearance: ", selectKey, newValue, force);
+function GTMenuView(selectKey, newValue, force) {
+    console.log("GTMenuView: ", selectKey, newValue, force);
     var comps = selectKey.split("_");
     switch (comps[0]) {
     case "menubar":
@@ -2164,17 +2164,17 @@ function GTMenuAppearance(selectKey, newValue, force) {
     }
 }
 
-function GTMenuSharing(selectKey, newValue, force) {
-    console.log("GTMenuSharing: ", selectKey, newValue, force);
+function GTMenuShare(selectKey, newValue, force) {
+    console.log("GTMenuShare: ", selectKey, newValue, force);
     if (!gWebSocket)
 	return;
-    if (gParams.controller || (selectKey == "control" && !gMenuState.sharing.locked)) {
+    if (gParams.controller || (selectKey == "control" && !gMenuState.share.locked)) {
     } else {
 	alert("Only controller can update share settings");
     }
 	
     newValue = !!newValue;
-    console.log("GTMenuSharing: ", selectKey);
+    console.log("GTMenuShare: ", selectKey);
     switch (selectKey) {
     case "control":
 	gParams.controller = newValue;
@@ -2187,13 +2187,13 @@ function GTMenuSharing(selectKey, newValue, force) {
 	break;
     case "tandem":
 	if (newValue && !force && !window.confirm('Tandem (or simultaneous) control is an experimental feature and may be unstable. Proceed?')) {
-	    GTMenuUpdateToggle("sharing_tandem", false);
+	    GTMenuUpdateToggle("share_tandem", false);
 	    return;
 	}
 	break;
     case "webcast":
 	if (newValue && !force && !window.confirm('Make terminal publicly viewable ("webcast")?')) {
-	    GTMenuUpdateToggle("sharing_webcast", false);
+	    GTMenuUpdateToggle("share_webcast", false);
 	    return;
 	}
 	$("#terminal").toggleClass("gterm-webcast", newValue);
@@ -2201,17 +2201,17 @@ function GTMenuSharing(selectKey, newValue, force) {
 	break;
     }
     // Update value for all users
-    gWebSocket.write([["update_params", "sharing_"+selectKey, newValue]])
+    gWebSocket.write([["update_params", "share_"+selectKey, newValue]])
 }
 
 function GTMenuTop(topKey, force) {
     console.log("GTMenuTop: ", topKey, force);
     switch (topKey) {
     case "steal":
-	if (!gMenuState.sharing.locked) {
+	if (!gMenuState.share.locked) {
 	    gParams.controller = true;
 	    GTUpdateController();
-	    gWebSocket.write([["update_params", "sharing_control", true]]);
+	    gWebSocket.write([["update_params", "share_control", true]]);
 	}
 	break;
     case "home":

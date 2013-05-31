@@ -83,6 +83,41 @@ text into a temporary location as plain text (such as in a plain text
 editor), and then copy/paste it from there to GraphTerm.
 
 
+Inline graphics and notebook mode
+----------------------------------------------------------------------------------------------
+
+.. index:: inline graphics
+
+
+My inline graphics plot does not appear?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If using ``gpylab.py``, try adding a ``show(False)`` function call to display a new
+image or ``show()`` to overwrite a previous image. You can also use
+``display(fig)`` to display a figure.
+
+
+.. index:: notebook format
+
+How do I specify the format for saving a notebook?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The notebook save file format is determined by the filename extension,
+i.e., ``.ipynb`` or ``.md``.
+
+
+Session sharing
+----------------------------------------------------------------------------------------------
+
+.. index:: sharing
+
+
+Others cannot see or access my terminal for sharing?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable the *share/private* option to share your terminal.
+
+
 Server
 ----------------------------------------------------------------------------------------------------
 

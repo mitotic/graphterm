@@ -91,7 +91,7 @@ shell on your Mac/Linux/Unix computer. For a quick install, if the python
 use the following two commands::
 
    sudo easy_install graphterm
-   sudo gterm_setup
+   sudo gterm_setup            # Sets up the command toolchain
 
 (If ``setuptools`` is not installed, consider installing it using
 ``apt-get install -y python-setuptools`` on Debian Linux systems
@@ -109,8 +109,8 @@ web server, which can be downloaded from
 
 You can also try out ``GraphTerm`` without installing it, after
 untarring the source tarball (or checking out the source from ``github``). You can
-run the server ``gtermserver.py`` in the ``graphterm``
-subdirectory of the distribution, after you have installed the ``tornado`` module
+run the server as ``./gtermserver.py`` in the ``graphterm``
+subdirectory of the distribution, after you have installed the ``tornado`` package
 in your system (or in the ``graphterm`` subdirectory).
 
 You can browse the ``GraphTerm`` source code, and download the development

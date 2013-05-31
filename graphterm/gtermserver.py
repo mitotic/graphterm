@@ -449,7 +449,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     for term_name in conn.term_dict:
                         path = host + "/" + term_name
                         terminal_params = self._control_params.get(path)
-                        if terminal_params and (not terminal_params["sharing_private"] or terminal_params["state_id"] == self.authorized["state_id"]):
+                        if terminal_params and (not terminal_params["share_private"] or terminal_params["state_id"] == self.authorized["state_id"]):
                             term_list.append(term_name)
                     term_list.sort()
                     self.write_json([["term_list", self.authorized["state_id"], user, host, term_list]])
@@ -490,13 +490,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if path not in self._control_params:
                 # Initialize parameters for new terminal
                 assert self.authorized["auth_type"] > self.WEBCAST_AUTH
-                terminal_params = {"sharing_locked": False, "sharing_private": True, "sharing_tandem": False,
+                terminal_params = {"share_locked": False, "share_private": True, "share_tandem": False,
                                    "owner": user, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params
             else:
                 terminal_params = self._control_params[path]
-                if terminal_params["sharing_private"] and (terminal_params["state_id"] != self.authorized["state_id"]):
+                if terminal_params["share_private"] and (terminal_params["state_id"] != self.authorized["state_id"]):
                     # No sharing
                     self.write_json([["abort", "Invalid terminal path: %s" % path]])
                     self.close()
@@ -520,8 +520,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
                 self.wildcard = wildcard2re(path)
                 self._wildcards[self.websocket_id] = self.wildcard
-                terminal_params["sharing_private"] = True
-                terminal_params["sharing_locked"] = True
+                terminal_params["share_private"] = True
+                terminal_params["share_locked"] = True
 
             assert self.websocket_id not in self._watch_dict[path]
 
@@ -532,12 +532,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 controller = False
             elif self.wildcard:
                 controller = True
-            elif option == "steal" and (is_owner or not terminal_params["sharing_locked"]):
+            elif option == "steal" and (is_owner or not terminal_params["share_locked"]):
                 controller = True
-                if terminal_params["sharing_tandem"]:
+                if terminal_params["share_tandem"]:
                     self._control_set[path].add(self.websocket_id)
                 else:
-                    self.broadcast(path, ["update_menu", "sharing_control", False], controller=True)
+                    self.broadcast(path, ["update_menu", "share_control", False], controller=True)
                     self._control_set[path] = set([self.websocket_id])
             elif option == "watch" or self._control_set.get(path):
                 controller = False
@@ -564,7 +564,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             parent_term = conn.term_dict.get(term_name, "") if conn else ""
             state_values = terminal_params.copy()
             state_values.pop("state_id", None)
-            state_values["sharing_webcast"] = bool(path in self._webcast_paths)
+            state_values["share_webcast"] = bool(path in self._webcast_paths)
             users = [get_user(self._all_websockets.get(ws_id)) for ws_id in self._watch_dict[self.remote_path]]
             self.write_json([["setup", {"user": user, "host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
@@ -660,14 +660,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if not controller and term_name in conn.allow_feedback:
                 allow_feedback_only = True
 
-        allow_control_request = not terminal_params["sharing_locked"] and not terminal_params["sharing_private"] and not self._webcast_paths.get(self.remote_path)
+        allow_control_request = not terminal_params["share_locked"] and not terminal_params["share_private"] and not self._webcast_paths.get(self.remote_path)
         if is_owner or controller or allow_feedback_only or allow_control_request:
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
                 if allow_feedback_only:
                     msg_list = [msg for msg in msg_list if msg[0] == "feedback"]
                 elif not controller:
-                    msg_list = [msg for msg in msg_list if msg[0] == "update_params" and msg[1] == "sharing_control"]
+                    msg_list = [msg for msg in msg_list if msg[0] == "update_params" and msg[1] == "share_control"]
             except Exception, excp:
                 logging.warning("GTSocket.on_message: ERROR %s", excp)
                 self.write_json([["errmsg", str(excp)]])
@@ -708,13 +708,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     key, value = msg[1], msg[2]
                     if self.wildcard:
                         raise Exception("Cannot change setting for wildcard terminal: %s" % key)
-                    elif key == "sharing_control":
+                    elif key == "share_control":
                         if not value:
                             # Give up control
                             self._control_set[self.remote_path].discard(self.websocket_id)
-                        elif is_super_user or is_owner or not terminal_params["sharing_locked"]:
+                        elif is_super_user or is_owner or not terminal_params["share_locked"]:
                             # Gain control
-                            if terminal_params["sharing_tandem"]:
+                            if terminal_params["share_tandem"]:
                                 # Shared control
                                 self._control_set[self.remote_path].add(self.websocket_id)
                             else:
@@ -723,15 +723,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 self._control_set[self.remote_path] = set([self.websocket_id])
                         else:
                             raise Exception("Failed to acquire control of terminal")
-                    elif key == "sharing_tandem":
-                        terminal_params["sharing_tandem"] = value
+                    elif key == "share_tandem":
+                        terminal_params["share_tandem"] = value
                         if not value:
                             # No tandem access; restrict control access to self
                             self.broadcast(self.remote_path, ["update_menu", key, False], controller=True)
                             self._control_set[self.remote_path] = set([self.websocket_id])
                         self.broadcast(self.remote_path, ["update_menu", key, value])
-                    elif key == "sharing_webcast":
-                        if not terminal_params["sharing_private"]:
+                    elif key == "share_webcast":
+                        if not terminal_params["share_private"]:
                             if self.remote_path in self._webcast_paths:
                                 del self._webcast_paths[self.remote_path]
                             if len(self._webcast_paths) > MAX_WEBCASTS:
@@ -743,11 +743,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 # Cancel webcast
                                 self.close_watchers(keep_controllers=True)
                             self.broadcast(self.remote_path, ["update_menu", key, value])
-                    elif key == "sharing_locked":
-                        terminal_params["sharing_locked"] = value
+                    elif key == "share_locked":
+                        terminal_params["share_locked"] = value
                         self.broadcast(self.remote_path, ["update_menu", key, value])
-                    elif key == "sharing_private":
-                        terminal_params["sharing_private"] = value
+                    elif key == "share_private":
+                        terminal_params["share_private"] = value
                         if not value:
                             # Share access to terminal
                             self.broadcast(self.remote_path, ["update_menu", key, value])
