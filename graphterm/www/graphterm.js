@@ -947,7 +947,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		}
 
             } else if (action == "body") {
-		$("body").text(command[1]);
+		$("body").html(command[1]);
 
             } else if (action == "abort") {
 		alert(command[1]);
@@ -2247,6 +2247,12 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	break;
     case "reconnect":
 	ReconnectHost();
+	break;
+    case "kill":
+	if (force || window.confirm("Kill terminal?")) {
+	    if (gWebSocket && gWebSocket.terminal)
+		gWebSocket.write([["kill_term"]]);
+	}
 	break;
     case "clear":
 	if (newValue && !force && !window.confirm('Clear screen?')) {
