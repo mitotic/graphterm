@@ -781,6 +781,18 @@ def receive_data(stderr=False, verbose=False):
     finally:
         termios.tcsetattr(saved_stdin, termios.TCSADRAIN, saved_settings)
 
+def enable_tab_completion():
+    # https://news.ycombinator.com/item?id=5658062
+    try:
+        import readline
+    except ImportError:
+        pass
+    else:
+        import rlcompleter
+        readline.parse_and_bind("tab: complete")
+        if sys.platform == 'darwin':
+            readline.parse_and_bind("bind ^I rl_complete")
+
 Saved_displayhook = sys.displayhook
 
 def _gterm_display_hook(expr):
