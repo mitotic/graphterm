@@ -2,6 +2,23 @@ Screenshots
 *********************************************************************************
 .. contents::
 
+metro.sh
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.png
+   :align: center
+   :width: 90%
+   :figwidth: 100%
+
+Output of the
+`metro.sh <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh>`_
+command, which embeds six smaller terminals within the main terminal, running
+six different commands from the GraphTerm toolchain: (i) live twitter stream output using
+``gtweet``, (ii) weather info using ``yweather``,
+(ii)i slideshow from markdown file using ``greveal`` and *reveal.js*,
+(iv)  word cloud using ``d3cloud`` and *d3.js*, (v) inline graphics using ``gmatplot.py``,
+and (vi) notebook mode using the standard python interpreter.
+
 ls vs. gls
 ==================================================
 

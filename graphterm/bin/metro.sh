@@ -2,7 +2,7 @@
 # metro.sh: "Metro" style demo of GraphTerm features
 
 # Create 3x3 frames, with borders, each row 300px tall, to display terminals
-gframe -c 3 -b -r 40% -t tweetwin weatherwin slidewin cloudwin snowwin matplotwin
+gframe -c 3 -b -r 40% -t tweetwin weatherwin slidewin cloudwin matplotwin notewin
 sleep 5
 
 # Tweet stream, fullscreen, search for keyword "science"
@@ -18,13 +18,12 @@ gsh -c slidewin greveal -l -t 2500 '$GTERM_DIR/bin/landslide/landslides.md' '|' 
 gsh -c cloudwin d3cloud '$GTERM_DIR/bin/d3cloud' '|' gframe -f
 
 # Draw snowflakes using inline SVG
-gsh -c snowwin sleep 5
-gsh snowwin gsnowflake.py
+gsh -c matplotwin sleep 4
+gsh matplotwin gsnowflake.py
+gsh matplotwin sleep 4
 
-# Animate inline matplotlib graph
-gsh -c matplotwin sleep 10
+# Animate inline matplotlib graph in the same window
 gsh matplotwin gmatplot.py --animate
-gsh matplotwin sleep 5
 
-# Start a notebook in the same window
-gsh matplotwin python -i '$GTERM_DIR/bin/gpylab.py' '$GTERM_DIR/notebooks/SineWave.ipynb'
+# Start a notebook
+gsh -c notewin python -i '$GTERM_DIR/bin/gpylab.py' '$GTERM_DIR/notebooks/SineWave.ipynb'

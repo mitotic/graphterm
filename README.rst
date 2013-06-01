@@ -68,15 +68,21 @@ a keyboard. It preserves history for all commands,
 whether entered by typing, clicking, or tapping.
 It is also themable using CSS.
 
-Images of GraphTerm in action can be found in `screenshots <https://github.com/mitotic/graphterm/blob/master/SCREENSHOTS.rst>`_ 
+Images of GraphTerm in action can be found in `screenshots <https://github.com/mitotic/graphterm/blob/master/docs/screenshots.rst>`_ 
 and in this `YouTube Video <http://youtu.be/TvO1SnEpwfE>`_.
-Here is a sample screenshot illustrating graphical ``gls`` and ``cat`` command
-output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome).
+Here is a sample screenshot showing the output of the
+`metro.sh <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh>`_
+command, which embeds six smaller terminals within the main terminal, running
+six different commands from the GraphTerm toolchain: (i) live twitter stream output using
+``gtweet``, (ii) weather info using ``yweather``,
+(ii) slideshow from markdown file using ``greveal`` and *reveal.js*,
+(iv) word cloud using ``d3cloud`` and *d3.js*, (v) inline graphics using ``gmatplot.py``,
+and (vi) notebook mode using the standard python interpreter.
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.png
    :align: center
    :width: 90%
-   :figwidth: 70%
+   :figwidth: 100%
 
 .. index:: installation
 
