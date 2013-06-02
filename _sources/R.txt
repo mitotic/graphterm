@@ -14,5 +14,10 @@ installed: ``RCurl``, ``Cairo``, and ``png``.
 may need to be installed: ``libcurl4-openssl-dev libcairo2-dev
 libxt-dev``)
 
-The R-markdown file ``$GTERM_DIR/notebooks/R-histogram.R.md`` contains
+The file `$GTERM_DIR/bin/gtermapi.R
+<https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gtermapi.R>`_
+includes convenience functions for using the GraphTerm API to display
+inline graphics.
+The R-markdown file 
+`$GTERM_DIR/notebooks/R-histogram.R.md <https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/R-histogram.R.md>`_ contains
 a sample notebook that can be opened by clicking on it in the ``gls`` output.

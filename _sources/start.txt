@@ -1,5 +1,5 @@
 *********************************************************************************
- Getting started with GraphTerm
+Getting started with GraphTerm
 *********************************************************************************
 .. contents::
 
@@ -118,10 +118,15 @@ The reside in the directory ``$GTERM_DIR/bin`` and include the following:
 
    ``yweather [location]`` To view weather forecasts (see  :ref:`weather_shot`)
 
+
+
+Using the terminal
+================================================================
+
 .. index:: visual cues
 
 Visual cues
-================================================================
+--------------------------------------------------------------------------------------------
 
 In the default theme, *blue* color denotes text that can be *clicked*
 or *tapped* (see  :ref:`ls_shot`). The action triggered by clicking depends upon two
@@ -135,7 +140,7 @@ entire command line is copied and pasted.)
 .. index:: folders, opening files, navigating folders
 
 Navigating folders/opening files
-================================================================
+--------------------------------------------------------------------------------------------
 
 You can navigate folders in GraphTerm just like you would do in a GUI,
 while retaining the ability to drop back to the CLI at any time.
@@ -149,13 +154,131 @@ pasted into the command line, without any
 command being executed. You can edit the pasted text, then press the
 Enter key to execute it.
 
+.. index:: menu shortcut
+
+Menu shortcuts
+--------------------------------------------------------------------------------------------
+
+All the items in the top menubar can be accessed by typing *Control-J*
+followed by a single letter for each level of menu selection. The
+letter to be typed will be highlighted when you type *Control-J* and
+is usually, but not always, the first letter of the item name. For example,
+the sequence *Control-J t c* will select the menu item *terminal/clear*
+
+The menubar can also be accessed from the
+command line, using the ``gmenu`` command, e.g.::
+
+    gmenu terminal clear
+
+A single-word menu name is typed to select each menu level, and
+preceding level names may be omitted, as long as there is no ambiguity, e.g.::
+
+    gmenu clear
+
+
+.. index:: command history
+
+Command recall
+--------------------------------------------------------------------------------------------
+
+
+If the command line is empty, *up/down arrows* will use the underlying
+shell for command recall (like Control-P and Control-N). If the
+command line contains any text, including whitespace,
+*up/down arrows* will cause GraphTerm to search for matching
+previous commands that begin with the text already typed (ignoring
+any leading whitespace). You can use the *right arrow* to
+complete the recalled command (for editing) or use the *Enter* key
+to execute it. Typing any other key, including the *left arrow*,
+will cancel the command recall process. 
+
+.. index:: copy/paste, paste
+
+Copy/paste
+--------------------------------------------------------------------------------------------
+
+For certain browsers (e.g., desktop Chrome/Firefox),
+the usual *Command-V* or *Control-V* key sequence should directly
+paste text from the clipboard. If that doesn't work, there are a couple
+of other ways to paste text.
+First, you can use the keyboard shortcut *Control-O* to open a
+popup window, paste the text into the popup window using the
+browser's paste menu command or a keyboard shortcut,
+such as *Command/Control-V*, and then type *Control-O* again to
+insert the text at the GraphTerm cursor location.
+(The popup paste window can also be accessed using the *terminal/paste
+special* menu item.)
+Alternatively, for some browsers, and on the iPad, you can *click on the cursor*
+before beginning the paste operation and then paste the text directly.
+This second technique may not always work well for text copied from non-plain
+text sources, such as a web page.
+
+.. index:: drag and drop
+
+Drag and drop
+--------------------------------------------------------------------------------------------
+
+Sort of works! You can drag a filename (*grabbing the icon does not
+work*) and drop it on a folder, an executable, or the command line.
+For drag-and-drop between two GraphTerm windows running on the same
+host, the file will be moved to the destination folder. For windows
+on two different hosts, the file will be copied.
+(Graphical feedback for this operation is not properly implemented at
+this time. Look at the command line for the feedback.)
+
+.. index:: ipad, android, tablet
+
+iPad/Android tablet usage
+--------------------------------------------------------------------------------------------
+
+Tap on the cursor to display virtual keyboard on the tablet. The
+*Bottom menu*, exposed by clicking on the last displayed prompt, can be
+quite useful on a tablet. (On Android, you may need to tap a couple of
+more times on the cursor after the keyboard is displayed.)
+
+
+
+.. index:: icon display
+
+Icon display
+--------------------------------------------------------------------------------------------
+
+Select ``view/icons`` in the menubar to activate icon display for commands like
+``gls``.
+
+
+.. index:: themes
+
+Themes
+--------------------------------------------------------------------------------------------
+
+
+Themes, selected using the menubar, are a work in progress, especially
+the 3-D perspective theme, which only works on Chrome/Safari ((see  :ref:`stars3d_shot`).
+
+
+.. index:: terminal type
+
+Choosing the terminal type
+--------------------------------------------------------------------------------------------
+
+The default terminal type is set to ``xterm``, but it may not always
+work properly. You can also try out the terminal types ``screen`` or
+``linux``,  which may work better for some purposes.
+You can use the ``--term_type`` option when running the server to set
+the default terminal type, or use the ``export TERM=screen`` command.
+(Fully supporting these terminal types is a work in progress.)
+
+
+Inline graphics, notebooks, slideshows, tracing etc.
+===============================================================
 
 .. index:: inline graphics, matplotlib
 
 .. _inline_graphics:
 
 Inline plots using matplotlib
-===============================================================
+--------------------------------------------------------------------------------------------
 
 If you have ``matplotlib`` installed, the ``gpylab`` module in the
 ``$GTERM_DIR/bin`` directory can be used to start up the python
@@ -178,72 +301,113 @@ See the function ``main`` in this file for the plotting code.
 .. _notebook_mode:
  
 Notebook mode
-===============================================================
+--------------------------------------------------------------------------------------------
+
+Currently, the notebook mode can be used with the shell (``bash``),
+python (``python``, or ``ipython``)  and ``R``
+(see `Using GraphTerm with R <http://code.mindmeldr.com/graphterm/R.html>`_).
+Clicking on files with extensions
+``*.ipynb``, ``*.py.md`` or ``*.R.md`` displayed in ``gls`` output
+will automatically open a notebook using the appropriate program.
+You can also try using the notebook mode 
+with any other shell-like program (such as ``IDL``) which has a unique
+prompt by typing *Shift-Enter* after starting the program. 
 
 To enter the notebook mode, select *notebook/new* on the top menu, or
 type *Shift-Enter* (or *Control-Enter*, if you wish to read a notebook
-file and customize the prompts). You can exit the notebook mode using
+file and/or specify the shell prompts). You can exit the notebook mode using
 the top menu bar, or by typing *Control-C*. Within the notebook mode,
 use *Shift-Enter* to execute a cell and move to the next, or
 *Control-Enter* for in-place execution. Additional keyboard shortcuts are listed
 in the *help* menu, and are in many cases identical to that used by
 IPython Notebook.
 
-Notebooks can be saved any time using the IPython Notebook (``*.ipynb``) or Markdown(``*.md``)
+Notebooks can be saved any time using the IPython Notebook
+(``*.ipynb``) or Markdown (``*.md``)
 formats. The filename determines the format.
 You can also start up the python interpreter to load a notebook file, in
 ``*.ipynb`` or ``*.md`` format, as follows::
 
     python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb
 
-(see  :ref:`notebook_shot`). Currently, the notebook mode can be used with
-``bash``, ``python``, ``ipython``, ``R``, and ``IDL``
-(see `Using GraphTerm with R <http://code.mindmeldr.com/graphterm/R.html>`_).
-The notebook mode can also be
-used with any other shell-like program which has a single, unique
-prompt by typing *Shift-Enter* after opening the program.
-Clicking on files with extensions
-``*.ipynb``, ``*.py.md`` or ``*.R.md`` displayed in ``gls`` output
-will automatically open a notebook with the appropriate program
-(``ipython``, ``python``, or ``R``).
+(see  :ref:`notebook_shot`). 
 
-.. index:: menu shortcut
 
-Menu shortcuts
+.. index:: slides, slideshows
+
+.. _slideshows:
+
+Slideshows
+--------------------------------------------------------------------------------------------
+
+
+
+The ``glandslide`` command, which is a slightly modified version of the
+web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
+can be used to create a slideshow from Markdown (.md) or reStructured
+Text (.rst) files (see  :ref:`landslide_shot`). A few sample ``.md`` files are provided in the
+``$GTERM_DIR/bin/landslide`` directory of the distribution. To view a slideshow about
+GraphTerm, type::
+
+  glandslide -o $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
+
+Type ``h`` for help and ``q`` to quit the slideshow. (The unmodified
+Landslide program can also be used, but remote sharing will not work.)
+
+The ``greveal`` command can be used to display Markdown files as
+slideshows using `reveal.js <https://github.com/hakimel/reveal.js/>`_::
+
+    greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
+
+Type ``b`` three times in quick succession to exit the slideshow.
+
+The ``gimage`` command, which displays images inline, can also be used for
+slideshows and simple presentations. Just ``cd`` to a directory
+that has the images for a slideshow, and type::
+
+  gimage -f
+
+To select a subset of images in the directory, you can use a wildcard
+pattern. For publicly webcasting a slideshow, use the ``-b`` option.
+
+
+.. index:: execution tracing, online python tutor, python tutor
+
+.. _python_tutor:
+
+Code tracing using Python Tutor
+--------------------------------------------------------------------------------------------
+
+
+The command ``gtutor`` implements a command-line version of the
+Online Python Tutorial from `pythontutor.com <http://pythontutor.com>`_.
+It produces HTML output that can be piped to ``gframe`` for inline
+display (see  :ref:`pytutor_shot`).
+To trace the execution of a sample program ``example.py``, use it as follows::
+
+  gtutor example.py | gframe -f
+
+More sample programs may be found in the directory ``$GTERM_DIR/bin/pytutor/example-code``.
+Of course, you can use ``gtutor`` to trace any other (small) python program as well.
+Type ``gtutor -h`` to display the command line options.
+*Note:* By default, ``gtutor`` accesses the browser CSS/JS files from
+`pythontutor.com <http://pythontutor.com>`_.
+To use ``gtutor`` in an offline-mode, you will need to specify the
+``--offline`` option and also download the Online Python Tutorial
+code from GitHub and copy/rename the main source directory
+(currently ``v3``) as ``$GTERM_DIR/www/pytutor`` so that GraphTerm
+can serve the CSS/JS files locally.
+
+*Advanced usage:* You can embed tutorials within a Landslide/Markdown
+presentation by including an ``iframe`` HTML element in the
+presentation file, with the ``src`` attribute set to a graphterm
+URL, such as ``http://localhost:8900/local/tutorial``. This will open
+up a graphterm window where you can either run ``gtutor`` interactively or
+use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
+
+ 
+Sharing, embedding, remote access, and security
 ================================================================
-
-All the items in the top menubar can be accessed by typing *Control-J*
-followed by a single letter for each level of menu selection. The
-letter to be typed will be highlighted when you type *Control-J* and
-is usually, but not always, the first letter of the item name. For example,
-the sequence *Control-J t c* will select the menu item *terminal/clear*
-
-The menubar can also be accessed from the
-command line, using the ``gmenu`` command, e.g.::
-
-    gmenu terminal clear
-
-A single-word menu name is typed to select each menu level, and
-preceding level names may be omitted, as long as there is no ambiguity, e.g.::
-
-    gmenu clear
-
-
-.. index:: command history
-
-Command recall
-================================================================
-
-
-If the command line is empty, *up/down arrows* will use the underlying
-shell for command recall (like Control-P and Control-N). If the
-command line contains any text, including whitespace,
-*up/down arrows* will cause GraphTerm to search for matching
-previous commands that begin with the text already typed (ignoring
-any leading whitespace). You can use the *right arrow* to
-complete the recalled command (for editing) or use the *Enter* key
-to execute it. Typing any other key, including the *left arrow*,
-will cancel the command recall process. 
 
 
 .. index:: sessions, screensharing
@@ -251,7 +415,7 @@ will cancel the command recall process.
 .. _screensharing:
 
 Sessions and "screensharing"
-================================================================
+--------------------------------------------------------------------------------------------
 
 For each host, terminal sessions are assigned default names like
 ``tty1``, ``tty2`` etc. You can also create unique terminal session names simply by using it in an
@@ -290,10 +454,10 @@ else. This may change in the future.
 .. index:: webcasting
 
 Webcasting
-================================================================
+--------------------------------------------------------------------------------------------
 
 
-If you enable the *sharinf/webcast* in the menubar, anyone can use the
+If you enable the *share/webcast* in the menubar, anyone can use the
 session URL to view the session, without the need for
 authentication, but will not be able to steal it. *Use this feature
 with caution to avoid exposing sensitive data.*
@@ -303,7 +467,7 @@ with caution to avoid exposing sensitive data.*
 .. _embedding:
 
 Embedding and remote terminal commands
-================================================================
+--------------------------------------------------------------------------------------------
 
 Additional GraphTerm terminals can be embedded within any GraphTerm
 terminal. For example, the following command::
@@ -311,9 +475,10 @@ terminal. For example, the following command::
     gframe -b -t terma termb
 
 creates two terminals, ``terma`` and ``termb`` and embeds them within
-the current terminal. The demo script ``$GTERM_DIR/bin/metro.sh``
+the current terminal. The demo script
+`metro.sh <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh>`_
 illustrates the embedding of multiple terminals, each running a
-different command (see  :ref:`metro_shot`). The script also demonstrates the use of the ``gsh``
+different command (see screenshot :ref:`metro_shot`). The script also demonstrates the use of the ``gsh``
 command to execute commands remotely on a terminal, e.g.::
 
     gsh terma yweather -f austin
@@ -332,7 +497,7 @@ browser window, you can use::
 .. _wildcard:
 
 Wildcard sessions and multiplexing
-================================================================
+--------------------------------------------------------------------------------------------
 
 
 A terminal session path is of the form ``session_host/session_name``. You can
@@ -357,159 +522,10 @@ See the *otrace* integration section for more information.
 NOTE: Multiplexed input/output display cannot be easily implemented for
 regular shell terminals.
 
-.. index:: slides, slideshows
-
-.. _slideshows:
-
-Slideshows
-================================================================
-
-
-The ``glandslide`` command, which is a slightly modified version of the
-web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
-can be used to create a slideshow from Markdown (.md) or reStructured
-Text (.rst) files (see  :ref:`landslide_shot`). A few sample ``.md`` files are provided in the
-``$GTERM_DIR/bin/landslide`` directory of the distribution. To view a slideshow about
-GraphTerm, type::
-
-  glandslide -o $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
-
-Type ``h`` for help and ``q`` to quit the slideshow. (The unmodified
-Landslide program can also be used, but remote sharing will not work.)
-
-The ``greveal`` command can be used to display Markdown files as
-slideshows using `reveal.js <https://github.com/hakimel/reveal.js/>`_::
-
-    greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
-
-Type ``b`` three times in quick succession to exit the slideshow.
-
-The ``gimage`` command, which displays images inline, can also be used for
-slideshows and simple presentations. Just ``cd`` to a directory
-that has the images for a slideshow, and type::
-
-  gimage -f
-
-To select a subset of images in the directory, you can use a wildcard
-pattern. For publicly webcasting a slideshow, use the ``-b`` option.
-
-
-
-.. index:: execution tracing, online python tutor, python tutor
-
-.. _python_tutor:
-
-Command-line version of pythontutor.com
-================================================================
-
-
-The command ``gtutor`` implements a command-line version of the
-Online Python Tutorial from `pythontutor.com <http://pythontutor.com>`_.
-It produces HTML output that can be piped to ``gframe`` for inline
-display (see  :ref:`pytutor_shot`).
-To trace the execution of a sample program ``example.py``, use it as follows::
-
-  gtutor example.py | gframe -f
-
-More sample programs may be found in the directory ``$GTERM_DIR/bin/pytutor/example-code``.
-Of course, you can use ``gtutor`` to trace any other (small) python program as well.
-Type ``gtutor -h`` to display the command line options.
-*Note:* By default, ``gtutor`` accesses the browser CSS/JS files from
-`pythontutor.com <http://pythontutor.com>`_.
-To use ``gtutor`` in an offline-mode, you will need to specify the
-``--offline`` option and also download the Online Python Tutorial
-code from GitHub and copy/rename the main source directory
-(currently ``v3``) as ``$GTERM_DIR/www/pytutor`` so that GraphTerm
-can serve the CSS/JS files locally.
-
-*Advanced usage:* You can embed tutorials within a Landslide/Markdown
-presentation by including an ``iframe`` HTML element in the
-presentation file, with the ``src`` attribute set to a graphterm
-URL, such as ``http://localhost:8900/local/tutorial``. This will open
-up a graphterm window where you can either run ``gtutor`` interactively or
-use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
-
-
-.. index:: ipad, android, tablet
-
-iPad/Android tablet usage
-================================================================
-
-Tap on the cursor to display virtual keyboard on the tablet. The
-*Bottom menu*, exposed by clicking on the last displayed prompt, can be
-quite useful on a tablet. (On Android, you may need to tap a couple of
-more times on the cursor after the keyboard is displayed.)
-
-
-.. index:: copy/paste, paste
-
-Copy/paste
-================================================================
-
-For certain browsers (e.g., desktop Chrome/Firefox),
-the usual *Command-V* or *Control-V* key sequence should directly
-paste text from the clipboard. If that doesn't work, there are a couple
-of other ways to paste text.
-First, you can use the keyboard shortcut *Control-O* to open a
-popup window, paste the text into the popup window using the
-browser's paste menu command or a keyboard shortcut,
-such as *Command/Control-V*, and then type *Control-O* again to
-insert the text at the GraphTerm cursor location.
-(The popup paste window can also be accessed using the *terminal/paste
-special* menu item.)
-Alternatively, for some browsers, and on the iPad, you can *click on the cursor*
-before beginning the paste operation and then paste the text directly.
-This second technique may not always work well for text copied from non-plain
-text sources, such as a web page.
-
-.. index:: drag and drop
-
-Drag and drop
-================================================================
-
-Sort of works! You can drag a filename (*grabbing the icon does not
-work*) and drop it on a folder, an executable, or the command line.
-For drag-and-drop between two GraphTerm windows running on the same
-host, the file will be moved to the destination folder. For windows
-on two different hosts, the file will be copied.
-(Graphical feedback for this operation is not properly implemented at
-this time. Look at the command line for the feedback.)
-
-
-.. index:: icon display
-
-Icon display
-================================================================
-
-Select ``view/icons`` in the menubar to activate icon display for commands like
-``gls``.
-
-
-.. index:: themes
-
-Themes
-================================================================
-
-
-Themes, selected using the menubar, are a work in progress, especially
-the 3-D perspective theme, which only works on Chrome/Safari ((see  :ref:`stars3d_shot`).
-
-.. index:: terminal type
-
-Choosing the terminal type
-================================================================
-
-The default terminal type is set to ``xterm``, but it may not always
-work properly. You can also try out the terminal types ``screen`` or
-``linux``,  which may work better for some purposes.
-You can use the ``--term_type`` option when running the server to set
-the default terminal type, or use the ``export TERM=screen`` command.
-(Fully supporting these terminal types is a work in progress.)
-
 .. index:: multiple hosts
 
 Multiple hosts
-================================================================
+--------------------------------------------------------------------------------------------
 
 More than one host can connect to the GraphTerm server. The ``localhost``
 is connected by default (but this can be disabled using the
@@ -535,7 +551,7 @@ be dynamically introspected and debugged using `otrace <http://code.mindmeldr.co
 .. index:: security
 
 Security
-================================================================
+--------------------------------------------------------------------------------------------
 
 
 *The GraphTerm is not yet ready to be executed with root privileges*.
@@ -554,7 +570,7 @@ it, although it is not yet ready for everyday use.)
 .. index:: ssh, port forwarding, remote access
 
 SSH, port forwarding, and remote access
-================================================================
+--------------------------------------------------------------------------------------------
 
 Currently, the most secure way to access the GraphTerm server running
 on a remote computer is to use SSH port forwarding. For example, if
@@ -598,8 +614,9 @@ A more permanent solution involves the following three steps:
    accessed. Alternatively, you could simply install GraphTerm on the
    remote machine, even if you are never planning to start the server.
 
- - Append the file ``$GTERM_DIR/bin/gprofile`` to your
-   ``.bash_profile`` on the remote machine, and uncomment/modify the
+ - Append the file
+   `$GTERM_DIR/bin/gprofile <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gprofile>`_
+   to your ``.bash_profile`` on the remote machine, and uncomment/modify the
    last few lines so that ``$GTERM_DIR`` points to the parent of the
    directory where the toolchain files are installed. This ensures
    that the GraphTerm toolchain is included in your ``PATH`` on the remote
