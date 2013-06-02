@@ -115,7 +115,7 @@ Session sharing
 Others cannot see or access my terminal for sharing?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Disable the *sharing/private* option to share your terminal.
+Disable the *share/private* option to share your terminal.
 
 
 Server

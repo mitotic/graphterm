@@ -116,6 +116,7 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#">README</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#quick-start">Quick Start</a></li>
 <li><a class="reference internal" href="#documentation-and-support">Documentation and Support</a></li>
 <li><a class="reference internal" href="#caveats-and-limitations">Caveats and Limitations</a></li>
 <li><a class="reference internal" href="#credits">Credits</a></li>
@@ -164,10 +165,11 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#readme" id="id5">README</a><ul>
 <li><a class="reference internal" href="#introduction" id="id6">Introduction</a></li>
 <li><a class="reference internal" href="#installation" id="id7">Installation</a></li>
-<li><a class="reference internal" href="#documentation-and-support" id="id8">Documentation and Support</a></li>
-<li><a class="reference internal" href="#caveats-and-limitations" id="id9">Caveats and Limitations</a></li>
-<li><a class="reference internal" href="#credits" id="id10">Credits</a></li>
-<li><a class="reference internal" href="#license" id="id11">License</a></li>
+<li><a class="reference internal" href="#quick-start" id="id8">Quick Start</a></li>
+<li><a class="reference internal" href="#documentation-and-support" id="id9">Documentation and Support</a></li>
+<li><a class="reference internal" href="#caveats-and-limitations" id="id10">Caveats and Limitations</a></li>
+<li><a class="reference internal" href="#credits" id="id11">Credits</a></li>
+<li><a class="reference internal" href="#license" id="id12">License</a></li>
 </ul>
 </li>
 </ul>
@@ -224,12 +226,18 @@ tablets, with tappable links and command re-use to minimize the need for
 a keyboard. It preserves history for all commands,
 whether entered by typing, clicking, or tapping.
 It is also themable using CSS.</p>
-<p>Images of GraphTerm in action can be found in <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/SCREENSHOTS.rst">screenshots</a>
+<p>Images of GraphTerm in action can be found in <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/docs/screenshots.rst">screenshots</a>
 and in this <a class="reference external" href="http://youtu.be/TvO1SnEpwfE">YouTube Video</a>.
-Here is a sample screenshot illustrating graphical <tt class="docutils literal"><span class="pre">gls</span></tt> and <tt class="docutils literal"><span class="pre">cat</span></tt> command
-output using a 3D  perspective theme (captured on OS X Lion, using Google Chrome).</p>
-<div class="figure align-center" style="width: 70%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-stars3d.png" style="width: 90%;" />
+Here is a sample screenshot showing the output of the
+<a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh">metro.sh</a>
+command, which embeds six smaller terminals within the main terminal, running
+six different commands from the GraphTerm toolchain: (i) live twitter stream output using
+<tt class="docutils literal"><span class="pre">gtweet</span></tt>, (ii) weather info using <tt class="docutils literal"><span class="pre">yweather</span></tt>,
+(ii) slideshow from markdown file using <tt class="docutils literal"><span class="pre">greveal</span></tt> and <em>reveal.js</em>,
+(iv) word cloud using <tt class="docutils literal"><span class="pre">d3cloud</span></tt> and <em>d3.js</em>, (v) inline graphics using <tt class="docutils literal"><span class="pre">gmatplot.py</span></tt>,
+and (vi) notebook mode using the standard python interpreter.</p>
+<div class="figure align-center" style="width: 100%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.png" style="width: 90%;" />
 </div>
 </div>
 <div class="section" id="installation">
@@ -260,26 +268,46 @@ in your system (or in the <tt class="docutils literal"><span class="pre">graphte
 <p>You can browse the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> source code, and download the development
 version, at <a class="reference external" href="https://github.com/mitotic/graphterm">Github</a>.</p>
 </div>
+<div class="section" id="quick-start">
+<span id="index-2"></span><h2><a class="toc-backref" href="#id8">Quick Start</a><a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_code</span><span class="o">=</span><span class="n">none</span>
+</pre></div>
+</div>
+<p>Once the server is running, you can open a GraphTerm terminal window
+using a browser that supports websockets, such as Google Chrome,
+Firefox, Safari, or IE10 (Chrome works best), and entering the following URL:</p>
+<div class="highlight-python"><pre>http://localhost:8900</pre>
+</div>
+<p>Once you have a terminal, try out the following commands:</p>
+<div class="highlight-python"><pre>gls &lt;directory&gt;
+gvi &lt;text-filename&gt;</pre>
+</div>
+<p>These are commands in the GraphTerm toolchain that imitate
+basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands.
+See <a class="reference external" href="http://code.mindmeldr.com/graphterm/start.html">Getting Started with GraphTerm</a>
+and the
+<a class="reference external" href="http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html">Using Graphical Features</a>
+tutorials for more info on using GraphTerm.</p>
+</div>
 <div class="section" id="documentation-and-support">
-<span id="index-2"></span><h2><a class="toc-backref" href="#id8">Documentation and Support</a><a class="headerlink" href="#documentation-and-support" title="Permalink to this headline">¶</a></h2>
+<span id="index-3"></span><h2><a class="toc-backref" href="#id9">Documentation and Support</a><a class="headerlink" href="#documentation-and-support" title="Permalink to this headline">¶</a></h2>
 <p>Usage info and other documentation can be found on the project home page,
 <a class="reference external" href="http://code.mindmeldr.com/graphterm">code.mindmeldr.com/graphterm</a>.
-Begin with <a class="reference external" href="http://code.mindmeldr.com/graphterm/start.html">Getting started with GraphTerm</a>,
-and see the <a class="reference external" href="http://code.mindmeldr.com/graphterm/tutorials.html">Tutorials and Talks</a>
-page for more advanced usage.</p>
+See the <a class="reference external" href="http://code.mindmeldr.com/graphterm/tutorials.html">Tutorials and Talks</a>
+page for more advanced usage examples.</p>
 <p>You can also use the following command:</p>
 <div class="highlight-python"><pre>glandslide -o graphterm-talk1.md | gframe -f</pre>
 </div>
 <p>to view a slideshow about GraphTerm within GraphTerm (type <tt class="docutils literal"><span class="pre">h</span></tt> for
 help and <tt class="docutils literal"><span class="pre">q</span></tt> to quit)..</p>
-<p><strong>NEW</strong>
-There is a <a class="reference external" href="https://groups.google.com/group/graphterm">Google Groups mailing list</a>
+<p>There is a <a class="reference external" href="https://groups.google.com/group/graphterm">Google Groups mailing list</a>
 for announcements of new releases, posting questions related to
 GraphTerm etc. You can also follow <a class="reference external" href="https://twitter.com/intent/user?screen_name=graphterm">&#64;graphterm</a> on Twitter for updates.</p>
 <p>To report bugs and other issues, use the Github <a class="reference external" href="https://github.com/mitotic/graphterm/issues">Issue Tracker</a>.</p>
 </div>
 <div class="section" id="caveats-and-limitations">
-<span id="index-3"></span><h2><a class="toc-backref" href="#id9">Caveats and Limitations</a><a class="headerlink" href="#caveats-and-limitations" title="Permalink to this headline">¶</a></h2>
+<span id="index-4"></span><h2><a class="toc-backref" href="#id10">Caveats and Limitations</a><a class="headerlink" href="#caveats-and-limitations" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul>
 <li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
@@ -301,7 +329,7 @@ should be able to so in the future.)</li>
 </div></blockquote>
 </div>
 <div class="section" id="credits">
-<span id="index-4"></span><h2><a class="toc-backref" href="#id10">Credits</a><a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h2>
+<span id="index-5"></span><h2><a class="toc-backref" href="#id11">Credits</a><a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h2>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is inspired by two earlier projects that implement the
 terminal interface within the browser,
 <a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a> and
@@ -330,7 +358,7 @@ menu plugin</li>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> was developed as part of the <a class="reference external" href="http://mindmeldr.com">Mindmeldr</a> project, which is aimed at improving classroom interaction.</p>
 </div>
 <div class="section" id="license">
-<span id="index-5"></span><h2><a class="toc-backref" href="#id11">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<span id="index-6"></span><h2><a class="toc-backref" href="#id12">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is distributed as open source under the <a class="reference external" href="http://www.opensource.org/licenses/bsd-license.php">BSD-license</a>.</p>
 </div>
 </div>

@@ -108,9 +108,10 @@ in a GraphTerm window to upload it (*this is yet to be implemented*).
 Scrolling to the top/bottom quickly
 ==========================================================================
 
-Expose the bottom menu bar by clicking on the lowest displayed
-prompt, and then click *Top* in the menu bar to scroll to the top.
-To scroll back to the bottom, select *appearance/bottom* on the top menubar.
+You can scroll to the top/bottom of the terminal using the *view* menu
+in the top menubar. If the top menubar is not visible, expose the
+bottom menu bar by clicking on the lowest displayed prompt, and then
+click *Top* to scroll to the top.
 
 
 Sending special characters on an iPad/Android tablet

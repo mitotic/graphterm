@@ -22,7 +22,9 @@ To start the ``GraphTerm`` server, use the command::
 
   gtermserver --auth_code=none
 
-Type  ``gtermserver -h`` to view all options. You can use the
+Note that ``none`` is all lowercase in the above command and indicates
+no authentication. Type  ``gtermserver -h`` to view all command
+options. You can use the
 ``--daemon=start`` option to run it in the background. The
 ``--host=hostname`` option is useful for listening on a public IP address instead
 of the default ``localhost``. The ``--lc_export`` option can be used to
@@ -62,24 +64,35 @@ Use the ``-h`` option to display help information for these commands,
 and read the
 `UsingGraphicalFeatures tutorial <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_ for usage examples.
 
-The GraphTerm toolchain commands reside in the directory ``$GTERM_DIR/bin``
-Other commands in the toolchain include:
+.. _toolchain:
 
-   ``d3cloud [file]`` To display file (or stdin) content as a word cloud
+Toolchain
+====================================================
+
+GraphTerm is bundled with a command toolchain that allow access to
+many graphical features from the command line.
+The toolchain commands can communicate with each other using pipes
+and may be written any language,
+e.g., Bash shell script, Python etc.
+The reside in the directory ``$GTERM_DIR/bin`` and include the following:
+
+   ``d3cloud [file]`` To display file (or stdin) content as a word
+   cloud (see  :ref:`d3cloud_shot`)
 
    ``gframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) within
-   an inline *iframe*
+   an inline *iframe*  (see  :ref:`d3cloud_shot`)
 
    ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
 
    ``gjs java script command``   Execute Javascript in the client browser
 
-   ``glandslide [options] file.md``   A GraphTerm-aware version of Landslide, a web-based slideshow program
+   ``glandslide [options] file.md``   A GraphTerm-aware version of
+   Landslide, a web-based slideshow program  (see  :ref:`landslide_shot`)
 
    ``gload terminal_name`` Load a new terminal in the current window
 
-   ``gmatplot.py``   An inline ``matplotlib`` plotting package
+   ``gmatplot.py``   An inline ``matplotlib`` plotting package (see  :ref:`matplotlib_shot`)
 
    ``gmenu item subitem``   To access the menubar from the command line
 
@@ -91,16 +104,19 @@ Other commands in the toolchain include:
 
    ``gsnowflake.py``  An inline plotting demo for the SVG module ``svgwrite``
 
-   ``gtweet [-s keywords] | tweet``  To send, search, or receive tweets
+   ``gtweet [-s keywords] | tweet``  To send, search, or receive
+   tweets  (see  :ref:`tweet_shot`)
 
-   ``gtutor [...] example.py``  A command-line version of the Online Python Tutorial  at `pythontutor.com <http://pythontutor.com>`_
+   ``gtutor [...] example.py``  A command-line version of the Online
+   Python Tutorial  at `pythontutor.com <http://pythontutor.com>`_
+   (see :ref:`pytutor_shot`)
 
    ``gupload [filename|directory]`` To upload files from desktop into
    the terminal
 
    ``hello_gterm.sh`` Hello World program that displays inline HTML text and image
 
-   ``yweather [location]`` To view weather forecasts
+   ``yweather [location]`` To view weather forecasts (see  :ref:`weather_shot`)
 
 .. index:: visual cues
 
@@ -108,14 +124,13 @@ Visual cues
 ================================================================
 
 In the default theme, *blue* color denotes text that can be *clicked*
-or *tapped*. The action triggered by clicking depends upon two
+or *tapped* (see  :ref:`ls_shot`). The action triggered by clicking depends upon two
 factors, whether there is text in the current command line,
 and whether the Control modifier in the *Bottom menu* is active.
 Click on the last displayed prompt to toggle display of the *Bottom
 menu*. Clicking on other prompts toggles display of the command
 output (unless the Control modifier is used, in which case the
 entire command line is copied and pasted.)
-
 
 .. index:: folders, opening files, navigating folders
 
@@ -137,6 +152,8 @@ Enter key to execute it.
 
 .. index:: inline graphics, matplotlib
 
+.. _inline_graphics:
+
 Inline plots using matplotlib
 ===============================================================
 
@@ -148,7 +165,7 @@ GraphTerm terminal::
     python -i $GTERM_DIR/bin/gpylab.py
     >>> plot([1,2,4])
 
-Run ``$GTERM_DIR/bin/gmatplot.py`` for a demo of inline graphics.
+Run ``$GTERM_DIR/bin/gmatplot.py`` for a demo of inline graphics (see  :ref:`matplotlib_shot`).
 See the function ``main`` in this file for the plotting code.
 
  - Use ``ioff()`` to disable interactive mode
@@ -157,6 +174,8 @@ See the function ``main`` in this file for the plotting code.
  - Use ``display(fig)`` to display figure
 
 .. index:: notebook
+
+.. _notebook_mode:
  
 Notebook mode
 ===============================================================
@@ -166,15 +185,48 @@ type *Shift-Enter* (or *Control-Enter*, if you wish to read a notebook
 file and customize the prompts). You can exit the notebook mode using
 the top menu bar, or by typing *Control-C*. Within the notebook mode,
 use *Shift-Enter* to execute a cell and move to the next, or
-*Control-Enter* for in-place execution. (Additional keyboard shortcuts are listed
-in the *help* menu.)
+*Control-Enter* for in-place execution. Additional keyboard shortcuts are listed
+in the *help* menu, and are in many cases identical to that used by
+IPython Notebook.
 
-Notebooks can be saved any time using the IPython notebook (``*.ipynb``) or Markdown(``*.md``)
+Notebooks can be saved any time using the IPython Notebook (``*.ipynb``) or Markdown(``*.md``)
 formats. The filename determines the format.
-You can also start up the python interpreter load a notebook file, in
-``*.ipynb`` or ``*.md``, as follows::
+You can also start up the python interpreter to load a notebook file, in
+``*.ipynb`` or ``*.md`` format, as follows::
 
     python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb
+
+(see  :ref:`notebook_shot`). Currently, the notebook mode can be used with
+``bash``, ``python``, ``ipython``, ``R``, and ``IDL``
+(see `Using GraphTerm with R <http://code.mindmeldr.com/graphterm/R.html>`_).
+The notebook mode can also be
+used with any other shell-like program which has a single, unique
+prompt by typing *Shift-Enter* after opening the program.
+Clicking on files with extensions
+``*.ipynb``, ``*.py.md`` or ``*.R.md`` displayed in ``gls`` output
+will automatically open a notebook with the appropriate program
+(``ipython``, ``python``, or ``R``).
+
+.. index:: menu shortcut
+
+Menu shortcuts
+================================================================
+
+All the items in the top menubar can be accessed by typing *Control-J*
+followed by a single letter for each level of menu selection. The
+letter to be typed will be highlighted when you type *Control-J* and
+is usually, but not always, the first letter of the item name. For example,
+the sequence *Control-J t c* will select the menu item *terminal/clear*
+
+The menubar can also be accessed from the
+command line, using the ``gmenu`` command, e.g.::
+
+    gmenu terminal clear
+
+A single-word menu name is typed to select each menu level, and
+preceding level names may be omitted, as long as there is no ambiguity, e.g.::
+
+    gmenu clear
 
 
 .. index:: command history
@@ -196,6 +248,8 @@ will cancel the command recall process.
 
 .. index:: sessions, screensharing
 
+.. _screensharing:
+
 Sessions and "screensharing"
 ================================================================
 
@@ -212,10 +266,10 @@ to connect to it. This is like "screensharing", but more efficient,
 because only the content is shared, not the graphical themes.
 
 The first user to create a session "owns" it, and can make the session
-publicly available by disabling the *sharing/private* menubar option.
+publicly available by disabling the *share/private* menubar option.
 Other users connecting to a public terminal session using its URL
-have read-only access, unless they *steal* session using the menubar
-button (or using the *sharing/control* menu item)l.
+have read-only access, unless they *steal* the session using the menubar
+button (or using the *share/control* menu item).
 The original user can prevent stealing of sessions by *locking* it.
 
 For example, if you forgot to detach your session at work, you can
@@ -224,13 +278,13 @@ to securely access your work desktop, and then steal the
 session using your home browser.
 
 Normally, only a single user has control of a terminal session at a
-time. There is a *sharing/tandem* option that can be enabled to allow
+time. There is a *share/tandem* option that can be enabled to allow
 multiple users to control the terminal session at the same
 time. However, this could sometimes have unpredictable effects.
 
 NOTE: Although GraphTerm supports multiple users, it currently
 assumes a cooperative environment, where everyone trusts everyone
-else. (This may change in the future.)
+else. This may change in the future.
 
 
 .. index:: webcasting
@@ -246,6 +300,8 @@ with caution to avoid exposing sensitive data.*
 
 .. index:: embedding
 
+.. _embedding:
+
 Embedding and remote terminal commands
 ================================================================
 
@@ -257,13 +313,13 @@ terminal. For example, the following command::
 creates two terminals, ``terma`` and ``termb`` and embeds them within
 the current terminal. The demo script ``$GTERM_DIR/bin/metro.sh``
 illustrates the embedding of multiple terminals, each running a
-different command. The script also demonstrates the use of the ``gsh``
+different command (see  :ref:`metro_shot`). The script also demonstrates the use of the ``gsh``
 command to execute commands remotely on a terminal, e.g.::
 
     gsh terma yweather -f austin
 
 The terminal name argument for ``gsh`` can be a wildcard
-expression, e.g. ``'term*``. Unlike ``ssh``, the ``gsh`` command does
+expression, e.g. ``'term*'``. Unlike ``ssh``, the ``gsh`` command does
 not display the output of the remote command. You will need to view it
 in the remote terminal. To load a remote terminal in the current
 browser window, you can use::
@@ -273,6 +329,7 @@ browser window, you can use::
 
 .. index:: multiplexing, wildcard sessions
 
+.. _wildcard:
 
 Wildcard sessions and multiplexing
 ================================================================
@@ -302,6 +359,8 @@ regular shell terminals.
 
 .. index:: slides, slideshows
 
+.. _slideshows:
+
 Slideshows
 ================================================================
 
@@ -309,7 +368,7 @@ Slideshows
 The ``glandslide`` command, which is a slightly modified version of the
 web-based slideshow program `Landslide <https://github.com/adamzap/landslide>`_,
 can be used to create a slideshow from Markdown (.md) or reStructured
-Text (.rst) files. A few sample ``.md`` files are provided in the
+Text (.rst) files (see  :ref:`landslide_shot`). A few sample ``.md`` files are provided in the
 ``$GTERM_DIR/bin/landslide`` directory of the distribution. To view a slideshow about
 GraphTerm, type::
 
@@ -334,6 +393,41 @@ that has the images for a slideshow, and type::
 To select a subset of images in the directory, you can use a wildcard
 pattern. For publicly webcasting a slideshow, use the ``-b`` option.
 
+
+
+.. index:: execution tracing, online python tutor, python tutor
+
+.. _python_tutor:
+
+Command-line version of pythontutor.com
+================================================================
+
+
+The command ``gtutor`` implements a command-line version of the
+Online Python Tutorial from `pythontutor.com <http://pythontutor.com>`_.
+It produces HTML output that can be piped to ``gframe`` for inline
+display (see  :ref:`pytutor_shot`).
+To trace the execution of a sample program ``example.py``, use it as follows::
+
+  gtutor example.py | gframe -f
+
+More sample programs may be found in the directory ``$GTERM_DIR/bin/pytutor/example-code``.
+Of course, you can use ``gtutor`` to trace any other (small) python program as well.
+Type ``gtutor -h`` to display the command line options.
+*Note:* By default, ``gtutor`` accesses the browser CSS/JS files from
+`pythontutor.com <http://pythontutor.com>`_.
+To use ``gtutor`` in an offline-mode, you will need to specify the
+``--offline`` option and also download the Online Python Tutorial
+code from GitHub and copy/rename the main source directory
+(currently ``v3``) as ``$GTERM_DIR/www/pytutor`` so that GraphTerm
+can serve the CSS/JS files locally.
+
+*Advanced usage:* You can embed tutorials within a Landslide/Markdown
+presentation by including an ``iframe`` HTML element in the
+presentation file, with the ``src`` attribute set to a graphterm
+URL, such as ``http://localhost:8900/local/tutorial``. This will open
+up a graphterm window where you can either run ``gtutor`` interactively or
+use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
 
 
 .. index:: ipad, android, tablet
@@ -381,12 +475,13 @@ on two different hosts, the file will be copied.
 (Graphical feedback for this operation is not properly implemented at
 this time. Look at the command line for the feedback.)
 
+
 .. index:: icon display
 
 Icon display
 ================================================================
 
-Select ``appearance/icons`` in the menubar to activate icon display for commands like
+Select ``view/icons`` in the menubar to activate icon display for commands like
 ``gls``.
 
 
@@ -396,8 +491,8 @@ Themes
 ================================================================
 
 
-Themes, selected using the menubar, are a work in progress, especially the 3-D perspective theme
-(which only works on Chrome/Safari).
+Themes, selected using the menubar, are a work in progress, especially
+the 3-D perspective theme, which only works on Chrome/Safari ((see  :ref:`stars3d_shot`).
 
 .. index:: terminal type
 
@@ -436,39 +531,6 @@ connect to the GraphTerm server on ``localhost`` pretending to be different "hos
 on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a "host", allowing it to
 be dynamically introspected and debugged using `otrace <http://code.mindmeldr.com/otrace>`_.)
-
-
-.. index:: execution tracing, online python tutor, python tutor
-
-Command-line version of pythontutor.com
-================================================================
-
-
-The command ``gtutor`` implements a command-line version of the
-Online Python Tutorial from `pythontutor.com <http://pythontutor.com>`_.
-It produces HTML output that can be piped to ``gframe`` for inline display.
-To trace the execution of a sample program ``example.py``, use it as follows::
-
-  gtutor example.py | gframe -f
-
-More sample programs may be found in the directory ``$GTERM_DIR/bin/pytutor/example-code``.
-Of course, you can use ``gtutor`` to trace any other (small) python program as well.
-Type ``gtutor -h`` to display the command line options.
-*Note:* By default, ``gtutor`` accesses the browser CSS/JS files from
-`pythontutor.com <http://pythontutor.com>`_.
-To use ``gtutor`` in an offline-mode, you will need to specify the
-``--offline`` option and also download the Online Python Tutorial
-code from GitHub and copy/rename the main source directory
-(currently ``v3``) as ``$GTERM_DIR/www/pytutor`` so that GraphTerm
-can serve the CSS/JS files locally.
-
-*Advanced usage:* You can embed tutorials within a Landslide/Markdown
-presentation by including an ``iframe`` HTML element in the
-presentation file, with the ``src`` attribute set to a graphterm
-URL, such as ``http://localhost:8900/local/tutorial``. This will open
-up a graphterm window where you can either run ``gtutor`` interactively or
-use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
-
 
 .. index:: security
 
@@ -510,8 +572,7 @@ computer and run the ``gtermhost`` program remotely to allow it to
 connect to the ``gtermserver`` running on your local computer using
 SSH reverse port forwarding, e.g.::
 
-   ssh -R 7799:localhost:8899 user@remote-computer
-   gtermhost --server_port=7799 remote-computer    # on remote computer
+   ssh -R 8899:localhost:8899 user@remote1 gtermhost remote1
 
 In this case, the remote computer will appear as another host on your
 local GraphTerm server.

@@ -203,10 +203,10 @@ to connect to it. This is like "screensharing", but more efficient,
 because only the content is shared, not the graphical themes.
 
 The first user to create a session "owns" it, and can make the session
-publicly available by disabling the *sharing/private* menubar option.
+publicly available by disabling the *share/private* menubar option.
 Other users connecting to a public terminal session using its URL
 have read-only access, unless they *steal* session using the menubar
-button (or using the *sharing/control* menu item)l.
+button (or using the *share/control* menu item)l.
 The original user can prevent stealing of sessions by *locking* it.
 
 For example, if you forgot to detach your session at work, you can
@@ -215,7 +215,7 @@ to securely access your work desktop, and then steal the
 session using your home browser.
 
 Normally, only a single user has control of a terminal session at a
-time. There is a *sharing/tandem* option that can be enabled to allow
+time. There is a *share/tandem* option that can be enabled to allow
 multiple users to control the terminal session at the same
 time. However, this could sometimes have unpredictable effects.
 
@@ -377,7 +377,7 @@ this time. Look at the command line for the feedback.)
 Icon display
 ================================================================
 
-Select ``appearance/icons`` in the menubar to activate icon display for commands like
+Select ``view/icons`` in the menubar to activate icon display for commands like
 ``gls``.
 
 
@@ -502,8 +502,7 @@ computer and run the ``gtermhost`` program remotely to allow it to
 connect to the ``gtermserver`` running on your local computer using
 SSH reverse port forwarding, e.g.::
 
-   ssh -R 7799:localhost:8899 user@remote-computer
-   gtermhost --server_port=7799 remote-computer    # on remote computer
+   ssh -R 8899:localhost:8899 user@remote1 gtermhost remote1
 
 In this case, the remote computer will appear as another host on your
 local GraphTerm server.

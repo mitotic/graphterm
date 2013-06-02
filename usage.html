@@ -340,17 +340,17 @@ Anyone with access to the GraphTerm server can use the session URL
 to connect to it. This is like &#8220;screensharing&#8221;, but more efficient,
 because only the content is shared, not the graphical themes.</p>
 <p>The first user to create a session &#8220;owns&#8221; it, and can make the session
-publicly available by disabling the <em>sharing/private</em> menubar option.
+publicly available by disabling the <em>share/private</em> menubar option.
 Other users connecting to a public terminal session using its URL
 have read-only access, unless they <em>steal</em> session using the menubar
-button (or using the <em>sharing/control</em> menu item)l.
+button (or using the <em>share/control</em> menu item)l.
 The original user can prevent stealing of sessions by <em>locking</em> it.</p>
 <p>For example, if you forgot to detach your session at work, you can
 <tt class="docutils literal"><span class="pre">ssh</span></tt> to your desktop from home, use SSH port forwarding (see below)
 to securely access your work desktop, and then steal the
 session using your home browser.</p>
 <p>Normally, only a single user has control of a terminal session at a
-time. There is a <em>sharing/tandem</em> option that can be enabled to allow
+time. There is a <em>share/tandem</em> option that can be enabled to allow
 multiple users to control the terminal session at the same
 time. However, this could sometimes have unpredictable effects.</p>
 <p>NOTE: Although GraphTerm supports multiple users, it currently
@@ -469,7 +469,7 @@ this time. Look at the command line for the feedback.)</p>
 </div>
 <div class="section" id="icon-display">
 <span id="index-14"></span><h2><a class="toc-backref" href="#id19">Icon display</a><a class="headerlink" href="#icon-display" title="Permalink to this headline">¶</a></h2>
-<p>Select <tt class="docutils literal"><span class="pre">appearance/icons</span></tt> in the menubar to activate icon display for commands like
+<p>Select <tt class="docutils literal"><span class="pre">view/icons</span></tt> in the menubar to activate icon display for commands like
 <tt class="docutils literal"><span class="pre">gls</span></tt>.</p>
 </div>
 <div class="section" id="themes">
@@ -562,8 +562,7 @@ on your home computer to access GraphTerm running on your work computer.</p>
 computer and run the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> program remotely to allow it to
 connect to the <tt class="docutils literal"><span class="pre">gtermserver</span></tt> running on your local computer using
 SSH reverse port forwarding, e.g.:</p>
-<div class="highlight-python"><pre>ssh -R 7799:localhost:8899 user@remote-computer
-gtermhost --server_port=7799 remote-computer    # on remote computer</pre>
+<div class="highlight-python"><pre>ssh -R 8899:localhost:8899 user@remote1 gtermhost remote1</pre>
 </div>
 <p>In this case, the remote computer will appear as another host on your
 local GraphTerm server.</p>
