@@ -79,7 +79,7 @@ six different commands from the GraphTerm toolchain: (i) live twitter stream out
 (iv) word cloud using ``d3cloud`` and *d3.js*, (v) inline graphics using ``gmatplot.py``,
 and (vi) notebook mode using the standard python interpreter.
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg
    :align: center
    :width: 90%
    :figwidth: 100%

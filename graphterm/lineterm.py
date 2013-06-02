@@ -36,6 +36,7 @@ import glob
 import hashlib
 import hmac
 import pipes
+import platform
 import Queue
 import shlex
 import subprocess
@@ -3084,7 +3085,7 @@ class Multiplex(object):
         if self.term_params.get("lc_export"):
             # Export some environment variables as LC_* (hack to enable SSH forwarding)
             env_dict = dict(env)
-            env.append( ("LC_"+GT_PREFIX+"EXPORT", socket.getfqdn() or "unknown") )
+            env.append( ("LC_"+GT_PREFIX+"EXPORT", platform.node() or "unknown") )
             if export_prompt_fmt:
                 env.append( ("LC_"+GT_PREFIX+"PROMPT", export_prompt_fmt) )
                 env.append( ("LC_PROMPT_COMMAND", env_dict["PROMPT_COMMAND"]) )
@@ -3104,7 +3105,7 @@ class Multiplex(object):
                 except Exception:
                     term.pty_write('## Failed to read file %s\n' % (Exec_path+"/gprofile"))
                 return
-            term.pty_write('[ "$GTERM_COOKIE" ] || export GTERM_EXPORT="%s"\n' % (socket.getfqdn() or "unknown",))
+            term.pty_write('[ "$GTERM_COOKIE" ] || export GTERM_EXPORT="%s"\n' % (platform.node() or "unknown",))
             for name, value in self.term_env(term_name, term.cookie, term.height, term.width,
                                              term.winheight, term.winwidth, export=True):
                 try:

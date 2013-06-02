@@ -8,7 +8,7 @@ Screenshots
 metro.sh
 ==================================================
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg
    :align: center
    :width: 90%
    :figwidth: 100%
@@ -203,7 +203,7 @@ Inline data visualization plotting using matplotlib
 Inline contour plots using matplotlib
 =========================================================
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-contourplot.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-contourplot.jpg
    :align: center
    :width: 90%
    :figwidth: 85%
