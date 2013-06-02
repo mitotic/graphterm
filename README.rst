@@ -122,6 +122,34 @@ in your system (or in the ``graphterm`` subdirectory).
 You can browse the ``GraphTerm`` source code, and download the development
 version, at `Github <https://github.com/mitotic/graphterm>`_.
 
+.. index:: quick start
+
+Quick Start
+----------------------------------------------------------------------------------------------
+
+To start the ``GraphTerm`` server, use the command::
+
+  gtermserver --auth_code=none
+
+Once the server is running, you can open a GraphTerm terminal window
+using a browser that supports websockets, such as Google Chrome,
+Firefox, Safari, or IE10 (Chrome works best), and entering the following URL::
+
+  http://localhost:8900
+
+Once you have a terminal, try out the following commands::
+
+   gls <directory>
+   gvi <text-filename>
+
+These are commands in the GraphTerm toolchain that imitate
+basic features of the standard ``ls`` and ``vi`` commands.
+See `Getting Started with GraphTerm <http://code.mindmeldr.com/graphterm/start.html>`_
+and the
+`Using Graphical Features
+<http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_
+tutorials for more info on using GraphTerm.
+
 .. index:: documentation, support
 
 Documentation and Support
@@ -129,9 +157,8 @@ Documentation and Support
 
 Usage info and other documentation can be found on the project home page,
 `code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_.
-Begin with `Getting started with GraphTerm <http://code.mindmeldr.com/graphterm/start.html>`_,
-and see the `Tutorials and Talks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
-page for more advanced usage.
+See the `Tutorials and Talks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
+page for more advanced usage examples.
 
 You can also use the following command::
 
@@ -140,7 +167,6 @@ You can also use the following command::
 to view a slideshow about GraphTerm within GraphTerm (type ``h`` for
 help and ``q`` to quit)..
 
-**NEW**
 There is a `Google Groups mailing list <https://groups.google.com/group/graphterm>`_
 for announcements of new releases, posting questions related to
 GraphTerm etc. You can also follow `@graphterm <https://twitter.com/intent/user?screen_name=graphterm>`_ on Twitter for updates.

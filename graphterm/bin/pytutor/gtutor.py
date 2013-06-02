@@ -39,7 +39,7 @@ LOG_QUERIES = False
 if LOG_QUERIES:
   import os, datetime, create_log_db, sqlite3
 
-HEADERFMT = """This is a command-line version of the Online Python Tutorial. See <a href="http://pythontutor.com" target="_blank">pythontutor.com</a> for more info.  To exit, click on the red X above.
+HEADERFMT = """This is a command-line version of the Online Python Tutorial. See <a href="http://pythontutor.com" target="_blank">pythontutor.com</a> for more info.  To exit, click on the X to the right.
   <hr>
   For command options, type <code>gtutor -h</code>.<br>
   Note: The <em>Edit code</em> link does not work in the command-line version at this time.<br>
