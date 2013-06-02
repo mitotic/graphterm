@@ -369,7 +369,7 @@ function handle_resize() {
 	gWebSocket.write([["set_size", [gRows, gCols, $(window).height(), $(window).width(), gParams.parent_term||""]]]);
     var isNarrow = $("#terminal").hasClass("gterm-narrow");
     try {
-	$("#terminal").toggleClass("gterm-narrow", $("#menubar-first-item").width()/$(window).width() > 0.08);
+	$("#terminal").toggleClass("gterm-narrow", $("#menubar-first-item").width()/$(window).width() > 0.077);
     } catch(err) {
     }
     if (isNarrow == $("#terminal").hasClass("gterm-narrow"))
