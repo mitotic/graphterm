@@ -1013,7 +1013,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var host_html = "<p>";
 		if (user)
 		    host_html += "User: <b>"+user + "</b><p>\n";
-		host_html += 'Hosts available:<p><ol>';
+		host_html += 'GraphTerm Hosts Available:<p><ol>';
 		for (var j=0; j<hosts.length; j++)
 		    host_html += '<li><a href="/'+hosts[j]+'/?qauth='+getAuth()+'">'+hosts[j]+'</a></li>';
 		host_html += '</ol> <p><a href="#" onclick="SignOut();">Sign out</a>';
@@ -1026,11 +1026,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var host = command[3];
 		var terms = command[4];
 		var term_html = '<p><b>' + (user ? user : '') + "@" + host + "</b>\n";
-		term_html += '<p>Connect to session:<p><ol>';
+		term_html += '<p>Connect to GraphTerm session:<p><ol>';
 		for (var j=0; j<terms.length; j++)
 		    term_html += '<li><a href="/'+host+'/'+terms[j]+'/?qauth='+getAuth()+'">'+terms[j]+'</a></li>';
 		term_html += '<li><a href="/'+host+'/new/?qauth='+getAuth()+'"><b><em>new</em></b></a></li>';
-		term_html += '</ol> <p><a href="/">Hosts available</a> <p><a href="#" onclick="SignOut();">Sign out</a>';
+		term_html += '</ol> <p><a href="/">Back to Hosts Available</a> <p><a href="#" onclick="SignOut();">Sign out</a>';
 		$("body").html(term_html);
 
             } else if (action == "log") {
@@ -1419,6 +1419,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
                     var cursor_y    = cmd_arg[4];
 		    var update_rows = cmd_arg[5];
 		    var update_scroll = cmd_arg[6];
+
+		    gParams.update_opts = update_opts;
 
 		    var delayed_scroll = false;
 		    if (update_opts.alt_mode && !this.alt_mode) {
@@ -3662,6 +3664,10 @@ var gFrameDispatcher = new GTFrameDispatcher();
 function GTActivateNotebook(filepath, prompts) {
     if (gNotebook)
 	return;
+    if (!gParams.update_opts.command && filepath && !_.str.endsWith(filepath, ".sh.md") && !_.str.endsWith(filepath, ".sh.gnb.md")) {
+	alert("Only *.sh.md files can be opened at shell prompt. Please start appropriate program before opening notebook file: "+filepath);
+	return;
+    }
     if (gWebSocket && gParams.controller) {
 	gWebSocket.write([["open_notebook", filepath, prompts || [], null]]);
     }

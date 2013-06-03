@@ -33,6 +33,7 @@ Notes: Use ioff() to disable interactive mode
        Use display(fig) to display figure
        Use gtermapi.nbmode(False) to re-enable default expression printing behaviour
 """
+import sys
 
 try:
     import gmatplot as gm
@@ -61,8 +62,9 @@ try:
     print >> sys.stderr, "NOTE: Enabled interactive plotting mode, ion()"
     print >> sys.stderr, "      To disable, use ioff()"
 except ImportError:
-    pass
+    print >> sys.stderr, "NOTE: Plotting modules not loaded"
 
 if __name__ == "__main__":
+    import gtermapi
     gtermapi.nbmode()
     gtermapi.process_args()

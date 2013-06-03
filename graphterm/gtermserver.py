@@ -275,7 +275,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.common_name = subject.get("commonName")
             except Exception, excp:
                 logging.warning("gtermserver: client_cert ERROR %s", excp)
-        logging.warning("gtermserver: client_cert=%s, name=%s", self.client_cert, self.common_name)
+        if self.client_cert or self.client_cert:
+            logging.warning("gtermserver: client_cert=%s, name=%s", self.client_cert, self.client_cert)
         rpath, sep, self.request_query = self.request.uri.partition("?")
         self.req_path = "/".join(rpath.split("/")[2:])  # Strip out /_websocket from path
         if self.req_path.endswith("/"):
@@ -591,7 +592,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "state_values": state_values, "watchers": users,
                                         "controller": controller, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
-                                        "apps_url": APPS_URL, "feedback": term_feedback,
+                                        "apps_url": APPS_URL, "feedback": term_feedback, "update_opts": {},
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
             import traceback
@@ -1393,11 +1394,18 @@ def run_server(options, args):
 
     Http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_options)
     Http_server.listen(http_port, address=http_host)
-    logging.warning("Auth code = %s %s" % (GTSocket.get_auth_code(), auth_file))
+    if GTSocket.get_auth_code():
+        print >> sys.stderr, "Authentication code = %s %s" % (GTSocket.get_auth_code(), auth_file)
+    else:
+        print >> sys.stderr, "**WARNING** No authentication required"
 
+    url = "%s://%s:%d" % ("https" if options.https else "http", http_host, http_port)
     if options.terminal:
-        url = "%s://%s:%d/local/new" % ("https" if options.https else "http", http_host, http_port)
-        gtermapi.open_browser(url)
+        try:
+            gtermapi.open_browser(url)
+        except Exception, excp:
+            print >> sys.stderr, "Error in creating terminal; please open URL %s in browser (%s)" % (url, excp)
+            
 
     def test_fun():
         raise Exception("TEST EXCEPTION")
@@ -1424,9 +1432,10 @@ def run_server(options, args):
         ioloop_thread = threading.Thread(target=IO_loop.start)
         ioloop_thread.start()
         time.sleep(1)   # Time to start thread
-        print >> sys.stderr, "GraphTerm server (v%s) listening on %s:%s" % (about.version, http_host, http_port)
+        print >> sys.stderr, "\nGraphTerm server started (v%s)" % about.version
+        print >> sys.stderr, "Open URL %s in browser to connect" % url
 
-        print >> sys.stderr, "\nType ^C to stop server"
+        print >> sys.stderr, "Type ^C to stop server"
         if Trace_shell:
             Trace_shell.loop()
         if not Trace_shell or not options.oshell_input:

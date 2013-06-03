@@ -1043,7 +1043,7 @@ class Terminal(object):
                     with open(fullpath) as f:
                         content = f.read()
                 except Exception, excp:
-                    content = "Error in reading notebook file %s" % fullpath
+                    content = "### Notebook mode: Error in reading notebook file %s" % fullpath
                     logging.error("Error in reading notebook file %s" % fullpath)
             else:
                 content = ""
@@ -1896,8 +1896,9 @@ class Terminal(object):
                                                                              pdelim=self.pdelim,
                                                                              reconnecting=reconnecting)
             pre_offset = len(self.pdelim[0]) if self.pdelim else 0
+            command = os.path.basename(self.command_path) if self.command_path else ""
             self.screen_callback(self.term_name, response_id, "row_update",
-                                 [dict(alt_mode=self.alt_mode, reset=full_update,
+                                 [dict(alt_mode=self.alt_mode, reset=full_update, command=command,
                                        active_rows=self.active_rows, pre_offset=pre_offset),
                                   self.width, self.height,
                                   self.cursor_x, self.cursor_y,
@@ -1917,6 +1918,7 @@ class Terminal(object):
                         # Current cell will be updated later
                         self.screen_callback(self.term_name, response_id, "note_row_update",
                                              [dict(alt_mode=False, reset=True,
+                                                   command=self.note_params["command"],
                                                    active_rows=self.active_rows, pre_offset=0),
                                               self.width, self.height,
                                               0, 0,
