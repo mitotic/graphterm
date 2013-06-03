@@ -168,7 +168,7 @@ else:
 
 if init_command or fwall_command:
     startup_commands += [ "echo '"+init_command+"' > /etc/init.d/graphterm",
-                          "echo '"+fwall_command+"' > /etc/init.d/graphterm",
+                          "echo '"+fwall_command+"' >> /etc/init.d/graphterm",
                           "chmod +x /etc/init.d/graphterm",
                           "update-rc.d graphterm defaults"]
 
