@@ -49,18 +49,8 @@ applications for GraphTerm, such as:
  - a **collaborative terminal** that can be remotely accessed
    by multiple users simultaneously, to run programs, edit files etc.
 
- - a web-based **remote desktop** that supports a simple GUI
-   without the need for installing VNC or X-windows on the remote host
-
  - a **detachable terminal multiplexer**, sort of like GNU ``screen`` or
    ``tmux``
-
- - a **simple presentation tool** for webcasting images as slideshows
-   (and receiving live feedback)
-
- - a **management console** for a cluster of real or virtual hosts,
-   with wildcard access to hosts/sessions (e.g., to manage a virtual
-   computer lab using cloud instances),
 
 The interface is designed to be touch-friendly for use with
 tablets, with tappable links and command re-use to minimize the need for
