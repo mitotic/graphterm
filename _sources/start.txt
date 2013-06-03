@@ -282,19 +282,20 @@ Inline plots using matplotlib
 
 If you have ``matplotlib`` installed, the ``gpylab`` module in the
 ``$GTERM_DIR/bin`` directory can be used to start up the python
-interpreter in the ``pylab`` mode for inline graphics within the
+interpreter in ``pylab`` mode for inline graphics within the
 GraphTerm terminal::
 
     python -i $GTERM_DIR/bin/gpylab.py
     >>> plot([1,2,4])
 
 Run ``$GTERM_DIR/bin/gmatplot.py`` for a demo of inline graphics (see  :ref:`matplotlib_shot`).
-See the function ``main`` in this file for the plotting code.
+See the function ``main`` in this file for sample plotting code.
 
  - Use ``ioff()`` to disable interactive mode
  - Use ``show()`` to update image
  - Use ``show(False)`` to display new image
  - Use ``display(fig)`` to display figure
+
 
 .. index:: notebook
 
@@ -303,34 +304,45 @@ See the function ``main`` in this file for the plotting code.
 Notebook mode
 --------------------------------------------------------------------------------------------
 
+GraphTerm supports a notebook mode, where code can be entered in
+multiple cells and executed separately in each cell to display the
+output. Cells can also contain comment text in `Markdown
+<http://daringfireball.net/projects/markdown>`_ format.
 Currently, the notebook mode can be used with the shell (``bash``),
-python (``python``, or ``ipython``)  and ``R``
+or while running python (``python/ipython``) and ``R`` interpreters
 (see `Using GraphTerm with R <http://code.mindmeldr.com/graphterm/R.html>`_).
 Clicking on files with extensions
 ``*.ipynb``, ``*.py.md`` or ``*.R.md`` displayed in ``gls`` output
 will automatically open a notebook using the appropriate program.
 You can also try using the notebook mode 
-with any other shell-like program (such as ``IDL``) which has a unique
+with any other shell-like program (such as ``IDL`` or ``ncl``) which has a unique
 prompt by typing *Shift-Enter* after starting the program. 
 
-To enter the notebook mode, select *notebook/new* on the top menu, or
+To enter the notebook mode, run the appropriate program and when the
+program prompt appears,
+select *notebook/new* on the top menu bar, or
 type *Shift-Enter* (or *Control-Enter*, if you wish to read a notebook
-file and/or specify the shell prompts). You can exit the notebook mode using
-the top menu bar, or by typing *Control-C*. Within the notebook mode,
-use *Shift-Enter* to execute a cell and move to the next, or
-*Control-Enter* for in-place execution. Additional keyboard shortcuts are listed
-in the *help* menu, and are in many cases identical to that used by
-IPython Notebook.
-
-Notebooks can be saved any time using the IPython Notebook
-(``*.ipynb``) or Markdown (``*.md``)
-formats. The filename determines the format.
+file and/or specify the interpreter prompts).
 You can also start up the python interpreter to load a notebook file, in
-``*.ipynb`` or ``*.md`` format, as follows::
+``*.ipynb`` or ``*.md`` format, from the command line::
 
     python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb
 
 (see  :ref:`notebook_shot`). 
+
+Within notebook mode,
+use *Shift-Enter* to execute a cell and move to the next, or
+*Control-Enter* for in-place execution.
+Additional keyboard shortcuts are listed
+in the *help* menu, and are in many cases identical to that used by
+`IPython Notebook <http://ipython.org/notebook.html>`_.
+
+Notebooks can be saved any time using the IPython Notebook
+(``*.ipynb``) or Markdown (``*.md``)
+formats. The filename determines the format.
+You can exit the notebook mode using
+*notebook/quit* in the top menu bar, or by typing *Control-C*,
+to return to the terminal mode.
 
 
 .. index:: slides, slideshows
@@ -339,7 +351,6 @@ You can also start up the python interpreter to load a notebook file, in
 
 Slideshows
 --------------------------------------------------------------------------------------------
-
 
 
 The ``glandslide`` command, which is a slightly modified version of the

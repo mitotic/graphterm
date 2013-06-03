@@ -129,9 +129,9 @@ Quick Start
 
 To start the ``GraphTerm`` server, use the command::
 
-  gtermserver --auth_code=none
+  gtermserver --auth_code=none --terminal
 
-Once the server is running, you can open a GraphTerm terminal window
+Once the server is running, you can open GraphTerm terminal windows
 using a browser that supports websockets, such as Google Chrome,
 Firefox, Safari, or IE10 (Chrome works best), and entering the following URL::
 
