@@ -602,7 +602,8 @@ SSH reverse port forwarding, e.g.::
    ssh -R 8899:localhost:8899 user@remote1 gtermhost remote1
 
 In this case, the remote computer will appear as another host on your
-local GraphTerm server.
+local GraphTerm server. *Warning: If the remote computer is insecure,
+reverse forwarding should not be used.*
 
 If you do not wish to have a GraphTerm process running on
 the remote machine, you can still use many features though GraphTerm

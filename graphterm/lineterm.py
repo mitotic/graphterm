@@ -255,29 +255,31 @@ def prompt_offset(line, pdelim, meta=None):
     return offset
 
 def strip_prompt_lines(update_scroll, note_prompts):
-    """Strip scroll entries starting with notebook prompt"""
+    """Strip scroll lines starting with notebook prompt"""
     trunc_scroll = []
     block_scroll = []
     prev_prompt_entry = None
     for entry in update_scroll:
         line = entry[JLINE]
-        has_prompt = False
-        for prompt in note_prompts:
-            if line.startswith(prompt):
-                # Entry starts with prompt
-                has_prompt = True
-                break
+        has_prompt = bool(entry[JOFFSET])
+        if not has_prompt:
+            for prompt in note_prompts:
+                if line.startswith(prompt):
+                    # Line starts with prompt
+                    has_prompt = True
+                    break
         if has_prompt:
-            # Prompt entry saved temporarily
+            # Prompt line saved temporarily
             trunc_scroll += block_scroll
             block_scroll = []
             prev_prompt_entry = entry
         else:
-            # Retain all non-prompt entries
+            # Retain all non-prompt lines
             block_scroll.append(entry)
             if "error" in line.lower():
+                # Error message encountered
                 if prev_prompt_entry is not None:
-                    # Include previous prompt entry because of error
+                    # Include previous prompt line to provide error context
                     block_scroll = [prev_prompt_entry] + block_scroll
                     prev_prompt_entry = None
 
@@ -1777,7 +1779,7 @@ class Terminal(object):
         if not self.note_prompts:
             # No prompt; transmit all input data
             while self.note_input:
-                os.write(self.fd, uclean(self.note_input.pop(0), encoded=True)+"\n")
+                self.pty_write(uclean(self.note_input.pop(0), encoded=True)+"\n")
 
     def filled_cell_input(self, new_input):
         cell = self.note_cells["cells"][self.note_cells["curIndex"]]
@@ -1983,11 +1985,12 @@ class Terminal(object):
         self.poke(y, x+1, self.peek(y, x, y, self.width-1))
         self.zero(y, x, y, x)
 
-    def parse_command(self):
+    def parse_command(self, suffix=""):
         if not self.alt_mode and self.current_meta and not self.current_meta[1]:
             # Parse command line
             try:
                 line = dump(self.peek(self.cursor_y, 0, self.cursor_y, self.width), trim=True, encoded=True)
+                line += suffix
                 offset = prompt_offset(line, self.pdelim, self.current_meta)
                 args = shlex_split_str(line[offset:])
                 self.command_path = args[0]
@@ -2020,7 +2023,7 @@ class Terminal(object):
 
             if not self.alt_mode:
                 self.active_rows = max(self.cursor_y+1, self.active_rows)
-                if self.current_meta and not self.screen.meta[self.active_rows-1] and not self.note_cells:
+                if self.current_meta and not self.screen.meta[self.active_rows-1]:
                     self.current_meta = (self.current_meta[JCURDIR], self.current_meta[JCONTINUATION]+1)
                     self.screen.meta[self.active_rows-1] = self.current_meta
 
@@ -2037,11 +2040,6 @@ class Terminal(object):
         if not self.active_rows or self.cursor_y+1 == self.active_rows:
             self.current_meta = (current_directory, 0)
             self.screen.meta[self.cursor_y] = self.current_meta
-
-    def enter(self):
-        """Called when CR or LF is received from the user to indicate possible end of command"""
-        self.parse_command()
-        self.current_meta = None   # Command entry is completed
 
     def echo(self, char):
         char_code = ord(char)
@@ -2867,9 +2865,20 @@ class Terminal(object):
         return b
 
     def pty_write(self, data):
-        if "\x0d" in data or "\x0a" in data:
-            # Data contains CR/LF
-            self.enter()
+        if not self.alt_mode and self.current_meta and ("\x0d" in data or "\x0a" in data):
+            # At command line; user input contains CR or LF
+            if not self.current_meta[1]:
+                # Not continuation line
+                icr = data.find("\x0d")
+                ilf = data.find("\x0a")
+                if icr == -1 or ilf == -1:
+                    lbreak = max(icr, ilf)
+                else:
+                    lbreak = min(icr, ilf)
+                # Parse line for command path
+                self.parse_command(suffix=data[:lbreak])
+            # Command entry is completed (if active); no more command continuation
+            self.current_meta = None
         nbytes = len(data)
         offset = 0
         while offset < nbytes:
@@ -2916,7 +2925,7 @@ class Terminal(object):
                     # Prompt found
                     if self.note_input:
                         # transmit buffered notebook cell line
-                        os.write(self.fd, uclean(self.note_input.pop(0), encoded=True)+"\n")
+                        self.pty_write(uclean(self.note_input.pop(0), encoded=True)+"\n")
                         self.note_expect_prompt = not self.note_input
                     else:
                         self.note_expect_prompt = False
