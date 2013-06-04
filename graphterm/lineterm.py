@@ -2020,7 +2020,7 @@ class Terminal(object):
 
             if not self.alt_mode:
                 self.active_rows = max(self.cursor_y+1, self.active_rows)
-                if self.current_meta and not self.screen.meta[self.active_rows-1]:
+                if self.current_meta and not self.screen.meta[self.active_rows-1] and not self.note_cells:
                     self.current_meta = (self.current_meta[JCURDIR], self.current_meta[JCONTINUATION]+1)
                     self.screen.meta[self.active_rows-1] = self.current_meta
 
