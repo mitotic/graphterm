@@ -13,7 +13,7 @@ import time
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 usage = "usage: %prog [-l] [file|URL] ..."
 parser = OptionParser(usage=usage)
@@ -36,7 +36,7 @@ if not args:
         print >> sys.stderr, "Error in reading from stdin"
         sys.exit(1)
 
-    url_list = [ (gtermapi.create_blob(content, content_type="text/html"), "file" if options.link else "") ]
+    url_list = [ (gterm.create_blob(content, content_type="text/html"), "file" if options.link else "") ]
 
 else:
     url_list = []
@@ -72,11 +72,11 @@ else:
                     pass
 
             direct_display = (not htmlfile or options.unsafe)
-            if gtermapi.Export_host and direct_display:
+            if gterm.Export_host and direct_display:
                 # Exported environment: create blobs (excluding HTML files, for security reasons)
-                url = gtermapi.create_blob(from_file=filepath)
+                url = gterm.create_blob(from_file=filepath)
             else:
-                url = gtermapi.get_file_url(filepath, relative=direct_display, exists=True, plain=True)
+                url = gterm.get_file_url(filepath, relative=direct_display, exists=True, plain=True)
 
             if not url:
                 print >> sys.stderr, "File %s not found" % arg
@@ -87,6 +87,6 @@ else:
 for url, label in url_list:
     if label:
         html = '<a href="%s" target="_blank">Click to browse/download %s</a><br>\n' % (url, label)
-        gtermapi.write_html(html)
+        gterm.write_html(html)
     else:
-        gtermapi.open_url(url)
+        gterm.open_url(url)

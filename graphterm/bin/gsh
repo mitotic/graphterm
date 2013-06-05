@@ -12,11 +12,11 @@ Example:
 import os
 import sys
 
-import gtermapi
+import gterm
 
 usage = "usage: %prog [-n] path command_name arg1 ..."
 
-form_parser = gtermapi.FormParser(usage=usage, title="Send command input to terminal", command="gsh")
+form_parser = gterm.FormParser(usage=usage, title="Send command input to terminal", command="gsh")
 
 form_parser.add_argument(label="Terminal path: ", help="Terminal path [/host/]tty")
 form_parser.add_argument(label="Command: ", help="Command to be executed on terminal")
@@ -68,7 +68,7 @@ if options.ctrlc:
 
 for path in paths:
     if "/" not in path:
-        path = "/" + gtermapi.env("PATH").split("/")[1] + "/" + path
+        path = "/" + gterm.env("PATH").split("/")[1] + "/" + path
     elif not path.startswith("/"):
         print >> sys.stderr, "Invalid terminal path %s; must begin with /" % path
         sys.exit(1)
@@ -79,5 +79,5 @@ for path in paths:
                "x_gterm_parameters": params
                }
 
-    gtermapi.wrap_write("", headers=headers)
+    gterm.wrap_write("", headers=headers)
 

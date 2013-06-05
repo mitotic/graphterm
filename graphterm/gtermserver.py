@@ -46,7 +46,7 @@ import gtermhost
 import lineterm
 import packetserver
 
-from bin import gtermapi
+from bin import gterm
 
 import tornado.httpserver
 import tornado.ioloop
@@ -58,7 +58,7 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
-APPS_URL = "/"+gtermapi.STATIC_PATH
+APPS_URL = "/"+gterm.STATIC_PATH
 
 App_dir = os.path.join(os.getenv("HOME"), ".graphterm")
 File_dir = os.path.dirname(__file__)
@@ -186,14 +186,14 @@ def ssl_cert_gen(hostname="localhost", clientname="gterm-local", cwd=None, new=F
     cmd_list = server_cert_gen_cmds if new else server_cert_gen_cmds[-1:]
     for cmd in cmd_list:
         cmd_args = lineterm.shlex_split_str(cmd % params)
-        std_out, std_err = gtermapi.command_output(cmd_args, cwd=cwd, timeout=15)
+        std_out, std_err = gterm.command_output(cmd_args, cwd=cwd, timeout=15)
         if std_err:
             logging.warning("gtermserver: SSL keygen %s %s", std_out, std_err)
     fingerprint = std_out
     if new:
         for cmd in client_cert_gen_cmds:
             cmd_args = lineterm.shlex_split_str(cmd % params)
-            std_out, std_err = gtermapi.command_output(cmd_args, cwd=cwd, timeout=15)
+            std_out, std_err = gterm.command_output(cmd_args, cwd=cwd, timeout=15)
             if std_err:
                 logging.warning("gtermserver: SSL client keygen %s %s", std_out, std_err)
     return fingerprint
@@ -966,11 +966,11 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 client_version = msg[1]["version"]
                 min_client_version = msg[1]["min_version"]
                 try:
-                    min_client_comps = gtermapi.split_version(min_client_version)
-                    if gtermapi.split_version(client_version) < gtermapi.split_version(about.min_version):
+                    min_client_comps = gterm.split_version(min_client_version)
+                    if gterm.split_version(client_version) < gterm.split_version(about.min_version):
                         raise Exception("Obsolete client version %s (expected %s+)" % (client_version, about.min_version))
 
-                    if gtermapi.split_version(about.version) < min_client_comps:
+                    if gterm.split_version(about.version) < min_client_comps:
                         raise Exception("Obsolete server version %s (need %d.%d+)" % (about.version, min_client_comps[0], min_client_comps[1]))
 
                 except Exception, excp:
@@ -1097,7 +1097,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             if last_modified:
                 last_modified_datetime = gtermhost.str2datetime(last_modified)
 
-            if self.request.path.startswith(gtermapi.BLOB_PREFIX):
+            if self.request.path.startswith(gterm.BLOB_PREFIX):
                 if last_modified_datetime and \
                    if_mod_since_datetime and \
                    if_mod_since_datetime >= last_modified_datetime:
@@ -1109,7 +1109,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
                 self.finish_write(bheaders, bcontent)
                 return
 
-        if self.request.path.startswith(gtermapi.FILE_PREFIX):
+        if self.request.path.startswith(gterm.FILE_PREFIX):
             # Check if access to file is permitted
             self.file_path = "/" + self.file_path
 
@@ -1131,7 +1131,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
                 if not expect_secret or expect_secret != shared_secret:
                     raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
-            fpath_hmac = gtermapi.file_hmac(self.file_path, host_secret)
+            fpath_hmac = gterm.file_hmac(self.file_path, host_secret)
             if fpath_hmac != self.get_argument("hmac", ""):
                 raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
 
@@ -1210,14 +1210,14 @@ class ProxyFileHandler(tornado.web.RequestHandler):
         if etag:
             headers.append(("Etag", etag))
 
-        if self.request.path.startswith(gtermapi.BLOB_PREFIX):
+        if self.request.path.startswith(gterm.BLOB_PREFIX):
             headers.append(("Expires", datetime.datetime.utcnow() +
                                       datetime.timedelta(seconds=MAX_CACHE_TIME)))
             headers.append(("Cache-Control", "private, max-age="+str(MAX_CACHE_TIME)))
         elif last_modified and content_type:
             headers.append(("Cache-Control", "private, max-age=0, must-revalidate"))
 
-        cache = self.request.method != "HEAD" and (self.request.path.startswith(gtermapi.BLOB_PREFIX) or
+        cache = self.request.method != "HEAD" and (self.request.path.startswith(gterm.BLOB_PREFIX) or
                                                      (Cache_files and last_modified) )
         self.finish_write(headers, content, cache=cache)
 
@@ -1318,9 +1318,9 @@ def run_server(options, args):
                 auth_file = ""
 
     handlers += [(r"/_websocket/.*", GTSocket),
-                 (gtermapi.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
-                 (gtermapi.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
-                 (gtermapi.FILE_PREFIX+r"(.*)", ProxyFileHandler, {}),
+                 (gterm.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
+                 (gterm.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
+                 (gterm.FILE_PREFIX+r"(.*)", ProxyFileHandler, {}),
                  (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
                  ]
 
@@ -1402,7 +1402,7 @@ def run_server(options, args):
     url = "%s://%s:%d" % ("https" if options.https else "http", http_host, http_port)
     if options.terminal:
         try:
-            gtermapi.open_browser(url)
+            gterm.open_browser(url)
         except Exception, excp:
             print >> sys.stderr, "Error in creating terminal; please open URL %s in browser (%s)" % (url, excp)
             

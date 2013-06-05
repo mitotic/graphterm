@@ -19,7 +19,7 @@ import termios
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 Work_dir = os.getcwd()
 
@@ -61,4 +61,4 @@ if options.buffer and not (options.clear or options.edit):
     with open(filepath) as fp:
         content = fp.read()
         
-gtermapi.wrap_write(content, headers=html_headers)
+gterm.wrap_write(content, headers=html_headers)

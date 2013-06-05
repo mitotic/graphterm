@@ -6,7 +6,7 @@ gqrcode: Display QR code
 """
 import os
 import sys
-import gtermapi
+import gterm
 
 import cStringIO as StringIO
 
@@ -18,7 +18,7 @@ except ImportError:
 
 usage = "usage: %prog [-h ... ] text"
 
-form_parser = gtermapi.FormParser(usage=usage, title="Display QR code: ", command="gqrcode")
+form_parser = gterm.FormParser(usage=usage, title="Display QR code: ", command="gqrcode")
 form_parser.add_argument(label="", help="Text to QR encode")
 form_parser.add_option("border", 4, short="b", help="Border size (default 4)")
 form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display", raw=True)
@@ -28,14 +28,14 @@ form_parser.add_option("terminal", False, short="t", help="Display URL for this 
 
 (options, args) = form_parser.parse_args()
 
-if not gtermapi.Lterm_cookie or not sys.stdout.isatty():
+if not gterm.Lterm_cookie or not sys.stdout.isatty():
     options.output = True
 
-if options.terminal and gtermapi.Lterm_cookie:
-    text = gtermapi.env("URL", "")
+if options.terminal and gterm.Lterm_cookie:
+    text = gterm.env("URL", "")
 else:
     if not args or not args[0]:
-        gtermapi.write_form(form_parser.create_form(), command="gqrcode")
+        gterm.write_form(form_parser.create_form(), command="gqrcode")
         sys.exit(1)
     text = args[0]
 
@@ -61,6 +61,6 @@ else:
     data_uri = "data:image/gif;base64,"+img_data.encode("base64")
     IMGFORMAT = '<div><img class="gterm-fullimg" src="%s"></img><h1><code>%s</code></h1></div>' if options.fullscreen else '<center><img class="gterm-blockimg" src="%s"></img></center><center><h1><code>%s</code></h1></center>' 
 
-    gtermapi.write_pagelet(IMGFORMAT % (data_uri, text), display=("fullscreen" if options.fullscreen else "block"))
+    gterm.write_pagelet(IMGFORMAT % (data_uri, text), display=("fullscreen" if options.fullscreen else "block"))
 
     

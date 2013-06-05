@@ -1,4 +1,4 @@
-# gtermapi.R: Convenience functions to display inline graphics within GraphTerm
+# gterm.R: Convenience functions to display inline graphics within GraphTerm
 
 # Plotting example:
 #   g <- gcairo()          # Initialize Cairo device for GraphTerm output

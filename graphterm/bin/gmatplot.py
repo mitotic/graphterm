@@ -28,7 +28,7 @@ Note: If setting up using gm.setup(nopatch=True),
 """
 
 import time
-import gtermapi
+import gterm
 
 pyplot_dict = {}
 
@@ -116,15 +116,15 @@ def display(fig, overwrite=False, format="png", title=""):
         raise Exception("gmatplot.setup not invoked")
 
     content_type = "application/pdf" if format=="pdf" else "image/"+format
-    outbuf = gtermapi.BlobStringIO(content_type)
+    outbuf = gterm.BlobStringIO(content_type)
     pyplot_dict["drawing"] = True
     try:
         fig.savefig(outbuf, format=format)
     finally:
         pyplot_dict["drawing"] = False
     blob_url = outbuf.close()
-    ##gtermapi.display_blockimg_old(blob_url, overwrite=overwrite, alt=title)
-    gtermapi.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
+    ##gterm.display_blockimg_old(blob_url, overwrite=overwrite, alt=title)
+    gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
 
 def resize(dimensions=""):
     """Resize matplotlib default window for terminal
@@ -132,7 +132,7 @@ def resize(dimensions=""):
     if not pyplot_dict:
         raise Exception("gmatplot.setup not invoked")
     if not dimensions:
-        dimensions = gtermapi.Dimensions
+        dimensions = gterm.Dimensions
     if not dimensions:
         return
 

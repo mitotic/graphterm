@@ -38,7 +38,7 @@ try:
 except ImportError:
     from tornado.netutil import TCPServer     # Tornado 3.0-
 
-from bin import gtermapi
+from bin import gterm
 
 import about
 import lineterm
@@ -211,9 +211,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
     def xterm(self, term_name="", height=25, width=80, winheight=0, winwidth=0, parent="", command=""):
         if not self.lineterm:
-            version_str = gtermapi.API_VERSION
-            if gtermapi.API_MIN_VERSION and version_str != gtermapi.API_MIN_VERSION and not version_str.startswith(gtermapi.API_MIN_VERSION+"."):
-                version_str += "/" + gtermapi.API_MIN_VERSION
+            version_str = gterm.API_VERSION
+            if gterm.API_MIN_VERSION and version_str != gterm.API_MIN_VERSION and not version_str.startswith(gterm.API_MIN_VERSION+"."):
+                version_str += "/" + gterm.API_MIN_VERSION
             self.lineterm = lineterm.Multiplex(self.screen_callback, command=(command or self.command),
                                                shared_secret=self.host_secret, host=self.connection_id,
                                                server_url=self.server_url, term_type=self.term_type,
@@ -784,8 +784,8 @@ def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, connect
     trace_shell = otrace.OShell(locals_dict=oshell_globals, globals_dict=oshell_globals,
                                 new_thread=oshell_thread,
                                 allow_unsafe=oshell_unsafe, work_dir=oshell_workdir,
-                                add_env={gtermapi.GT_PREFIX+"COOKIE": host_connection.osh_cookie,
-                                         gtermapi.GT_PREFIX+"SHARED_SECRET": host_secret},
+                                add_env={gterm.GT_PREFIX+"COOKIE": host_connection.osh_cookie,
+                                         gterm.GT_PREFIX+"SHARED_SECRET": host_secret},
                                 init_file=oshell_init,
                                 db_interface=oshell_db_interface,
                                 web_interface=oshell_web_interface,

@@ -24,13 +24,13 @@ except ImportError:
 import math
 
 import time
-import gtermapi
+import gterm
 
 def write_svg(drawing, overwrite=False):
     """Display SVG drawing as block image
     """
-    blob_url = gtermapi.create_blob(drawing.tostring(), content_type="image/svg+xml")
-    gtermapi.display_blockimg(blob_url, overwrite=overwrite)
+    blob_url = gterm.create_blob(drawing.tostring(), content_type="image/svg+xml")
+    gterm.display_blockimg(blob_url, overwrite=overwrite)
 
 def koch_snowflake(name):
     # Koch Snowflake and Sierpinski Triangle combination fractal using recursion

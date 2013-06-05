@@ -31,7 +31,7 @@ Notes: Use ioff() to disable interactive mode
        Use show() to update image
        Use show(False) to display new image (same as show(overwrite=False))
        Use display(fig) to display figure
-       Use gtermapi.nbmode(False) to re-enable default expression printing behaviour
+       Use gterm.nbmode(False) to re-enable default expression printing behaviour
 """
 import sys
 
@@ -39,7 +39,7 @@ try:
     import gmatplot as gm
     gm.setup()    # Sets up gmatplot and patches pylab
     from pylab import *
-    import gtermapi
+    import gterm
     from gmatplot import display
     import matplotlib
 
@@ -55,7 +55,7 @@ try:
                 return None
         return expr
 
-    gtermapi.display_hook = _gpylab_display_hook
+    gterm.display_hook = _gpylab_display_hook
 
     ion()
 
@@ -65,6 +65,6 @@ except ImportError:
     print >> sys.stderr, "NOTE: Plotting modules not loaded"
 
 if __name__ == "__main__":
-    import gtermapi
-    gtermapi.nbmode()
-    gtermapi.process_args()
+    import gterm
+    gterm.nbmode()
+    gterm.process_args()

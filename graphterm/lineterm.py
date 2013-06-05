@@ -44,9 +44,9 @@ import traceback
 import urllib
 import uuid
 
-from bin import gtermapi
+from bin import gterm
 
-GT_PREFIX = gtermapi.GT_PREFIX
+GT_PREFIX = gterm.GT_PREFIX
 
 MAX_SCROLL_LINES = 1000
 
@@ -356,7 +356,7 @@ def parse_headers(text):
         headers = {"content_type": "text/html",
                    "x_gterm_response": "",
                    "x_gterm_parameters": {}}
-        offset, directive, opt_dict = gtermapi.parse_gterm_directive(text)
+        offset, directive, opt_dict = gterm.parse_gterm_directive(text)
         if offset:
             # gterm comment directive
             content = text[offset:]
@@ -468,7 +468,7 @@ JFILEPATH = 3
 JQUERY = 4
 
 def create_file_uri(url_comps):
-    return gtermapi.FILE_URI_PREFIX + url_comps[JHOST] + url_comps[JFILEPATH] + url_comps[JQUERY]
+    return gterm.FILE_URI_PREFIX + url_comps[JHOST] + url_comps[JFILEPATH] + url_comps[JQUERY]
 
 def split_file_url(url, check_host_secret=None):
     """Return [protocol://server[:port], hostname, filename, fullpath, query] for file://host/path
@@ -479,10 +479,10 @@ def split_file_url(url, check_host_secret=None):
     if not url:
         return []
     server_port = ""
-    if url.startswith(gtermapi.FILE_URI_PREFIX):
-        host_path = url[len(gtermapi.FILE_URI_PREFIX):]
-    elif url.startswith(gtermapi.FILE_PREFIX):
-        host_path = url[len(gtermapi.FILE_PREFIX):]
+    if url.startswith(gterm.FILE_URI_PREFIX):
+        host_path = url[len(gterm.FILE_URI_PREFIX):]
+    elif url.startswith(gterm.FILE_PREFIX):
+        host_path = url[len(gterm.FILE_PREFIX):]
     else:
         if url.startswith("http://"):
             protocol = "http"
@@ -495,9 +495,9 @@ def split_file_url(url, check_host_secret=None):
             return []
         server_port = url[:j]
         url_path = url[j:]
-        if not url_path.startswith(gtermapi.FILE_PREFIX):
+        if not url_path.startswith(gterm.FILE_PREFIX):
             return []
-        host_path = url_path[len(gtermapi.FILE_PREFIX):]
+        host_path = url_path[len(gterm.FILE_PREFIX):]
 
     host_path, sep, tail = host_path.partition("?")
     query = sep + tail
@@ -506,7 +506,7 @@ def split_file_url(url, check_host_secret=None):
     filepath = "/"+"/".join(comps[1:])
     filename = comps[-1]
     if check_host_secret:
-        filehmac = "?hmac="+gtermapi.file_hmac(filepath, check_host_secret)
+        filehmac = "?hmac="+gterm.file_hmac(filepath, check_host_secret)
         if query.lower() == filehmac.lower():
             hostname = ""
     return [server_port, hostname, filename, filepath, query]
@@ -1007,8 +1007,8 @@ class Terminal(object):
             note_command = os.path.basename(self.command_path)
         else:
             note_command = ""
-        if not prompts and note_command in gtermapi.PROMPTS_LIST:
-            prompts = gtermapi.PROMPTS_LIST[note_command]
+        if not prompts and note_command in gterm.PROMPTS_LIST:
+            prompts = gterm.PROMPTS_LIST[note_command]
         if not prompts:
             # Search buffer to use current prompt
             try:
@@ -1016,13 +1016,13 @@ class Terminal(object):
                 comps = line.split()
                 if comps and comps[0]:
                     prompts = [comps[0]+" "]
-                    if prompts[0] == gtermapi.PROMPTS_LIST["python"][0]:
-                        prompts += gtermapi.PROMPTS_LIST["python"][1:]
-                    elif prompts[0] == gtermapi.PROMPTS_LIST["ipython"][0]:
-                        prompts += gtermapi.PROMPTS_LIST["ipython"][1:]
+                    if prompts[0] == gterm.PROMPTS_LIST["python"][0]:
+                        prompts += gterm.PROMPTS_LIST["python"][1:]
+                    elif prompts[0] == gterm.PROMPTS_LIST["ipython"][0]:
+                        prompts += gterm.PROMPTS_LIST["ipython"][1:]
                     elif note_shell:
                         prompts += ["> "]
-                    elif prompts[-1] == gtermapi.PROMPTS_LIST["node"][0]:
+                    elif prompts[-1] == gterm.PROMPTS_LIST["node"][0]:
                         # Handles node REPL shell
                         prompts += ["... "]
             except Exception:
@@ -1055,8 +1055,8 @@ class Terminal(object):
                 filepath = DEFAULT_FILE_PREFIX+str(filenum)
                 if note_command == "ipython":
                     filepath += ".ipynb"
-                elif note_command in gtermapi.EXTENSIONS:
-                    filepath += "." + gtermapi.EXTENSIONS[note_command] + ".gnb.md"
+                elif note_command in gterm.EXTENSIONS:
+                    filepath += "." + gterm.EXTENSIONS[note_command] + ".gnb.md"
                 else:
                     filepath += ".gnb.md"
 
@@ -1175,7 +1175,7 @@ class Terminal(object):
                         match = MD_IMAGE_RE.match(line)
                         alt = match.group(1).strip() or "image"
                         ref_id = match.group(2).strip()
-                        blob_id = gtermapi.get_blob_id(ref_id)
+                        blob_id = gterm.get_blob_id(ref_id)
                         if blob_id:
                             data_uri = self.note_screen_buf.get_blob_uri(blob_id)
                             if data_uri:
@@ -1275,7 +1275,7 @@ class Terminal(object):
                             blob_id = str(uuid.uuid4())
                             data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
                             self.create_blob(blob_id, data_uri[len("data:"):])
-                            markup = BLOCKIMGFORMAT % (blob_id, gtermapi.get_blob_url(blob_id, host=self.host), "image")
+                            markup = BLOCKIMGFORMAT % (blob_id, gterm.get_blob_url(blob_id, host=self.host), "image")
                             self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                                row_params=["pagelet", {"blob": blob_id}])
                 self.update()
@@ -1367,7 +1367,7 @@ class Terminal(object):
                     ref_id = match.group(2).strip()
                     blob_id = blob_ids.get(ref_id, "") or str(uuid.uuid4())
                     blob_ids[ref_id] = blob_id
-                    blob_url = gtermapi.get_blob_url(blob_id, host=self.host)
+                    blob_url = gterm.get_blob_url(blob_id, host=self.host)
                     fig_prefix, sep, _ = ref_id.partition("-")
                     if code_cell and fig_prefix == "output":
                         # Output image
@@ -1396,9 +1396,9 @@ class Terminal(object):
                     if ref_id in blob_ids:
                         self.create_blob(blob_ids[ref_id], line[len(match.group(0)):])
 
-                elif gtermapi.GTERM_DIRECTIVE_RE.match(line):
+                elif gterm.GTERM_DIRECTIVE_RE.match(line):
                     # gterm comment directive (currently just ignored)
-                    offset, directive, opt_dict = gtermapi.parse_gterm_directive(line)
+                    offset, directive, opt_dict = gterm.parse_gterm_directive(line)
 
                 elif not line and leaving_block is None and raw_lines:
                     # Append blank line only if other raw lines are already appended
@@ -1418,12 +1418,12 @@ class Terminal(object):
                         self.update()
                         code_cell = None
 
-                    if line.rstrip() == gtermapi.PAGE_BREAK:
+                    if line.rstrip() == gterm.PAGE_BREAK:
                         # Page break
                         if raw_lines:
                             # Split raw block
                             self.add_cell("markdown", init_text="\n".join(raw_lines))
-                        self.add_cell("markdown", init_text=gtermapi.PAGE_BREAK)
+                        self.add_cell("markdown", init_text=gterm.PAGE_BREAK)
                         raw_lines = []
                     else:
                         # Append non-blank line to markdown block
@@ -1446,7 +1446,7 @@ class Terminal(object):
             If before_cell_number > 0, add new_cell before before_cell_number
         """
         if not new_cell_type:
-            new_cell_type = gtermapi.LANGUAGES.get(self.note_params["command"], "code")
+            new_cell_type = gterm.LANGUAGES.get(self.note_params["command"], "code")
         fmatch = MD_FENCE_RE.match(new_cell_type)
         if fmatch:
             new_cell_type = fmatch.group(1)
@@ -1520,7 +1520,7 @@ class Terminal(object):
 
     def is_page_break(self, cell_index):
         cell = self.note_cells["cells"][cell_index]
-        return cell["cellType"] in MARKUP_TYPES and "\n".join(cell["cellInput"]).rstrip() == gtermapi.PAGE_BREAK
+        return cell["cellType"] in MARKUP_TYPES and "\n".join(cell["cellInput"]).rstrip() == gterm.PAGE_BREAK
 
     def leave_cell(self, delete=False, move_up=False):
         """Leave current cell, deleting it if requested. Return index of new cell, or 0"""
@@ -2559,7 +2559,7 @@ class Terminal(object):
                     # Raw html display; append to scroll buffer
                     row_params = ["pagelet", headers["x_gterm_parameters"] or {}]
                     screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
-                    offset, directive, opt_dict = gtermapi.parse_gterm_directive(content)
+                    offset, directive, opt_dict = gterm.parse_gterm_directive(content)
                 elif response_type == "create_blob":
                     # Note: blob content should be Base64 encoded
                     del headers["x_gterm_response"]
@@ -2587,8 +2587,8 @@ class Terminal(object):
                         prompts = response_params.get("prompts", [])
                         if not prompts:
                             command = os.path.basename(self.command_path) if self.command_path else ""
-                            if command in gtermapi.PROMPTS_LIST:
-                                prompts = gtermapi.PROMPTS_LIST[command][:]
+                            if command in gterm.PROMPTS_LIST:
+                                prompts = gterm.PROMPTS_LIST[command][:]
                         if prompts:
                             self.note_start = (prompts[0], filepath, prompts, content)
                         else:
@@ -2796,7 +2796,7 @@ class Terminal(object):
                             cmd_text = cmd_text[len("local"):]
                         elif not cmd_text.startswith("/"):
                             raise Exception("Command '%s' not valid" % text)
-                        validated = tail and tail == ("hmac="+gtermapi.file_hmac(cmd_text, self.shared_secret))
+                        validated = tail and tail == ("hmac="+gterm.file_hmac(cmd_text, self.shared_secret))
                     if not pre_line and not validated and not which(cmd_text, add_path=[Exec_path]):
                         # Check for command in path only if no text in line
                         # NOTE: Can use blank space in command line to disable this check

@@ -32,7 +32,7 @@ try:
 except ImportError:
     from urllib import urlopen, urlencode
 
-import gtermapi
+import gterm
 
 CONFIG_HELP = """Steps to acquire consumer and access tokens:
   1. Register an application with twitter at dev.twitter.com
@@ -65,7 +65,7 @@ TWITTER_STREAM_URL = "https://stream.twitter.com/1/statuses"
 TWITTER_USER_STREAM_URL = "https://userstream.twitter.com/2"
 ##TWITTER_USER_STREAM_URL = "http://localhost:4079"
 
-Auth_parser = gtermapi.FormParser(title='Enter OAuth credentials for your Twitter app<br>(Usually at <a href="https://dev.twitter.com/apps" target="_blank">https://dev.twitter.com/apps</a>)<p>')
+Auth_parser = gterm.FormParser(title='Enter OAuth credentials for your Twitter app<br>(Usually at <a href="https://dev.twitter.com/apps" target="_blank">https://dev.twitter.com/apps</a>)<p>')
 
 Auth_parser.add_option("consumer_key", label="Consumer key: ", help="Consumer key")
 Auth_parser.add_option("consumer_secret", label="Consumer secret: ", help="Consumer secret")
@@ -272,7 +272,7 @@ class TwitterStreamReader(object):
                 tweet_html = cgi.escape(message["text"])
             else:
                 tweet_html = "<b>%s:</b> %s" % (cgi.escape(user_label), cgi.escape(message["text"]))
-            gtermapi.wrap_write(json.dumps(tweet_html), headers=Json_headers, stderr=(not Out_tty))
+            gterm.wrap_write(json.dumps(tweet_html), headers=Json_headers, stderr=(not Out_tty))
 
 def read_twitter_user_stream(Auth_tokens, keywords=[], recv=False):
     global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
@@ -349,7 +349,7 @@ if len(sys.argv) < 2:
     check_auth_file(Default_auth_file)
 
 usage = "usage: %prog [-h ...] [keyword1] ..."
-form_parser = gtermapi.FormParser(usage=usage, title="Text to tweet or keywords to search for: ", command="gtweet")
+form_parser = gterm.FormParser(usage=usage, title="Text to tweet or keywords to search for: ", command="gtweet")
 
 form_parser.add_argument(help="Tweet text for sending, or keywords for receiving")
 form_parser.add_option("search", False, short="s", help="Search for all tweets containing specified keywords")
@@ -394,7 +394,7 @@ Json_headers["x_gterm_response"] = "pagelet_json"
 Json_headers["x_gterm_parameters"] = {}
 
 if options.fullscreen:
-    gtermapi.wrap_write(pagelet_html, headers=Headers, stderr=(not Out_tty))
+    gterm.wrap_write(pagelet_html, headers=Headers, stderr=(not Out_tty))
 
 if options.search or options.recv:
     try:
@@ -405,4 +405,4 @@ else:
     update_status(" ".join(args))
 
 if options.fullscreen:
-    gtermapi.write_blank(exit_page=True, stderr=(not Out_tty))
+    gterm.write_blank(exit_page=True, stderr=(not Out_tty))

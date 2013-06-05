@@ -1,8 +1,8 @@
 """
-gtermapi: API module for gterm-aware programs
+gterm: API module for gterm-aware programs
 """
 
-# The code in this particular file (gtermapi.py) is
+# The code in this particular file (gterm.py) is
 # released in the public domain, so that it maybe
 # re-used in other projects without any restrictions.
 # It was developed as part of the GraphTerm project
@@ -816,7 +816,7 @@ def nbmode(enable=True):
         Saved_displayhook = sys.displayhook
         sys.displayhook = _gterm_display_hook
         print >> sys.stderr, "NOTE: Enabled notebook mode (affects auto printing of expressions)"
-        print >> sys.stderr, "      To disable, use gtermapi.nbmode(False)"
+        print >> sys.stderr, "      To disable, use gterm.nbmode(False)"
     else:
         print >> sys.stderr, "NOTE: Disabled notebook mode"
         sys.displayhook = Saved_displayhook

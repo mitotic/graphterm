@@ -21,11 +21,11 @@ import time
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 usage = "usage: %prog [file1|URL1] ..."
 
-form_parser = gtermapi.FormParser(usage=usage, title="Display URL/file/stdin content within iframe", command="gframe")
+form_parser = gterm.FormParser(usage=usage, title="Display URL/file/stdin content within iframe", command="gframe")
 
 form_parser.add_argument(label="URL/filename: ", help="URL/filename to display (optional)")
 form_parser.add_option("prefix", "", short="p", help="URL/path prefix")
@@ -50,7 +50,7 @@ if args:
             iframe_urls.append(arg)
         elif options.terminal:
             if "/" not in arg:
-                arg = "/" + gtermapi.env("PATH").split("/")[1] + "/" + arg
+                arg = "/" + gterm.env("PATH").split("/")[1] + "/" + arg
             elif not arg.startswith("/"):
                 print >> sys.stderr, "Invalid terminal path %s; must begin with /" % arg
                 sys.exit(1)
@@ -58,10 +58,10 @@ if args:
             arg += "qauth=%(qauth)"
             iframe_urls.append(arg)
         else:
-            if gtermapi.Export_host:
-                iframe_urls.append(gtermapi.create_blob(from_file=arg))
+            if gterm.Export_host:
+                iframe_urls.append(gterm.create_blob(from_file=arg))
             else:
-                iframe_urls.append(gtermapi.get_file_url(arg, relative=True, exists=True))
+                iframe_urls.append(gterm.get_file_url(arg, relative=True, exists=True))
 
             if not iframe_urls[-1]:
                 print >> sys.stderr, "File %s not found" % arg
@@ -76,7 +76,7 @@ else:
         print >> sys.stderr, "Error in reading from stdin"
         sys.exit(1)
 
-    iframe_urls = [gtermapi.create_blob(content, content_type="text/html")]
+    iframe_urls = [gterm.create_blob(content, content_type="text/html")]
 
 headers = {"opacity": options.opacity}
 if not options.fullscreen and not options.rowheight:
@@ -101,7 +101,7 @@ elif options.columns:
         if options.lastheight.endswith("%"):
             lh_precent = float(options.lastheight[:-1])
         else:
-            termx, termy = gtermapi.env("DIMENSIONS").split(";")[1].split("x")
+            termx, termy = gterm.env("DIMENSIONS").split(";")[1].split("x")
             lh_precent = 100.0*float(options.lastheight)/float(termy)
         height_percent = (max_percent - 5 - lh_precent) / (nrows - 1)
     else:
@@ -136,7 +136,7 @@ if not options.noheader:
 
 # TODO: Wrap iframe in div box with close X header for non fullscreen mode
 
-gtermapi.write_pagelet(iframe_html, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
+gterm.write_pagelet(iframe_html, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
 
 if options.fullscreen:
     if options.echo or not sys.stdout.isatty():
@@ -144,7 +144,7 @@ if options.fullscreen:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            gtermapi.write_blank(exit_page=True)
+            gterm.write_blank(exit_page=True)
     else:
         saved_settings = termios.tcgetattr(sys.stdout.fileno())
         new_settings = saved_settings[:]
@@ -154,7 +154,7 @@ if options.fullscreen:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            gtermapi.write_blank(exit_page=True)
+            gterm.write_blank(exit_page=True)
         finally:
             termios.tcsetattr(sys.stdout.fileno(), termios.TCSADRAIN, saved_settings)
 

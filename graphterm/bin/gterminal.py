@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""gterm: GraphTerm client launcher
+"""gterminal: GraphTerm client launcher
 """
 
 import hashlib
@@ -12,7 +12,7 @@ import sys
 
 import tornado.httpclient
 
-import gtermapi
+import gterm
 
 Http_addr = "localhost"
 Http_port = 8900
@@ -33,7 +33,7 @@ def getuid(pid):
 def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, protocol="http"):
     """Simulate user form submission by executing a HTTP request"""
 
-    cert_dir = gtermapi.App_dir
+    cert_dir = gterm.App_dir
     server_name = "localhost"
     client_prefix = server_name + "-gterm-local"
     ca_certs = cert_dir+"/"+server_name+".crt"
@@ -87,29 +87,29 @@ def main():
         if "/" in args[0]:
             path = args[0]
         else:
-            path = (gtermapi.Host or "local") + "/" + args[0]
+            path = (gterm.Host or "local") + "/" + args[0]
 
-    if gtermapi.Lterm_cookie:
+    if gterm.Lterm_cookie:
         # Open new terminal window from within graphterm window
-        path = path or (gtermapi.Host + "/" + "new")
-        url = gtermapi.URL + "/" + path
+        path = path or (gterm.Host + "/" + "new")
+        url = gterm.URL + "/" + path
         target = "_blank" if url.endswith("/new") else path
-        gtermapi.open_url(url, target=target)
+        gterm.open_url(url, target=target)
         return
 
     if options.server_auth:
         # Authenticate server
-        if not os.path.exists(gtermapi.Gterm_secret_file):
+        if not os.path.exists(gterm.Gterm_secret_file):
             print >> sys.stderr, "gterm: Server not running (no secret file); use 'gtermserver' command to start it."
             sys.exit(1)
 
         try:
-            with open(gtermapi.Gterm_secret_file) as f:
+            with open(gterm.Gterm_secret_file) as f:
                 Http_port, Gterm_pid, Gterm_secret = f.read().split()
                 Http_port = int(Http_port)
                 Gterm_pid = int(Gterm_pid)
         except Exception, excp:
-            print >> sys.stderr, "gterm: Error in reading %s: %s" % (gtermapi.Gterm_secret_file, excp)
+            print >> sys.stderr, "gterm: Error in reading %s: %s" % (gterm.Gterm_secret_file, excp)
             sys.exit(1)
 
         if os.getuid() != getuid(Gterm_pid):
@@ -137,7 +137,7 @@ def main():
     if path:
         url += "/" + path
 
-    std_out, std_err = gtermapi.open_browser(url)
+    std_out, std_err = gterm.open_browser(url)
     if std_err:
         print >> sys.stderr, "gterm: ERROR in opening browser window '%s' - %s\n Check if server is running. If not, start it with 'gtermserver' command." % (" ".join(command_args), std_err)
         sys.exit(1)

@@ -10,10 +10,10 @@ import os
 import re
 import sys
 
-import gtermapi
+import gterm
 
 usage = "usage: %prog [file1] [file2] ..."
-form_parser = gtermapi.FormParser(usage=usage, title="Files containing words", command="d3cloud %(args) | gframe")
+form_parser = gterm.FormParser(usage=usage, title="Files containing words", command="d3cloud %(args) | gframe")
 form_parser.add_argument(help="Provide input text with words")
 
 cloud_layout = """

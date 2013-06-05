@@ -23,7 +23,7 @@ import termios
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 CHUNK_BYTES = 4096
 
@@ -82,7 +82,7 @@ params = {"display": "block", "current_directory": Work_dir}
 html_headers = {"x_gterm_response": "upload_file",
                 "x_gterm_parameters": params
                 }
-gtermapi.wrap_write("", headers=html_headers, stderr=not options.stdout)
+gterm.wrap_write("", headers=html_headers, stderr=not options.stdout)
 
 Stdin_fd = sys.stdin.fileno()
 Saved_settings = termios.tcgetattr(Stdin_fd)
@@ -96,7 +96,7 @@ try:
     while True:
         ch = sys.stdin.read(1)
         if ch == "\x03" or ch == "\x04": # ^C/^D
-            gtermapi.write_blank(stderr=not options.stdout)
+            gterm.write_blank(stderr=not options.stdout)
             sys.exit(1)
         if ch != "\n":
             line += ch
@@ -113,18 +113,18 @@ try:
 
     # Process headers
     if not header_line:
-        gtermapi.write_blank(stderr=not options.stdout)
+        gterm.write_blank(stderr=not options.stdout)
         sys.exit(1)
 
     headers = json.loads(header_line)
 
     if "x_gterm_filepath" not in headers:
-        gtermapi.write_blank(stderr=not options.stdout)
+        gterm.write_blank(stderr=not options.stdout)
         sys.exit(1)
 
     content_type = headers["content_type"]
     if content_type.startswith("none/"):
-        gtermapi.write_blank(stderr=not options.stdout)
+        gterm.write_blank(stderr=not options.stdout)
         sys.exit(1)
 
     filename = headers["x_gterm_filepath"]
@@ -160,7 +160,7 @@ except KeyboardInterrupt:
 finally:
     termios.tcsetattr(Stdin_fd, termios.TCSADRAIN, Saved_settings)
 
-gtermapi.write_blank(stderr=not options.stdout)
+gterm.write_blank(stderr=not options.stdout)
 
 if filepath:
     if to_dir:

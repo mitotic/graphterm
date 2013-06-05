@@ -12,18 +12,18 @@ import sys
 import xml.dom.minidom
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 SPECIAL_FILES = set(["..", ".", "~"])
 
-gbrowsecmd = gtermapi.env("BROWSE_CMD", "") or "gbrowse"
-gimagecmd = gtermapi.env("IMAGE_CMD", "") or "gimage"
-glscmd = gtermapi.env("LS_CMD", "") or "gls"
-gopencmd = gtermapi.env("OPEN_CMD", "") or "gopen"
-gvicmd = gbrowsecmd if gtermapi.Export_host else gtermapi.env("VI_CMD", "") or "gvi"
+gbrowsecmd = gterm.env("BROWSE_CMD", "") or "gbrowse"
+gimagecmd = gterm.env("IMAGE_CMD", "") or "gimage"
+glscmd = gterm.env("LS_CMD", "") or "gls"
+gopencmd = gterm.env("OPEN_CMD", "") or "gopen"
+gvicmd = gbrowsecmd if gterm.Export_host else gterm.env("VI_CMD", "") or "gvi"
 
-NB2CMD = {"py": "python -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
-          "ipynb": "ipython -i $"+gtermapi.GT_PREFIX+"DIR/bin/gpylab.py",
+NB2CMD = {"py": "python -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py",
+          "ipynb": "ipython -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py",
           "js": "node %[notebook]",
           "R": "R -q %[notebook]> |+ ",
           "sh": " %[notebook]",
@@ -117,7 +117,7 @@ def file2html(filepath, filename, filemode=0):
     if not filecmd:
         fileicon, filecmd = FILE_TYPES[filetype]
 
-    fileurl = gtermapi.get_file_url(filepath, relative=(filetype != "htmlfile"))
+    fileurl = gterm.get_file_url(filepath, relative=(filetype != "htmlfile"))
     if options.images and mimetype and mimetype.startswith("image/"):
         fileicon = fileurl
 
@@ -217,5 +217,5 @@ Table_list.append('</table>')
 
 html = "\n".join(Table_list) + "\n"
 
-gtermapi.write_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=Work_dir)
+gterm.write_pagelet(html, display=("fullpage" if options.fullpage else "block"), dir=Work_dir)
 

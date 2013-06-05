@@ -16,7 +16,7 @@ import sys
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 pagelet_html = """<script>
 var GTPageletMaxFeeds = 20;
@@ -57,7 +57,7 @@ Json_headers = {"content_type": "text/json"}
 Json_headers["x_gterm_response"] = "pagelet_json"
 Json_headers["x_gterm_parameters"] = {}
 
-gtermapi.write_pagelet(pagelet_html, display="fullscreen", dir=os.getcwd(), add_headers=add_headers)
+gterm.write_pagelet(pagelet_html, display="fullscreen", dir=os.getcwd(), add_headers=add_headers)
 while True:
     try:
         line = sys.stdin.readline()
@@ -73,6 +73,6 @@ while True:
         feed_html = '<b>%s</b>:%s' % (prefix, suffix)
     else:
         feed_html = line
-    gtermapi.wrap_write(json.dumps(feed_html), headers=Json_headers)
+    gterm.wrap_write(json.dumps(feed_html), headers=Json_headers)
 
-gtermapi.write_blank()
+gterm.write_blank()

@@ -5,7 +5,7 @@
 
 ```{r}
 # Load GraphTerm API helper functions
-source(paste(Sys.getenv("GTERM_DIR"),"/bin/gtermapi.R", sep=""))
+source(paste(Sys.getenv("GTERM_DIR"),"/bin/gterm.R", sep=""))
 
 ```
 

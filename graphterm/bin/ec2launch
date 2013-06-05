@@ -17,14 +17,14 @@ from optparse import OptionParser
 import boto
 import ec2common
 
-import gtermapi
+import gterm
 
 ssh_dir = os.path.expanduser("~/.ssh")
 gterm_user = "ubuntu"
 
 usage = "usage: %prog [-h ... ] <instance-tag|full-domain-name>"
 
-form_parser = gtermapi.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname (e.g., tagname.graphterm.net): ", command="ec2launch -f")
+form_parser = gterm.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname (e.g., tagname.graphterm.net): ", command="ec2launch -f")
 form_parser.add_argument(label="", help="Instance hostname")
 form_parser.add_option("type", ("t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
@@ -46,14 +46,14 @@ form_parser.add_option("text", False, short="t", help="Text only", raw=True)
 
 (options, args) = form_parser.parse_args()
 
-if not gtermapi.Lterm_cookie or not sys.stdout.isatty():
+if not gterm.Lterm_cookie or not sys.stdout.isatty():
     options.text = True
 
 if not args:
     if options.text:
         print >> sys.stderr, form_parser.get_usage()
         sys.exit(1)
-    gtermapi.write_form(form_parser.create_form(), command="ec2launch -f")
+    gterm.write_form(form_parser.create_form(), command="ec2launch -f")
     sys.exit(1)
     
 instance_tag = args[0]
@@ -279,7 +279,7 @@ if options.text:
 while status == "pending":
     timesec = int(time.time() - start_time)
     if not options.text:
-        gtermapi.write_pagelet(Status_template % (instance_tag, status, timesec), overwrite=True, display="fullpage")
+        gterm.write_pagelet(Status_template % (instance_tag, status, timesec), overwrite=True, display="fullpage")
     time.sleep(3)
     status = instance.update()
 
@@ -332,7 +332,7 @@ time.sleep(30)
 if copy_files:
     scp_cmd_args = ["scp", "-i", os.path.expanduser("~/.ssh/ec2key.pem"), "-o", "StrictHostKeyChecking=no"] + copy_files + [gterm_user+"@"+public_dns_name+":"]
     print >> sys.stderr, " ".join(scp_cmd_args)
-    out, err = gtermapi.command_output(scp_cmd_args, timeout=60)
+    out, err = gterm.command_output(scp_cmd_args, timeout=60)
     if out:
         print out
     if err:
@@ -344,7 +344,7 @@ if copy_files:
 
 print >> sys.stderr, " ".join(ssh_cmd_args)
 print >> sys.stderr, wait_cmd
-out, err = gtermapi.command_output(ssh_cmd_args + [wait_cmd], timeout=600)
+out, err = gterm.command_output(ssh_cmd_args + [wait_cmd], timeout=600)
 
 if out:
     print out

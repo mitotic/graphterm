@@ -9,7 +9,7 @@ import sys
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 usage = "usage: %prog <menu1> <menu2> ... [on/off]"
 parser = OptionParser(usage=usage)
@@ -30,5 +30,5 @@ if not args:
 
 target = "_".join(args)
 
-gtermapi.menu_op(target, value)
+gterm.menu_op(target, value)
     

@@ -14,7 +14,7 @@ import urllib2
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 BLOCK_SIZE = 8192
 
@@ -33,27 +33,27 @@ if len(args) != 2:
 
 src_uri, dst_uri = args
 
-src_comps = gtermapi.split_file_url(src_uri, check_host_secret=gtermapi.Shared_secret)
-dst_comps = gtermapi.split_file_url(dst_uri, check_host_secret=gtermapi.Shared_secret)
+src_comps = gterm.split_file_url(src_uri, check_host_secret=gterm.Shared_secret)
+dst_comps = gterm.split_file_url(dst_uri, check_host_secret=gterm.Shared_secret)
 
 if dst_comps:
-    if dst_comps[gtermapi.JHOST]:
+    if dst_comps[gterm.JHOST]:
         print >> sys.stderr, "Remote copy destination not implemented"
         sys.exit(1)
-    dst_file = dst_comps[gtermapi.JFILEPATH]
+    dst_file = dst_comps[gterm.JFILEPATH]
 else:
     dst_file = dst_uri
     
 
 src_file = None
-if not src_comps or not src_comps[gtermapi.JHOST]:
-    src_file = src_comps[gtermapi.JFILEPATH] if src_comps else src_uri
+if not src_comps or not src_comps[gterm.JHOST]:
+    src_file = src_comps[gterm.JFILEPATH] if src_comps else src_uri
 
 if os.path.exists(dst_file):
     if not os.path.isdir(dst_file) or not os.access(dst_file, os.W_OK):
         print >> sys.stderr, "Unable to write to %s" % dst_file
         sys.exit(1)
-    dst_file = os.path.join(dst_file, src_comps[gtermapi.JFILENAME] if src_comps else os.path.basename(src_file))
+    dst_file = os.path.join(dst_file, src_comps[gterm.JFILENAME] if src_comps else os.path.basename(src_file))
 
 if src_file:
     if not os.path.isfile(src_file) or not os.access(src_file, os.R_OK):
@@ -65,7 +65,7 @@ if src_file:
     shutil.copyfile(src_file, dst_file)
 
 else:
-    req_url = gtermapi.URL+gtermapi.FILE_PREFIX+src_comps[gtermapi.JHOST]+src_comps[gtermapi.JFILEPATH]+src_comps[gtermapi.JQUERY]+"&"+urllib.urlencode({"host": gtermapi.Host, "shared_secret": gtermapi.Shared_secret})
+    req_url = gterm.URL+gterm.FILE_PREFIX+src_comps[gterm.JHOST]+src_comps[gterm.JFILEPATH]+src_comps[gterm.JQUERY]+"&"+urllib.urlencode({"host": gterm.Host, "shared_secret": gterm.Shared_secret})
     if options.verbose:
         print >> sys.stderr, "Copying %s -> %s" % (req_url, dst_file)
     try:

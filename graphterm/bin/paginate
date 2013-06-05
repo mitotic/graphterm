@@ -12,11 +12,11 @@ import os
 import re
 import sys
 
-import gtermapi
+import gterm
 
 usage = "usage: %prog file ..."
 
-form_parser = gtermapi.FormParser(usage=usage, title="Paginate Markdown file", command="paginate")
+form_parser = gterm.FormParser(usage=usage, title="Paginate Markdown file", command="paginate")
 
 START_FENCE_RE = re.compile(r"^```(expect|output)")
 END_FENCE_RE = re.compile(r"^```\s*$")

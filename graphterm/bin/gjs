@@ -9,7 +9,7 @@ import sys
 
 from optparse import OptionParser
 
-import gtermapi
+import gterm
 
 usage = "usage: %prog [-f file] [-e js_string] [js_func arg1 ...]"
 parser = OptionParser(usage=usage)
@@ -48,7 +48,7 @@ Headers = {"content_type": "text/plain"}
 Headers["x_gterm_response"] = "eval_js"
 Headers["x_gterm_parameters"] = {}
 
-gtermapi.wrap_write(js, headers=Headers, stderr=True)
+gterm.wrap_write(js, headers=Headers, stderr=True)
 
 try:
     lines = sys.stdin.readlines()
