@@ -28,7 +28,7 @@ requires = ["tornado"]
 setup(name="graphterm",
       cmdclass={'install': install},
       packages=["graphterm"],
-      entry_points={"console_scripts":["gterm = graphterm.bin.gterm:main",
+      entry_points={"console_scripts":["gterm = graphterm.bin.gterminal:main",
                                        "gtermserver = graphterm.gtermserver:main",
                                        "gtermhost = graphterm.gtermhost:main",
                                        "gterm_setup = graphterm.gterm_setup:main",
