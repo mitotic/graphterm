@@ -795,9 +795,17 @@ def enable_tab_completion():
 
 Saved_displayhook = sys.displayhook
 
+try:
+    import pandas
+except ImportError:
+    pandas = None
+
 def _gterm_display_hook(expr):
     if "display_hook" in globals():
         expr = globals()["display_hook"](expr)
+    if pandas and isinstance(expr, pandas.core.frame.DataFrame):
+        wrap_write(expr.to_html())
+        return
     if expr is not None:
         auto_print(repr(expr)+"\n")
 

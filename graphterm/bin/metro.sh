@@ -1,7 +1,7 @@
 #!/bin/bash
 # metro.sh: "Metro" style demo of GraphTerm features
 
-# Create 3x3 frames, with borders, each row 300px tall, to display terminals
+# Create 3x3 frames, with borders and 40% row height, to display six terminals
 gframe -c 3 -b -r 40% -t tweetwin weatherwin slidewin cloudwin matplotwin notewin
 sleep 5
 
