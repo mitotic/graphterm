@@ -18,6 +18,7 @@ import os
 import Queue
 import random
 import re
+import stat
 import subprocess
 import sys
 import termios
@@ -34,8 +35,13 @@ API_VERSION = "0.35.0"
 API_MIN_VERSION = "0.35"
 
 HEX_DIGITS = 16
+SIGN_HEXDIGITS = 24
 
 GT_PREFIX = "GTERM_"
+
+# Short prompt (long prompt with directory metadata fills most of row):
+#    unique prompt prefix (maybe null), unique prompt suffix (non-null), prompt body, remote prompt body
+DEFAULT_PROMPTS = ["", "$", "\W", "\h:\W"]
 
 def env(name, default="", lc=False):
     if not lc:
@@ -82,8 +88,55 @@ FILE_PREFIX = "/"+FILE_PATH+"/"
 STATIC_PREFIX = "/"+STATIC_PATH+"/"
 FILE_URI_PREFIX = "file://"
 
-App_dir = os.path.join(os.path.expanduser("~"), ".graphterm")
-Gterm_secret_file = os.path.join(App_dir, "graphterm_secret")
+SETUP_USER_CMD = "/usr/local/bin/gterm_user_setup"
+
+APP_DIRNAME = ".graphterm"
+APP_AUTH_FILENAME = "graphterm_auth"
+APP_SECRET_FILENAME = "graphterm_secret"
+SIGN_SEP = "|"
+
+App_dir = os.path.join(os.path.expanduser("~"), APP_DIRNAME)
+App_auth_file = os.path.join(App_dir, APP_AUTH_FILENAME)
+App_secret_file = os.path.join(App_dir, APP_SECRET_FILENAME)
+
+def create_app_directory(appdir=App_dir):
+    if not os.path.exists(appdir):
+        try:
+            # Create App directory
+            os.mkdir(appdir, 0700)
+        except OSError, excp:
+            print >> sys.stderr, "Error in creating app directory %s: %s" % (appdir, excp)
+    
+    if os.path.isdir(appdir) and os.stat(appdir).st_mode != 0700:
+        # Protect App directory
+        os.chmod(appdir, 0700)
+
+def read_auth_code(appdir=App_dir, user=""):
+    auth_file = os.path.join(appdir, APP_AUTH_FILENAME)
+    if user:
+        auth_file += "." + user
+    with open(auth_file) as f:
+        auth_code = f.read().strip()
+        assert auth_code, "Null authentication code in file "+auth_file
+        return auth_code
+
+def write_auth_code(code, appdir=App_dir, user=""):
+    auth_file = os.path.join(appdir, APP_AUTH_FILENAME)
+    if user:
+        auth_file += "." + user
+    with open(auth_file, "w") as f:
+        f.write(code+"\n")
+    os.chmod(auth_file, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+
+def compute_hmac(key, message, hex_digits=HEX_DIGITS):
+    return hmac.new(str(key), message, digestmod=hashlib.sha256).hexdigest()[:hex_digits]
+
+def user_hmac(key, user, key_version=None):
+    # Note: should use the same format as packetserver.RPCLink.sign_token
+    return compute_hmac(key, str(key_version)+SIGN_SEP+user, hex_digits=SIGN_HEXDIGITS)
+
+def file_hmac(filepath, host_secret):
+    return compute_hmac(host_secret, filepath)
 
 def split_version(version_str):
     """Splits version string "major.minor.revision" and returns list of ints [major, minor]"""
@@ -371,9 +424,6 @@ def menu_op(target, value=None, stderr=False):
                }
     wrap_write("", headers=headers, stderr=stderr)
 
-def file_hmac(filepath, host_secret):
-        return hmac.new(str(host_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
-
 def get_file_url(filepath, relative=False, exists=False, plain=False):
     """Construct file URL by expanding/normalizing filepath, with hmac cookie suffix.
     If relative, return '/_file/host/path'
@@ -512,8 +562,8 @@ def split_file_url(url, check_host_secret=None):
         filepath = "/"+"/".join(comps[1:])
         filename = comps[-1]
         if check_host_secret:
-            filehmac = "?hmac="+hmac.new(str(check_host_secret), filepath, digestmod=hashlib.sha256).hexdigest()[:HEX_DIGITS]
-            if query.lower() == filehmac.lower():
+            fhmac = "?hmac="+file_hmac(filepath, check_host_secret)
+            if query.lower() == fhmac.lower():
                 hostname = ""
 	return [server_port, hostname, filename, filepath, query]
 

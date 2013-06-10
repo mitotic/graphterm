@@ -803,12 +803,25 @@ def run_host(options, args):
 
     oshell_globals = globals() if options.oshell else None
 
+    if options.auth_file:
+        with open(options.auth_file) as f:
+            auth_code = f.read().strip()
+    else:
+        try:
+            auth_code = gterm.read_auth_code(user=host_name)
+        except Exception, excp:
+            auth_code = None
+
+    key_version = "1" if auth_code and auth_code != "name" else None
+
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=options.server_port,
                                                          connect_kw={"command": options.shell_command,
                                                                      "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
-                                                                     "key_secret": options.server_secret or None,
+                                                                     "prompt_list": gterm.DEFAULT_PROMPTS,
+                                                                     "key_secret": auth_code or None,
+                                                                     "key_version": key_version,
                                                                      "widget_port":
                                                                      (DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
@@ -852,8 +865,8 @@ def main():
                       help="Server hostname (or IP address) (default: localhost)")
     parser.add_option("", "--server_port", dest="server_port", default=DEFAULT_HOST_PORT,
                       help="Server port (default: %d)" % DEFAULT_HOST_PORT, type="int")
-    parser.add_option("", "--server_secret", dest="server_secret", default="",
-                      help="Server secret (for host authentication)")
+    parser.add_option("", "--auth_file", dest="auth_file", default="",
+                      help="Server auth file")
 
     parser.add_option("", "--shell_command", dest="shell_command", default=SHELL_CMD,
                       help="Shell command (default: %s) % SHELL_CMD")

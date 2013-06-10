@@ -89,7 +89,7 @@ class Daemon(object):
 		self.daemonize()
 		self.run()
 
-	def stop(self):
+	def stop(self, restart=False):
 		"""
 		Stop the daemon
 		"""
@@ -102,8 +102,9 @@ class Daemon(object):
 			pid = None
 	
 		if not pid:
-			message = "pidfile %s does not exist. Daemon not running?\n"
-			sys.stderr.write(message % self.pidfile)
+			if not restart:
+				message = "pidfile %s does not exist. Daemon not running?\n"
+				sys.stderr.write(message % self.pidfile)
 			return # not an error in a restart
 
 		# Try killing the daemon process	
@@ -124,7 +125,7 @@ class Daemon(object):
 		"""
 		Restart the daemon
 		"""
-		self.stop()
+		self.stop(restart=True)
 		self.start()
 
 	def run(self):

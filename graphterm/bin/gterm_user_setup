@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Creates gterm user, if not present, and starts host connection
+#  Note: gterm users are locked and cannot login directly
+# If user is --all, host connection is started for all existing users
+
+HOSTS_FILE=/etc/graphterm_hosts
+HOME_MNT=/home
+ADMIN=ubuntu
+
+server=localhost
+port=8900
+
+if [ $# -lt 1 ]; then
+    echo "Usage: gterm_user_setup (username|--all) [server_name [port]]"
+    exit 1
+fi
+
+username=$1
+
+if [ $# -gt 1 ]; then
+    server=$2
+    if [ $# -gt 2 ]; then
+	port=$3
+    fi
+fi
+
+if { ! -f $HOME_MNT ]; then
+    echo "Home directory $HOME_MNT does not exist"
+    exit 1
+fi
+
+if [ "$username" = "--all" ]; then
+    host_list="`cat $HOSTS_FILE`"
+
+elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
+    if getent passwd $username > /dev/null 2>&1; then
+	echo "User $username already present"
+	exit 1
+    fi
+    # Create new user
+    echo "Creating new user and group $username"
+    groupadd $username
+    useradd -g $username -d $HOME_MNT/$username -s /bin/bash $username
+
+    # Lock user password (i.e., no direct logins allowed)
+    passwd -l $username
+
+    echo " $username" >> $HOSTS_FILE
+    
+    host_list=$username
+
+else
+    echo "Invalid username $username"
+    exit 1
+fi
+
+for host in $host_list; do
+    # Update authentication code for host/user
+    /usr/local/bin/gauth -w -a $ADMIN $host
+
+    # Start client for host
+    sudo -u $host gtermhost --daemon=start --server_addr=$server --server_port=$port $host
+done

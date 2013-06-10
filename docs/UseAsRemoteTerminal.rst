@@ -58,7 +58,7 @@ your terminal session ``tty1``. Now disable the *terminal/private* menu
 option, to allow others to share your terminal. To disable privacy by
 default, start the server as::
 
-  gtermserver --auth_code=none --term_settings='{"sharing_private": false}'
+  gtermserver --auth_code=none --term_settings='{"share_private": false}'
 
 You can then access your work terminal from home, by connecting to your work computer using SSH::
 

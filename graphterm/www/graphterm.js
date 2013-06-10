@@ -168,6 +168,7 @@ var JQUERY = 4;
 var HEX_DIGITS = 16;
 
 function compute_hmac(key, message) {
+    //console.log("compute_hmac: ", key, message);
     return CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, key).finalize(message).toString().substr(0,HEX_DIGITS);
 }
 
@@ -338,7 +339,8 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
 
 function Authenticate(evt) {
     console.log("Authenticate: ", evt);
-    Connect($("#authuser").val(), $("#authcode").val(), gAuthenticatingCookie);
+    var authHMAC = compute_hmac($.trim($("#authcode").val() || ""), gAuthenticatingCookie);
+    Connect($("#authuser").val(), authHMAC, gAuthenticatingCookie);
     return false;
 }
 
@@ -808,7 +810,7 @@ function GTWebSocket(auth_user, auth_code, connect_cookie) {
     var add_params = (this.auth_user || this.auth_code) ? {user: auth_user, code: auth_code} : {};
     if (self.location.hostname != top.location.hostname)
 	add_params.embedded = "1";
-    if (!location.search && connect_cookie)
+    if (connect_cookie)
 	add_params.cauth = connect_cookie;
     if (!$.isEmptyObject(add_params))
 	this.ws_url += (location.search ? "&" : "?") + $.param(add_params);
@@ -947,6 +949,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		}
 
             } else if (action == "body") {
+		$("body").unbind("paste");
 		$("body").html(command[1]);
 
             } else if (action == "abort") {
@@ -959,6 +962,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
 		    setCookie("GRAPHTERM_AUTH", null);
+		$("body").unbind("paste");
 		AuthPage(command[1], command[2], command[3], command[4]);
 
             } else if (action == "open") {

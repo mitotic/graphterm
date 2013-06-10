@@ -99,17 +99,17 @@ def main():
 
     if options.server_auth:
         # Authenticate server
-        if not os.path.exists(gterm.Gterm_secret_file):
+        if not os.path.exists(gterm.App_secret_file):
             print >> sys.stderr, "gterm: Server not running (no secret file); use 'gtermserver' command to start it."
             sys.exit(1)
 
         try:
-            with open(gterm.Gterm_secret_file) as f:
+            with open(gterm.App_secret_file) as f:
                 Http_port, Gterm_pid, Gterm_secret = f.read().split()
                 Http_port = int(Http_port)
                 Gterm_pid = int(Gterm_pid)
         except Exception, excp:
-            print >> sys.stderr, "gterm: Error in reading %s: %s" % (gterm.Gterm_secret_file, excp)
+            print >> sys.stderr, "gterm: Error in reading %s: %s" % (gterm.App_secret_file, excp)
             sys.exit(1)
 
         if os.getuid() != getuid(Gterm_pid):

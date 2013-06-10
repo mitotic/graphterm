@@ -30,12 +30,13 @@ form_parser.add_option("type", ("t1.micro", "m1.small", "m1.medium", "m1.large")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
 form_parser.add_option("auth_code", "", help="User authentication code (enter 'none' for public access)")
-form_parser.add_option("server_secret", "", help="Server secret for host authentication (to connect from anywhere)")
 form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
 form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
 form_parser.add_option("copy_files", "", help="List of files to copy (space separated, e.g., .twitter_auth)")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("R", False, help="Install R")
+form_parser.add_option("auto_users", False, help="Automatically create new users")
+form_parser.add_option("allow_share", False, help="Allow sharing between users")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
 form_parser.add_option("verbose", False, help="Verbose")
@@ -95,6 +96,9 @@ if options.install:
 if options.copy_files:
     copy_files += options.copy_files.split()
 
+auth_code = options.auth_code.strip()
+allow_host_connect = auth_code and auth_code not in ("name","none")
+
 GroupRule = collections.namedtuple("GroupRule",
                                    ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
 
@@ -110,7 +114,7 @@ SecurityGroups = [
         GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
         GroupRule("tcp", "80", "80", "0.0.0.0/0", None),
         GroupRule("tcp", "8888", "8888", "0.0.0.0/0", None),
-        GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if options.server_secret else HostGroupName),
+        GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if allow_host_connect else HostGroupName),
         GroupRule("tcp", "8900", "8900", "0.0.0.0/0", None),
         ],
      )
@@ -139,10 +143,12 @@ if options.R:
     startup_commands += ["apt-get install -y r-base libcurl4-openssl-dev libcairo2-dev libxt-dev"]
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
+if options.auto_users:
+    command_format += " --auto_users"
+if options.allow_share:
+    command_format += " --allow_share"
 if options.oshell:
     command_format += " --oshell"
-if options.server_secret:
-    command_format += ' --server_secret="'+options.server_secret+'"'
 
 init_command = ""
 fwall_command = ""
@@ -160,7 +166,7 @@ else:
     host_domain = instance_tag if instance_domain else "`curl http://169.254.169.254/latest/meta-data/public-hostname`"
     fwall_command = "iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"
     startup_commands += [ fwall_command ]
-    if install_gterm and options.auth_code.strip():
+    if install_gterm and auth_code:
         init_command = (command_format % "gtermserver") + ' --auth_code="'+options.auth_code+'" --host='+host_domain
         if options.wildcard:
             init_command += " --blob_host=wildcard"
@@ -171,6 +177,11 @@ if init_command or fwall_command:
                           "echo '"+fwall_command+"' >> /etc/init.d/graphterm",
                           "chmod +x /etc/init.d/graphterm",
                           "update-rc.d graphterm defaults"]
+
+if options.auto_users:
+    startup_commands += ["cp `which gterm_user_setup` /usr/local/bin",
+                         "chmod u+s /usr/local/bin/gterm_user_setup",
+                         "echo /usr/local/bin/gterm_user_setup --all >> /etc/init.d/graphterm"]
 
 startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
 
