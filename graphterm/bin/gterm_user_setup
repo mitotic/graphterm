@@ -25,7 +25,7 @@ if [ $# -gt 1 ]; then
     fi
 fi
 
-if { ! -f $HOME_MNT ]; then
+if [ ! -d $HOME_MNT ]; then
     echo "Home directory $HOME_MNT does not exist"
     exit 1
 fi
@@ -47,6 +47,9 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
     passwd -l $username
 
     echo " $username" >> $HOSTS_FILE
+
+    mkdir -p $HOME_MNT/$username/.graphterm
+    chmod 0700 $HOME_MNT/$username/.graphterm
     
     host_list=$username
 

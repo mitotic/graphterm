@@ -48,6 +48,8 @@ from bin import gterm
 
 GT_PREFIX = gterm.GT_PREFIX
 
+ESCAPE_BUF_LEN = 256
+
 MAX_SCROLL_LINES = 1000
 
 CHUNK_BYTES = 4096            # Chunk size for receiving data in stdin
@@ -2409,7 +2411,7 @@ class Terminal(object):
 
     def escape(self):
         e = self.buf
-        if len(e)>32:
+        if len(e)>ESCAPE_BUF_LEN:
             if Log_ignored or self.logfile:
                 print >> sys.stderr, "lineterm: escape error %r"%e
             self.buf = ""

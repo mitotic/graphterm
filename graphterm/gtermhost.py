@@ -803,12 +803,15 @@ def run_host(options, args):
 
     oshell_globals = globals() if options.oshell else None
 
+    auth_code = None
     if options.auth_file:
-        with open(options.auth_file) as f:
-            auth_code = f.read().strip()
+        if options.auth_file != "none":
+            with open(options.auth_file) as f:
+                auth_code = f.read().strip()
     else:
         try:
             auth_code = gterm.read_auth_code(user=host_name)
+            print >> sys.stderr, "Using auth info from default file", gterm.App_auth_file+"."+host_name
         except Exception, excp:
             auth_code = None
 
@@ -899,7 +902,8 @@ def main():
         run_host(options, args)
     else:
         from daemon import ServerDaemon
-        pidfile = "/tmp/gtermhost.pid"
+        host_name = args[0]
+        pidfile = "/tmp/gtermhost."+host_name+".pid"
         daemon = ServerDaemon(pidfile, functools.partial(run_host, options, args))
         daemon.daemon_run(options.daemon)
 

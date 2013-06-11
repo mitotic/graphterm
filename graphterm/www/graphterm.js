@@ -637,6 +637,7 @@ function GTUpdateController() {
 	window.name = "";
     GTMenuUpdateToggle("share_control", gParams.controller);
     $("#terminal").toggleClass("gterm-controller", gParams.controller);
+    $("#terminal").toggleClass("gterm-superuser", gParams.super_user);
     handle_resize();
     gFrameDispatcher.updateControl(gParams.controller);
 }
@@ -1016,7 +1017,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var hosts = command[3];
 		var host_html = "<p>";
 		if (user)
-		    host_html += "User: <b>"+user + "</b><p>\n";
+		    host_html += 'User: <b>'+user + '</b><p>\n';
 		host_html += 'GraphTerm Hosts Available:<p><ol>';
 		for (var j=0; j<hosts.length; j++)
 		    host_html += '<li><a href="/'+hosts[j]+'/?qauth='+getAuth()+'">'+hosts[j]+'</a></li>';
@@ -1029,7 +1030,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var user = command[2];
 		var host = command[3];
 		var terms = command[4];
-		var term_html = '<p><b>' + (user ? user : '') + "@" + host + "</b>\n";
+		var term_html = '<p>' + (user ? 'User: <b>'+user+'</b><br>\n' : '') + 'Host: <b>' + host + '</b>\n';
 		term_html += '<p>Connect to GraphTerm session:<p><ol>';
 		for (var j=0; j<terms.length; j++)
 		    term_html += '<li><a href="/'+host+'/'+terms[j]+'/?qauth='+getAuth()+'">'+terms[j]+'</a></li>';
@@ -2187,9 +2188,17 @@ function GTMenuShare(selectKey, newValue, force) {
 	GTUpdateController();
 	break;
     case "private":
+	if (!newValue && !force && !window.confirm('Make terminal viewable by other users?')) {
+	    GTMenuUpdateToggle("share_private", false);
+	    return;
+	}
 	$("#terminal").toggleClass("gterm-share", !newValue);
 	break;
     case "locked":
+	if (!newValue && !force && !window.confirm('Make terminal controllable by other users?')) {
+	    GTMenuUpdateToggle("share_locked", false);
+	    return;
+	}
 	break;
     case "tandem":
 	if (newValue && !force && !window.confirm('Tandem (or simultaneous) control is an experimental feature and may be unstable. Proceed?')) {
@@ -2198,6 +2207,11 @@ function GTMenuShare(selectKey, newValue, force) {
 	}
 	break;
     case "webcast":
+	if (!gParams.state_values.allow_webcast) {
+	    GTMenuUpdateToggle("share_webcast", false);
+	    alert("Webcasting not permitted for user")
+	    return;
+	}
 	if (newValue && !force && !window.confirm('Make terminal publicly viewable ("webcast")?')) {
 	    GTMenuUpdateToggle("share_webcast", false);
 	    return;

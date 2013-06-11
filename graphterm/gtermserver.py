@@ -92,6 +92,8 @@ PROTOCOL = "http"
 
 LOCAL_HOST = "local"
 
+HOME_MNT = "/home"
+
 RSS_FEED_URL = "http://code.mindmeldr.com/graphterm/graphterm-announce/posts.xml"
 
 def cgi_escape(s):
@@ -379,18 +381,18 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if self.is_super_user(user):
                                 # Super user; must always validate with raw auth code
                                 validated = (code == gterm.compute_hmac(self._auth_code, cauth))
-                            elif Server_settings["auto_users"] and user not in self._all_users:
+                            elif Server_settings["auto_users"] and not os.path.exists(HOME_MNT+"/"+user):
                                 # New auto user; no code validation required
                                 validated = True
                                 if not os.path.exists(gterm.SETUP_USER_CMD):
                                     self.write_json([["abort", "Unable to create new user"]])
                                     self.close()
                                     return
-                                cmd_args = [gterm.SETUP_USER_CMD, user, Server_settings["host"]]
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, Server_settings["host"]]
                                 std_out, std_err = gterm.command_output(cmd_args, cwd=cwd, timeout=15)
                                 if std_err:
                                     logging.warning("gtermserver: ERROR in %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
-                                    self.write_json([["abort", "Error in creating new user"]])
+                                    self.write_json([["abort", "Error in creating new user "+user]])
                                     self.close()
                                     return
                             else:
@@ -539,16 +541,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                    "owner": user, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params
+                is_owner = True
             else:
                 # Existing terminal
                 terminal_params = self._control_params[path]
-                if terminal_params["share_private"] and (terminal_params["state_id"] != self.authorized["state_id"]):
+                is_owner = (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"])
+                if terminal_params["share_private"] and not is_owner:
                     # No sharing
                     self.write_json([["abort", "Invalid terminal path: %s" % path]])
                     self.close()
                     return
-
-            is_owner = (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"])
 
             if option == "kill":
                 if not wildhost and (is_super_user or is_owner):
@@ -579,6 +581,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             controller = False
             if self.authorized["auth_type"] == self.WEBCAST_AUTH:
                 controller = False
+            elif self._auth_type >= self.CODE_AUTH and not is_super_user and not is_owner:
+                controller = False
             elif self.wildcard:
                 controller = True
             elif option == "steal" and (is_owner or not terminal_params["share_locked"]):
@@ -588,9 +592,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 else:
                     self.broadcast(path, ["update_menu", "share_control", False], controller=True)
                     self._control_set[path] = set([self.websocket_id])
-            elif option == "watch" or self._control_set.get(path):
-                controller = False
-            else:
+            elif not self._control_set.get(path) and is_owner and option != "watch":
                 controller = True
                 self._control_set[path] = set([self.websocket_id])
 
@@ -615,13 +617,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             state_values = terminal_params.copy()
             state_values.pop("state_id", None)
             state_values["share_webcast"] = bool(path in self._webcast_paths)
+            state_values["allow_webcast"] = bool(self._auth_type <= self.NAME_AUTH or is_super_user or Server_settings["allow_share"])
             users = [get_user(self._all_websockets.get(ws_id)) for ws_id in self._watch_dict[self.remote_path]]
             self.write_json([["setup", {"user": user, "host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
                                         "state_values": state_values, "watchers": users,
-                                        "controller": controller, "parent_term": parent_term,
+                                        "controller": controller, "super_user": is_super_user, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "feedback": term_feedback, "update_opts": {},
                                         "state_id": self.authorized["state_id"]}]])
@@ -766,7 +769,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if not value:
                             # Give up control
                             self._control_set[self.remote_path].discard(self.websocket_id)
-                        elif self.is_super_user(from_user) or is_owner or not terminal_params["share_locked"]:
+                        elif self.is_super_user(from_user) or is_owner or (not terminal_params["share_locked"] and
+                                                                           (self._auth_type <= self.NAME_AUTH or
+                                                                            (Server_settings["allow_share"] and
+                                                                             not self.is_super_user(terminal_params["owner"])))):
                             # Gain control
                             if terminal_params["share_tandem"]:
                                 # Shared control
@@ -791,8 +797,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if len(self._webcast_paths) > MAX_WEBCASTS:
                                 self._webcast_paths.pop(last=False)
                             if value:
-                                # Join webcast
-                                self._webcast_paths[self.remote_path] = time.time()
+                                # Initiate webcast
+                                if self._auth_type <= self.NAME_AUTH or (Server_settings["allow_share"] or
+                                                                         self.is_super_user(from_user)):
+                                    self._webcast_paths[self.remote_path] = time.time()
                             else:
                                 # Cancel webcast
                                 self.close_watchers(keep_controllers=True)
@@ -806,7 +814,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             # Share access to terminal
                             self.broadcast(self.remote_path, ["update_menu", key, value])
                         else:
-                            # Revert to private mode; close all watchers, exluding self
+                            # Revert to private mode; close all watchers, excluding self
                             self.close_watchers()
                     else:
                         raise Exception("Invalid setting: %s" % key)
@@ -943,13 +951,14 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     host_secrets = {}
     @classmethod
     def get_matching_paths(cls, regexp, user, state_id):
+        is_super_user = GTSocket.is_super_user(user)
         matchpaths = []
         for host, conn in cls._all_connections.iteritems():
             for term_name in conn.term_dict:
                 path = host + "/" + term_name
                 if regexp.match(path):
                     match_params = GTSocket.get_terminal_params(path)
-                    if match_params and ((user and user == match_params["owner"]) or
+                    if match_params and (is_super_user or (user and user == match_params["owner"]) or
                                          (not user and state_id == match_params["state_id"])):
                         matchpaths.append(path)
         return matchpaths
@@ -1381,8 +1390,14 @@ def run_server(options, args):
 
     internal_server_ssl = {"certfile": certfile, "keyfile": keyfile} if options.internal_https else None
     internal_client_ssl = {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": certfile} if options.internal_https else None
-    key_secret = auth_code if auth_code and auth_code != "name" else None
-    key_version = "1" if auth_code and auth_code != "name" else None
+    if auth_code and auth_code != "name":
+        key_secret = auth_code
+        key_version = "1"
+        local_key_secret = gterm.user_hmac(key_secret, LOCAL_HOST, key_version=key_version)
+    else:
+        key_secret = None
+        key_version = None
+        local_key_secret = key_secret
     TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
                                         key_secret=key_secret, key_version=key_version, ssl_options=internal_server_ssl)
 
@@ -1401,7 +1416,7 @@ def run_server(options, args):
                                                                      "command": options.shell_command,
                                                                      "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
-                                                                     "key_secret": key_secret,
+                                                                     "key_secret": local_key_secret,
                                                                      "key_version": key_version,
                                                                      "prompt_list": prompt_list,
                                                                      "term_params": term_params,

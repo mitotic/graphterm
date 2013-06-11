@@ -97,7 +97,10 @@ if options.copy_files:
     copy_files += options.copy_files.split()
 
 auth_code = options.auth_code.strip()
-allow_host_connect = auth_code and auth_code not in ("name","none")
+allow_host_connect = auth_code and auth_code not in ("name", "none")
+
+if allow_host_connect and auth_code not in ("random", "file"):
+    raise Exception("Specifying auth code as argument is insecure")
 
 GroupRule = collections.namedtuple("GroupRule",
                                    ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
@@ -179,9 +182,10 @@ if init_command or fwall_command:
                           "update-rc.d graphterm defaults"]
 
 if options.auto_users:
-    startup_commands += ["cp `which gterm_user_setup` /usr/local/bin",
-                         "chmod u+s /usr/local/bin/gterm_user_setup",
-                         "echo /usr/local/bin/gterm_user_setup --all >> /etc/init.d/graphterm"]
+    startup_commands += [ "if which gterm_user_setup; then",
+                          "  cp `which gterm_user_setup` /usr/local/bin",
+                          "  echo /usr/local/bin/gterm_user_setup --all >> /etc/init.d/graphterm",
+                          "fi"]
 
 startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
 
