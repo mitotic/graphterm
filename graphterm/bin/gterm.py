@@ -39,6 +39,8 @@ SIGN_HEXDIGITS = 24
 
 GT_PREFIX = "GTERM_"
 
+Bin_dir = os.path.dirname(__file__)
+
 # Short prompt (long prompt with directory metadata fills most of row):
 #    unique prompt prefix (maybe null), unique prompt suffix (non-null), prompt body, remote prompt body
 DEFAULT_PROMPTS = ["", "$", "\W", "\h:\W"]
@@ -88,7 +90,7 @@ FILE_PREFIX = "/"+FILE_PATH+"/"
 STATIC_PREFIX = "/"+STATIC_PATH+"/"
 FILE_URI_PREFIX = "file://"
 
-SETUP_USER_CMD = "/usr/local/bin/gterm_user_setup"
+SETUP_USER_CMD = os.path.join(Bin_dir, "gterm_user_setup")
 
 APP_DIRNAME = ".graphterm"
 APP_AUTH_FILENAME = "graphterm_auth"

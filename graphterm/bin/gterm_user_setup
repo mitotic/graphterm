@@ -4,12 +4,13 @@
 #  Note: gterm users are locked and cannot login directly
 # If user is --all, host connection is started for all existing users
 
-HOSTS_FILE=/etc/graphterm_hosts
 HOME_MNT=/home
 ADMIN=ubuntu
+GRAPHTERM_DIR=.graphterm
+GRAPHTERM_AUTH=graphterm_auth
 
 server=localhost
-port=8900
+port=8899
 
 if [ $# -lt 1 ]; then
     echo "Usage: gterm_user_setup (username|--all) [server_name [port]]"
@@ -30,27 +31,38 @@ if [ ! -d $HOME_MNT ]; then
     exit 1
 fi
 
+
 if [ "$username" = "--all" ]; then
-    host_list="`cat $HOSTS_FILE`"
+    host_list=""
+    cd  $HOME_MNT
+    for host in *; do
+        if [ "$host" != "$ADMIN" ]; then
+	    host_list="$host_list $host"
+	fi
+    done
 
 elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
     if getent passwd $username > /dev/null 2>&1; then
 	echo "User $username already present"
 	exit 1
     fi
+
+    homedir=$HOME_MNT/$username
+    if [ -e $homedir ]; then
+	echo "Home directory already exists"
+	exit 1
+    fi
+
     # Create new user
     echo "Creating new user and group $username"
-    groupadd $username
-    useradd -g $username -d $HOME_MNT/$username -s /bin/bash $username
+    useradd --user-group --create-home --home $homedir --shell /bin/bash $username
 
+    sudo -u $username mkdir $homedir/$GRAPHTERM_DIR
+    sudo -u $username chmod 0700 $homedir/$GRAPHTERM_DIR
+    
     # Lock user password (i.e., no direct logins allowed)
     passwd -l $username
 
-    echo " $username" >> $HOSTS_FILE
-
-    mkdir -p $HOME_MNT/$username/.graphterm
-    chmod 0700 $HOME_MNT/$username/.graphterm
-    
     host_list=$username
 
 else
@@ -60,8 +72,11 @@ fi
 
 for host in $host_list; do
     # Update authentication code for host/user
-    /usr/local/bin/gauth -w -a $ADMIN $host
+    if [ "$host" != "$ADMIN" ]; then
+	/usr/local/bin/gauth -w -a $ADMIN $host
+	chown ${host}:$host $HOME_MNT/$host/$GRAPHTERM_DIR/$GRAPHTERM_AUTH.$host
 
-    # Start client for host
-    sudo -u $host gtermhost --daemon=start --server_addr=$server --server_port=$port $host
+        # Start client for host
+	sudo -u $host -H gtermhost --daemon=restart --server_addr=$server --server_port=$port $host
+    fi
 done

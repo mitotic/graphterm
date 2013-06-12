@@ -332,6 +332,7 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
 
     $(document).unbind("keydown");
     $(document).unbind("keypress");
+    $("body").unbind("paste");
 
     $("#authenticate").rebind("submit", Authenticate);
     $("#authuser").focus();
@@ -963,7 +964,6 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
 		    setCookie("GRAPHTERM_AUTH", null);
-		$("body").unbind("paste");
 		AuthPage(command[1], command[2], command[3], command[4]);
 
             } else if (action == "open") {
@@ -1014,14 +1014,24 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		if (command[1])
 		    setCookie("GRAPHTERM_AUTH", command[1]);
 		var user = command[2];
-		var hosts = command[3];
+		var new_auto = command[3];
+		var hosts = command[4];
 		var host_html = "<p>";
 		if (user)
 		    host_html += 'User: <b>'+user + '</b><p>\n';
-		host_html += 'GraphTerm Hosts Available:<p><ol>';
-		for (var j=0; j<hosts.length; j++)
-		    host_html += '<li><a href="/'+hosts[j]+'/?qauth='+getAuth()+'">'+hosts[j]+'</a></li>';
-		host_html += '</ol> <p><a href="#" onclick="SignOut();">Sign out</a>';
+		if (!hosts.length) {
+		    if (new_auto)
+			host_html += 'Created new user. Click <a href="/">here</a> to proceed.';
+		    else
+			host_html += 'No GraphTerm Hosts currently available<br>';
+		} else {
+		    host_html += 'GraphTerm Hosts Available:<p>';
+		    host_html += '<ol>';
+		    for (var j=0; j<hosts.length; j++)
+			host_html += '<li><a href="/'+hosts[j]+'/?qauth='+getAuth()+'">'+hosts[j]+'</a></li>';
+		    host_html += '</ol>';
+		}
+		host_html += '<p><a href="#" onclick="SignOut();">Sign out</a>';
 		$("body").html(host_html);
 
             } else if (action == "term_list") {

@@ -181,12 +181,6 @@ if init_command or fwall_command:
                           "chmod +x /etc/init.d/graphterm",
                           "update-rc.d graphterm defaults"]
 
-if options.auto_users:
-    startup_commands += [ "if which gterm_user_setup; then",
-                          "  cp `which gterm_user_setup` /usr/local/bin",
-                          "  echo /usr/local/bin/gterm_user_setup --all >> /etc/init.d/graphterm",
-                          "fi"]
-
 startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
 
 startup_script = "\n".join(startup_commands) + "\n"

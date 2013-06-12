@@ -894,8 +894,8 @@ def main():
         print >> sys.stderr, usage
         sys.exit(1)
 
-    if not HOST_RE.match(args[0]):
-        print >> sys.stderr, "Invalid characters in host name"
+    if not args or not HOST_RE.match(args[0]):
+        print >> sys.stderr, "Invalid/missing host name"
         sys.exit(1)
 
     if not options.daemon:
