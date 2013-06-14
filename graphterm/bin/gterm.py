@@ -852,7 +852,7 @@ try:
 except ImportError:
     pandas = None
 
-def _gterm_display_hook(expr):
+def auto_display(expr):
     if "display_hook" in globals():
         expr = globals()["display_hook"](expr)
     if pandas and isinstance(expr, pandas.core.frame.DataFrame):
@@ -866,7 +866,7 @@ def nbmode(enable=True):
     if enable:
         # Control automatic printing of expressions
         Saved_displayhook = sys.displayhook
-        sys.displayhook = _gterm_display_hook
+        sys.displayhook = auto_display
         print >> sys.stderr, "NOTE: Enabled notebook mode (affects auto printing of expressions)"
         print >> sys.stderr, "      To disable, use gterm.nbmode(False)"
     else:

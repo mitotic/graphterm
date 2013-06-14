@@ -12,7 +12,6 @@ import random
 import re
 import sys
 import time
-from optparse import OptionParser
 
 import boto
 import ec2common
@@ -147,7 +146,9 @@ if options.R:
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
 if options.auto_users:
-    command_format += " --auto_users"
+    if options.auth_code != "file":
+        raise Exception("Must specify auth_code=file to enable auto_users")
+    command_format += " --auto_users --super_users=ubuntu"
 if options.allow_share:
     command_format += " --allow_share"
 if options.oshell:

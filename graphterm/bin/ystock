@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+#
+
+"""
+ystock: Display stock prices using Yahoo Finance API (via pandas)
+"""
+
+from pandas.io.data import get_data_yahoo
+import gmatplot as gm
+gm.setup() 
+
+import matplotlib.pyplot as plt
+import gterm
+
+import sys
+
+usage = "usage: %prog [-f] <stock_symbol>"
+form_parser = gterm.FormParser(usage=usage, title="Display stock price history using Yahoo Finance API ", command="ystock")
+
+form_parser.add_argument(label="Stock symbol: ", help="Stock symbol (abbreviation used to identify the company)")
+
+form_parser.add_option("text", False, short="t", help="Plain text display", raw=True)
+form_parser.add_option("raw", False, short="r", help="Display raw tabular data (instead of plotting)")
+form_parser.add_option("start", "", short="s", help="Start date (yyyy-mm-dd)")
+form_parser.add_option("end", "", short="e", help="End date (yyyy-mm-dd)")
+
+(options, args) = form_parser.parse_args()
+
+if not sys.stdout.isatty():
+    options.text = True
+
+symbol = args[0]
+
+data = get_data_yahoo(symbol, start=options.start or None, end=options.end or None)[['Close', 'Volume']]
+
+if not gterm.Lterm_cookie or options.text:
+    sys.stdout.write(repr(data)+"\n")
+elif options.raw:
+    gterm.auto_display(data)
+else:
+    data.plot(subplots = True, figsize = (8, 8));
+    plt.legend(loc = 'best')
+    plt.show()
