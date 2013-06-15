@@ -816,7 +816,7 @@ def run_host(options, args):
             raise
             auth_code = None
 
-    key_version = "1" if auth_code and auth_code != "name" else None
+    key_version = "1" if auth_code else None
 
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=options.server_port or port or gterm.DEFAULT_HOST_PORT,

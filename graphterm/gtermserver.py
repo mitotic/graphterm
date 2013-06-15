@@ -222,16 +222,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return user and user in cls._super_users
 
     @classmethod
-    def set_auth_code(cls, value):
+    def set_auth_code(cls, value, local=False):
         cls._auth_code = value
         if not value:
             cls._auth_type = cls.NULL_AUTH
         elif value == "name":
             cls._auth_type = cls.NAME_AUTH
-        elif value == "local":
-            cls._auth_type = cls.LOCAL_AUTH
         else:
-            cls._auth_type = cls.CODE_AUTH
+            cls._auth_type = cls.LOCAL_AUTH if local else cls.CODE_AUTH
 
     @classmethod
     def get_auth_code(cls):
@@ -252,10 +250,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     @classmethod
     def check_connect_cookie(cls, value):
         return cls._connect_cookies.pop(value, None)            
-
-    @classmethod
-    def get_auth_code(cls):
-        return cls._auth_code
 
     @classmethod
     def get_terminal_params(cls, path):
@@ -394,7 +388,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             auth_message = "User name %s already in use" % user
                     else:
                         validated = False
-                        if self._auth_users:
+                        if code == gterm.compute_hmac(self._auth_code, cauth):
+                            # Validation using master secret
+                            validated = True
+                        elif self._auth_users:
                             if user in self._auth_users:
                                 validated = (code == gterm.compute_hmac(self._auth_users[user], cauth))
                         else:
@@ -1333,7 +1330,7 @@ def run_server(options, args):
         Term_settings = {}
 
     auth_file = ""
-    if options.auth_code == "local" or (options.auth_code == "user" and not os.path.exists(gterm.get_auth_filename(server=http_host))):
+    if options.auth_type == "local" or (options.auth_type == "user" and not os.path.exists(gterm.get_auth_filename(server=http_host))):
         # Random auth code
         auth_code = GTSocket.get_auth_code()
         try:
@@ -1343,13 +1340,13 @@ def run_server(options, args):
             sys.exit(1)
         auth_file = gterm.get_auth_filename()
     else:
-        if options.auth_code == "none":
+        if options.auth_type == "none":
             # No auth code
             auth_code = ""
-        elif options.auth_code == "name":
+        elif options.auth_type == "name":
             # No auth code
             auth_code = "name"
-        elif options.auth_code == "user":
+        elif options.auth_type == "user":
             try:
                 auth_code, port = gterm.read_auth_code()
             except Exception, excp:
@@ -1357,15 +1354,16 @@ def run_server(options, args):
                 sys.exit(1)
             auth_file = gterm.get_auth_filename()
         else:
-            print >> sys.stderr, "Invalide authentication type '%s'; must be one of none/name/local/user" % options.auth_code
+            print >> sys.stderr, "Invalid authentication type '%s'; must be one of none/name/local/user" % options.auth_type
             sys.exit(1)
-        GTSocket.set_auth_code(auth_code)
+
+    GTSocket.set_auth_code(auth_code, local=options.auth_type=="local")
 
     super_users = options.super_users.split(",") if options.super_users else []
     GTSocket.set_super_users(super_users)
 
     if options.auth_users:
-        assert auth_code and auth_code != "name", "Must specify auth code"
+        assert options.auth_type == "user", "Must specify auth_type=user "
         for user in options.auth_users.split(","):
             # Personalized user auth codes
             if user:
@@ -1472,11 +1470,11 @@ def run_server(options, args):
     if options.terminal:
         server_nonce = GTSocket.get_connect_cookie()
         query = "?cauth="+server_nonce
-        if options.auth_code == "local":
+        if options.auth_type == "local":
             query += "&code="+gterm.compute_hmac(auth_code, server_nonce)
-        elif options.auth_code == "user" and super_users:
+        elif options.auth_type == "user" and super_users:
             query += "&user="+super_users[0]+"&code="+gterm.compute_hmac(gterm.user_hmac(auth_code, super_users[0], key_version=key_version), server_nonce)
-        elif options.auth_code == "name" and super_users:
+        elif options.auth_type == "name" and super_users:
             query += "&user="+super_users[0]
         url = "%s://%s:%d/local/new/%s" % ("https" if options.https else "http", http_host, http_port, query)
         try:
@@ -1523,7 +1521,7 @@ def run_server(options, args):
         print >> sys.stderr, "Interrupted"
 
     finally:
-        if options.auth_code == "local":
+        if options.auth_type == "local":
             gterm.clear_auth_code(server=http_host)
     IO_loop.add_callback(stop_server)
 
@@ -1533,8 +1531,8 @@ def main():
     usage = "usage: gtermserver [-h ... options]"
     parser = OptionParser(usage=usage)
 
-    parser.add_option("", "--auth_code", dest="auth_code", default="local",
-                      help="Authentication code (none/name/local/user)")
+    parser.add_option("", "--auth_type", dest="auth_type", default="local",
+                      help="Authentication type (none/name/local/user)")
 
     parser.add_option("", "--auth_users", dest="auth_users", default="",
                       help="Comma-separated list of authenticated user names")

@@ -28,7 +28,7 @@ form_parser.add_argument(label="", help="Instance hostname")
 form_parser.add_option("type", ("t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-82fa58eb", help="Instance OS (default: Ubuntu 12.04LTS)")
-form_parser.add_option("auth_code", "", help="User authentication code (none/name/local/user)")
+form_parser.add_option("auth_type", "", help="Authentication type (none/name/local/user)")
 form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
 form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
 form_parser.add_option("copy_files", "", help="List of files to copy (space separated, e.g., .twitter_auth)")
@@ -95,10 +95,10 @@ if options.install:
 if options.copy_files:
     copy_files += options.copy_files.split()
 
-auth_code = options.auth_code.strip()
-allow_host_connect = auth_code and auth_code not in ("name", "none")
+auth_type = options.auth_type.strip()
+allow_host_connect = auth_type and auth_type not in ("name", "none")
 
-if allow_host_connect and auth_code not in ("local", "user"):
+if allow_host_connect and auth_type not in ("local", "user"):
     raise Exception("Specifying auth code as argument is insecure")
 
 GroupRule = collections.namedtuple("GroupRule",
@@ -146,8 +146,8 @@ if options.R:
 
 command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
 if options.auto_users:
-    if options.auth_code != "user":
-        raise Exception("Must specify auth_code=user to enable auto_users")
+    if options.auth_type != "user":
+        raise Exception("Must specify auth_type=user to enable auto_users")
     command_format += " --auto_users --super_users=ubuntu"
 if options.allow_share:
     command_format += " --allow_share"
@@ -170,8 +170,8 @@ else:
     host_domain = instance_tag if instance_domain else "`curl http://169.254.169.254/latest/meta-data/public-hostname`"
     fwall_command = "iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"
     startup_commands += [ fwall_command ]
-    if install_gterm and auth_code:
-        init_command = (command_format % "gtermserver") + ' --auth_code="'+options.auth_code+'" --host='+host_domain
+    if install_gterm and auth_type:
+        init_command = (command_format % "gtermserver") + ' --auth_type="'+options.auth_type+'" --host='+host_domain
         if options.wildcard:
             init_command += " --blob_host=wildcard"
         startup_commands += [ init_command ]
