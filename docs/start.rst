@@ -4,7 +4,7 @@ Getting started with GraphTerm
 .. contents::
 
 
-Introduction
+Running GraphTerm
 ====================================================
 
 To install ``GraphTerm``, you need to have Python 2.6+ and the Bash
@@ -20,39 +20,50 @@ more installation options.)
 
 To start the ``GraphTerm`` server, use the command::
 
-  gtermserver --auth_code=none
+    gtermserver --terminal
 
-Note that ``none`` is all lowercase in the above command and indicates
-no authentication. Type  ``gtermserver -h`` to view all command
-options. You can use the
-``--daemon=start`` option to run it in the background. The
+This will run the  server and open a GraphTerm terminal window
+using the default browser.  You can open additional GraphTerm
+terminal windows using the following command::
+
+    gterm [session_name]
+
+where the terminal session name argument is optional.
+You can also access the GraphTerm server directly
+using a browser that supports websockets, such as Google Chrome,
+Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
+
+    http://localhost:8900
+
+If you use the browser directly, you will need to enter
+the authentication code stored in the file
+``~/.graphterm/graphterm_auth``. (The ``gterm``
+command enters this code for you automatically.)
+In the ``graphterm`` browser page, select the GraphTerm host you
+wish to connect to and create a new terminal session. (Note: The GraphTerm
+host is different from the network hostname for the server.)
+Within a GraphTerm window, you can use *terminal/new* menu option, or
+type the command ``gmenu new``, to create a new GraphTerm session
+
+Type  ``gtermserver -h`` to view all options for starting the server.
+You can use the
+``--daemon=start`` option to run the server in the background. The
 ``--host=hostname`` option is useful for listening on a public IP address instead
 of the default ``localhost``. The ``--lc_export`` option can be used to
 export the GraphTerm environment across SSH via the locale variables
-(which sometimes works). Another useful option is ``--auth_code=name``
-to enable simple name-based sharing.
+(which sometimes works).
 
-Once the server is running, you can open a GraphTerm terminal window
-using a browser that supports websockets, such as Google Chrome,
-Firefox, Safari, or IE10 (Chrome works best), and entering the following URL::
+If you are using GraphTerm for teaching or demonstration purposes, where
+security is not important, you can start the server as follows::
 
-  http://localhost:8900
+    gtermserver --auth_type=none --terminal
 
-If the server is listening on a public IP address, change the hostname as appropriate.
-Once within the ``graphterm`` browser page, select the GraphTerm host you
-wish to connect to and create a new terminal session. (Note: The GraphTerm
-host is different from the network hostname for the server)
+Note that ``none`` is all lowercase in the above command and indicates
+that no authentication is required. Another useful option is ``--auth_type=name``
+to enable simple name-based sharing. (For more on running publicly
+accessible servers, see :ref:`cloud`.)
 
-Other ways to open a terminal window are:
-
- - Specify the ``--terminal`` option when starting ``gtermserver``
-
- - Within a GraphTerm window, select the *terminal/new* menu option, or
-   type the command ``gmenu new`` to create a new GraphTerm session
-
-.. index:: graphterm-aware commands
-
-Once you have a terminal, try out the following commands::
+Within the terminal, try out the following commands::
 
    gls <directory>
    gvi <text-filename>
@@ -64,9 +75,11 @@ Use the ``-h`` option to display help information for these commands,
 and read the
 `UsingGraphicalFeatures tutorial <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_ for usage examples.
 
+.. index:: graphterm-aware commands, toolchain
+
 .. _toolchain:
 
-Toolchain
+Command Toolchain
 ====================================================
 
 GraphTerm is bundled with a command toolchain that allow access to
@@ -92,6 +105,8 @@ The reside in the directory ``$GTERM_DIR/bin`` and include the following:
 
    ``gload terminal_name`` Load a new terminal in the current window
 
+   ``gls [-i] [filenames]``   Generate clickable directory listing
+
    ``gmatplot.py``   An inline ``matplotlib`` plotting package (see  :ref:`matplotlib_shot`)
 
    ``gmenu item subitem``   To access the menubar from the command line
@@ -113,6 +128,8 @@ The reside in the directory ``$GTERM_DIR/bin`` and include the following:
 
    ``gupload [filename|directory]`` To upload files from desktop into
    the terminal
+
+   ``gvi filename``   Open file using a browser-based visual editor
 
    ``hello_gterm.sh`` Hello World program that displays inline HTML text and image
 
@@ -295,6 +312,24 @@ See the function ``main`` in this file for sample plotting code.
  - Use ``show()`` to update image
  - Use ``show(False)`` to display new image
  - Use ``display(fig)`` to display figure
+
+
+.. index:: pandas, DataFrame
+
+.. _pandas_mode:
+ 
+
+Inline tables using pandas
+--------------------------------------------------------------------------------------------
+
+GraphTerm can display ``pandas`` DataFrame objects as a table using
+HTML.
+
+    python -i $GTERM_DIR/bin/gpylab.py
+    >>> import pandas as pd
+    >>> d = {'one' : [1., 2., 3., 4.],
+    >>> 'two' : [4., 3., 2., 1.]}
+    >>> pd.DataFrame(d)
 
 
 .. index:: notebook
@@ -566,9 +601,17 @@ Security
 
 
 *The GraphTerm is not yet ready to be executed with root privileges*.
-Run it logged in as a regular user. The ``--auth_code`` option can be
-used to specify an authentication code required for users connecting
-to the server. Although multiple hosts can connect to the terminal
+You should typically run it logged in as a regular user.
+The ``--auth_type=local`` (default) and ``--auth_type=user`` options should
+be used for security, as they require an authentication code to create
+a new terminal. Using the ``gterm`` command to create a new terminal
+provides additional security, as the command validates the server
+before opening a new terminal.
+The ``--auth_type=none`` and ``--auth_type=name`` options
+should only be used for teaching or demonstration purposes (or
+on computers where only trusted users have access).
+
+Although multiple hosts can connect to the terminal
 server, initially, it would be best to use ``graphterm`` to just connect to
 ``localhost``, on a computer with only trusted users. You can always
 use SSH port forwarding (see below) to securely connect to the

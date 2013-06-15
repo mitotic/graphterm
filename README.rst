@@ -119,18 +119,30 @@ Quick Start
 
 To start the ``GraphTerm`` server, use the command::
 
-  gtermserver --auth_code=none --terminal
+    gtermserver --terminal
 
-Once the server is running, you can open GraphTerm terminal windows
+This will run the  server and open a GraphTerm terminal window
+using the default browser.  You can open additional GraphTerm
+terminal windows using the following command::
+
+    gterm [session_name]
+
+where the terminal session name argument is optional.
+You can also access the GraphTerm server directly
 using a browser that supports websockets, such as Google Chrome,
-Firefox, Safari, or IE10 (Chrome works best), and entering the following URL::
+Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
 
-  http://localhost:8900
+    http://localhost:8900
+
+If you use the browser directly, you will need to enter
+the authentication code stored in the file
+``~/.graphterm/graphterm_auth``. (The ``gterm``
+command enters this code for you automatically.)
 
 Once you have a terminal, try out the following commands::
 
-   gls <directory>
-   gvi <text-filename>
+    gls <directory>
+    gvi <text-filename>
 
 These are commands in the GraphTerm toolchain that imitate
 basic features of the standard ``ls`` and ``vi`` commands.

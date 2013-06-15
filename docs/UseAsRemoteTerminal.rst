@@ -51,18 +51,14 @@ Accessing GraphTerm server from a remote computer using SSH
 Assume that you will be running ``gtermserver`` on your ``work-computer`` as
 ``localhost`` listening on the default port 8900 using the command::
 
-  gtermserver --auth_code=none
+    gtermserver --terminal
 
 At work, you will use the URL ``http://localhost:8900/local/tty1`` to access
 your terminal session ``tty1``. Now disable the *terminal/private* menu
-option, to allow others to share your terminal. To disable privacy by
-default, start the server as::
-
-  gtermserver --auth_code=none --term_settings='{"share_private": false}'
-
+option, to allow others to share your terminal. 
 You can then access your work terminal from home, by connecting to your work computer using SSH::
 
-  ssh -L 8901:localhost:8900 user@work-computer
+    ssh -L 8901:localhost:8900 user@work-computer
 
 The above command maps your work computer port 8900 to your home computer port 8901.
 (There is also a ``-R`` option that provides a reverse port mapping, which can be useful if
@@ -73,13 +69,23 @@ desktop port 8901.)
 After establishing the SSH connection, you can access your work terminal session from
 home using the URL::
 
-  http://localhost:8901/local/tty1
+    http://localhost:8901/local/tty1
 
+You will need to enter the authentication code from the file
+``~/.graphterm/graphterm_auth` on your work computer.
 (If you forgot to detach your work terminal before leaving, use the
 *steal* menu button to steal control of the session.)
 
+If you are the only
+user with access to your work computer, you can disable authentication
+and privacy by default, by starting the server as::
+
+    gtermserver --auth_type=none --term_settings='{"share_private": false}'
+
 If you have multiple terminals open, use the URL ``http://localhost:8901/local`` to
 see a list of all the available terminal sessions.
+
+
 
 Connecting multiple hosts to gtermserver
 ======================================================================================

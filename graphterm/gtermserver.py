@@ -1354,7 +1354,7 @@ def run_server(options, args):
                 sys.exit(1)
             auth_file = gterm.get_auth_filename()
         else:
-            print >> sys.stderr, "Invalid authentication type '%s'; must be one of none/name/local/user" % options.auth_type
+            print >> sys.stderr, "Invalid authentication type '%s'; must be one of local/none/name/user" % options.auth_type
             sys.exit(1)
 
     GTSocket.set_auth_code(auth_code, local=options.auth_type=="local")
@@ -1457,9 +1457,9 @@ def run_server(options, args):
     Http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_options)
     Http_server.listen(http_port, address=http_host)
     if auth_file:
-        print >> sys.stderr, "Authentication code in file " + auth_file
+        print >> sys.stderr, "\nAuthentication code in file " + auth_file
     else:
-        print >> sys.stderr, "**WARNING** No authentication required"
+        print >> sys.stderr, "\n**WARNING** No authentication required"
 
     if options.daemon and options.auto_users:
         cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", internal_host]
@@ -1467,6 +1467,7 @@ def run_server(options, args):
         if std_err:
             logging.warning("gtermserver: ERROR in starting up %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
 
+    url = "%s://%s:%d/local/new" % ("https" if options.https else "http", http_host, http_port)
     if options.terminal:
         server_nonce = GTSocket.get_connect_cookie()
         query = "?cauth="+server_nonce
@@ -1476,9 +1477,8 @@ def run_server(options, args):
             query += "&user="+super_users[0]+"&code="+gterm.compute_hmac(gterm.user_hmac(auth_code, super_users[0], key_version=key_version), server_nonce)
         elif options.auth_type == "name" and super_users:
             query += "&user="+super_users[0]
-        url = "%s://%s:%d/local/new/%s" % ("https" if options.https else "http", http_host, http_port, query)
         try:
-            gterm.open_browser(url)
+            gterm.open_browser(url+"/"+query)
         except Exception, excp:
             print >> sys.stderr, "Error in creating terminal; please open URL %s in browser (%s)" % (url, excp)
             
@@ -1508,10 +1508,9 @@ def run_server(options, args):
         ioloop_thread = threading.Thread(target=IO_loop.start)
         ioloop_thread.start()
         time.sleep(1)   # Time to start thread
-        print >> sys.stderr, "\nGraphTerm server started (v%s)" % about.version
         print >> sys.stderr, "Open URL %s in browser to connect" % url
-
-        print >> sys.stderr, "Type ^C to stop server"
+        print >> sys.stderr, "GraphTerm server started (v%s)" % about.version
+        print >> sys.stderr, "Type ^C to stop"
         if Trace_shell:
             Trace_shell.loop()
         if not Trace_shell or not options.oshell_input:
@@ -1532,7 +1531,7 @@ def main():
     parser = OptionParser(usage=usage)
 
     parser.add_option("", "--auth_type", dest="auth_type", default="local",
-                      help="Authentication type (none/name/local/user)")
+                      help="Authentication type (local/none/name/user)")
 
     parser.add_option("", "--auth_users", dest="auth_users", default="",
                       help="Comma-separated list of authenticated user names")

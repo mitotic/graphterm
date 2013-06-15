@@ -74,6 +74,8 @@ def main():
 
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
+    parser.add_option("-n", "--noauth", dest="noauth", action="store_true",
+                      help="No authentication required")
     parser.add_option("-b", "--browser", dest="browser", default="",
                       help="Browser application name (OS X only)")
     parser.add_option("-u", "--user", dest="user", default="",
@@ -105,14 +107,11 @@ def main():
         gterm.open_url(url, target=target)
         return
 
-    try:
-        auth_code, port = gterm.read_auth_code(user=options.user, server=options.server)
-    except Exception, exception:
-        if options.user or options.server:
-            print >> sys.stderr, "gterm: Error in reading authentication file %s" % gterm.get_auth_filename(user=options.user, server=options.server)
-            sys.exit(1)
+    if options.noauth:
         auth_code = "none"
         port = None
+    else:
+        auth_code, port = gterm.read_auth_code(user=options.user, server=options.server)
 
     Http_addr = options.server or "localhost"
     Http_port = options.port or port or gterm.DEFAULT_HTTP_PORT
@@ -121,14 +120,14 @@ def main():
 
     resp = auth_request(Http_addr, Http_port, client_nonce, user=options.user, protocol=protocol)
     if not resp:
-        print >> sys.stderr, "gterm: Auth HTTTP Request failed"
+        print >> sys.stderr, "\ngterm: Authentication request to GraphTerm server %s:%s failed" % (Http_addr, Http_port)
+        print >> sys.stderr, "gterm: Server may not be running; use 'gtermserver' command to start it."
         sys.exit(1)
 
     server_nonce, received_token = resp.split(":")
     client_token, server_token = auth_token(auth_code, "graphterm", client_nonce, server_nonce)
     if received_token != client_token:
-        print >> sys.stderr, "gterm: Server failed to authenticate itself"
-        print >> sys.stderr, "gterm: Server may not be running; use 'gtermserver' command to start it."
+        print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself (Check port number, if necessary)" % (Http_addr, Http_port)
         sys.exit(1)
 
     ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token

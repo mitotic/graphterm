@@ -3,6 +3,22 @@ Release Notes
 .. contents::
 
 
+0.39.0 (June ??, 2013)
+---------------------------------------------------------------------------------
+
+  - Support for auto user creation
+
+  - Support for inline HTML display for pandas.DataFrame objects
+
+  - Support for server and user authentication via the gterm command
+
+  - Added ``ystock`` command
+
+  - Renamed ``auth_code`` option to ``auth_type``
+
+  - Renamed ``gtermapi.py`` to ``gterm.py``
+
+
 0.38.1 (June 3, 2013)
 ---------------------------------------------------------------------------------
 
