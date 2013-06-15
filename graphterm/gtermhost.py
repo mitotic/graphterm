@@ -56,9 +56,6 @@ SHELL_CMD = "/bin/bash"
 HTML_ESCAPES = ["\x1b[?1155;", "h",
                 "\x1b[?1155l"]
 
-DEFAULT_HTTP_PORT = 8900
-DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
-
 USER_RE    = re.compile(r"^[a-z][a-z0-9\-]*$")                # Allowed user names
 HOST_RE    = re.compile(r"^[a-z][a-z0-9\-\*\?\[\]]*$")        # Allowed host names
 SESSION_RE = re.compile(r"^[a-zA-Z\*\?\[\]][\w\*\?\[\]]*$")   # Allowed session names
@@ -740,7 +737,7 @@ def gterm_shutdown(trace_shell=None):
             pass
 
 Host_connections = {}
-def gterm_connect(host_name, server_addr, server_port=DEFAULT_HOST_PORT, connect_kw={},
+def gterm_connect(host_name, server_addr, server_port=gterm.DEFAULT_HOST_PORT, connect_kw={},
                   oshell_globals=None, oshell_thread=False, oshell_unsafe=False, oshell_workdir="",
                   oshell_init="", oshell_db_interface=None, oshell_web_interface=None,
                   oshell_hold_wrapper=None, oshell_no_input=True, gterm_callback=None, io_loop=None):
@@ -804,21 +801,25 @@ def run_host(options, args):
     oshell_globals = globals() if options.oshell else None
 
     auth_code = None
+    port = None
     if options.auth_file:
         if options.auth_file != "none":
             with open(options.auth_file) as f:
-                auth_code = f.read().strip()
+                comps = f.read().strip().split()
+                auth_code = comps[0]
+                port = int(comps[1]) if len(comps) > 1 else None
     else:
         try:
-            auth_code = gterm.read_auth_code(user=host_name)
-            print >> sys.stderr, "Using auth info from default file", gterm.App_auth_file+"."+host_name
+            auth_code, port = gterm.read_auth_code(user=host_name)
+            print >> sys.stderr, "Using auth info from default file", gterm.get_auth_filename(user=host_name)
         except Exception, excp:
+            raise
             auth_code = None
 
     key_version = "1" if auth_code and auth_code != "name" else None
 
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
-                                                         server_port=options.server_port,
+                                                         server_port=options.server_port or port or gterm.DEFAULT_HOST_PORT,
                                                          connect_kw={"command": options.shell_command,
                                                                      "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
@@ -826,7 +827,7 @@ def run_host(options, args):
                                                                      "key_secret": auth_code or None,
                                                                      "key_version": key_version,
                                                                      "widget_port":
-                                                                     (DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
+                                                                     (gterm.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
                                                          oshell_unsafe=True,
                                                          oshell_no_input=(not options.oshell_input))
@@ -866,8 +867,8 @@ def main():
 
     parser.add_option("", "--server_addr", dest="server_addr", default="localhost",
                       help="Server hostname (or IP address) (default: localhost)")
-    parser.add_option("", "--server_port", dest="server_port", default=DEFAULT_HOST_PORT,
-                      help="Server port (default: %d)" % DEFAULT_HOST_PORT, type="int")
+    parser.add_option("", "--server_port", dest="server_port", default=0,
+                      help="Server port (default: %d)" % gterm.DEFAULT_HOST_PORT, type="int")
     parser.add_option("", "--auth_file", dest="auth_file", default="",
                       help="Server auth file")
 
@@ -880,7 +881,7 @@ def main():
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
     parser.add_option("", "--widgets", dest="widgets", action="store_true",
-                      help="Activate widgets on port %d" % (DEFAULT_HTTP_PORT-2))
+                      help="Activate widgets on port %d" % (gterm.DEFAULT_HTTP_PORT-2))
     parser.add_option("", "--term_type", dest="term_type", default="",
                       help="Terminal type (linux/screen/xterm)")
     parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",

@@ -341,7 +341,7 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
 function Authenticate(evt) {
     console.log("Authenticate: ", evt);
     var authHMAC = compute_hmac($.trim($("#authcode").val() || ""), gAuthenticatingCookie);
-    Connect($("#authuser").val(), authHMAC, gAuthenticatingCookie);
+    window.location = location.pathname+"?"+$.param({cauth: gAuthenticatingCookie, code: authHMAC, user:$("#authuser").val()});
     return false;
 }
 

@@ -66,8 +66,6 @@ if File_dir == ".":
     
 Doc_rootdir = os.path.join(File_dir, "www")
 
-Gterm_secret = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leading zeros when stringified
-
 Check_state_cookie = False             # Controls checking of state cookie for file access
 
 Cache_files = False                     # Controls caching of files (blobs are always cached)
@@ -207,9 +205,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _webcast_paths = OrderedDict()
     _cookie_states = OrderedDict()
     _auth_users = OrderedDict()
-    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, CODE_AUTH = range(4)
+    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, LOCAL_AUTH, CODE_AUTH = range(5)
+    # Note: WEBCAST_AUTH is used only for sockets, not for the server
     _auth_code = uuid.uuid4().hex[:HEX_DIGITS]
-    _auth_type = CODE_AUTH
+    _auth_type = LOCAL_AUTH
     _wildcards = {}
     _super_users = set()
     _connect_cookies = OrderedDict()
@@ -229,8 +228,18 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             cls._auth_type = cls.NULL_AUTH
         elif value == "name":
             cls._auth_type = cls.NAME_AUTH
+        elif value == "local":
+            cls._auth_type = cls.LOCAL_AUTH
         else:
             cls._auth_type = cls.CODE_AUTH
+
+    @classmethod
+    def get_auth_code(cls):
+        return cls._auth_code
+
+    @classmethod
+    def get_auth_type(cls):
+        return cls._auth_type
 
     @classmethod
     def get_connect_cookie(cls):
@@ -316,8 +325,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return authorized
 
     def open(self):
-        need_user = self._auth_type >= self.NAME_AUTH
-        need_code = self._auth_type >= self.CODE_AUTH
+        need_code = self._auth_type >= self.LOCAL_AUTH
+        need_user = self._auth_type == self.NAME_AUTH or self._auth_type >= self.CODE_AUTH
 
         user = ""
         try:
@@ -365,7 +374,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         return
 
                     if not user:
-                        if self.req_path not in self._webcast_paths:
+                        if not code and self.req_path in self._webcast_paths:
+                            pass
+                        elif self._auth_type == self.LOCAL_AUTH:
+                            if code == gterm.compute_hmac(self._auth_code, cauth):
+                                self.authorized = self.add_state(user, self._auth_type)
+                            else:
+                                auth_message = "Enter authentication code (found in %s), or use 'gterm' command" % gterm.get_auth_filename(server=Server_settings["host"])
+                        else:
                             auth_message = "Please specify username (letters/digits/hyphens, starting with letter)."
                             if Server_settings["auto_users"]:
                                 auth_message += " If new user, leave code blank."
@@ -382,10 +398,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if user in self._auth_users:
                                 validated = (code == gterm.compute_hmac(self._auth_users[user], cauth))
                         else:
-                            if self.is_super_user(user):
-                                # Super user; must always validate with raw auth code
-                                validated = (code == gterm.compute_hmac(self._auth_code, cauth))
-                            elif Server_settings["auto_users"] and not os.path.exists(HOME_MNT+"/"+user):
+                            if Server_settings["auto_users"] and not os.path.exists(HOME_MNT+"/"+user) and not self.is_super_user(user):
                                 # New auto user; no code validation required
                                 validated = True
                                 new_auto_user = True
@@ -401,7 +414,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     self.close()
                                     return
                             else:
-                                # Non-auto user or existing auto user; need to validate with user auth code
+                                # Non-auto user, super user, or existing auto user; need to validate with user auth code
                                 key_version = "1" if self._auth_type >= self.CODE_AUTH else None
                                 validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
 
@@ -475,7 +488,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             
             option = path_comps[2] if len(path_comps) > 2 else ""
             if wildhost:
-                allow_wild_host = (not self._super_users and self._auth_type <= self.NAME_AUTH) or is_super_user
+                allow_wild_host = (not self._super_users and self._auth_type <= self.LOCAL_AUTH) or is_super_user
                 if not allow_wild_host:
                     self.write_json([["abort", "User not authorized for wildcard host"]])
                     self.close()
@@ -537,8 +550,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if path not in self._control_params:
                 # Initialize parameters for new terminal
-                allow_host_access = self._auth_type <= self.NAME_AUTH or (host != LOCAL_HOST and host == user) or (host == LOCAL_HOST and is_super_user)
-                if not allow_host_access or self.authorized["auth_type"] <= self.WEBCAST_AUTH:
+                allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or (host != LOCAL_HOST and host == user) or (host == LOCAL_HOST and is_super_user))
+                if not allow_host_access:
                     self.write_json([["abort", "Unable to create terminal on host %s" % host]])
                     self.close()
                     return
@@ -570,7 +583,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.websocket_id = str(self._counter[0])
 
             if is_wildcard(path):
-                allow_wild_card = (not self._super_users and self._auth_type <= self.NAME_AUTH) or is_super_user or (host != LOCAL_HOST and host == user)
+                allow_wild_card = (not self._super_users and self.authorized["auth_type"] > self.NULL_AUTH and self._auth_type <= self.LOCAL_AUTH) or is_super_user or (host != LOCAL_HOST and host == user)
                 if not allow_wild_card:
                     self.write_json([["abort", "User not authorized for wildcard path"]])
                     self.close()
@@ -597,7 +610,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 else:
                     self.broadcast(path, ["update_menu", "share_control", False], controller=True)
                     self._control_set[path] = set([self.websocket_id])
-            elif not self._control_set.get(path) and is_owner and option != "watch":
+            elif not self._control_set.get(path) and option != "watch" and (is_owner or self._auth_type == self.LOCAL_AUTH):
                 controller = True
                 self._control_set[path] = set([self.websocket_id])
 
@@ -622,7 +635,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             state_values = terminal_params.copy()
             state_values.pop("state_id", None)
             state_values["share_webcast"] = bool(path in self._webcast_paths)
-            state_values["allow_webcast"] = bool(self._auth_type <= self.NAME_AUTH or is_super_user or Server_settings["allow_share"])
+            state_values["allow_webcast"] = bool(self._auth_type <= self.LOCAL_AUTH or is_super_user or Server_settings["allow_share"])
             users = [get_user(self._all_websockets.get(ws_id)) for ws_id in self._watch_dict[self.remote_path]]
             self.write_json([["setup", {"user": user, "host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
@@ -775,7 +788,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             # Give up control
                             self._control_set[self.remote_path].discard(self.websocket_id)
                         elif self.is_super_user(from_user) or is_owner or (not terminal_params["share_locked"] and
-                                                                           (self._auth_type <= self.NAME_AUTH or
+                                                                           (self._auth_type <= self.LOCAL_AUTH or
                                                                             (Server_settings["allow_share"] and
                                                                              not self.is_super_user(terminal_params["owner"])))):
                             # Gain control
@@ -803,7 +816,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 self._webcast_paths.pop(last=False)
                             if value:
                                 # Initiate webcast
-                                if self._auth_type <= self.NAME_AUTH or (Server_settings["allow_share"] or
+                                if self._auth_type <= self.LOCAL_AUTH or (Server_settings["allow_share"] or
                                                                          self.is_super_user(from_user)):
                                     self._webcast_paths[self.remote_path] = time.time()
                             else:
@@ -925,7 +938,7 @@ class TraceInterface(object):
         cls.trace_hook(channel, repeat, path_comps, message)
             
 
-def xterm(command="", name=None, host="localhost", port=gtermhost.DEFAULT_HTTP_PORT):
+def xterm(command="", name=None, host="localhost", port=gterm.DEFAULT_HTTP_PORT):
     """Create new terminal"""
     pass
 
@@ -1280,12 +1293,20 @@ def run_server(options, args):
     class AuthHandler(tornado.web.RequestHandler):
         def get(self):
             self.set_header("Content-Type", "text/plain")
+            user = self.get_argument("user", "")
+            key_version = self.get_argument("key_version", "1")
             client_nonce = self.get_argument("nonce", "")
             if not client_nonce:
                 raise tornado.web.HTTPError(401)
-            server_nonce = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leading zeros when stringified
+            server_nonce = GTSocket.get_connect_cookie()
+            if GTSocket.get_auth_type() >= GTSocket.CODE_AUTH:
+                hmac_key = gterm.user_hmac(GTSocket.get_auth_code(), user, key_version=key_version)
+            elif GTSocket.get_auth_type() == GTSocket.LOCAL_AUTH:
+                hmac_key = GTSocket.get_auth_code()
+            else:
+                hmac_key = "none"
             try:
-                client_token, server_token = auth_token(Gterm_secret, "graphterm", client_nonce, server_nonce)
+                client_token, server_token = auth_token(hmac_key, "graphterm", client_nonce, server_nonce)
             except Exception:
                 raise tornado.web.HTTPError(401)
 
@@ -1312,15 +1333,15 @@ def run_server(options, args):
         Term_settings = {}
 
     auth_file = ""
-    if options.auth_code == "random" or (options.auth_code == "file" and not os.path.exists(os.path.join(gterm.App_dir, gterm.APP_AUTH_FILENAME))):
+    if options.auth_code == "local" or (options.auth_code == "user" and not os.path.exists(gterm.get_auth_filename(server=http_host))):
         # Random auth code
         auth_code = GTSocket.get_auth_code()
         try:
-            gterm.write_auth_code(auth_code)
+            gterm.write_auth_code(auth_code, server=http_host, port=http_port)
         except Exception, excp:
             print >> sys.stderr, "Error in writing authentication file: %s" % excp
             sys.exit(1)
-        auth_file = gterm.App_auth_file
+        auth_file = gterm.get_auth_filename()
     else:
         if options.auth_code == "none":
             # No auth code
@@ -1328,26 +1349,20 @@ def run_server(options, args):
         elif options.auth_code == "name":
             # No auth code
             auth_code = "name"
-        elif options.auth_code == "file":
+        elif options.auth_code == "user":
             try:
-                auth_code = gterm.read_auth_code()
+                auth_code, port = gterm.read_auth_code()
             except Exception, excp:
                 print >> sys.stderr, "Error in reading authentication file: %s" % excp
                 sys.exit(1)
-            auth_file = gterm.App_auth_file
+            auth_file = gterm.get_auth_filename()
         else:
-            print >> sys.stderr, "Invalide authentication type '%s'; must be one of none/name/file/random" % options.auth_code
+            print >> sys.stderr, "Invalide authentication type '%s'; must be one of none/name/local/user" % options.auth_code
             sys.exit(1)
         GTSocket.set_auth_code(auth_code)
 
-    GTSocket.set_super_users(options.super_users.split(",") if options.super_users else [])
-
-    handlers = []
-    if options.server_auth:
-        handlers += [(r"/_auth/.*", AuthHandler)]
-        with open(gterm.App_secret_file, "w") as f:
-            f.write("%d %d %s\n" % (http_port, os.getpid(), Gterm_secret))
-        os.chmod(gterm.App_secret_file, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+    super_users = options.super_users.split(",") if options.super_users else []
+    GTSocket.set_super_users(super_users)
 
     if options.auth_users:
         assert auth_code and auth_code != "name", "Must specify auth code"
@@ -1356,12 +1371,13 @@ def run_server(options, args):
             if user:
                 GTSocket._auth_users[user] = gterm.user_hmac(auth_code, user, key_version="1")
 
-    handlers += [(r"/_websocket/.*", GTSocket),
-                 (gterm.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
-                 (gterm.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
-                 (gterm.FILE_PREFIX+r"(.*)", ProxyFileHandler, {}),
-                 (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
-                 ]
+    handlers = [(r"/_auth/.*", AuthHandler),
+                (r"/_websocket/.*", GTSocket),
+                (gterm.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
+                (gterm.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
+                (gterm.FILE_PREFIX+r"(.*)", ProxyFileHandler, {}),
+                (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
+                ]
 
     application = tornado.web.Application(handlers)
 
@@ -1429,7 +1445,7 @@ def run_server(options, args):
                                                                      "blob_host": options.blob_host,
                                                                      "lterm_logfile": options.lterm_logfile,
                                                                      "widget_port":
-                                                                       (gtermhost.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
+                                                                       (gterm.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,
                                                          oshell_init="gtermserver.trc",
                                                          oshell_unsafe=True,
@@ -1453,8 +1469,16 @@ def run_server(options, args):
         if std_err:
             logging.warning("gtermserver: ERROR in starting up %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
 
-    url = "%s://%s:%d" % ("https" if options.https else "http", http_host, http_port)
     if options.terminal:
+        server_nonce = GTSocket.get_connect_cookie()
+        query = "?cauth="+server_nonce
+        if options.auth_code == "local":
+            query += "&code="+gterm.compute_hmac(auth_code, server_nonce)
+        elif options.auth_code == "user" and super_users:
+            query += "&user="+super_users[0]+"&code="+gterm.compute_hmac(gterm.user_hmac(auth_code, super_users[0], key_version=key_version), server_nonce)
+        elif options.auth_code == "name" and super_users:
+            query += "&user="+super_users[0]
+        url = "%s://%s:%d/local/new/%s" % ("https" if options.https else "http", http_host, http_port, query)
         try:
             gterm.open_browser(url)
         except Exception, excp:
@@ -1499,11 +1523,8 @@ def run_server(options, args):
         print >> sys.stderr, "Interrupted"
 
     finally:
-        try:
-            if options.server_auth:
-                os.remove(gterm.App_secret_file)
-        except Exception:
-            pass
+        if options.auth_code == "local":
+            gterm.clear_auth_code(server=http_host)
     IO_loop.add_callback(stop_server)
 
 def main():
@@ -1512,16 +1533,16 @@ def main():
     usage = "usage: gtermserver [-h ... options]"
     parser = OptionParser(usage=usage)
 
-    parser.add_option("", "--auth_code", dest="auth_code", default="random",
-                      help="Authentication code (random/none/name/file)")
+    parser.add_option("", "--auth_code", dest="auth_code", default="local",
+                      help="Authentication code (none/name/local/user)")
 
     parser.add_option("", "--auth_users", dest="auth_users", default="",
                       help="Comma-separated list of authenticated user names")
 
     parser.add_option("", "--host", dest="host", default="localhost",
                       help="Hostname (or IP address) (default: localhost)")
-    parser.add_option("", "--port", dest="port", default=gtermhost.DEFAULT_HTTP_PORT,
-                      help="IP port (default: %d)" % gtermhost.DEFAULT_HTTP_PORT, type="int")
+    parser.add_option("", "--port", dest="port", default=gterm.DEFAULT_HTTP_PORT,
+                      help="IP port (default: %d)" % gterm.DEFAULT_HTTP_PORT, type="int")
 
     parser.add_option("", "--terminal", dest="terminal", action="store_true",
                       help="Open new terminal window")
@@ -1547,8 +1568,6 @@ def main():
                       help="Use SSL (TLS) connections for security")
     parser.add_option("", "--internal_https", dest="internal_https", action="store_true",
                       help="Use https for internal connections")
-    parser.add_option("", "--server_auth", dest="server_auth", action="store_true",
-                      help="Enable server authentication by gterm clients")
     parser.add_option("", "--prompts", dest="prompts", default="",
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
     parser.add_option("", "--lc_export", dest="lc_export", action="store_true",
@@ -1574,7 +1593,7 @@ def main():
     parser.add_option("", "--lterm_logfile", dest="lterm_logfile", default="",
                       help="Lineterm logfile")
     parser.add_option("", "--widgets", dest="widgets", action="store_true",
-                      help="Activate widgets on port %d" % (gtermhost.DEFAULT_HTTP_PORT-2))
+                      help="Activate widgets on port %d" % (gterm.DEFAULT_HTTP_PORT-2))
 
 
     parser.add_option("", "--daemon", dest="daemon", default="",
@@ -1585,8 +1604,9 @@ def main():
     if not options.daemon:
         run_server(options, args)
     else:
+        import getpass
         from daemon import ServerDaemon
-        pidfile = "/tmp/gtermserver.pid"
+        pidfile = "/tmp/gtermserver.%s.pid" % getpass.getuser()
         daemon = ServerDaemon(pidfile, functools.partial(run_server, options, args))
         daemon.daemon_run(options.daemon)
 

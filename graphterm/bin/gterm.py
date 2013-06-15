@@ -39,6 +39,9 @@ SIGN_HEXDIGITS = 24
 
 GT_PREFIX = "GTERM_"
 
+DEFAULT_HTTP_PORT = 8900
+DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
+
 Bin_dir = os.path.dirname(__file__)
 
 # Short prompt (long prompt with directory metadata fills most of row):
@@ -57,7 +60,7 @@ Export_host = env("EXPORT") or (not env("COOKIE") and os.getenv("LC_"+GT_PREFIX+
 Path = env("PATH", lc=True)
 Dimensions = env("DIMENSIONS", lc=True) # colsxrows[;widthxheight]
 Shared_secret = env("SHARED_SECRET", lc=True)
-URL = env("URL", "http://localhost:8900")
+URL = env("URL", "http://localhost:%d" % DEFAULT_HTTP_PORT)
 Blob_server = env("BLOB_SERVER", "")
 
 _, Host, Session = Path.split("/") if Path else ("", "", "") 
@@ -113,22 +116,38 @@ def create_app_directory(appdir=App_dir):
         # Protect App directory
         os.chmod(appdir, 0700)
 
-def read_auth_code(appdir=App_dir, user=""):
+def get_auth_filename(appdir=App_dir, user="", server=""):
     auth_file = os.path.join(appdir, APP_AUTH_FILENAME)
     if user:
         auth_file += "." + user
-    with open(auth_file) as f:
-        auth_code = f.read().strip()
-        assert auth_code, "Null authentication code in file "+auth_file
-        return auth_code
+    if server and server != "localhost":
+        auth_file += "@" + server
+    return auth_file
 
-def write_auth_code(code, appdir=App_dir, user=""):
-    auth_file = os.path.join(appdir, APP_AUTH_FILENAME)
-    if user:
-        auth_file += "." + user
+def read_auth_code(appdir=App_dir, user="", server=""):
+    auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
+    with open(auth_file) as f:
+        comps = f.read().strip().split()
+        auth_code = comps[0]
+        port = int(comps[1]) if len(comps) > 1 else None
+        assert auth_code, "Null authentication code in file "+auth_file
+        return auth_code, port
+
+def write_auth_code(code, appdir=App_dir, user="", server="", port=None):
+    auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
     with open(auth_file, "w") as f:
-        f.write(code+"\n")
+        f.write(code)
+        if port and port != DEFAULT_HTTP_PORT:
+            f.write(" "+str(port))
+        f.write("\n")
     os.chmod(auth_file, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+
+def clear_auth_code(appdir=App_dir, user="", server=""):
+    auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
+    try:
+        os.remove(auth_file)
+    except Exception:
+        pass
 
 def compute_hmac(key, message, hex_digits=HEX_DIGITS):
     return hmac.new(str(key), message, digestmod=hashlib.sha256).hexdigest()[:hex_digits]
@@ -738,11 +757,15 @@ def command_output(command_args, **kwargs):
         except Queue.Empty:
             return "", "Timed out after %s seconds" % timeout
 
-def open_browser(url):
+def open_browser(url, browser=""):
     if sys.platform.startswith("linux"):
-        command_args = ["xdg-open", url]
+        command_args = ["xdg-open"]
     else:
-        command_args = ["open", url]
+        command_args = ["open"]
+        if browser:
+            command_args += ["-a", browser]
+
+    command_args.append(url)
 
     return command_output(command_args, timeout=5)
 

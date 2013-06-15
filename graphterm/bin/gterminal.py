@@ -15,12 +15,12 @@ import tornado.httpclient
 import gterm
 
 Http_addr = "localhost"
-Http_port = 8900
+Http_port = gterm.DEFAULT_HTTP_PORT
 
 def getuid(pid):
     """Return uid of running process"""
     command_args = ["lsof", "-a", "-p", str(pid), "-d", "cwd", "-Fu"]
-    std_out, std_err = command_output(command_args, timeout=1)
+    std_out, std_err = gterm.command_output(command_args, timeout=1)
     if std_err:
         logging.warning("getuid: ERROR %s", std_err)
         return None
@@ -30,7 +30,7 @@ def getuid(pid):
         logging.warning("getuid: ERROR %s", excp)
         return None
 
-def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, protocol="http"):
+def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, user="", protocol="http"):
     """Simulate user form submission by executing a HTTP request"""
 
     cert_dir = gterm.App_dir
@@ -45,6 +45,8 @@ def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, p
 	ssl_options.update(client_cert=client_cert, client_key=client_key)
 	
     url = "%s://%s:%s/_auth/?nonce=%s" % (protocol, http_addr, http_port, nonce)
+    if user:
+        url += "&user=" + user
     request = tornado.httpclient.HTTPRequest(url, validate_cert=True, ca_certs=ca_certs,
 					     **ssl_options)
     http_client = tornado.httpclient.HTTPClient()
@@ -72,12 +74,18 @@ def main():
 
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
-    parser.add_option("", "--server_auth", dest="server_auth", action="store_true",
-                      help="Authenticate server before opening gterm window")
+    parser.add_option("-b", "--browser", dest="browser", default="",
+                      help="Browser application name (OS X only)")
+    parser.add_option("-u", "--user", dest="user", default="",
+                      help="User name")
+    parser.add_option("-s", "--server", dest="server", default="",
+                      help="Remote server domain name")
+    parser.add_option("-p", "--port", dest="port", default=0,
+                      help="Remote server port", type="int")
     parser.add_option("", "--client_cert", dest="client_cert", default="",
                       help="Path to client CA cert (or '.')")
-    parser.add_option("", "--term_type", dest="term_type", default="",
-                      help="Terminal type (linux/screen/xterm) NOT YET IMPLEMENTED")
+    #parser.add_option("", "--term_type", dest="term_type", default="",
+    #                  help="Terminal type (linux/screen/xterm) NOT YET IMPLEMENTED")
 
     (options, args) = parser.parse_args()
     protocol = "https" if options.https else "http"
@@ -89,7 +97,7 @@ def main():
         else:
             path = (gterm.Host or "local") + "/" + args[0]
 
-    if gterm.Lterm_cookie:
+    if not options.server and gterm.Lterm_cookie:
         # Open new terminal window from within graphterm window
         path = path or (gterm.Host + "/" + "new")
         url = gterm.URL + "/" + path
@@ -97,47 +105,44 @@ def main():
         gterm.open_url(url, target=target)
         return
 
-    if options.server_auth:
-        # Authenticate server
-        if not os.path.exists(gterm.App_secret_file):
-            print >> sys.stderr, "gterm: Server not running (no secret file); use 'gtermserver' command to start it."
+    try:
+        auth_code, port = gterm.read_auth_code(user=options.user, server=options.server)
+    except Exception, exception:
+        if options.user or options.server:
+            print >> sys.stderr, "gterm: Error in reading authentication file %s" % gterm.get_auth_filename(user=options.user, server=options.server)
             sys.exit(1)
+        auth_code = "none"
+        port = None
 
-        try:
-            with open(gterm.App_secret_file) as f:
-                Http_port, Gterm_pid, Gterm_secret = f.read().split()
-                Http_port = int(Http_port)
-                Gterm_pid = int(Gterm_pid)
-        except Exception, excp:
-            print >> sys.stderr, "gterm: Error in reading %s: %s" % (gterm.App_secret_file, excp)
-            sys.exit(1)
+    Http_addr = options.server or "localhost"
+    Http_port = options.port or port or gterm.DEFAULT_HTTP_PORT
 
-        if os.getuid() != getuid(Gterm_pid):
-            print >> sys.stderr, "gterm: Server not running (invalid pid); use 'gtermserver' command to start it."
-            sys.exit(1)
+    client_nonce = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leading zeros when stringified
 
-        client_nonce = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leading zeros when stringified
+    resp = auth_request(Http_addr, Http_port, client_nonce, user=options.user, protocol=protocol)
+    if not resp:
+        print >> sys.stderr, "gterm: Auth HTTTP Request failed"
+        sys.exit(1)
 
-        resp = auth_request(Http_addr, Http_port, client_nonce, protocol=protocol)
-        if not resp:
-            print >> sys.stderr, "gterm: Auth HTTTP Request failed"
-            sys.exit(1)
+    server_nonce, received_token = resp.split(":")
+    client_token, server_token = auth_token(auth_code, "graphterm", client_nonce, server_nonce)
+    if received_token != client_token:
+        print >> sys.stderr, "gterm: Server failed to authenticate itself"
+        print >> sys.stderr, "gterm: Server may not be running; use 'gtermserver' command to start it."
+        sys.exit(1)
 
-        server_nonce, received_token = resp.split(":")
-        client_token, server_token = auth_token(Gterm_secret, "graphterm", client_nonce, server_nonce)
-        if received_token != client_token:
-            print >> sys.stderr, "gterm: Server failed to authenticate itself"
-            sys.exit(1)
-
-        # TODO: Send server token to server in URL to authenticate
-        ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
+    ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
 
     # Open graphterm window using browser
     url = "%s://%s:%d" % (protocol, Http_addr, Http_port)
     if path:
         url += "/" + path
+    code = gterm.compute_hmac(auth_code, server_nonce)
+    url += "/?cauth="+server_nonce+"&code="+code
+    if options.user:
+        url += "&user="+options.user
 
-    std_out, std_err = gterm.open_browser(url)
+    std_out, std_err = gterm.open_browser(url, browser=options.browser)
     if std_err:
         print >> sys.stderr, "gterm: ERROR in opening browser window '%s' - %s\n Check if server is running. If not, start it with 'gtermserver' command." % (" ".join(command_args), std_err)
         sys.exit(1)
