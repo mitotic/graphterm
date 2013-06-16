@@ -60,12 +60,6 @@ def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, u
 	print >> sys.stderr, "HTTPClient ERROR ", excp
     return None
 
-def auth_token(secret, connection_id, client_nonce, server_nonce):
-    """Return (client_token, server_token)"""
-    SIGN_SEP = "|"
-    prefix = SIGN_SEP.join([connection_id, client_nonce, server_nonce]) + SIGN_SEP
-    return [hmac.new(str(secret), prefix+conn_type, digestmod=hashlib.sha256).hexdigest()[:24] for conn_type in ("client", "server")]
-
 def main():
     global Http_addr, Http_port
     from optparse import OptionParser
@@ -125,7 +119,7 @@ def main():
         sys.exit(1)
 
     server_nonce, received_token = resp.split(":")
-    client_token, server_token = auth_token(auth_code, "graphterm", client_nonce, server_nonce)
+    client_token, server_token = gterm.auth_token(auth_code, "graphterm", Http_addr, Http_port, client_nonce, server_nonce)
     if received_token != client_token:
         print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself (Check port number, if necessary)" % (Http_addr, Http_port)
         sys.exit(1)

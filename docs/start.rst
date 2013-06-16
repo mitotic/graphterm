@@ -84,10 +84,12 @@ Command Toolchain
 
 GraphTerm is bundled with a command toolchain that allow access to
 many graphical features from the command line.
+(*Note:* You need to execute the ``sudo gterm_setup`` command
+to be able to use the GraphTerm toolchain.)
 The toolchain commands can communicate with each other using pipes
 and may be written any language,
 e.g., Bash shell script, Python etc.
-The reside in the directory ``$GTERM_DIR/bin`` and include the following:
+The commands reside in the directory ``$GTERM_DIR/bin`` and include the following:
 
    ``d3cloud [file]`` To display file (or stdin) content as a word
    cloud (see  :ref:`d3cloud_shot`)

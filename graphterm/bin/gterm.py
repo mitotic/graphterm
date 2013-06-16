@@ -110,6 +110,12 @@ def dashify(s, n=4):
 def undashify(s):
     return s.replace("-", "")
 
+def auth_token(secret, connection_id, host, port, client_nonce, server_nonce):
+    """Return (client_token, server_token)"""
+    SIGN_SEP = "|"
+    prefix = SIGN_SEP.join([connection_id, host.lower(), str(port), client_nonce, server_nonce]) + SIGN_SEP
+    return [hmac.new(str(secret), prefix+conn_type, digestmod=hashlib.sha256).hexdigest()[:24] for conn_type in ("client", "server")]
+
 def create_app_directory(appdir=App_dir):
     if not os.path.exists(appdir):
         try:
