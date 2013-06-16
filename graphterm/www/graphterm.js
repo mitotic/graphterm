@@ -165,7 +165,11 @@ var JFILENAME = 2;
 var JFILEPATH = 3;
 var JQUERY = 4;
 
-var HEX_DIGITS = 16;
+var HEX_DIGITS = 20;
+
+function undashify(s) {
+    return s.replace(/-/g, "");
+}
 
 function compute_hmac(key, message) {
     //console.log("compute_hmac: ", key, message);
@@ -340,7 +344,7 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
 
 function Authenticate(evt) {
     console.log("Authenticate: ", evt);
-    var authHMAC = compute_hmac($.trim($("#authcode").val() || ""), gAuthenticatingCookie);
+    var authHMAC = compute_hmac(undashify($.trim($("#authcode").val()) || ""), gAuthenticatingCookie);
     window.location = location.pathname+"?"+$.param({cauth: gAuthenticatingCookie, code: authHMAC, user:$("#authuser").val()});
     return false;
 }

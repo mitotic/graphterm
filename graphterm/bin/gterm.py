@@ -34,7 +34,7 @@ from optparse import OptionParser
 API_VERSION = "0.35.0"
 API_MIN_VERSION = "0.35"
 
-HEX_DIGITS = 16
+HEX_DIGITS = 20
 SIGN_HEXDIGITS = 24
 
 GT_PREFIX = "GTERM_"
@@ -104,6 +104,12 @@ App_dir = os.path.join(os.path.expanduser("~"), APP_DIRNAME)
 App_auth_file = os.path.join(App_dir, APP_AUTH_FILENAME)
 App_secret_file = os.path.join(App_dir, APP_SECRET_FILENAME)
 
+def dashify(s, n=4):
+    return "-".join(s[j:j+n] for j in range(0, len(s), n))
+
+def undashify(s):
+    return s.replace("-", "")
+
 def create_app_directory(appdir=App_dir):
     if not os.path.exists(appdir):
         try:
@@ -128,7 +134,7 @@ def read_auth_code(appdir=App_dir, user="", server=""):
     auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
     with open(auth_file) as f:
         comps = f.read().strip().split()
-        auth_code = comps[0]
+        auth_code = undashify(comps[0])
         port = int(comps[1]) if len(comps) > 1 else None
         assert auth_code, "Null authentication code in file "+auth_file
         return auth_code, port
@@ -136,7 +142,7 @@ def read_auth_code(appdir=App_dir, user="", server=""):
 def write_auth_code(code, appdir=App_dir, user="", server="", port=None):
     auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
     with open(auth_file, "w") as f:
-        f.write(code)
+        f.write(dashify(code))
         if port and port != DEFAULT_HTTP_PORT:
             f.write(" "+str(port))
         f.write("\n")

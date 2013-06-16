@@ -34,7 +34,7 @@ def main():
         admin_dir = gterm.App_dir
 
     auth_code, port = gterm.read_auth_code(appdir=admin_dir)
-    user_code = gterm.user_hmac(auth_code, user, key_version="1")
+    user_code = gterm.dashify(gterm.user_hmac(auth_code, user, key_version="1"))
     if not options.write:
         print user_code
     else:
