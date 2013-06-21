@@ -70,6 +70,9 @@ Within the terminal, try out the following commands::
 
 These are commands in the GraphTerm toolchain that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
+(*Note:* You need to execute the ``sudo gterm_setup`` command
+to be able to use the GraphTerm toolchain. Otherwise, you will
+encounter a ``Permission denied`` error.)
 To display images as thumbnails, use the ``gls -i ...`` command.
 Use the ``-h`` option to display help information for these commands,
 and read the
@@ -84,8 +87,7 @@ Command Toolchain
 
 GraphTerm is bundled with a command toolchain that allow access to
 many graphical features from the command line.
-(*Note:* You need to execute the ``sudo gterm_setup`` command
-to be able to use the GraphTerm toolchain.)
+
 The toolchain commands can communicate with each other using pipes
 and may be written any language,
 e.g., Bash shell script, Python etc.

@@ -147,7 +147,8 @@ Once you have a terminal, try out the following commands::
 These are commands in the GraphTerm toolchain that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
 (*Note:* You need to execute the ``sudo gterm_setup`` command
-to be able to use the GraphTerm toolchain.)
+to be able to use the GraphTerm toolchain. Otherwise, you will
+encounter a ``Permission denied`` error.)
 See `Getting Started with GraphTerm <http://code.mindmeldr.com/graphterm/start.html>`_
 and the
 `Using Graphical Features

@@ -284,6 +284,9 @@ gvi &lt;text-filename&gt;</pre>
 </div>
 <p>These are commands in the GraphTerm toolchain that imitate
 basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands.
+(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command
+to be able to use the GraphTerm toolchain. Otherwise, you will
+encounter a <tt class="docutils literal"><span class="pre">Permission</span> <span class="pre">denied</span></tt> error.)
 To display images as thumbnails, use the <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span> <span class="pre">...</span></tt> command.
 Use the <tt class="docutils literal"><span class="pre">-h</span></tt> option to display help information for these commands,
 and read the
@@ -292,10 +295,8 @@ and read the
 <div class="section" id="command-toolchain">
 <span id="toolchain"></span><span id="index-0"></span><h2><a class="toc-backref" href="#id8">Command Toolchain</a><a class="headerlink" href="#command-toolchain" title="Permalink to this headline">¶</a></h2>
 <p>GraphTerm is bundled with a command toolchain that allow access to
-many graphical features from the command line.
-(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command
-to be able to use the GraphTerm toolchain.)
-The toolchain commands can communicate with each other using pipes
+many graphical features from the command line.</p>
+<p>The toolchain commands can communicate with each other using pipes
 and may be written any language,
 e.g., Bash shell script, Python etc.
 The commands reside in the directory <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> and include the following:</p>
