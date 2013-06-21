@@ -1753,15 +1753,30 @@ class Terminal(object):
             # For python, need to insert blank lines before reverting back to no indentation
             tem_lines = []
             indent = 0
+            prev_blank = False
             for line in input_lines:
-                new_indent = len(line) - len(line.lstrip())
+                unindented_line = line.lstrip()
+                if not unindented_line:
+                    # Blank line
+                    if prev_blank:
+                        tem_lines.append("".join([" "]*indent))
+                    prev_blank = True
+                    continue
+                # Non-blank line
+                new_indent = len(line) - len(unindented_line)
+                append_blank = False
                 if not new_indent and indent:
                     # Append blank line to clear indent, if need be
                     comps = line.rstrip().split()
                     if comps and comps[0] not in ("else:", "elif", "except:", "except", "finally:"):
-                        tem_lines.append("")
+                        append_blank = True
+                if append_blank:
+                    tem_lines.append("")
+                elif prev_blank:
+                    tem_lines.append("".join([" "]*indent))
                 tem_lines.append(line)
                 indent = new_indent
+                prev_blank = False
             input_lines = tem_lines
 
         if input_lines[-1]:
