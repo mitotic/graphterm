@@ -39,7 +39,7 @@ form_parser.add_option("allow_share", False, help="Allow sharing between users")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("dry_run", False, help="Dry run")
 form_parser.add_option("verbose", False, help="Verbose")
-form_parser.add_option("wildcard", False, help="Enable wildcard subdomains")
+##form_parser.add_option("wildcard", False, help="Enable wildcard subdomains")
 
 form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
 form_parser.add_option("text", False, short="t", help="Text only", raw=True)
@@ -172,8 +172,8 @@ else:
     startup_commands += [ fwall_command ]
     if install_gterm and auth_type:
         init_command = (command_format % "gtermserver") + ' --auth_type="'+options.auth_type+'" --host='+host_domain
-        if options.wildcard:
-            init_command += " --blob_host=wildcard"
+        ##if options.wildcard:
+        ##    init_command += " --blob_host=wildcard"
         startup_commands += [ init_command ]
 
 if init_command or fwall_command:
@@ -317,8 +317,8 @@ public_dns_name = instance_obj.public_dns_name
 if hosted_zone:
     # Create new CNAME entry pointing to instance public DNS
     ec2common.cname(route53conn, hosted_zone, instance_tag, public_dns_name)
-    if options.wildcard:
-        ec2common.cname(route53conn, hosted_zone, "*."+instance_tag, public_dns_name)
+    ##if options.wildcard:
+    ##    ec2common.cname(route53conn, hosted_zone, "*."+instance_tag, public_dns_name)
 
 print >> sys.stderr, "Created EC2 instance %s: id=%s, public=%s" % (instance_tag, instance_id, public_dns_name)
 if options.verbose:
