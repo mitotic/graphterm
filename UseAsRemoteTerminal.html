@@ -158,22 +158,22 @@ code.mindmeldr.com
           <div class="body">
             
   <div class="section" id="use-graphterm-as-a-remote-terminal-like-screen-or-tmux">
-<h1><a class="toc-backref" href="#id2">Use GraphTerm as a remote terminal (like screen or tmux)</a><a class="headerlink" href="#use-graphterm-as-a-remote-terminal-like-screen-or-tmux" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id4">Use GraphTerm as a remote terminal (like screen or tmux)</a><a class="headerlink" href="#use-graphterm-as-a-remote-terminal-like-screen-or-tmux" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#use-graphterm-as-a-remote-terminal-like-screen-or-tmux" id="id2">Use GraphTerm as a remote terminal (like screen or tmux)</a><ul>
-<li><a class="reference internal" href="#introduction" id="id3">Introduction</a></li>
-<li><a class="reference internal" href="#accessing-graphterm-features-across-ssh-logins" id="id4">Accessing GraphTerm features across SSH logins</a></li>
-<li><a class="reference internal" href="#accessing-graphterm-server-from-a-remote-computer-using-ssh" id="id5">Accessing GraphTerm server from a remote computer using SSH</a></li>
-<li><a class="reference internal" href="#connecting-multiple-hosts-to-gtermserver" id="id6">Connecting multiple hosts to gtermserver</a></li>
-<li><a class="reference internal" href="#wildcard-sessions" id="id7">Wildcard sessions</a></li>
+<li><a class="reference internal" href="#use-graphterm-as-a-remote-terminal-like-screen-or-tmux" id="id4">Use GraphTerm as a remote terminal (like screen or tmux)</a><ul>
+<li><a class="reference internal" href="#introduction" id="id5">Introduction</a></li>
+<li><a class="reference internal" href="#accessing-graphterm-features-across-ssh-logins" id="id6">Accessing GraphTerm features across SSH logins</a></li>
+<li><a class="reference internal" href="#accessing-graphterm-server-from-a-remote-computer-using-ssh" id="id7">Accessing GraphTerm server from a remote computer using SSH</a></li>
+<li><a class="reference internal" href="#connecting-multiple-hosts-to-gtermserver" id="id8">Connecting multiple hosts to gtermserver</a></li>
+<li><a class="reference internal" href="#wildcard-sessions" id="id9">Wildcard sessions</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="introduction">
-<h2><a class="toc-backref" href="#id3">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>GraphTerm provides the basic capabilities of <em>detached terminal</em> programs like
 <tt class="docutils literal"><span class="pre">screen</span></tt> and <tt class="docutils literal"><span class="pre">tmux</span></tt>. The GraphTerm terminal window is just a web page,
 served by <tt class="docutils literal"><span class="pre">gtermserver</span></tt>. Therefore, it can be accessed from any computer
@@ -195,7 +195,7 @@ and the hosts will automatically reconnect.</p>
 file for basic instructions on installing and starting up GraphTerm.</p>
 </div>
 <div class="section" id="accessing-graphterm-features-across-ssh-logins">
-<h2><a class="toc-backref" href="#id4">Accessing GraphTerm features across SSH logins</a><a class="headerlink" href="#accessing-graphterm-features-across-ssh-logins" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Accessing GraphTerm features across SSH logins</a><a class="headerlink" href="#accessing-graphterm-features-across-ssh-logins" title="Permalink to this headline">¶</a></h2>
 <p>If you login to a remote computer using SSH, you can use the
 <em>terminal/export environment</em>  menu option to set the Bash shell
 environment variables on the remote computer. This will allow
@@ -209,20 +209,16 @@ to connect remote hosts to the GraphTerm server, use:</p>
 </div>
 </div>
 <div class="section" id="accessing-graphterm-server-from-a-remote-computer-using-ssh">
-<h2><a class="toc-backref" href="#id5">Accessing GraphTerm server from a remote computer using SSH</a><a class="headerlink" href="#accessing-graphterm-server-from-a-remote-computer-using-ssh" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Accessing GraphTerm server from a remote computer using SSH</a><a class="headerlink" href="#accessing-graphterm-server-from-a-remote-computer-using-ssh" title="Permalink to this headline">¶</a></h2>
 <p>Assume that you will be running <tt class="docutils literal"><span class="pre">gtermserver</span></tt> on your <tt class="docutils literal"><span class="pre">work-computer</span></tt> as
 <tt class="docutils literal"><span class="pre">localhost</span></tt> listening on the default port 8900 using the command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_code</span><span class="o">=</span><span class="n">none</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span>
 </pre></div>
 </div>
 <p>At work, you will use the URL <tt class="docutils literal"><span class="pre">http://localhost:8900/local/tty1</span></tt> to access
 your terminal session <tt class="docutils literal"><span class="pre">tty1</span></tt>. Now disable the <em>terminal/private</em> menu
-option, to allow others to share your terminal. To disable privacy by
-default, start the server as:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_code</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">term_settings</span><span class="o">=</span><span class="s">&#39;{&quot;sharing_private&quot;: false}&#39;</span>
-</pre></div>
-</div>
-<p>You can then access your work terminal from home, by connecting to your work computer using SSH:</p>
+option, to allow others to share your terminal.
+You can then access your work terminal from home, by connecting to your work computer using SSH:</p>
 <div class="highlight-python"><pre>ssh -L 8901:localhost:8900 user@work-computer</pre>
 </div>
 <p>The above command maps your work computer port 8900 to your home computer port 8901.
@@ -234,13 +230,21 @@ desktop port 8901.)</p>
 home using the URL:</p>
 <div class="highlight-python"><pre>http://localhost:8901/local/tty1</pre>
 </div>
-<p>(If you forgot to detach your work terminal before leaving, use the
+<p>You will need to enter the authentication code from the file
+<a href="#id1"><span class="problematic" id="id2">``</span></a>~/.graphterm/graphterm_auth` on your work computer.
+(If you forgot to detach your work terminal before leaving, use the
 <em>steal</em> menu button to steal control of the session.)</p>
+<p>If you are the only
+user with access to your work computer, you can disable authentication
+and privacy by default, by starting the server as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">term_settings</span><span class="o">=</span><span class="s">&#39;{&quot;share_private&quot;: false}&#39;</span>
+</pre></div>
+</div>
 <p>If you have multiple terminals open, use the URL <tt class="docutils literal"><span class="pre">http://localhost:8901/local</span></tt> to
 see a list of all the available terminal sessions.</p>
 </div>
 <div class="section" id="connecting-multiple-hosts-to-gtermserver">
-<h2><a class="toc-backref" href="#id6">Connecting multiple hosts to gtermserver</a><a class="headerlink" href="#connecting-multiple-hosts-to-gtermserver" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">Connecting multiple hosts to gtermserver</a><a class="headerlink" href="#connecting-multiple-hosts-to-gtermserver" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command can be used to connect from any computer to
 <tt class="docutils literal"><span class="pre">gtermserver</span></tt> running on a management cmputer as follows:</p>
 <div class="highlight-python"><pre>gtermhost --server_addr=&lt;serveraddr&gt; &lt;hostname&gt;</pre>
@@ -257,7 +261,7 @@ connect to <tt class="docutils literal"><span class="pre">gtermserver</span></tt
 on the same computer.</p>
 </div>
 <div class="section" id="wildcard-sessions">
-<h2><a class="toc-backref" href="#id7">Wildcard sessions</a><a class="headerlink" href="#wildcard-sessions" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">Wildcard sessions</a><a class="headerlink" href="#wildcard-sessions" title="Permalink to this headline">¶</a></h2>
 <p>A session path is of the form <tt class="docutils literal"><span class="pre">session_host/session_name</span></tt>. You can
 use the shell wildcard patterns <tt class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></tt> in the session path. For
 example, you can open a wildcard session for multiple hosts using the URL:</p>

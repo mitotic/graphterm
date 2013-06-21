@@ -9,8 +9,8 @@ installed: ``RCurl``, ``Cairo``, and ``png``.
 On Linux, the following additional libraries, or their equivalents,
 may need to be installed: ``libcurl4-openssl-dev libcairo2-dev
 libxt-dev``
-The file `$GTERM_DIR/bin/gtermapi.R
-<https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gtermapi.R>`_
+The file `$GTERM_DIR/bin/gterm.R
+<https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gterm.R>`_
 includes helper functions for using the GraphTerm API to display
 inline graphics.
 

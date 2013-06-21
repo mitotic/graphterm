@@ -264,20 +264,33 @@ version, at <a class="reference external" href="https://github.com/mitotic/graph
 <div class="section" id="quick-start">
 <span id="index-2"></span><h2><a class="toc-backref" href="#id8">Quick Start</a><a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
 <p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_code</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">terminal</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span>
 </pre></div>
 </div>
-<p>Once the server is running, you can open GraphTerm terminal windows
+<p>This will run the  server and open a GraphTerm terminal window
+using the default browser.  You can open additional GraphTerm
+terminal windows using the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gterm</span> <span class="p">[</span><span class="n">session_name</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>where the terminal session name argument is optional.
+You can also access the GraphTerm server directly
 using a browser that supports websockets, such as Google Chrome,
-Firefox, Safari, or IE10 (Chrome works best), and entering the following URL:</p>
+Firefox, Safari, or IE10 (Chrome works best), by entering the following URL:</p>
 <div class="highlight-python"><pre>http://localhost:8900</pre>
 </div>
+<p>If you use the browser directly, you will need to enter
+the authentication code stored in the file
+<tt class="docutils literal"><span class="pre">~/.graphterm/graphterm_auth</span></tt>. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
+command enters this code for you automatically.)</p>
 <p>Once you have a terminal, try out the following commands:</p>
 <div class="highlight-python"><pre>gls &lt;directory&gt;
 gvi &lt;text-filename&gt;</pre>
 </div>
 <p>These are commands in the GraphTerm toolchain that imitate
 basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands.
+(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command
+to be able to use the GraphTerm toolchain.)
 See <a class="reference external" href="http://code.mindmeldr.com/graphterm/start.html">Getting Started with GraphTerm</a>
 and the
 <a class="reference external" href="http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html">Using Graphical Features</a>

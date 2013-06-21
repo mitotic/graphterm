@@ -34,7 +34,7 @@ See also the programs ``gls``, ``gimage``, ``gframe``, ``gvi``, ``gfeed``,
 ``yweather``, ``ec2launch`` and ``ec2list`` for examples
 of GraphTerm API usage. You can use the ``which gls``
 command to figure out where these programs are located.
-The file ``gtermapi.py`` contains many helper functions for accessing
+The file ``gterm.py`` contains many helper functions for accessing
 the GraphTerm API. See also the
 `gcowsay <https://github.com/mitotic/gcowsay>`_ program for an
 example of a stand-alone GraphTerm-aware command.
