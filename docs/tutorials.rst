@@ -6,7 +6,7 @@ Tutorials, talks, proceedings
 .. toctree::
    :maxdepth: 1
 
-   Preprint of paper descrbing GraphTerm (to appear in Scipy2013 Proceedings) <https://github.com/mitotic/graphterm/raw/master/doc-images/graphterm_scipy2013.pdf>
+   Preprint of paper descrbing GraphTerm (to appear in Scipy2013 Proceedings) <https://dl.dropboxusercontent.com/u/72208800/graphterm/graphterm_scipy13.pdf>
 
    Using the graphical features of GraphTerm <UsingGraphicalFeatures>
 
