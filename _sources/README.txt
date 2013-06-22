@@ -40,18 +40,21 @@ applications for GraphTerm, such as:
    displaying images etc.
 
  - an **inline data visualization tool** to view output from plotting
-   libraries like ``matplotlib``
+   libraries like ``matplotlib``.
 
  - a **notebook interface** for data analysis and documentation (like
-   the *Mathematica* or *iPython* Notebook interface, but at the shell
+   the ``Mathematica`` or ``IPython`` notebook interface, but at the shell
    level).
+
+ - a **virtual computer lab** for teaching and demonstrations.
+   The GraphTerm server can be set up in the cloud
+   and accessed by multiple users using their laptop/mobile browsers.
+   You can then share presentations using ``landslide`` or ``reveal.js``, trace code execution,
+   etc.
 
  - a **collaborative terminal** that can be remotely accessed
    by multiple users simultaneously, to run programs, edit files etc.
-   The GraphTerm server can be used to set up a *virtual computer lab*
-   in the cloud.
-
- - a **detachable terminal multiplexer**, sort of like GNU ``screen`` or
+   It can also be used as a *detachable terminal multiplexer*, sort of like GNU ``screen`` or
    ``tmux``
 
 The interface is designed to be touch-friendly for use with
