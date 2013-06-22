@@ -48,6 +48,8 @@ applications for GraphTerm, such as:
 
  - a **collaborative terminal** that can be remotely accessed
    by multiple users simultaneously, to run programs, edit files etc.
+   The GraphTerm server can be used to set up a *virtual computer lab*
+   in the cloud.
 
  - a **detachable terminal multiplexer**, sort of like GNU ``screen`` or
    ``tmux``
