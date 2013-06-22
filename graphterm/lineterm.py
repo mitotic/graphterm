@@ -2980,14 +2980,14 @@ class Multiplex(object):
         self.thread.start()
 
     def terminal(self, term_name=None, height=25, width=80, winheight=0, winwidth=0, parent="", command=""):
-        """Return (tty_name, cookie) for existing or newly created pty"""
+        """Return (tty_name, cookie, alert_msg) for existing or newly created pty"""
         command = command or self.command
         with self.lock:
             if term_name:
                 term = self.proc.get(term_name)
                 if term:
                     self.set_size(term_name, height, width, winheight, winwidth)
-                    return (term_name, term.cookie)
+                    return (term_name, term.cookie, "")
 
             else:
                 # New default terminal name
@@ -3068,10 +3068,11 @@ class Multiplex(object):
                                                 pdelim=self.pdelim, term_params=self.term_params,
                                                 logfile=self.logfile)
                 self.set_size(term_name, height, width, winheight, winwidth)
+                alert_msg = ""
                 if not is_executable(Gls_path) and not Exec_errmsg:
                     Exec_errmsg = True
-                    self.screen_callback(term_name, "", "alert", ["File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path])
-                return term_name, cookie
+                    alert_msg = "File %s is not executable. Did you 'sudo gterm_setup' after 'sudo easy_install graphterm'?" % Gls_path
+                return term_name, cookie, alert_msg
 
     def term_env(self, term_name, cookie, height, width, winheight, winwidth, export=False):
         env = []
@@ -3454,7 +3455,7 @@ if __name__ == "__main__":
             sys.stdout.flush()
 
     Line_term = Multiplex(screen_callback, "sh", cookie=1, logfile=Log_file)
-    Term_name = Line_term.terminal(height=height, width=width)
+    Term_name, lterm_cookie, alert_msg = Line_term.terminal(height=height, width=width)
 
     Term_attr = termios.tcgetattr(pty.STDIN_FILENO)
     try:

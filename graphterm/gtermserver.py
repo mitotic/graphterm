@@ -551,7 +551,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.write_json([["abort", "Unable to create terminal on host %s" % host]])
                     self.close()
                     return
-                terminal_params = {"share_locked": True, "share_private": True, "share_tandem": False,
+                terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
+                                   "share_private": self._auth_type > self.LOCAL_AUTH,
+                                   "share_tandem": False,
                                    "owner": user, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params

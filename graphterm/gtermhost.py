@@ -217,10 +217,12 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                                                api_version=version_str, widget_port=self.widget_port,
                                                prompt_list=self.prompt_list, blob_server=self.blob_server,
                                                term_params=self.term_params, logfile=self.lterm_logfile)
-        term_name, lterm_cookie = self.lineterm.terminal(term_name, height=height, width=width,
-                                                         winheight=winheight, winwidth=winwidth,
-                                                         parent=parent)
+        term_name, lterm_cookie, alert_msg = self.lineterm.terminal(term_name, height=height, width=width,
+                                                                    winheight=winheight, winwidth=winwidth,
+                                                                    parent=parent)
         self.add_term(term_name, lterm_cookie)
+        if alert_msg:
+            self.screen_callback(term_name, "", "alert", [alert_msg])
         return term_name
 
     def paste_command(self, term_name, command_line):

@@ -48,6 +48,8 @@ applications for GraphTerm, such as:
 
  - a **collaborative terminal** that can be remotely accessed
    by multiple users simultaneously, to run programs, edit files etc.
+   The GraphTerm server can be used to set up a *virtual computer lab*
+   in the cloud.
 
  - a **detachable terminal multiplexer**, sort of like GNU ``screen`` or
    ``tmux``
@@ -147,7 +149,8 @@ Once you have a terminal, try out the following commands::
 These are commands in the GraphTerm toolchain that imitate
 basic features of the standard ``ls`` and ``vi`` commands.
 (*Note:* You need to execute the ``sudo gterm_setup`` command
-to be able to use the GraphTerm toolchain.)
+to be able to use the GraphTerm toolchain. Otherwise, you will
+encounter a ``Permission denied`` error.)
 See `Getting Started with GraphTerm <http://code.mindmeldr.com/graphterm/start.html>`_
 and the
 `Using Graphical Features
