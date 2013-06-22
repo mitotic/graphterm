@@ -295,10 +295,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if state_id not in cls._cookie_states:
             return None
         state_value = cls._cookie_states[state_id]
-        if (time.time() - state_value["time"]) <= COOKIE_TIMEOUT:
-            return state_value
-        del cls._cookie_states[state_id]
-        return None
+        ##if cls._auth_type >= cls.LOCAL_AUTH and (time.time() - state_value["time"]) > COOKIE_TIMEOUT:
+        ##    del cls._cookie_states[state_id]
+        ##    return None
+        return state_value
 
     @classmethod
     def drop_state(cls, state_id):

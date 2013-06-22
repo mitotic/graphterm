@@ -31,7 +31,39 @@ project along these lines is
 <a href="http://acko.net/blog/on-termkit/">TermKit</a>.)
 </p>
 
-<p>
+Possible applications of GraphTerm include:
+<ul>
+  <li>an <b>enhanced terminal</b> that combines the command line with basic
+   GUI operations like navigating folders, file drag-and-drop,
+   displaying images etc.
+   With tappable links, the interface is designed to be touch-friendly
+   for use with tablets.
+  </li>
+
+  <li>an <b>inline data visualization tool</b> to view output from plotting
+   libraries like <tt>matplotlib</tt>.
+  </li>
+
+  <li>a <b>notebook interface</b> for data analysis and documentation (like
+   the <tt>Mathematica</tt> or <tt>IPython</tt> notebook interface, but at the shell
+   level).
+  </li>
+
+  <li>a <b>virtual computer lab</b> for teaching and demonstrations.
+  The GraphTerm server can be set up <a href="cloud.html">in the cloud</a>
+  and accessed by multiple users using their laptop/mobile browsers.
+  You can then share presentations using <tt>landslide</tt> or <tt>reveal.js</tt>, 
+  <a href="screenshots.html#code-tracing-using-online-version-of-python-tutor">trace code execution</a>,
+  etc.
+  </li>
+
+  <li>a <b>collaborative terminal</b> that can be remotely accessed
+   by multiple users simultaneously, to run programs, edit files etc.
+   It can also be used as a <em>detachable terminal multiplexer</em>, sort of like GNU <tt>screen</tt> or
+   <tt>tmux</tt>
+  </li>
+</ul>
+
 You can find more information in the
 <a href="README.html">README</a> file and in
 <a href="start.html">Getting started with GraphTerm</a>.
@@ -39,25 +71,7 @@ Images of GraphTerm in action can be found in
 <a href="screenshots.html">screenshots </a>
 and in the
 <a href="videos.html">demo videos</a>.
-</p>
 
-<p>
-GraphTerm can be used as
-a <em>collaborative graphical terminal</em>,
-as a <em>detachable terminal multiplexer</em> (like GNU <tt>screen</tt> or
-<tt>tmux</tt>),
-or as an <em>inline data visualization tool</em>
-(sort of like the <em>Mathematica</em> or <em>iPython</em> Notebook interface,
-but at the shell level). The GraphTerm server can be used to set up a
-<em>virtual computer lab</em> by running it
-<a href="cloud.html">in the cloud</a>.
- You can even invoke web sites like the
-<a href="http://pythontutor.com">Online Python Tutor</a> from the
-command line
-<a href="start.html#code-tracing-using-python-tutor">within
-GraphTerm</a>.
-With tappable links, the interface is designed to be touch-friendly
-for use with tablets.
 <p>
 Here is a sample screenshot showing the output of the
 <a href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh"><tt>metro.sh</tt></a>
