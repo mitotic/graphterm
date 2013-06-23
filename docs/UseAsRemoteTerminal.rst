@@ -76,12 +76,6 @@ You will need to enter the authentication code from the file
 (If you forgot to detach your work terminal before leaving, use the
 *steal* menu button to steal control of the session.)
 
-If you are the only
-user with access to your work computer, you can disable authentication
-and privacy by default, by starting the server as::
-
-    gtermserver --auth_type=none --term_settings='{"share_private": false}'
-
 If you have multiple terminals open, use the URL ``http://localhost:8901/local`` to
 see a list of all the available terminal sessions.
 

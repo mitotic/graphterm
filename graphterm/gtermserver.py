@@ -1330,7 +1330,7 @@ def run_server(options, args):
         Term_settings = {}
 
     auth_file = ""
-    if options.auth_type == "local" or (options.auth_type == "user" and not os.path.exists(gterm.get_auth_filename(server=http_host))):
+    if options.auth_type == "local" or (options.auth_type == "multiuser" and not os.path.exists(gterm.get_auth_filename(server=http_host))):
         # Random auth code
         auth_code = GTSocket.get_auth_code()
         try:
@@ -1346,7 +1346,7 @@ def run_server(options, args):
         elif options.auth_type == "name":
             # No auth code
             auth_code = "name"
-        elif options.auth_type == "user":
+        elif options.auth_type == "multiuser":
             try:
                 auth_code, port = gterm.read_auth_code()
             except Exception, excp:
@@ -1354,7 +1354,7 @@ def run_server(options, args):
                 sys.exit(1)
             auth_file = gterm.get_auth_filename()
         else:
-            print >> sys.stderr, "Invalid authentication type '%s'; must be one of local/none/name/user" % options.auth_type
+            print >> sys.stderr, "Invalid authentication type '%s'; must be one of local/none/name/multiuser" % options.auth_type
             sys.exit(1)
 
     GTSocket.set_auth_code(auth_code, local=options.auth_type=="local")
@@ -1363,7 +1363,7 @@ def run_server(options, args):
     GTSocket.set_super_users(super_users)
 
     if options.auth_users:
-        assert options.auth_type == "user", "Must specify auth_type=user "
+        assert options.auth_type == "multiuser", "Must specify auth_type=multiuser "
         for user in options.auth_users.split(","):
             # Personalized user auth codes
             if user:
@@ -1473,7 +1473,7 @@ def run_server(options, args):
         query = "?cauth="+server_nonce
         if options.auth_type == "local":
             query += "&code="+gterm.compute_hmac(auth_code, server_nonce)
-        elif options.auth_type == "user" and super_users:
+        elif options.auth_type == "multiuser" and super_users:
             query += "&user="+super_users[0]+"&code="+gterm.compute_hmac(gterm.user_hmac(auth_code, super_users[0], key_version=key_version), server_nonce)
         elif options.auth_type == "name" and super_users:
             query += "&user="+super_users[0]
@@ -1535,7 +1535,7 @@ def main():
     parser = optconfig.OptConfig(usage=usage, config_file=config_file)
 
     parser.add_option("auth_type", default="local",
-                      help="Authentication type (local/none/name/user)")
+                      help="Authentication type (local/none/name/multiuser)")
 
     parser.add_option("auth_users", default="",
                       help="Comma-separated list of authenticated user names")

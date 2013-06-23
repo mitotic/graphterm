@@ -606,7 +606,7 @@ Security
 
 *The GraphTerm is not yet ready to be executed with root privileges*.
 You should typically run it logged in as a regular user.
-The ``--auth_type=local`` (default) and ``--auth_type=user`` options should
+The ``--auth_type=local`` (default) and ``--auth_type=multiuser`` options should
 be used for security, as they require an authentication code to create
 a new terminal. Using the ``gterm`` command to create a new terminal
 provides additional security, as the command validates the server

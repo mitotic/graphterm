@@ -79,10 +79,10 @@ for example::
 *Note:* Using an ``auth_type`` value of ``none`` (or ``name``, for
 simple name-based authentication) is very insecure and
 should not be used when handling any sensitive information.
-For increased security in a publicly-accessible server, the ``--auth_type=user`` option
+For increased security in a publicly-accessible server, the ``--auth_type=multiuser`` option
 can be used::
 
-    gtermserver --daemon=start --auth_type=user  --host=<server_domain_or_address> --super_users=ubuntu  --auto_users --allow_share
+    gtermserver --daemon=start --auth_type=multiuser  --host=<server_domain_or_address> --super_users=ubuntu  --auto_users --allow_share
 
 In this case, a secret master authentication code is stored in the file
 ``~/.graphterm/graphterm_auth@server_domain``. If the authentication
