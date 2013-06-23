@@ -50,12 +50,12 @@ applications for GraphTerm, such as:
    The GraphTerm server can be set up in the cloud
    and accessed by multiple users using their laptop/mobile browsers.
    You can then share presentations using ``landslide`` or ``reveal.js``, trace code execution,
-   etc.
+   interact with other users, etc.
 
  - a **collaborative terminal** that can be remotely accessed
    by multiple users simultaneously, to run programs, edit files etc.
    It can also be used as a *detachable terminal multiplexer*, sort of like GNU ``screen`` or
-   ``tmux``
+   ``tmux``.
 
 The interface is designed to be touch-friendly for use with
 tablets, with tappable links and command re-use to minimize the need for

@@ -44,6 +44,7 @@ except ImportError:
 import about
 import gtermhost
 import lineterm
+import optconfig
 import packetserver
 
 from bin import gterm
@@ -1526,76 +1527,86 @@ def run_server(options, args):
 def main():
     from optparse import OptionParser
 
-    usage = "usage: gtermserver [-h ... options]"
-    parser = OptionParser(usage=usage)
+    config_file = os.path.join(gterm.App_dir, "gtermserver.cfg")
+    if not os.path.isfile(config_file):
+        config_file = None
 
-    parser.add_option("", "--auth_type", dest="auth_type", default="local",
+    usage = "usage: gtermserver [-h ... options]"
+    parser = optconfig.OptConfig(usage=usage, config_file=config_file)
+
+    parser.add_option("auth_type", default="local",
                       help="Authentication type (local/none/name/user)")
 
-    parser.add_option("", "--auth_users", dest="auth_users", default="",
+    parser.add_option("auth_users", default="",
                       help="Comma-separated list of authenticated user names")
 
-    parser.add_option("", "--host", dest="host", default="localhost",
+    parser.add_option("host", default="localhost",
                       help="Hostname (or IP address) (default: localhost)")
-    parser.add_option("", "--port", dest="port", default=gterm.DEFAULT_HTTP_PORT,
-                      help="IP port (default: %d)" % gterm.DEFAULT_HTTP_PORT, type="int")
+    parser.add_option("port", default=gterm.DEFAULT_HTTP_PORT,
+                      help="IP port (default: %d)" % gterm.DEFAULT_HTTP_PORT, opt_type="int")
 
-    parser.add_option("", "--terminal", dest="terminal", action="store_true",
+    parser.add_option("terminal", default=False, opt_type="flag",
                       help="Open new terminal window")
-    parser.add_option("", "--internal_host", dest="internal_host", default="",
+    parser.add_option("internal_host", default="",
                       help="internal host name (or IP address) (default: localhost)")
-    parser.add_option("", "--internal_port", dest="internal_port", default=0,
-                      help="internal port (default: PORT-1)", type="int")
-    parser.add_option("", "--blob_host", dest="blob_host", default="",
+    parser.add_option("internal_port", default=0,
+                      help="internal port (default: PORT-1)", opt_type="int")
+    parser.add_option("blob_host", default="",
                       help="blob server host name (or IP address) (default: same as server)")
 
-    parser.add_option("", "--nolocal", dest="nolocal", action="store_true",
+    parser.add_option("nolocal", default=False, opt_type="flag",
                       help="Disable connection to localhost")
 
-    parser.add_option("", "--super_users", dest="super_users", default="",
+    parser.add_option("super_users", default="",
                       help="Super user list: root,admin,...")
-    parser.add_option("", "--shell_command", dest="shell_command", default="",
+    parser.add_option("shell_command", default="",
                       help="Shell command")
-    parser.add_option("", "--oshell", dest="oshell", action="store_true",
+    parser.add_option("oshell", default=False, opt_type="flag",
                       help="Activate otrace/oshell")
-    parser.add_option("", "--oshell_input", dest="oshell_input", action="store_true",
+    parser.add_option("oshell_input", default=False, opt_type="flag",
                       help="Allow stdin input otrace/oshell")
-    parser.add_option("", "--https", dest="https", action="store_true",
+    parser.add_option("https", default=False, opt_type="flag",
                       help="Use SSL (TLS) connections for security")
-    parser.add_option("", "--internal_https", dest="internal_https", action="store_true",
+    parser.add_option("internal_https", default=False, opt_type="flag",
                       help="Use https for internal connections")
-    parser.add_option("", "--prompts", dest="prompts", default="",
+    parser.add_option("prompts", default="",
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
-    parser.add_option("", "--lc_export", dest="lc_export", action="store_true",
+    parser.add_option("lc_export", default=False, opt_type="flag",
                       help="Export environment as locale (ssh hack)")
-    parser.add_option("", "--no_pyindent", dest="no_pyindent", action="store_true",
+    parser.add_option("no_pyindent", default=False, opt_type="flag",
                       help="Disable auto indentation mods for notebook cells in python interpreter")
-    parser.add_option("", "--allow_embed", dest="allow_embed", action="store_true",
+    parser.add_option("allow_embed", default=False, opt_type="flag",
                       help="Allow iframe embedding of terminal on other domains (possibly insecure)")
-    parser.add_option("", "--allow_share", dest="allow_share", action="store_true",
+    parser.add_option("allow_share", default=False, opt_type="flag",
                       help="Allow sharing of terminals between users")
-    parser.add_option("", "--auto_users", dest="auto_users", action="store_true",
+    parser.add_option("auto_users", default=False, opt_type="flag",
                       help="Allow automatic user creation")
-    parser.add_option("", "--no_formcheck", dest="no_formcheck", action="store_true",
+    parser.add_option("no_formcheck", default=False, opt_type="flag",
                       help="Disable form checking (INSECURE)")
-    parser.add_option("", "--client_cert", dest="client_cert", default="",
+    parser.add_option("client_cert", default="",
                       help="Path to client CA cert (or '.')")
-    parser.add_option("", "--term_type", dest="term_type", default="",
+    parser.add_option("term_type", default="",
                       help="Terminal type (linux/screen/xterm)")
-    parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",
+    parser.add_option("term_encoding", default="utf-8",
                       help="Terminal character encoding (utf-8/latin-1/...)")
-    parser.add_option("", "--term_settings", dest="term_settings", default="{}",
+    parser.add_option("term_settings", default="{}",
                       help="Terminal settings (JSON)")
-    parser.add_option("", "--lterm_logfile", dest="lterm_logfile", default="",
+    parser.add_option("lterm_logfile", default="",
                       help="Lineterm logfile")
-    parser.add_option("", "--widgets", dest="widgets", action="store_true",
+    parser.add_option("widgets", default=False, opt_type="flag",
                       help="Activate widgets on port %d" % (gterm.DEFAULT_HTTP_PORT-2))
 
-
-    parser.add_option("", "--daemon", dest="daemon", default="",
+    parser.add_option("daemon", default="",
                       help="daemon=start/stop/restart/status")
 
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
+    options = parser.getallopts()
+
+    if options.config:
+        config_file = options.config
+
+    if config_file:
+        print >> sys.stderr, "***** Reading config info from %s:%s" % (config_file, options.select or "DEFAULT")
 
     if not options.daemon:
         run_server(options, args)

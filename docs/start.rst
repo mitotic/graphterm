@@ -627,6 +627,8 @@ it, although it is not yet ready for everyday use.)
 
 .. index:: ssh, port forwarding, remote access
 
+.. _ssh:
+
 SSH, port forwarding, and remote access
 --------------------------------------------------------------------------------------------
 
