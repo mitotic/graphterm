@@ -1,6 +1,6 @@
 .. _troubleshooting:
 
-Troubleshooting
+Troubleshooting FAQ
 ==================================================================
 
 .. index:: troubleshooting
@@ -20,7 +20,7 @@ terminal, type ``Control-C``. If you are in the fullscreen graphics
 mode (e.g., using ``gframe``), you may need to click on the top of
 the terminal portion of the window to get the input focus out of the
 ``iframe`` and then type ``Control-C``. Finally, *refreshing the browser*
-may also fix the problem.
+by reloading the page may also fix the problem.
 
 .. index:: permission denied
  
@@ -42,7 +42,7 @@ where ``gls`` and other commands are located. GraphTerm tries to set
 the ``PATH`` variable to automatically include this directory. But
 sometimes this may fail, in which case you would need to modify you
 shell initialization files to include ``$GTERM_DIR`` in ``$PATH``.
-(The menu command *Actions-.Export environment* may also help in this
+(The menu command *terminal/export environment* may also help in this
 situation.)
 
 .. index:: remote login, ssh
@@ -55,7 +55,8 @@ computer that the ``gtermhost`` program is running on. By default, SSH is treate
 like any other program that accesses the terminal for
 input/output. However, you can use the *terminal/export environment*
 menu command to set shell environment variables on the remote computer
-to restore some, but not all, of GraphTerm features.
+to restore some, but not all, of GraphTerm features. (For a more
+permanent solution, see the :ref:`ssh` section.)
 
  
 .. index:: copy/paste, paste
