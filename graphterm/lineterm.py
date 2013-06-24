@@ -1264,6 +1264,19 @@ class Terminal(object):
                 if cell["cell_type"] == "markdown":
                     self.add_cell("markdown", init_text=join_lines(cell["source"]))
 
+                elif cell["cell_type"] == "heading":
+                    try:
+                        prefix = "".join(["#"] * int(cell["level"]))
+                    except Exception:
+                        prefix = "#"
+                    self.add_cell("markdown", init_text=prefix+" "+join_lines(cell["source"]))
+
+                elif cell["cell_type"] == "raw":
+                    lines = cell["source"]
+                    if isinstance(lines, basestring):
+                        lines = split_lines(lines, chomp=True)
+                    self.add_cell("markdown", init_text=join_lines(["    "+line for line in lines]))
+
                 elif cell["cell_type"] == "code":
                     new_cell = self.add_cell(cell["language"], init_text=join_lines(cell["input"]))
                     for output in cell["outputs"]:

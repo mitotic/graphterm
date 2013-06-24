@@ -473,8 +473,8 @@ URL, e.g.::
 
       http://localhost:8900/local/mysession/?qauth=code
 
-The ``qauth`` code is the same for all terminals on the same browser,
-and provides a layer of security.
+(The ``qauth`` value is a security code common to all terminals on the same browser,
+and can be omitted when sharing the URL with someone else.)
 Anyone with access to the GraphTerm server can use the session URL
 to connect to it. This is like "screensharing", but more efficient,
 because only the content is shared, not the graphical themes.
