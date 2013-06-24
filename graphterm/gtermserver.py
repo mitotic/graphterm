@@ -66,6 +66,10 @@ if File_dir == ".":
     File_dir = os.getcwd()    # Need this for daemonizing to work?
     
 Doc_rootdir = os.path.join(File_dir, "www")
+Auto_add_file = os.path.join(gterm.App_dir, "AUTO_ADD_USERS")
+
+Log_filename = os.path.join(gterm.App_dir, "graphterm.log")
+Log_file = None
 
 Check_state_cookie = False             # Controls checking of state cookie for file access
 
@@ -204,7 +208,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _webcast_paths = OrderedDict()
     _cookie_states = OrderedDict()
     _auth_users = OrderedDict()
-    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, LOCAL_AUTH, CODE_AUTH = range(5)
+    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, LOCAL_AUTH, MULTI_AUTH = range(5)
     # Note: WEBCAST_AUTH is used only for sockets, not for the server
     _auth_code = uuid.uuid4().hex[:gterm.HEX_DIGITS]
     _auth_type = LOCAL_AUTH
@@ -228,7 +232,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         elif value == "name":
             cls._auth_type = cls.NAME_AUTH
         else:
-            cls._auth_type = cls.LOCAL_AUTH if local else cls.CODE_AUTH
+            cls._auth_type = cls.LOCAL_AUTH if local else cls.MULTI_AUTH
 
     @classmethod
     def get_auth_code(cls):
@@ -319,7 +323,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
     def open(self):
         need_code = self._auth_type >= self.LOCAL_AUTH
-        need_user = self._auth_type == self.NAME_AUTH or self._auth_type >= self.CODE_AUTH
+        need_user = self._auth_type == self.NAME_AUTH or self._auth_type >= self.MULTI_AUTH
 
         user = ""
         try:
@@ -376,7 +380,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 auth_message = "Enter authentication code (found in %s), or use 'gterm' command" % gterm.get_auth_filename(server=Server_settings["host"])
                         else:
                             auth_message = "Please specify username (letters/digits/hyphens, starting with letter)."
-                            if Server_settings["auto_users"]:
+                            if Server_settings["auto_users"] and os.path.exists(Auto_add_file):
                                 auth_message += " If new user, leave code blank."
                     elif self._auth_type == self.NAME_AUTH:
                         # Name-only authentication
@@ -394,7 +398,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if user in self._auth_users:
                                 validated = (code == gterm.compute_hmac(self._auth_users[user], cauth))
                         else:
-                            if Server_settings["auto_users"] and not os.path.exists(HOME_MNT+"/"+user) and not self.is_super_user(user):
+                            if not self.is_super_user(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(HOME_MNT+"/"+user):
                                 # New auto user; no code validation required
                                 validated = True
                                 new_auto_user = True
@@ -402,21 +406,24 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     self.write_json([["abort", "Unable to create new user"]])
                                     self.close()
                                     return
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, Server_settings["internal_host"]]
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, Server_settings["host"]]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
                                     logging.warning("gtermserver: ERROR in %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
                                     self.write_json([["abort", "Error in creating new user "+user]])
                                     self.close()
                                     return
+                                if Log_file:
+                                    Log_file.write("Created new user: %s\n" % user)
+                                    Log_file.flush()
                             else:
                                 # Non-auto user, super user, or existing auto user; need to validate with user auth code
-                                key_version = "1" if self._auth_type >= self.CODE_AUTH else None
+                                key_version = "1" if self._auth_type >= self.MULTI_AUTH else None
                                 validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
 
                         if validated:
                             # User auth code matched
-                            self.authorized = self.add_state(user, self.CODE_AUTH)
+                            self.authorized = self.add_state(user, self.MULTI_AUTH)
                         else:
                             auth_message = "Authentication failed; check user/code"
 
@@ -449,10 +456,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if len(path_comps) < 1 or not path_comps[0]:
                 host_list = TerminalConnection.get_connection_ids()
-                if self._auth_type >= self.CODE_AUTH and not is_super_user:
+                if self._auth_type >= self.MULTI_AUTH and not is_super_user:
                     if Server_settings["allow_share"]:
-                        if LOCAL_HOST in host_list:
-                            host_list.remove(LOCAL_HOST)
+                        ##if LOCAL_HOST in host_list:
+                        ##    host_list.remove(LOCAL_HOST)
+                        pass
                     else:
                         if user in host_list:
                             host_list = [ user ]
@@ -469,11 +477,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            if self._auth_type >= self.CODE_AUTH and not is_super_user:
-                if host == LOCAL_HOST:
-                    self.write_json([["abort", "Local host access not allowed for user %s" % user]])
-                    self.close()
-                    return
+            if self._auth_type >= self.MULTI_AUTH and not is_super_user:
+                ##if host == LOCAL_HOST:
+                ##    self.write_json([["abort", "Local host access not allowed for user %s" % user]])
+                ##    self.close()
+                ##    return
                 if not Server_settings["allow_share"] and host != user:
                     self.write_json([["abort", "Inaccesible host %s" % host]])
                     self.close()
@@ -510,7 +518,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if tparams and (not tparams["share_private"] or is_local or (user and user == tparams["owner"]) or (not user and tparams["state_id"] == self.authorized["state_id"])):
                             term_list.append(term_name)
                     term_list.sort()
-                    self.write_json([["term_list", self.authorized["state_id"], user, host, term_list]])
+                    allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
+                    self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
                     self.close()
                     return
 
@@ -598,7 +607,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             controller = False
             if self.authorized["auth_type"] == self.WEBCAST_AUTH:
                 controller = False
-            elif self._auth_type >= self.CODE_AUTH and not is_super_user and not is_owner:
+            elif self._auth_type >= self.MULTI_AUTH and not is_super_user and not is_owner:
                 controller = False
             elif self.wildcard:
                 controller = True
@@ -984,9 +993,9 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         matchpaths.append(path)
         return matchpaths
         
-    def __init__(self, stream, address, server_address, key_secret=None, key_version=None, ssl_options={}):
+    def __init__(self, stream, address, server_address, key_secret=None, key_version=None, key_id=None, ssl_options={}):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
-                                                 key_secret=key_secret, key_version=key_version,
+                                                 key_secret=key_secret, key_version=key_version, key_id=key_id,
                                                  ssl_options=ssl_options, max_packet_buf=2)
         self.term_dict = dict()
         self.term_count = 0
@@ -1284,7 +1293,7 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 
 
 def run_server(options, args):
-    global IO_loop, Http_server, Local_client, Host_secret, Server_settings, Term_settings, Trace_shell
+    global IO_loop, Http_server, Local_client, Log_file, Host_secret, Server_settings, Term_settings, Trace_shell
     import signal
 
     class AuthHandler(tornado.web.RequestHandler):
@@ -1296,7 +1305,7 @@ def run_server(options, args):
             if not client_nonce:
                 raise tornado.web.HTTPError(401)
             server_nonce = GTSocket.get_connect_cookie()
-            if GTSocket.get_auth_type() >= GTSocket.CODE_AUTH:
+            if GTSocket.get_auth_type() >= GTSocket.MULTI_AUTH:
                 hmac_key = gterm.user_hmac(GTSocket.get_auth_code(), user, key_version=key_version)
             elif GTSocket.get_auth_type() == GTSocket.LOCAL_AUTH:
                 hmac_key = GTSocket.get_auth_code()
@@ -1338,7 +1347,7 @@ def run_server(options, args):
         except Exception, excp:
             print >> sys.stderr, "Error in writing authentication file: %s" % excp
             sys.exit(1)
-        auth_file = gterm.get_auth_filename()
+        auth_file = gterm.get_auth_filename(server=http_host)
     else:
         if options.auth_type == "none":
             # No auth code
@@ -1348,7 +1357,7 @@ def run_server(options, args):
             auth_code = "name"
         elif options.auth_type == "multiuser":
             try:
-                auth_code, port = gterm.read_auth_code()
+                auth_code, port = gterm.read_auth_code(server=http_host)
             except Exception, excp:
                 print >> sys.stderr, "Error in reading authentication file: %s" % excp
                 sys.exit(1)
@@ -1358,6 +1367,14 @@ def run_server(options, args):
             sys.exit(1)
 
     GTSocket.set_auth_code(auth_code, local=options.auth_type=="local")
+
+    if options.auth_type == "multiuser":
+        if options.auto_users:
+            if not os.path.exists(Auto_add_file):
+                with open(Auto_add_file, "w") as f:
+                    pass
+        elif os.path.exists(Auto_add_file):
+            os.remove(Auto_add_file)
 
     super_users = options.super_users.split(",") if options.super_users else []
     GTSocket.set_super_users(super_users)
@@ -1419,7 +1436,8 @@ def run_server(options, args):
         key_version = None
         local_key_secret = key_secret
     TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
-                                        key_secret=key_secret, key_version=key_version, ssl_options=internal_server_ssl)
+                                        key_secret=key_secret, key_version=key_version,
+                                        key_id=str(internal_port), ssl_options=internal_server_ssl)
 
     if options.internal_https or options.nolocal:
         # Internal https causes tornado to loop  (client fails to connect to server)
@@ -1438,6 +1456,7 @@ def run_server(options, args):
                                                                      "term_encoding": options.term_encoding,
                                                                      "key_secret": local_key_secret,
                                                                      "key_version": key_version,
+                                                                     "key_id": str(internal_port),
                                                                      "prompt_list": prompt_list,
                                                                      "term_params": term_params,
                                                                      "blob_host": options.blob_host,
@@ -1466,6 +1485,10 @@ def run_server(options, args):
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
             logging.warning("gtermserver: ERROR in starting up %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
+
+    if options.logging:
+        Log_file = open(Log_filename, "a")
+        print >> sys.stderr, "Logging to", Log_filename
 
     url = "%s://%s:%d/local/new" % ("https" if options.https else "http", http_host, http_port)
     if options.terminal:
@@ -1522,6 +1545,8 @@ def run_server(options, args):
     finally:
         if options.auth_type == "local":
             gterm.clear_auth_code(server=http_host)
+        if Log_file:
+            Log_file.close()
     IO_loop.add_callback(stop_server)
 
 def main():
@@ -1593,6 +1618,8 @@ def main():
                       help="Terminal settings (JSON)")
     parser.add_option("lterm_logfile", default="",
                       help="Lineterm logfile")
+    parser.add_option("logging", default=False, opt_type="flag",
+                      help="Log to ~/.graphterm/graphterm.log")
     parser.add_option("widgets", default=False, opt_type="flag",
                       help="Activate widgets on port %d" % (gterm.DEFAULT_HTTP_PORT-2))
 

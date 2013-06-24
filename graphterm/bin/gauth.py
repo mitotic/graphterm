@@ -16,6 +16,8 @@ def main():
     parser = OptionParser(usage=usage)
     parser.add_option("-a", "--admin", dest="admin", default="",
                       help="Admin username")
+    parser.add_option("-s", "--server", dest="server", default="localhost",
+                      help="External server name (default: localhost)")
     parser.add_option("-w", "--write",
                       action="store_true", dest="write", default=False,
                       help="Write authentication file for user (for superuser use)")
@@ -33,14 +35,14 @@ def main():
     else:
         admin_dir = gterm.App_dir
 
-    auth_code, port = gterm.read_auth_code(appdir=admin_dir)
-    user_code = gterm.dashify(gterm.user_hmac(auth_code, user, key_version="1"))
+    auth_code, port = gterm.read_auth_code(appdir=admin_dir, server=options.server)
+    user_code = gterm.user_hmac(auth_code, user, key_version="1")
     if not options.write:
-        print user_code
+        print gterm.dashify(user_code)
     else:
         user_dir = os.path.join(os.path.expanduser("~"+user), gterm.APP_DIRNAME)
         gterm.create_app_directory(appdir=user_dir)
-        gterm.write_auth_code(user_code, appdir=user_dir, user=user)
+        gterm.write_auth_code(user_code, appdir=user_dir, user=user, server=options.server)
 
 if __name__ == "__main__":
     main()

@@ -130,11 +130,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     all_cookies = {}
     def __init__(self, host, port, host_secret="", oshell=False, io_loop=None, ssl_options={},
                  command="", term_type="", term_encoding="utf-8", widget_port=0, prompt_list=[],
-                 blob_host="", term_params={}, lterm_logfile="", key_secret=None, key_version=None):
+                 blob_host="", term_params={}, lterm_logfile="", key_secret=None, key_version=None, key_id=None):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
                                              reconnect_sec=RETRY_SEC, server_type="frame",
-                                             key_secret=key_secret, key_version=key_version)
+                                             key_secret=key_secret, key_version=key_version, key_id=key_id)
         self.host_secret = host_secret
         self.oshell = oshell
 
@@ -808,7 +808,7 @@ def run_host(options, args):
         if options.auth_file != "none":
             with open(options.auth_file) as f:
                 comps = f.read().strip().split()
-                auth_code = comps[0]
+                auth_code = gterm.undashify(comps[0])
                 port = int(comps[1]) if len(comps) > 1 else None
     else:
         try:
@@ -819,15 +819,16 @@ def run_host(options, args):
             auth_code = None
 
     key_version = "1" if auth_code else None
-
+    server_port = options.server_port or port or gterm.DEFAULT_HOST_PORT
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
-                                                         server_port=options.server_port or port or gterm.DEFAULT_HOST_PORT,
+                                                         server_port=server_port,
                                                          connect_kw={"command": options.shell_command,
                                                                      "term_type": options.term_type,
                                                                      "term_encoding": options.term_encoding,
                                                                      "prompt_list": gterm.DEFAULT_PROMPTS,
                                                                      "key_secret": auth_code or None,
                                                                      "key_version": key_version,
+                                                                     "key_id": str(server_port),
                                                                      "widget_port":
                                                                      (gterm.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
                                                          oshell_globals=oshell_globals,

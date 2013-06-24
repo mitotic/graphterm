@@ -584,11 +584,13 @@ class RPCLink(object):
     """
     rpc_key_secret = None         # Set for server/client
     rpc_key_version = None        # Set for server/client
+    rpc_key_id = None             # Set for server/client
     def __init__(self, *args, **kwargs):
         """ Arguments:
         connection_id (str) required for clients.
         key_secret (str) optional
         key_version (int) optional
+        key_id (str) optional
               
         """
         self.connection_id = kwargs.pop("connection_id", "")
@@ -596,6 +598,8 @@ class RPCLink(object):
             self.rpc_key_secret = kwargs.pop("key_secret") 
         if "key_version" in kwargs:
             self.rpc_key_version = kwargs.pop("key_version")
+        if "key_id" in kwargs:
+            self.rpc_key_id = kwargs.pop("key_id")
         self.rpc_expect = "connect"
 
         self.rpc_ready = False
@@ -669,7 +673,7 @@ class RPCLink(object):
         else:
             key_secret = hmac.new(str(self.rpc_key_secret), str(self.rpc_key_version)+SIGN_SEP+connection_id, digestmod=SIGN_HASH).hexdigest()[:SIGN_HEXDIGITS]
 
-        prefix = SIGN_SEP.join([connection_id, client_nonce, server_nonce]) + SIGN_SEP
+        prefix = SIGN_SEP.join([connection_id, str(self.rpc_key_id or ""), client_nonce, server_nonce]) + SIGN_SEP
         return [hmac.new(str(key_secret), prefix+conn_type, digestmod=SIGN_HASH).hexdigest()[:SIGN_HEXDIGITS] for conn_type in ("client", "server")]
 
     def send_request_threadsafe(self, method, *args, **kwargs):

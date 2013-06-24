@@ -105,6 +105,7 @@ App_auth_file = os.path.join(App_dir, APP_AUTH_FILENAME)
 App_secret_file = os.path.join(App_dir, APP_SECRET_FILENAME)
 
 def dashify(s, n=4):
+    s = undashify(s)
     return "-".join(s[j:j+n] for j in range(0, len(s), n))
 
 def undashify(s):

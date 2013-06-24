@@ -36,7 +36,9 @@ form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("R", False, help="Install R")
 form_parser.add_option("auto_users", False, help="Automatically create new users")
 form_parser.add_option("allow_share", False, help="Allow sharing between users")
+form_parser.add_option("logging", False, help="Enable logging")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
+form_parser.add_option("other_opts", "", help="Other options for gtermserver (space-separated)")
 form_parser.add_option("dry_run", False, help="Dry run")
 form_parser.add_option("verbose", False, help="Verbose")
 ##form_parser.add_option("wildcard", False, help="Enable wildcard subdomains")
@@ -151,6 +153,10 @@ if options.auto_users:
     command_format += " --auto_users --super_users=ubuntu"
 if options.allow_share:
     command_format += " --allow_share"
+if options.other_opts:
+    command_format += " " + options.other_opts.strip()
+if options.logging:
+    command_format += " --logging"
 if options.oshell:
     command_format += " --oshell"
 

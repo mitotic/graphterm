@@ -1023,11 +1023,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var host_html = "<p>";
 		if (user)
 		    host_html += 'User: <b>'+user + '</b><p>\n';
-		if (!hosts.length) {
-		    if (new_auto)
-			host_html += 'Created new user. Click <a href="/">here</a> to proceed.';
-		    else
-			host_html += 'No GraphTerm Hosts currently available<br>';
+		if (new_auto) {
+		    host_html += 'Created new user. Click <a href="/">here</a> to proceed.';
+		} else if (!hosts.length) {
+		    host_html += 'No GraphTerm Hosts currently available<br>';
 		} else {
 		    host_html += 'GraphTerm Hosts Available:<p>';
 		    host_html += '<ol>';
@@ -1043,12 +1042,18 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    setCookie("GRAPHTERM_AUTH", command[1]);
 		var user = command[2];
 		var host = command[3];
-		var terms = command[4];
+		var allow_new = command[4];
+		var terms = command[5];
 		var term_html = '<p>' + (user ? 'User: <b>'+user+'</b><br>\n' : '') + 'Host: <b>' + host + '</b>\n';
-		term_html += '<p>Connect to GraphTerm session:<p><ol>';
-		for (var j=0; j<terms.length; j++)
-		    term_html += '<li><a href="/'+host+'/'+terms[j]+'/?qauth='+getAuth()+'">'+terms[j]+'</a></li>';
-		term_html += '<li><a href="/'+host+'/new/?qauth='+getAuth()+'"><b><em>new</em></b></a></li>';
+		if (allow_new || terms.length) {
+		    term_html += '<p>Connect to GraphTerm session:<p><ol>';
+		    for (var j=0; j<terms.length; j++)
+			term_html += '<li><a href="/'+host+'/'+terms[j]+'/?qauth='+getAuth()+'">'+terms[j]+'</a></li>';
+		    if (allow_new)
+			term_html += '<li><a href="/'+host+'/new/?qauth='+getAuth()+'"><b><em>new</em></b></a></li>';
+		} else {
+		    term_html += 'No GraphTerm sessions currently accessible<br>';
+		}
 		term_html += '</ol> <p><a href="/">Back to Hosts Available</a> <p><a href="#" onclick="SignOut();">Sign out</a>';
 		$("body").html(term_html);
 
