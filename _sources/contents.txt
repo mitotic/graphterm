@@ -13,6 +13,7 @@ Documentation contents
    implementation
    screenshots
    tutorials
+   talks
    videos
    advanced
    release-notes

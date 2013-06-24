@@ -228,9 +228,9 @@ for example:</p>
 <p><em>Note:</em> Using an <tt class="docutils literal"><span class="pre">auth_type</span></tt> value of <tt class="docutils literal"><span class="pre">none</span></tt> (or <tt class="docutils literal"><span class="pre">name</span></tt>, for
 simple name-based authentication) is very insecure and
 should not be used when handling any sensitive information.
-For increased security in a publicly-accessible server, the <tt class="docutils literal"><span class="pre">--auth_type=user</span></tt> option
+For increased security in a publicly-accessible server, the <tt class="docutils literal"><span class="pre">--auth_type=multiuser</span></tt> option
 can be used:</p>
-<div class="highlight-python"><pre>gtermserver --daemon=start --auth_type=user  --host=&lt;server_domain_or_address&gt; --super_users=ubuntu  --auto_users --allow_share</pre>
+<div class="highlight-python"><pre>gtermserver --daemon=start --auth_type=multiuser  --host=&lt;server_domain_or_address&gt; --super_users=ubuntu  --auto_users --allow_share</pre>
 </div>
 <p>In this case, a secret master authentication code is stored in the file
 <tt class="docutils literal"><span class="pre">~/.graphterm/graphterm_auth&#64;server_domain</span></tt>. If the authentication

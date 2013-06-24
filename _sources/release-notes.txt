@@ -3,6 +3,14 @@ Release Notes
 .. contents::
 
 
+0.39+ (June, 2013)
+---------------------------------------------------------------------------------
+
+  - Implemented config file to specify default options for gtermserver
+
+  - ``auth_type=user`` changed to ``auth_type=multiuser``
+
+
 0.39.0 (June 21, 2013)
 ---------------------------------------------------------------------------------
 
