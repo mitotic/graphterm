@@ -3,7 +3,7 @@ Release Notes
 .. contents::
 
 
-0.39+ (June, 2013)
+0.40.0 (June 25, 2013)
 ---------------------------------------------------------------------------------
 
   - Implemented config file to specify default options for gtermserver

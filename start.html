@@ -572,20 +572,25 @@ use <tt class="docutils literal"><span class="pre">gframe</span> <span class="pr
 URL, e.g.:</p>
 <div class="highlight-python"><pre>http://localhost:8900/local/mysession/?qauth=code</pre>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">qauth</span></tt> code is the same for all terminals on the same browser,
-and provides a layer of security.
-Anyone with access to the GraphTerm server can use the session URL
-to connect to it. This is like &#8220;screensharing&#8221;, but more efficient,
-because only the content is shared, not the graphical themes.</p>
+<p>The <tt class="docutils literal"><span class="pre">qauth</span></tt> value is a security code. It is optional and if you omit it
+the browser will re-generate it for you by
+requiring you to click on a link. (This requirement prevents
+unauthorized access to the terminal URL from other web sites.)</p>
 <p>The first user to create a session &#8220;owns&#8221; it, and can make the session
 publicly available by disabling the <em>share/private</em> menubar option.
-Other users connecting to a public terminal session using its URL
-have read-only access, unless they <em>steal</em> the session using the menubar
-button (or using the <em>share/control</em> menu item).
-The original user can prevent stealing of sessions by <em>locking</em> it.</p>
+The public session URL (without the <tt class="docutils literal"><span class="pre">qauth</span></tt> code) can then be shared
+with other users connected to the same GraphTerm server,
+to provide read-only access to the terminal.
+(This is like &#8220;screensharing&#8221;, but more efficient,
+because only the content is shared, not the theme/style data.)</p>
+<p>If the session owner has unlocked the
+session by disabling the <em>share/lock</em> menubar option,
+other users can also <em>steal</em>
+control of the session using the menubar button
+(or using the <em>share/control</em> menu item).</p>
 <p>For example, if you forgot to detach your session at work, you can
-<tt class="docutils literal"><span class="pre">ssh</span></tt> to your desktop from home, use SSH port forwarding (see below)
-to securely access your work desktop, and then steal the
+<tt class="docutils literal"><span class="pre">ssh</span></tt> to your desktop from home, use SSH port forwarding
+(see <a class="reference internal" href="#ssh"><em>SSH, port forwarding, and remote access</em></a>) to securely access your work desktop, and then <em>steal</em> the
 session using your home browser.</p>
 <p>Normally, only a single user has control of a terminal session at a
 time. There is a <em>share/tandem</em> option that can be enabled to allow
@@ -599,8 +604,8 @@ else. This may change in the future.</p>
 <span id="index-17"></span><h3><a class="toc-backref" href="#id28">Webcasting</a><a class="headerlink" href="#webcasting" title="Permalink to this headline">¶</a></h3>
 <p>If you enable the <em>share/webcast</em> in the menubar, anyone can use the
 session URL to view the session, without the need for
-authentication, but will not be able to steal it. <em>Use this feature
-with caution to avoid exposing sensitive data.</em></p>
+authentication, but will not be able to steal it.
+<em>This feature is somewhat experimental; use it with caution to avoid exposing sensitive data.</em></p>
 </div>
 <div class="section" id="embedding-and-remote-terminal-commands">
 <span id="embedding"></span><span id="index-18"></span><h3><a class="toc-backref" href="#id29">Embedding and remote terminal commands</a><a class="headerlink" href="#embedding-and-remote-terminal-commands" title="Permalink to this headline">¶</a></h3>

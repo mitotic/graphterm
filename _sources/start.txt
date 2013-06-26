@@ -473,22 +473,28 @@ URL, e.g.::
 
       http://localhost:8900/local/mysession/?qauth=code
 
-The ``qauth`` code is the same for all terminals on the same browser,
-and provides a layer of security.
-Anyone with access to the GraphTerm server can use the session URL
-to connect to it. This is like "screensharing", but more efficient,
-because only the content is shared, not the graphical themes.
+The ``qauth`` value is a security code. It is optional and if you omit it
+the browser will re-generate it for you by
+requiring you to click on a link. (This requirement prevents
+unauthorized access to the terminal URL from other web sites.)
 
 The first user to create a session "owns" it, and can make the session
 publicly available by disabling the *share/private* menubar option.
-Other users connecting to a public terminal session using its URL
-have read-only access, unless they *steal* the session using the menubar
-button (or using the *share/control* menu item).
-The original user can prevent stealing of sessions by *locking* it.
+The public session URL (without the ``qauth`` code) can then be shared
+with other users connected to the same GraphTerm server,
+to provide read-only access to the terminal.
+(This is like "screensharing", but more efficient,
+because only the content is shared, not the theme/style data.)
+
+If the session owner has unlocked the
+session by disabling the *share/lock* menubar option,
+other users can also *steal*
+control of the session using the menubar button
+(or using the *share/control* menu item).
 
 For example, if you forgot to detach your session at work, you can
-``ssh`` to your desktop from home, use SSH port forwarding (see below)
-to securely access your work desktop, and then steal the
+``ssh`` to your desktop from home, use SSH port forwarding
+(see :ref:`ssh`) to securely access your work desktop, and then *steal* the
 session using your home browser.
 
 Normally, only a single user has control of a terminal session at a
@@ -509,8 +515,8 @@ Webcasting
 
 If you enable the *share/webcast* in the menubar, anyone can use the
 session URL to view the session, without the need for
-authentication, but will not be able to steal it. *Use this feature
-with caution to avoid exposing sensitive data.*
+authentication, but will not be able to steal it.
+*This feature is somewhat experimental; use it with caution to avoid exposing sensitive data.*
 
 .. index:: embedding
 
