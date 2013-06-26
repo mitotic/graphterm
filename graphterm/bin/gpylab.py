@@ -40,7 +40,7 @@ try:
     gm.setup()    # Sets up gmatplot and patches pylab
     from pylab import *
     import gterm
-    from gmatplot import display
+    from gmatplot import display, _gterm_cell_start_hook, _gterm_cell_end_hook
     import matplotlib
 
     def _gpylab_display_hook(expr):

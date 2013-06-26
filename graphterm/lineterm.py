@@ -1801,9 +1801,11 @@ class Terminal(object):
                 tem_lines.append(line)
                 indent = new_indent
                 prev_blank = False
-            input_lines = tem_lines
+            # Sandwich input lines between calls to hook functions
+            ##input_lines = ['_gterm_cell_start_hook() if "_gterm_cell_start_hook" in globals() else None'] + tem_lines + ['_gterm_cell_end_hook() if "_gterm_cell_end_hook" in globals() else None']
+            input_lines = ['_gterm_cell_start_hook() if "_gterm_cell_start_hook" in globals() else None'] + tem_lines
 
-        if input_lines[-1]:
+        if not input_lines or input_lines[-1]:
             # Add blank line to clear any indentation level
             input_lines.append("")
 

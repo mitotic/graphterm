@@ -44,6 +44,7 @@ def setup(nopatch=False, figsize="4.0, 3.0"):
 
     import matplotlib.pyplot
     import pylab
+    pyplot_dict["new_cell"] = False
     pyplot_dict["new_plot"] = True
     pyplot_dict["drawing"] = False
     pyplot_dict["draw"] = matplotlib.pyplot.draw
@@ -59,6 +60,13 @@ def setup(nopatch=False, figsize="4.0, 3.0"):
         pylab.figure = figure
         pylab.show = show
 
+def _gterm_cell_start_hook():
+    pyplot_dict["new_cell"] = True
+    figure()
+
+def _gterm_cell_end_hook():
+    pass
+
 def draw_if_interactive():
     try:
         import matplotlib
@@ -71,7 +79,6 @@ def draw_if_interactive():
                 return retval
     except Exception:
         pass
-
 
 def draw(*args, **kwargs):
     """Wrapper for pyplot.draw
@@ -124,7 +131,11 @@ def display(fig, overwrite=False, format="png", title=""):
         pyplot_dict["drawing"] = False
     blob_url = outbuf.close()
     ##gterm.display_blockimg_old(blob_url, overwrite=overwrite, alt=title)
-    gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
+    if pyplot_dict["new_cell"]:
+        pyplot_dict["new_cell"] = False
+        pyplot_dict["new_plot"] = True
+    else:
+        gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
 
 def resize(dimensions=""):
     """Resize matplotlib default window for terminal
@@ -147,7 +158,6 @@ def resize(dimensions=""):
         matplotlib.rcParams["figure.figsize"] = figsize
     except Exception, excp:
         raise Exception("Error in resizing: "+str(excp))
-        
 
 def main():
     """gterm-aware matplotlib demo"""
