@@ -484,6 +484,10 @@ input.gterm-input-arg[type=text] {
 
 /* Notebook */
 
+.gterm-notecell-container {
+    margin-top: 5px;
+}
+
 textarea.gterm-notecell-text {
     width: 90%;
     border-radius: 5px;

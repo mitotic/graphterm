@@ -894,6 +894,9 @@ def auto_display(expr):
     if pandas and isinstance(expr, pandas.core.frame.DataFrame):
         wrap_write(expr.to_html())
         return
+    if hasattr(expr, "_repr_html_"):
+        wrap_write(expr._repr_html_())
+        return
     if expr is not None:
         auto_print(repr(expr)+"\n")
 

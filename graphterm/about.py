@@ -1,4 +1,4 @@
-version = "0.39.3"
+version = "0.39.3+"
 
 min_version = "0.39"
 

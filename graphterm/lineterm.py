@@ -1762,17 +1762,25 @@ class Terminal(object):
 
         input_lines = cell_lines[:]   # Must be a copy as it is modified later
 
-        if self.note_params["command"] == "python" and not self.term_params.get("no_pyindent"):
+        if self.note_params["command"] in ("ipython", "python") and not self.term_params.get("no_pyindent"):
             # For python, need to insert blank lines before reverting back to no indentation
             tem_lines = []
             indent = 0
             prev_blank = False
             for line in input_lines:
+                for prompt in self.note_prompts:
+                    if line.startswith(prompt):
+                        line = line[len(prompt):]
+                        break
                 unindented_line = line.lstrip()
                 if not unindented_line:
                     # Blank line
                     if prev_blank:
-                        tem_lines.append("".join([" "]*indent))
+                        # Force indent
+                        tem_line = "".join([" "]*indent)
+                        if self.note_params["command"] == "ipython":
+                            tem_line += "#"
+                        tem_lines.append(tem_line)
                     prev_blank = True
                     continue
                 # Non-blank line
@@ -1786,7 +1794,10 @@ class Terminal(object):
                 if append_blank:
                     tem_lines.append("")
                 elif prev_blank:
-                    tem_lines.append("".join([" "]*indent))
+                    tem_line = "".join([" "]*indent)
+                    if self.note_params["command"] == "ipython":
+                        tem_line += "#"
+                    tem_lines.append(tem_line)
                 tem_lines.append(line)
                 indent = new_indent
                 prev_blank = False
