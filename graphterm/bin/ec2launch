@@ -140,7 +140,7 @@ if install_gterm:
                          "gterm_setup"]
 
 if options.pylab:
-    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific libnetcdf-dev netcdf-bin ipython"]
+    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific python-pandas libnetcdf-dev netcdf-bin ipython"]
     startup_commands += ["easy_install pil qrcode"]
 
 if options.R:
