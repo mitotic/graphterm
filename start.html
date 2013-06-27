@@ -119,12 +119,12 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#using-the-terminal">Using the terminal</a><ul>
 <li><a class="reference internal" href="#visual-cues">Visual cues</a></li>
 <li><a class="reference internal" href="#navigating-folders-opening-files">Navigating folders/opening files</a></li>
+<li><a class="reference internal" href="#image-and-icon-display">Image and Icon display</a></li>
 <li><a class="reference internal" href="#menu-shortcuts">Menu shortcuts</a></li>
 <li><a class="reference internal" href="#command-recall">Command recall</a></li>
 <li><a class="reference internal" href="#copy-paste">Copy/paste</a></li>
 <li><a class="reference internal" href="#drag-and-drop">Drag and drop</a></li>
 <li><a class="reference internal" href="#ipad-android-tablet-usage">iPad/Android tablet usage</a></li>
-<li><a class="reference internal" href="#icon-display">Icon display</a></li>
 <li><a class="reference internal" href="#themes">Themes</a></li>
 <li><a class="reference internal" href="#choosing-the-terminal-type">Choosing the terminal type</a></li>
 </ul>
@@ -194,12 +194,12 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#using-the-terminal" id="id9">Using the terminal</a><ul>
 <li><a class="reference internal" href="#visual-cues" id="id10">Visual cues</a></li>
 <li><a class="reference internal" href="#navigating-folders-opening-files" id="id11">Navigating folders/opening files</a></li>
-<li><a class="reference internal" href="#menu-shortcuts" id="id12">Menu shortcuts</a></li>
-<li><a class="reference internal" href="#command-recall" id="id13">Command recall</a></li>
-<li><a class="reference internal" href="#copy-paste" id="id14">Copy/paste</a></li>
-<li><a class="reference internal" href="#drag-and-drop" id="id15">Drag and drop</a></li>
-<li><a class="reference internal" href="#ipad-android-tablet-usage" id="id16">iPad/Android tablet usage</a></li>
-<li><a class="reference internal" href="#icon-display" id="id17">Icon display</a></li>
+<li><a class="reference internal" href="#image-and-icon-display" id="id12">Image and Icon display</a></li>
+<li><a class="reference internal" href="#menu-shortcuts" id="id13">Menu shortcuts</a></li>
+<li><a class="reference internal" href="#command-recall" id="id14">Command recall</a></li>
+<li><a class="reference internal" href="#copy-paste" id="id15">Copy/paste</a></li>
+<li><a class="reference internal" href="#drag-and-drop" id="id16">Drag and drop</a></li>
+<li><a class="reference internal" href="#ipad-android-tablet-usage" id="id17">iPad/Android tablet usage</a></li>
 <li><a class="reference internal" href="#themes" id="id18">Themes</a></li>
 <li><a class="reference internal" href="#choosing-the-terminal-type" id="id19">Choosing the terminal type</a></li>
 </ul>
@@ -279,10 +279,11 @@ that no authentication is required. Another useful option is <tt class="docutils
 to enable simple name-based sharing. (For more on running publicly
 accessible servers, see <a class="reference internal" href="cloud.html#cloud"><em>GraphTerm in the cloud</em></a>.)</p>
 <p>Within the terminal, try out the following commands:</p>
-<div class="highlight-python"><pre>gls &lt;directory&gt;
+<div class="highlight-python"><pre>hello_gterm.sh
+gls &lt;directory&gt;
 gvi &lt;text-filename&gt;</pre>
 </div>
-<p>These are commands in the GraphTerm toolchain that imitate
+<p>The <tt class="docutils literal"><span class="pre">gls</span></tt> and <tt class="docutils literal"><span class="pre">gvi</span></tt> commands in the GraphTerm toolchain imitate
 basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands.
 (<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command
 to be able to use the GraphTerm toolchain. Otherwise, you will
@@ -303,6 +304,7 @@ The commands reside in the directory <tt class="docutils literal"><span class="p
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">d3cloud</span> <span class="pre">[file]</span></tt> To display file (or stdin) content as a word
 cloud (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gbrowse</span> <span class="pre">[filename|URL]</span></tt>    To view files/URLs in a separate browser window</p>
 <p><tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">[-f]</span> <span class="pre">[filename|URL]</span></tt>    To view files/URLs (or HTML from stdin) within
 an inline <em>iframe</em>  (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
 <p><tt class="docutils literal"><span class="pre">gimage</span> <span class="pre">[-f]</span> <span class="pre">[filenames]</span></tt>     To view images inline, or as a
@@ -314,6 +316,7 @@ Landslide, a web-based slideshow program  (see  <a class="reference internal" hr
 <p><tt class="docutils literal"><span class="pre">gls</span> <span class="pre">[-i]</span> <span class="pre">[filenames]</span></tt>   Generate clickable directory listing</p>
 <p><tt class="docutils literal"><span class="pre">gmatplot.py</span></tt>   An inline <tt class="docutils literal"><span class="pre">matplotlib</span></tt> plotting package (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Inline data visualization plotting using matplotlib</em></a>)</p>
 <p><tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">item</span> <span class="pre">subitem</span></tt>   To access the menubar from the command line</p>
+<p><tt class="docutils literal"><span class="pre">gopen</span> <span class="pre">filename</span></tt>    To open a file using the OS-specific <tt class="docutils literal"><span class="pre">open</span></tt> command</p>
 <p><tt class="docutils literal"><span class="pre">gqrcode</span> <span class="pre">URL|text</span></tt>    Display inline QR code</p>
 <p><tt class="docutils literal"><span class="pre">greveal</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>    A GraphTerm-aware interface to <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>, a web-based slideshow program</p>
 <p><tt class="docutils literal"><span class="pre">gsh</span> <span class="pre">terminal_name</span> <span class="pre">command</span> <span class="pre">args</span></tt> Execute command in the specified terminal (all output appears in terminal_name</p>
@@ -327,6 +330,7 @@ Python Tutorial  at <a class="reference external" href="http://pythontutor.com">
 the terminal</p>
 <p><tt class="docutils literal"><span class="pre">gvi</span> <span class="pre">filename</span></tt>   Open file using a browser-based visual editor</p>
 <p><tt class="docutils literal"><span class="pre">hello_gterm.sh</span></tt> Hello World program that displays inline HTML text and image</p>
+<p><tt class="docutils literal"><span class="pre">ystock</span> <span class="pre">stock_symbol</span></tt> To view a graph of stock price history</p>
 <p><tt class="docutils literal"><span class="pre">yweather</span> <span class="pre">[location]</span></tt> To view weather forecasts (see  <a class="reference internal" href="screenshots.html#weather-shot"><em>Graphical weather forecast using Yahoo Weather API</em></a>)</p>
 </div></blockquote>
 </div>
@@ -357,8 +361,17 @@ pasted into the command line, without any
 command being executed. You can edit the pasted text, then press the
 Enter key to execute it.</p>
 </div>
+<div class="section" id="image-and-icon-display">
+<span id="index-3"></span><h3><a class="toc-backref" href="#id12">Image and Icon display</a><a class="headerlink" href="#image-and-icon-display" title="Permalink to this headline">¶</a></h3>
+<p>To display images inline, use the <tt class="docutils literal"><span class="pre">gimage</span></tt> command.
+To activate icon display for commands like <tt class="docutils literal"><span class="pre">gls</span></tt>, select
+<tt class="docutils literal"><span class="pre">view/icons</span></tt> in the menubar. By default, <tt class="docutils literal"><span class="pre">gls</span></tt> does not
+display thumbnail icons of image files. (You can use <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span></tt> to
+force thumbnail icon display, but it can be a bit slow if there are a
+large number of images.)</p>
+</div>
 <div class="section" id="menu-shortcuts">
-<span id="index-3"></span><h3><a class="toc-backref" href="#id12">Menu shortcuts</a><a class="headerlink" href="#menu-shortcuts" title="Permalink to this headline">¶</a></h3>
+<span id="index-4"></span><h3><a class="toc-backref" href="#id13">Menu shortcuts</a><a class="headerlink" href="#menu-shortcuts" title="Permalink to this headline">¶</a></h3>
 <p>All the items in the top menubar can be accessed by typing <em>Control-J</em>
 followed by a single letter for each level of menu selection. The
 letter to be typed will be highlighted when you type <em>Control-J</em> and
@@ -374,7 +387,7 @@ preceding level names may be omitted, as long as there is no ambiguity, e.g.:</p
 </div>
 </div>
 <div class="section" id="command-recall">
-<span id="index-4"></span><h3><a class="toc-backref" href="#id13">Command recall</a><a class="headerlink" href="#command-recall" title="Permalink to this headline">¶</a></h3>
+<span id="index-5"></span><h3><a class="toc-backref" href="#id14">Command recall</a><a class="headerlink" href="#command-recall" title="Permalink to this headline">¶</a></h3>
 <p>If the command line is empty, <em>up/down arrows</em> will use the underlying
 shell for command recall (like Control-P and Control-N). If the
 command line contains any text, including whitespace,
@@ -386,7 +399,7 @@ to execute it. Typing any other key, including the <em>left arrow</em>,
 will cancel the command recall process.</p>
 </div>
 <div class="section" id="copy-paste">
-<span id="index-5"></span><h3><a class="toc-backref" href="#id14">Copy/paste</a><a class="headerlink" href="#copy-paste" title="Permalink to this headline">¶</a></h3>
+<span id="index-6"></span><h3><a class="toc-backref" href="#id15">Copy/paste</a><a class="headerlink" href="#copy-paste" title="Permalink to this headline">¶</a></h3>
 <p>For certain browsers (e.g., desktop Chrome/Firefox),
 the usual <em>Command-V</em> or <em>Control-V</em> key sequence should directly
 paste text from the clipboard. If that doesn&#8217;t work, there are a couple
@@ -404,7 +417,7 @@ This second technique may not always work well for text copied from non-plain
 text sources, such as a web page.</p>
 </div>
 <div class="section" id="drag-and-drop">
-<span id="index-6"></span><h3><a class="toc-backref" href="#id15">Drag and drop</a><a class="headerlink" href="#drag-and-drop" title="Permalink to this headline">¶</a></h3>
+<span id="index-7"></span><h3><a class="toc-backref" href="#id16">Drag and drop</a><a class="headerlink" href="#drag-and-drop" title="Permalink to this headline">¶</a></h3>
 <p>Sort of works! You can drag a filename (<em>grabbing the icon does not
 work</em>) and drop it on a folder, an executable, or the command line.
 For drag-and-drop between two GraphTerm windows running on the same
@@ -414,16 +427,11 @@ on two different hosts, the file will be copied.
 this time. Look at the command line for the feedback.)</p>
 </div>
 <div class="section" id="ipad-android-tablet-usage">
-<span id="index-7"></span><h3><a class="toc-backref" href="#id16">iPad/Android tablet usage</a><a class="headerlink" href="#ipad-android-tablet-usage" title="Permalink to this headline">¶</a></h3>
+<span id="index-8"></span><h3><a class="toc-backref" href="#id17">iPad/Android tablet usage</a><a class="headerlink" href="#ipad-android-tablet-usage" title="Permalink to this headline">¶</a></h3>
 <p>Tap on the cursor to display virtual keyboard on the tablet. The
 <em>Bottom menu</em>, exposed by clicking on the last displayed prompt, can be
 quite useful on a tablet. (On Android, you may need to tap a couple of
 more times on the cursor after the keyboard is displayed.)</p>
-</div>
-<div class="section" id="icon-display">
-<span id="index-8"></span><h3><a class="toc-backref" href="#id17">Icon display</a><a class="headerlink" href="#icon-display" title="Permalink to this headline">¶</a></h3>
-<p>Select <tt class="docutils literal"><span class="pre">view/icons</span></tt> in the menubar to activate icon display for commands like
-<tt class="docutils literal"><span class="pre">gls</span></tt>.</p>
 </div>
 <div class="section" id="themes">
 <span id="index-9"></span><h3><a class="toc-backref" href="#id18">Themes</a><a class="headerlink" href="#themes" title="Permalink to this headline">¶</a></h3>
@@ -465,13 +473,13 @@ See the function <tt class="docutils literal"><span class="pre">main</span></tt>
 <div class="section" id="inline-tables-using-pandas">
 <span id="pandas-mode"></span><span id="index-12"></span><h3><a class="toc-backref" href="#id22">Inline tables using pandas</a><a class="headerlink" href="#inline-tables-using-pandas" title="Permalink to this headline">¶</a></h3>
 <p>GraphTerm can display <tt class="docutils literal"><span class="pre">pandas</span></tt> DataFrame objects as a table using
-HTML.</p>
-<blockquote>
-<div>python -i $GTERM_DIR/bin/gpylab.py
+HTML:</p>
+<div class="highlight-python"><pre>python -i $GTERM_DIR/bin/gpylab.py
 &gt;&gt;&gt; import pandas as pd
-&gt;&gt;&gt; d = {&#8216;one&#8217; : [1., 2., 3., 4.],
-&gt;&gt;&gt; &#8216;two&#8217; : [4., 3., 2., 1.]}
-&gt;&gt;&gt; pd.DataFrame(d)</div></blockquote>
+&gt;&gt;&gt; d = {'one' : [1., 2., 3., 4.],
+&gt;&gt;&gt; 'two' : [4., 3., 2., 1.]}
+&gt;&gt;&gt; pd.DataFrame(d)</pre>
+</div>
 </div>
 <div class="section" id="notebook-mode">
 <span id="index-13"></span><span id="id1"></span><h3><a class="toc-backref" href="#id23">Notebook mode</a><a class="headerlink" href="#notebook-mode" title="Permalink to this headline">¶</a></h3>
