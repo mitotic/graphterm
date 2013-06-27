@@ -2515,7 +2515,7 @@ class Terminal(object):
                 # Unvalidated markup; plain-text or escaped HTML content for security
                 try:
                     import lxml.html
-                    content = lxml.html.fromstring(content).text_content()
+                    content = cgi.escape(lxml.html.fromstring(content).text_content())
                     headers["content_type"] = "text/plain"
                 except Exception:
                     content = cgi.escape(content)
