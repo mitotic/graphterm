@@ -12,7 +12,7 @@ gsh -c tweetwin gtweet -f -s science
 gsh -c weatherwin yweather -f austin
 
 # Looping slide show using reveal.js
-gsh -c slidewin greveal -l -t 2500 '$GTERM_DIR/bin/landslide/landslides.md' '|' gframe -f
+gsh -c slidewin greveal -l -t 2500 '$GTERM_DIR/examples/mypres1.md' '|' gframe -f
 
 # Generate and display wordcloud using d3.js
 gsh -c cloudwin d3cloud '$GTERM_DIR/bin/d3cloud' '|' gframe -f

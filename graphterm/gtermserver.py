@@ -424,8 +424,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if validated:
                             # User auth code matched
                             self.authorized = self.add_state(user, self.MULTI_AUTH)
-                        else:
+                        elif code:
                             auth_message = "Authentication failed; check user/code"
+                        else:
+                            auth_message = "Validation code required for user "+user
 
             if not self.authorized:
                 if self.req_path in self._webcast_paths:
