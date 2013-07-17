@@ -134,7 +134,9 @@ $(document).ready(function() {
 <body>
 
   <!-- This demo shows one visualization, embedded within a div ... -->
+<div style="margin-right: 10px;">
 %(header)s
+</div>
   <p>
   <div id="traceDiv"></div>
 

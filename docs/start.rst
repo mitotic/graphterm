@@ -65,10 +65,11 @@ accessible servers, see :ref:`cloud`.)
 
 Within the terminal, try out the following commands::
 
+   hello_gterm.sh
    gls <directory>
    gvi <text-filename>
 
-These are commands in the GraphTerm toolchain that imitate
+The ``gls`` and ``gvi`` commands in the GraphTerm toolchain imitate
 basic features of the standard ``ls`` and ``vi`` commands.
 (*Note:* You need to execute the ``sudo gterm_setup`` command
 to be able to use the GraphTerm toolchain. Otherwise, you will
@@ -96,6 +97,8 @@ The commands reside in the directory ``$GTERM_DIR/bin`` and include the followin
    ``d3cloud [file]`` To display file (or stdin) content as a word
    cloud (see  :ref:`d3cloud_shot`)
 
+   ``gbrowse [filename|URL]``    To view files/URLs in a separate browser window
+
    ``gframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) within
    an inline *iframe*  (see  :ref:`d3cloud_shot`)
 
@@ -114,6 +117,8 @@ The commands reside in the directory ``$GTERM_DIR/bin`` and include the followin
    ``gmatplot.py``   An inline ``matplotlib`` plotting package (see  :ref:`matplotlib_shot`)
 
    ``gmenu item subitem``   To access the menubar from the command line
+
+   ``gopen filename``    To open a file using the OS-specific ``open`` command
 
    ``gqrcode URL|text``    Display inline QR code
 
@@ -136,6 +141,8 @@ The commands reside in the directory ``$GTERM_DIR/bin`` and include the followin
    ``gvi filename``   Open file using a browser-based visual editor
 
    ``hello_gterm.sh`` Hello World program that displays inline HTML text and image
+
+   ``ystock stock_symbol`` To view a graph of stock price history
 
    ``yweather [location]`` To view weather forecasts (see  :ref:`weather_shot`)
 
@@ -174,6 +181,21 @@ even if it is just a space*, the clicking action will cause text to be
 pasted into the command line, without any
 command being executed. You can edit the pasted text, then press the
 Enter key to execute it.
+
+
+
+.. index:: icons, images
+
+Image and Icon display
+--------------------------------------------------------------------------------------------
+
+To display images inline, use the ``gimage`` command.
+To activate icon display for commands like ``gls``, select
+``view/icons`` in the menubar. By default, ``gls`` does not
+display thumbnail icons of image files. (You can use ``gls -i`` to
+force thumbnail icon display, but it can be a bit slow if there are a
+large number of images.)
+
 
 .. index:: menu shortcut
 
@@ -257,17 +279,6 @@ Tap on the cursor to display virtual keyboard on the tablet. The
 quite useful on a tablet. (On Android, you may need to tap a couple of
 more times on the cursor after the keyboard is displayed.)
 
-
-
-.. index:: icon display
-
-Icon display
---------------------------------------------------------------------------------------------
-
-Select ``view/icons`` in the menubar to activate icon display for commands like
-``gls``.
-
-
 .. index:: themes
 
 Themes
@@ -327,7 +338,7 @@ Inline tables using pandas
 --------------------------------------------------------------------------------------------
 
 GraphTerm can display ``pandas`` DataFrame objects as a table using
-HTML.
+HTML::
 
     python -i $GTERM_DIR/bin/gpylab.py
     >>> import pandas as pd

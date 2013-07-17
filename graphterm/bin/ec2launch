@@ -38,6 +38,7 @@ form_parser.add_option("auto_users", False, help="Automatically create new users
 form_parser.add_option("allow_share", False, help="Allow sharing between users")
 form_parser.add_option("logging", False, help="Enable logging")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
+form_parser.add_option("screen", False, help="Run server/host using GNU screen")
 form_parser.add_option("other_opts", "", help="Other options for gtermserver (space-separated)")
 form_parser.add_option("dry_run", False, help="Dry run")
 form_parser.add_option("verbose", False, help="Verbose")
@@ -146,19 +147,30 @@ if options.pylab:
 if options.R:
     startup_commands += ["apt-get install -y r-base libcurl4-openssl-dev libcairo2-dev libxt-dev"]
 
-command_format = "sudo -u "+gterm_user+" -i %s --daemon=start"
+command_name = "gtermhost" if options.connect_to_gterm else "gtermserver"
+command_line = "sudo -u "+gterm_user+" -i"
+if options.screen:
+    command_line += " screen -d -m"
+    if options.logging:
+        command_line += " -L"
+    command_line += " -S " + command_name + " " + command_name
+else:
+    command_line += " " + command_name + " --daemon=start"
+
 if options.auto_users:
     if options.auth_type != "multiuser":
         raise Exception("Must specify auth_type=multiuser to enable auto_users")
-    command_format += " --auto_users --super_users=ubuntu"
+    command_line += " --auto_users --super_users=ubuntu"
 if options.allow_share:
-    command_format += " --allow_share"
+    command_line += " --allow_share"
 if options.other_opts:
-    command_format += " " + options.other_opts.strip()
+    command_line += " " + options.other_opts.strip()
 if options.logging:
-    command_format += " --logging"
+    command_line += " --logging"
 if options.oshell:
-    command_format += " --oshell"
+    command_line += " --oshell"
+    if options.screen:
+        command_line += " --oshell_input"
 
 init_command = ""
 fwall_command = ""
@@ -168,7 +180,7 @@ if options.connect_to_gterm:
     if not server_domain:
         raise Exception("Must specify fully qualified domain name to connect to GraphTerm server")
     host_name = instance_name if instance_domain == server_domain else instance_tag
-    init_command = (command_format % "gtermhost") + " --server_addr="+ options.connect_to_gterm+" "+host_name
+    init_command = command_line + " --server_addr="+ options.connect_to_gterm+" "+host_name
     startup_commands += [ init_command ]
 else:
     security_groups = [ServerGroupName]
@@ -177,7 +189,7 @@ else:
     fwall_command = "iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900"
     startup_commands += [ fwall_command ]
     if install_gterm and auth_type:
-        init_command = (command_format % "gtermserver") + ' --auth_type="'+options.auth_type+'" --host='+host_domain
+        init_command = command_line + ' --auth_type="'+options.auth_type+'" --host='+host_domain
         ##if options.wildcard:
         ##    init_command += " --blob_host=wildcard"
         startup_commands += [ init_command ]

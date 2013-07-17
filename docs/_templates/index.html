@@ -19,16 +19,34 @@
 <p>
 <tt>GraphTerm</tt> is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
-interfaces. The goal is to provide a fully backwards-compatible terminal
-emulator for <tt>xterm</tt>.  You should be able to use it just like a regular terminal
-interface, accessing additional graphical features only as needed. GraphTerm builds
+interfaces. You can use it just like a regular terminal,
+backwards-compatible with <tt>xterm</tt>, and access the additional
+graphical features as needed.
+These features can help impove your terminal workflow by
+integrating clickable folder navigation with command line operations and
+letting you view image/HTML output without a separate window.
+You can use the GraphTerm API to build "mashups" of web applications
+that work seamlessly within
+the terminal. Sample mashups include:
+</p>
+
+<ul>
+ <li> <tt>greveal</tt>: Inline version of <tt>reveal.js</tt> to display Markdown files as slideshows</li>
+ <li> <tt>gtutor</tt>: Inline version of <a href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
+ <li> <tt>yweather</tt>: Using Yahoo weather API to display weather</li>
+ <li> <tt>ystock</tt>: Using Yahoo finance API to display stock price history</li>
+</ul>
+
+<p>
+ GraphTerm builds
 upon two earlier projects, 
 <a href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm </a>
 which implemented a terminal using the Mozilla framework and
 <a href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm </a>
-which is an AJAX/Python terminal implementation. (Another recent
-project along these lines is 
-<a href="http://acko.net/blog/on-termkit/">TermKit</a>.)
+which is an AJAX/Python terminal implementation. (Other recent
+projects along these lines include
+<a href="http://acko.net/blog/on-termkit/">TermKit</a> and
+<a href="http://www.enlightenment.org/p.php?p=about/terminology">Terminology</a>.)
 </p>
 
 Possible applications of GraphTerm include:

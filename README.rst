@@ -12,15 +12,28 @@ Introduction
 
 ``GraphTerm`` is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
-interfaces. The goal is to provide a fully backwards-compatible terminal
-emulator for ``xterm``.  You should be able to use it just like a regular terminal
-interface, accessing additional graphical features only as needed. GraphTerm builds
-upon two earlier projects, 
+interfaces. You can use it just like a regular terminal,
+backwards-compatible with ``xterm``, and access the additional
+graphical features as needed. These features can help impove your
+terminal workflow by integrating clickable folder navigation with
+command line operations and
+letting you view image/HTML output without a separate window.
+You can use the GraphTerm API to build "mashups" of web applications
+that work seamlessly within the terminal.  Sample mashups include:
+
+ - ``greveal``: Inline version of ``reveal.js`` to display Markdown files as slideshows
+ - ``gtutor``: Inline version of `pythontutor.com <http://pythontutor.com>`_ for visual tracing of python programs
+ - ``yweather``: Using Yahoo weather API to display weather
+ - ``ystock``: Using Yahoo finance API to display stock price history
+ 
+
+GraphTerm builds upon two earlier projects, 
 `XMLTerm <http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html>`_
 which implemented a terminal using the Mozilla framework and
 `AjaxTerm <https://github.com/antonylesuisse/qweb/tree/master/ajaxterm>`_
-which is an AJAX/Python terminal implementation. (Another recent
-project along these lines is  `TermKit <http://acko.net/blog/on-termkit/>`_.)
+which is an AJAX/Python terminal implementation. (Other recent
+projects along these lines include  `TermKit <http://acko.net/blog/on-termkit/>`_
+and `Terminology <http://www.enlightenment.org/p.php?p=about/terminology>`_.)
 
 A GraphTerm terminal window is just a web page served from the
 GraphTerm server program. Multiple users can connect
