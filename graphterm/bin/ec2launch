@@ -25,9 +25,9 @@ usage = "usage: %prog [-h ... ] <instance-tag|full-domain-name>"
 
 form_parser = gterm.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname (e.g., tagname.graphterm.net): ", command="ec2launch -f")
 form_parser.add_argument(label="", help="Instance hostname")
-form_parser.add_option("type", ("t1.micro", "m1.small", "m1.medium", "m1.large"), help="Instance type")
+form_parser.add_option("type", ("m3.medium", "c3.large", "m3.large", "m1.small", "t1.micro"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
-form_parser.add_option("ami", "ami-e5582d8c", help="Instance OS (default: Ubuntu 12.04LTS)")
+form_parser.add_option("ami", "ami-83e2dcea", help="Instance OS (default: Ubuntu 12.04LTS amd64)")
 form_parser.add_option("auth_type", "none", help="Authentication type (local/none/name/multiuser)")
 form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
 form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
@@ -130,19 +130,20 @@ setup_file = "SETUP_OVER"
 startup_commands = ["#!/bin/bash",
 "set -e -x",
 "apt-get update && apt-get upgrade -y",
-"apt-get install -y python-setuptools",
-"easy_install tornado",
+"apt-get install -y python-setuptools python-pip",
+"pip install tornado",
 ]
 
 install_gterm = not install_basename.startswith("graphterm")
 
 if install_gterm:
-    startup_commands += ["easy_install graphterm",
+    startup_commands += ["pip install graphterm",
                          "gterm_setup"]
 
 if options.pylab:
-    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific python-pandas libnetcdf-dev netcdf-bin ipython"]
-    startup_commands += ["easy_install pil qrcode"]
+    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific python-pandas python-jinja2 libnetcdf-dev netcdf-bin ipython"]
+    startup_commands += ["pip install pil qrcode"]
+    startup_commands += ["pip install --upgrade ipython pyzmq"]
 
 if options.R:
     startup_commands += ["apt-get install -y r-base libcurl4-openssl-dev libcairo2-dev libxt-dev"]
@@ -262,11 +263,16 @@ def create_or_update_security_group(ec2conn, group_name, description="", rules=[
         else:
             src_group = None
 
-        group.authorize(ip_protocol=rule.ip_protocol,
-                        from_port=rule.from_port,
-                        to_port=rule.to_port,
-                        cidr_ip=rule.cidr_ip,
-                        src_group=src_group)
+        try:
+            group.authorize(ip_protocol=rule.ip_protocol,
+                            from_port=rule.from_port,
+                            to_port=rule.to_port,
+                            cidr_ip=rule.cidr_ip,
+                src_group=src_group)
+        except Exception, excp:
+            if options.verbose:
+                print >> sys.stderr, "Rule creation error: "+str(excp)+"\n\n"
+
     return group
 
 # Create key pair, if needed
