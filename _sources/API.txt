@@ -4,6 +4,10 @@
 
 .. index:: API, graphterm-aware commands
 
+*Note:* The GraphTerm API is poorly documented, primarily because it
+ is in a state of flux. If you would like to develop a non-trivial
+ application using this API, please open a GitHub
+
 A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_
 writes to to the standard output in a format similar to a HTTP
 response, preceded and followed by
