@@ -184,6 +184,11 @@ hr {
     display: none;
 }
 
+#terminal .sf-menu .gterm-notelabel {
+    color: DarkOrange;
+    font-weight: bold;
+}
+
 #terminal .sf-menu li {
     background-color: rgb(225,225,225);
     color: black;

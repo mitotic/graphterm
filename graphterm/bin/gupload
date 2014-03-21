@@ -37,12 +37,12 @@ parser.add_option("-w", "--write",
 parser.add_option("-o", "--stdout",
                   action="store_true", dest="stdout", default=False,
                   help="Use STDOUT for pagelet output")
-parser.add_option("-v", "--verbose",
+parser.add_option("-q", "--quiet",
+                  action="store_true", dest="quiet", default=False,
+                  help="Quiet")
+parser.add_option("", "--verbose",
                   action="store_true", dest="verbose", default=False,
                   help="Verbose")
-parser.add_option("", "--veryverbose",
-                  action="store_true", dest="veryverbose", default=False,
-                  help="Veryverbose")
 
 (options, args) = parser.parse_args()
 
@@ -52,13 +52,16 @@ if len(args) > 1:
 
 assert sys.stdin.isatty()
 
-assert args or (not options.verbose and not options.veryverbose)
-
 to_dir = False
 if args:
     expname = os.path.expanduser(args[0])
     filepath = os.path.normcase(os.path.normpath(os.path.join(Work_dir, expname)))
+elif sys.stdout.isatty():
+    filepath = "."
+else:
+    filepath = ""
 
+if filepath:
     if os.path.exists(filepath):
         if os.path.isdir(filepath):
             to_dir = True
@@ -75,8 +78,6 @@ if args:
             else:
                 print >> sys.stderr, "Please create directory %s" % head
                 sys.exit(1)
-else:
-    filepath = ""
 
 params = {"display": "block", "current_directory": Work_dir}
 html_headers = {"x_gterm_response": "upload_file",
@@ -108,7 +109,7 @@ try:
             # Terminal null line
             break
 
-    if options.veryverbose:
+    if options.verbose:
         print >> sys.stderr, "header=%s\n" % (header_line,)
 
     # Process headers
@@ -129,7 +130,7 @@ try:
 
     filename = headers["x_gterm_filepath"]
     expect_length = headers["x_gterm_length"]
-    if options.veryverbose:
+    if options.verbose:
         print >> sys.stderr, "file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length)
 
     if expect_length:
@@ -147,7 +148,7 @@ try:
             if offset:
                 prefix = line[-offset:]
                 line = line[:-offset]
-            if options.veryverbose:
+            if options.verbose:
                 print >> sys.stderr, "line(%d,%s)=%s" % (len(chunk), count, line,)
             content_list.append(base64.b64decode(line))
         assert not prefix
@@ -167,8 +168,8 @@ if filepath:
         filepath = os.path.join(filepath, filename)
     with open(filepath, "w") as f:
         f.write(content)
-    if options.verbose or options.veryverbose:
-        print >> sys.stderr, "Wrote file "+filepath
+    if not options.quiet:
+        print >> sys.stderr, "Uploaded file "+filepath
 else:
     Stdout_data = content
 

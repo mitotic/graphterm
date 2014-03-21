@@ -89,6 +89,25 @@ class Daemon(object):
 		self.daemonize()
 		self.run()
 
+	def activate(self):
+		"""
+		Activate, i.e., start the daemon if not already running
+		"""
+		# Check for a pidfile to see if the daemon already runs
+		try:
+			pf = file(self.pidfile,'r')
+			pid = int(pf.read().strip())
+			pf.close()
+		except IOError:
+			pid = None
+	
+		if pid:
+			# Already running
+			sys.exit(0)
+		else
+			# Start the daemon
+			self.start()
+
 	def stop(self, restart=False):
 		"""
 		Stop the daemon
@@ -149,6 +168,8 @@ class ServerDaemon(Daemon):
 		    self.stop()
 		elif action == "restart":
 		    self.restart()
+		elif action == "activate":
+		    self.activate()
 		elif action == "status":
 			status = "Running" if os.path.exists(self.pidfile) else "Stopped"
 			print >> sys.stderr, status

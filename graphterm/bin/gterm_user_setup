@@ -9,17 +9,21 @@ ADMIN=ubuntu
 GRAPHTERM_DIR=.graphterm
 GRAPHTERM_AUTH=graphterm_auth
 
-server=localhost
-
 if [ $# -lt 1 ]; then
-    echo "Usage: gterm_user_setup (username|--all) [server_name]"
+    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name]]"
     exit 1
 fi
 
 username=$1
+action=activate
+server=localhost
 
 if [ $# -gt 1 ]; then
-    server=$2
+    action=$2
+fi
+
+if [ $# -gt 2 ]; then
+    server=$3
 fi
 
 if [ ! -d $HOME_MNT ]; then
@@ -38,29 +42,26 @@ if [ "$username" = "--all" ]; then
     done
 
 elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
+    host_list=$username
     if getent passwd $username > /dev/null 2>&1; then
 	echo "User $username already present"
-	exit 1
-    fi
+    else
+	homedir=$HOME_MNT/$username
+	if [ ! -e $homedir ]; then
+	    echo "Home directory already exists"
+	else
+            # Create new user
+	    echo "Creating new user and group $username"
+	    useradd --user-group --create-home --home $homedir --shell /bin/bash $username
 
-    homedir=$HOME_MNT/$username
-    if [ -e $homedir ]; then
-	echo "Home directory already exists"
-	exit 1
-    fi
-
-    # Create new user
-    echo "Creating new user and group $username"
-    useradd --user-group --create-home --home $homedir --shell /bin/bash $username
-
-    sudo -u $username mkdir $homedir/$GRAPHTERM_DIR
-    sudo -u $username chmod 0700 $homedir/$GRAPHTERM_DIR
+	    sudo -u $username mkdir $homedir/$GRAPHTERM_DIR
+	    sudo -u $username chmod 0700 $homedir/$GRAPHTERM_DIR
     
-    # Lock user password (i.e., no direct logins allowed)
-    passwd -l $username
+            # Lock user password (i.e., no direct logins allowed)
+	    passwd -l $username
 
-    host_list=$username
-
+	fi
+    fi
 else
     echo "Invalid username $username"
     exit 1
@@ -78,6 +79,6 @@ for host in $host_list; do
 	chown ${host}:$host $auth_file
 
         # Start client for host
-	sudo -u $host -H gtermhost --daemon=restart --auth_file=$auth_file $host
+	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file $host
     fi
 done

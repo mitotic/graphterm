@@ -1024,7 +1024,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		if (user)
 		    host_html += 'User: <b>'+user + '</b><p>\n';
 		if (new_auto) {
-		    host_html += 'Created new user. Click <a href="/">here</a> to proceed.';
+		    var mail_body = "User: "+user+"\nCode: "+new_auto+"\nURL: "+window.location.protocol+"/"+"/"+window.location.host+"/\n";
+		    host_html += 'Created new user <b>'+user+'</b>.<br>User authentication code is<br>&nbsp;<b>'+new_auto+'</b><br>Copy this information for future use or <a href="mailto:?subject=Graphterm%20code&body='+encodeURIComponent(mail_body)+'">email it to yourself</a>.<p>Click <a href="/">here</a> to open a terminal.<br>';
 		} else if (!hosts.length) {
 		    host_html += 'No GraphTerm Hosts currently available<br>';
 		} else {
@@ -1047,8 +1048,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var term_html = '<p>' + (user ? 'User: <b>'+user+'</b><br>\n' : '') + 'Host: <b>' + host + '</b>\n';
 		if (allow_new || terms.length) {
 		    term_html += '<p>Connect to GraphTerm session:<p><ol>';
-		    for (var j=0; j<terms.length; j++)
-			term_html += '<li><a href="/'+host+'/'+terms[j]+'/?qauth='+getAuth()+'">'+terms[j]+'</a></li>';
+		    for (var j=0; j<terms.length; j++) {
+			term_html += '<li>';
+			term_html += '<a href="/'+host+'/'+terms[j][0]+'/?qauth='+getAuth()+'">'+terms[j][0]+'</a>';
+		        if (terms[j][1])
+			    term_html += '(<a href="/'+host+'/'+terms[j][0]+'/steal/?qauth='+getAuth()+'">steal</a>)';
+			term_html += '</li>';
+		    }
 		    if (allow_new)
 			term_html += '<li><a href="/'+host+'/new/?qauth='+getAuth()+'"><b><em>new</em></b></a></li>';
 		} else {
@@ -1276,7 +1282,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    gExpectUpload = null;
 			} else {
 			    var uploadContent = '<div> <b>Select file to upload:</b><input type="file" class="gterm-fileinput" name="gterm-fileinput"></input><div class="gterm-filedrop">or Drag and drop file here</div><input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input> </div>';
-			    var uploadHtml = '<div class="pagelet entry '+classes+'" data-gtermpromptindex="'+gPromptIndex+'">'+uploadContent+'</div>\n'
+			    var uploadHtml = '<div class="pagelet entry '+classes+' gterm-upload" data-gtermpromptindex="'+gPromptIndex+'">'+uploadContent+'</div>\n'
 			    gExpectUpload = {file_types: params.expect_type || "any", callback: null};
 			    var newElem = $(uploadHtml).appendTo("#session-bufscreen");
 			    newElem.find(".gterm-filedrop").rebind('dragover', GTFileDrag);
@@ -2332,8 +2338,16 @@ function GTMenuTerminal(selectKey, newValue, force) {
 function GTMenuNotebook(selectKey, newValue, force) {
     console.log("GTMenuNotebook: ", selectKey, newValue, force);
 
-    if (selectKey == "new") {
-	GTActivateNotebook("");
+    if (_.str.startsWith(selectKey, "new_")) {
+        if (selectKey == "new_pylab") {
+	    gWebSocket.write([["paste_command", 'python -i $GTERM_DIR/bin/gpylab.py\ngterm.open_notebook()\n']]);
+	    //gWebSocket.write([["paste_command", 'python -i $GTERM_DIR/bin/gpylab.py\n']]);
+	    //setTimeout(GTActivateNotebook, 200);
+        } else if (selectKey == "new_r") {
+	    gWebSocket.write([["paste_command", 'R -q\nsource(paste(Sys.getenv("GTERM_DIR"), "/bin/gterm.R", sep=""))\ngnotebook()\n']]);
+        } else {
+	    GTActivateNotebook("");
+	}
     } else if (selectKey == "open") {
 	var filepath = $.trim(window.prompt("Notebook file: "));
 	var prompts = "";
@@ -3020,7 +3034,7 @@ function AjaxKeypress(evt) {
 	}
 
 	if (!gNotebook && evt.shiftKey) {
-	    GTMenuNotebook("new");
+	    GTMenuNotebook("new_default");
 	    return false;
 	}
 
@@ -3161,7 +3175,7 @@ function GTTerminalInput(chr, type_ahead) {
 	    return false;
 	} else if (gNotebook && !gNotebook.passthru_stdin) {
 	    // Close notebook
-	    if (window.confirm("Exit notebook mode and display output?"))
+	    if (window.confirm("Exit notebook mode without saving and display output in terminal mode?"))
 		GTCloseNotebook();
 	    return false;
 	}
@@ -3699,6 +3713,7 @@ GTFrameDispatcher.prototype.close = function(frameName, save) {
 var gFrameDispatcher = new GTFrameDispatcher();
 
 function GTActivateNotebook(filepath, prompts) {
+    filepath = filepath || "";
     if (gNotebook)
 	return;
     if (!gParams.update_opts.command && filepath && !_.str.endsWith(filepath, ".sh.md") && !_.str.endsWith(filepath, ".sh.gnb.md")) {
@@ -3754,7 +3769,7 @@ function GTNotebook(params) {
     this.splitting = false;
     this.closed = false;
     this.poll_intervalID = window.setInterval(bind_method(this, this.poll), POLL_SEC*1000);
-    $("#menubar-notelabel").text(this.note_params.name);
+    $("#menubar-notelabel").text("NB: "+this.note_params.name);
 }
 
 GTNotebook.prototype.close = function() {
@@ -4549,6 +4564,7 @@ function GTFileDropHandler(target) {
 function GTTransmitFile(filename, mimetype, b64_data) {
     gExpectUpload = null;
     gUploadFile = null;
+    $("#session-bufscreen .gterm-upload").remove();
     console.log("GTTransmitFile:", filename, mimetype, b64_data.length);
     if (gWebSocket && gParams.controller) {
 	gWebSocket.write([["save_data", {x_gterm_filepath: filename, content_type: mimetype,
@@ -4558,7 +4574,7 @@ function GTTransmitFile(filename, mimetype, b64_data) {
 
 function GTUploadCancel(evt) {
     console.log("GTUploadCancel");
-    GTTransmitFile("", "none/none", "")
+    GTTransmitFile("", "none/none", "");
 }
 
 function ScrollEventHandler(event) {

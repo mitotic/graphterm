@@ -90,8 +90,8 @@
             <a href="#">terminal</a>
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="terminal_new">new</a></li>
-              <li><a href="#" class="gterm-only-embed" gterm-state="terminal_full">full</a></li>
               <li><a href="#" class="gterm-only-controller gterm-key-altletter" gterm-state="terminal_reload">re<span class="gterm-key-letter">l</span>oad</a></li>
+              <li><a href="#" class="gterm-only-embed" gterm-state="terminal_full">full</a></li>
               <li><a href="#" gterm-state="terminal_detach">detach</a></li>
               <li><a href="#" gterm-state="terminal_reconnect">reconnect</a></li>
               <li><a href="#" gterm-state="terminal_kill">kill</a></li>
@@ -115,7 +115,14 @@
           <li>
             <a href="#">notebook</a>
             <ul class="gterm-menukey-firstletter">
-              <li><a href="#" class="gterm-only-controller gterm-non-notebook" gterm-state="notebook_new">new</a></li>
+              <li>
+                <a href="#"  class="gterm-only-controller gterm-non-notebook">new &#x25b9;</a>
+                <ul class="gterm-menukey-firstletter">
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_new_pylab">pylab</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_new_r">R</a></li>
+                  <li><a href="#" class="gterm-only-controller" gterm-state="notebook_new_default">default</a></li>
+                </ul>
+              </li>
               <li><a href="#" class="gterm-only-controller gterm-non-notebook" gterm-state="notebook_open">open</a></li>
               <li><a href="#" class="gterm-only-notebook" gterm-state="notebook_save">save</a></li>
               <li>
@@ -247,7 +254,7 @@
           <li class="gterm-menu-curved gterm-only-controller gterm-non-notebook-show gterm-wide"><a href="#" gterm-state="home"  class="gterm-key-altletter">ho<span class="gterm-key-letter">m</span>e</a></li>
           <li class="gterm-menu-curved gterm-only-controller gterm-only-notebook-show gterm-wide"><a href="#" gterm-state="run">run</a></li>
 	  <li id="menubar-sessionlabel-container" class="gterm-menu-white gterm-only-notebook-show gterm-wide">
-              <a href="#" class=""><span id="menubar-notelabel"></span></a>
+              <a href="#" class="gterm-notelabel"><span id="menubar-notelabel"></span></a>
           </li>
         </ul>
         <div id="menubar-padding" class"menubar-padding"></div>

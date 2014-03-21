@@ -33,6 +33,7 @@ form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTe
 form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
 form_parser.add_option("copy_files", "", help="List of files to copy (space separated, e.g., .twitter_auth)")
 form_parser.add_option("pylab", False, help="Install PyLab")
+form_parser.add_option("netcdf", False, help="Install NetCDF")
 form_parser.add_option("R", False, help="Install R")
 form_parser.add_option("auto_users", False, help="Automatically create new users")
 form_parser.add_option("allow_share", False, help="Allow sharing between users")
@@ -129,8 +130,8 @@ setup_file = "SETUP_OVER"
 
 startup_commands = ["#!/bin/bash",
 "set -e -x",
-"apt-get update && apt-get upgrade -y",
-"apt-get install -y python-setuptools python-pip",
+"apt-get update && apt-get upgrade -qy",
+"apt-get install -qy python-setuptools python-pip",
 "pip install tornado",
 ]
 
@@ -141,12 +142,16 @@ if install_gterm:
                          "gterm_setup"]
 
 if options.pylab:
-    startup_commands += ["apt-get install -y python-numpy python-scipy python-matplotlib python-scientific python-pandas python-jinja2 libnetcdf-dev netcdf-bin ipython"]
+    startup_commands += ["apt-get install -qy python-numpy python-scipy python-matplotlib python-scientific python-pandas python-jinja2 ipython"]
     startup_commands += ["pip install pil qrcode"]
     startup_commands += ["pip install --upgrade ipython pyzmq"]
 
+if options.netcdf:
+    startup_commands += ["apt-get install -qy libnetcdf-dev netcdf-bin libhdf5-serial-dev"]
+    startup_commands += ["pip install netCDF4"]
+
 if options.R:
-    startup_commands += ["apt-get install -y r-base libcurl4-openssl-dev libcairo2-dev libxt-dev"]
+    startup_commands += ["apt-get install -qy r-base libcurl4-openssl-dev libcairo2-dev libxt-dev"]
 
 command_name = "gtermhost" if options.connect_to_gterm else "gtermserver"
 command_line = "sudo -u "+gterm_user+" -i"

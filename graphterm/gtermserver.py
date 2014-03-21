@@ -221,7 +221,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         cls._super_users = set(users)
 
     @classmethod
-    def is_super_user(cls, user):
+    def is_super(cls, user):
         return user and user in cls._super_users
 
     @classmethod
@@ -321,6 +321,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         cls._cookie_states[state_id] = authorized
         return authorized
 
+    def is_local(self):
+        return (self.authorized["auth_type"] == self.LOCAL_AUTH and self._auth_type == self.LOCAL_AUTH)
+
+    def is_creator(self, user, path):
+        terminal_params = self._control_params[path]
+        return self.is_local() or (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"])
+
     def open(self):
         need_code = self._auth_type >= self.LOCAL_AUTH
         need_user = self._auth_type == self.NAME_AUTH or self._auth_type >= self.MULTI_AUTH
@@ -355,7 +362,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            new_auto_user = False
+            new_auto_user = ""
             if not self.authorized:
                 if self._auth_type == self.NULL_AUTH:
                     # No authorization code needed
@@ -398,15 +405,18 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if user in self._auth_users:
                                 validated = (code == gterm.compute_hmac(self._auth_users[user], cauth))
                         else:
-                            if not self.is_super_user(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(HOME_MNT+"/"+user):
+                            key_version = "1" if self._auth_type >= self.MULTI_AUTH else None
+                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(HOME_MNT+"/"+user):
                                 # New auto user; no code validation required
                                 validated = True
-                                new_auto_user = True
+                                new_auto_user = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
+
                                 if not os.path.exists(gterm.SETUP_USER_CMD):
-                                    self.write_json([["abort", "Unable to create new user"]])
+                                    self.write_json([["abort", "Command %s not found" % gterm.SETUP_USER_CMD]])
                                     self.close()
                                     return
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, Server_settings["host"]]
+
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["internal_host"]]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
                                     logging.warning("gtermserver: ERROR in %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
@@ -418,7 +428,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     Log_file.flush()
                             else:
                                 # Non-auto user, super user, or existing auto user; need to validate with user auth code
-                                key_version = "1" if self._auth_type >= self.MULTI_AUTH else None
                                 validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
 
                         if validated:
@@ -453,8 +462,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             else:
                 path_comps = self.req_path.split("/")
 
-            is_local = (self.authorized["auth_type"] == self.LOCAL_AUTH and self._auth_type == self.LOCAL_AUTH)
-            is_super_user = self.is_super_user(user) or is_local
+            is_super_user = self.is_super(user) or self.is_local()
 
             if len(path_comps) < 1 or not path_comps[0]:
                 host_list = TerminalConnection.get_connection_ids()
@@ -517,8 +525,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     for term_name in conn.term_dict:
                         path = host + "/" + term_name
                         tparams = self._control_params.get(path)
-                        if tparams and (not tparams["share_private"] or is_local or (user and user == tparams["owner"]) or (not user and tparams["state_id"] == self.authorized["state_id"])):
-                            term_list.append(term_name)
+                        if tparams:
+                            term_owner = self.is_creator(user, path)
+                            if not tparams["share_private"] or term_owner:
+                                stealable = term_owner or not tparams["share_locked"]
+                                term_list.append( [term_name, stealable, len(self._watch_dict[path])] )
                     term_list.sort()
                     allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
@@ -547,8 +558,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             path = host + "/" + term_name
 
             if self.authorized["state_id"] in self._watch_dict[path].values():
-                if not option:
-                    self.write_json([["abort", "Already connected to this terminal from different window"]])
+                ##if not option:
+                ##    self.write_json([["abort", "Already connected to this terminal from different window"]])
+                ##    self.close()
+                ##    return
+                if not option and self.is_creator(user, path):
+                    self.write_json([["abort", "Use 'steal' option to control this terminal"]])
                     self.close()
                     return
                 if self._watch_dict[path].values().count(self.authorized["state_id"]) > MAX_RECURSION:
@@ -563,8 +578,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.write_json([["abort", "Unable to create terminal on host %s" % host]])
                     self.close()
                     return
+                # Note: Multiuser without allow_share implies super user has default read access
+                start_private =  self._auth_type > self.LOCAL_AUTH and (self._auth_type < self.MULTI_AUTH or Server_settings["allow_share"])
                 terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
-                                   "share_private": self._auth_type > self.LOCAL_AUTH,
+                                   "share_private": start_private,
                                    "share_tandem": False,
                                    "owner": user, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
@@ -573,7 +590,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             else:
                 # Existing terminal
                 terminal_params = self._control_params[path]
-                is_owner = is_local or (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"])
+                is_owner = self.is_creator(user, path)
                 if terminal_params["share_private"] and not is_owner:
                     # No sharing
                     self.write_json([["abort", "Invalid terminal path: %s" % path]])
@@ -726,11 +743,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
         from_user = self.authorized["user"] if self.authorized else ""
 
-        is_local = (self.authorized["auth_type"] == self.LOCAL_AUTH and self._auth_type == self.LOCAL_AUTH)
+        is_super_user = self.is_super(from_user) or self.is_local()
 
-        is_super_user = self.is_super_user(from_user) or is_local
-
-        is_owner = is_local or (from_user and from_user == terminal_params["owner"]) or (not from_user and self.authorized["state_id"] == terminal_params["state_id"])
+        is_owner = self.is_creator(from_user, self.remote_path)
 
         controller = self.wildcard or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
 
@@ -804,7 +819,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         elif is_super_user or is_owner or (not terminal_params["share_locked"] and
                                                            (self._auth_type <= self.LOCAL_AUTH or
                                                             (Server_settings["allow_share"] and
-                                                             not self.is_super_user(terminal_params["owner"])))):
+                                                             not self.is_super(terminal_params["owner"])))):
                             # Gain control
                             if terminal_params["share_tandem"]:
                                 # Shared control
@@ -983,7 +998,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     host_secrets = {}
     @classmethod
     def get_matching_paths(cls, regexp, user, state_id, auth_type):
-        is_super_user = GTSocket.is_super_user(user) or (auth_type == GTSocket.LOCAL_AUTH and GTSocket.get_auth_type() == GTSocket.LOCAL_AUTH)
+        is_super_user = GTSocket.is_super(user) or (auth_type == GTSocket.LOCAL_AUTH and GTSocket.get_auth_type() == GTSocket.LOCAL_AUTH)
         matchpaths = []
         for host, conn in cls._all_connections.iteritems():
             for term_name in conn.term_dict:
@@ -1449,7 +1464,7 @@ def run_server(options, args):
     else:
         oshell_globals = globals() if otrace and options.oshell else None
         prompt_list = options.prompts.split(",") if options.prompts else gterm.DEFAULT_PROMPTS
-        term_params = {"lc_export": options.lc_export, "no_pyindent": options.no_pyindent}
+        term_params = {"nb_ext": options.nb_ext, "lc_export": options.lc_export, "no_pyindent": options.no_pyindent}
         Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST, internal_host,
                                                          server_port=internal_port,
                                                          connect_kw={"ssl_options": internal_client_ssl,
@@ -1483,7 +1498,7 @@ def run_server(options, args):
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
     if options.daemon and options.auto_users:
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", internal_host]
+        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", "restart", internal_host]
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
             logging.warning("gtermserver: ERROR in starting up %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
@@ -1598,6 +1613,8 @@ def main():
                       help="Use https for internal connections")
     parser.add_option("prompts", default="",
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
+    parser.add_option("nb_ext", default="",
+                      help="File extension for notebooks (default: 'ipynb' or 'py.gnb.md')")
     parser.add_option("lc_export", default=False, opt_type="flag",
                       help="Export environment as locale (ssh hack)")
     parser.add_option("no_pyindent", default=False, opt_type="flag",
@@ -1605,7 +1622,7 @@ def main():
     parser.add_option("allow_embed", default=False, opt_type="flag",
                       help="Allow iframe embedding of terminal on other domains (possibly insecure)")
     parser.add_option("allow_share", default=False, opt_type="flag",
-                      help="Allow sharing of terminals between users")
+                      help="Allow sharing of terminals between multiple users")
     parser.add_option("auto_users", default=False, opt_type="flag",
                       help="Allow automatic user creation")
     parser.add_option("no_formcheck", default=False, opt_type="flag",

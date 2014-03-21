@@ -1051,16 +1051,20 @@ class Terminal(object):
                     logging.error("Error in reading notebook file %s" % fullpath)
             else:
                 content = ""
-                fileprefix = (note_dir+"/" if note_dir else "")+DEFAULT_FILE_PREFIX
-                offset = len(fileprefix)
-                filenum = 1+max([int(DEFAULT_FILENUM_RE.match(fname[offset:]).group(1)) for fname in glob.glob(fileprefix+"*") if DEFAULT_FILENUM_RE.match(fname[offset:])] or [0])
-                filepath = DEFAULT_FILE_PREFIX+str(filenum)
-                if note_command == "ipython":
-                    filepath += ".ipynb"
-                elif note_command in gterm.EXTENSIONS:
-                    filepath += "." + gterm.EXTENSIONS[note_command] + ".gnb.md"
-                else:
-                    filepath += ".gnb.md"
+
+        if not filepath:
+            fileprefix = (note_dir+"/" if note_dir else "")+DEFAULT_FILE_PREFIX
+            offset = len(fileprefix)
+            filenum = 1+max([int(DEFAULT_FILENUM_RE.match(fname[offset:]).group(1)) for fname in glob.glob(fileprefix+"*") if DEFAULT_FILENUM_RE.match(fname[offset:])] or [0])
+            filepath = DEFAULT_FILE_PREFIX+str(filenum)
+            if self.term_params.get("nb_ext"):
+                filepath += "."+self.term_params["nb_ext"]
+            elif note_command == "ipython":
+                filepath += ".ipynb"
+            elif note_command in gterm.EXTENSIONS:
+                filepath += "." + gterm.EXTENSIONS[note_command] + ".gnb.md"
+            else:
+                filepath += ".gnb.md"
 
         note_name, note_tail = os.path.splitext(os.path.basename(filepath))
         if note_name.endswith(".gnb") or note_name.endswith(".ipynb"):
