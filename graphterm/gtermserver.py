@@ -406,8 +406,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 validated = (code == gterm.compute_hmac(self._auth_users[user], cauth))
                         else:
                             key_version = "1" if self._auth_type >= self.MULTI_AUTH else None
-                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(HOME_MNT+"/"+user):
-                                # New auto user; no code validation required
+                            group_secret = gterm.user_hmac(self._auth_code, "", key_version="grp")
+
+                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(HOME_MNT+"/"+user) and (code == gterm.compute_hmac(group_secret, cauth)):
+                                # New auto user; group code validation required
                                 validated = True
                                 new_auto_user = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
 
@@ -1503,6 +1505,8 @@ def run_server(options, args):
     Http_server.listen(http_port, address=http_host)
     if auth_file:
         print >> sys.stderr, "\nAuthentication code in file " + auth_file
+        if options.auth_type == "multiuser":
+            print >> sys.stderr, "Group Code: "+gterm.dashify(str(gterm.user_hmac(auth_code, "", key_version="grp")))
     else:
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
