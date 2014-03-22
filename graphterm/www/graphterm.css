@@ -421,7 +421,7 @@ body.mobilescreen .pagelet.gterm-fullwindow {
     overflow-y: scroll;
 }
 
-.session-term .session-feedback {
+.session-term .session-chat {
     opacity: 0.6;
     z-index: 2000;
     position: fixed;
@@ -432,7 +432,7 @@ body.mobilescreen .pagelet.gterm-fullwindow {
     overflow: hidden;
 }
 
-.session-term:not(.gterm-feedback) .session-feedback {
+.session-term:not(.gterm-chat) .session-chat {
     display: none;
 }
 

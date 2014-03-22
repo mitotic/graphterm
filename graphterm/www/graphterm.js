@@ -63,7 +63,7 @@ var gWebSocket = null;
 var gAuthenticatingCookie = "";
 var gEditing = null;
 
-var gFeedback = false;
+var gChat = false;
 
 var gScriptBuffer = [];
 
@@ -994,7 +994,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		GTUpdateController();
 		for (var k=0; k<gParams.watchers.length; k++)
 		    GTJoin(gParams.watchers[k], true, true);
-		gtermFeedbackStatus(gParams.feedback);
+		gtermChatStatus(gParams.chat);
 
 		if (gParams.host_secret)
 		    setCookie("GRAPHTERM_HOST_"+gParams.normalized_host, ""+gParams.host_secret);
@@ -1169,8 +1169,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			console.log("ERROR in frame_msg:", err, content);
 		    }
 
-		} else if (cmd_type == "graphterm_feedback") {
-		    gtermFeedbackStatus(cmd_arg);
+		} else if (cmd_type == "graphterm_chat") {
+		    gtermChatStatus(cmd_arg);
 
 		} else if (cmd_type == "graphterm_widget") {
 		    var params = cmd_arg[0];
@@ -2456,32 +2456,32 @@ function GTPasteSpecialEnd(buttonElem) {
     setTimeout(ScrollTop, 200);
 }
 
-function gtermFeedbackStatus(status) {
-    gFeedback = status;
-    $("#session-term").toggleClass("gterm-feedback", gFeedback);
+function gtermChatStatus(status) {
+    gChat = status;
+    $("#session-term").toggleClass("gterm-chat", gChat);
 }
 
-function gtermFeedbackHandler(event) {
-    gFeedbackText = "";
-    $("#gterm-feedbackarea-content").val("");
-    popupShow("#gterm-feedbackarea", gtermFeedbackAction, gtermFeedbackConfirmClose, "feedback");
+function gtermChatHandler(event) {
+    gChatText = "";
+    $("#gterm-chatarea-content").val("");
+    popupShow("#gterm-chatarea", gtermChatAction, gtermChatConfirmClose, "chat");
 }
 
-gFeedbackText = null;
-function gtermFeedbackConfirmClose() {
-  if (gFeedbackText == $("#gterm-feedbackarea-content").val()) {
+gChatText = null;
+function gtermChatConfirmClose() {
+  if (gChatText == $("#gterm-chatarea-content").val()) {
     // No changes
     return true
   }
   return false;
 }
 
-function gtermFeedbackAction(buttonElem) {
+function gtermChatAction(buttonElem) {
     var action = $(buttonElem).attr("name");
-    var text = $("#gterm-feedbackarea-content").val();
+    var text = $("#gterm-chatarea-content").val();
     //console.log("popupButton", action, text);
     if (action == "send")
-	gWebSocket.write([["feedback", text+"\n"]]);
+	gWebSocket.write([["chat", text+"\n"]]);
     popupClose();
 }
 
@@ -4819,7 +4819,7 @@ function GTReady() {
     $("#session-footermenu select").change(gtermBottomSelectHandler);
     $("#gterm-header .headfoot-icon").bindclick(gtermMenuClickHandler);
     $("#session-footermenu .headfoot").bindclick(gtermMenuClickHandler);
-    $("#session-feedback-button").bindclick(gtermFeedbackHandler);
+    $("#session-chat-button").bindclick(gtermChatHandler);
 
     //window.addEventListener("dragover", GTDragOver);
     window.addEventListener("drop", GTDropHandler);

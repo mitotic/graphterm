@@ -5,7 +5,7 @@
 gfeed: Display input lines as a "feed"
 
 Example:
-  gfeedback 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET
+  gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET
 """
 
 import csv

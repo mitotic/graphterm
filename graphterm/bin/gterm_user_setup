@@ -2,7 +2,8 @@
 
 # Creates gterm user, if not present, and starts host connection
 #  Note: gterm users are locked and cannot login directly
-# If user is --all, host connection is started for all existing users
+# If user is --all, host connection is started for all existing users (excluding ADMIN)
+# To reset user terminals, use "gterm_user_setup --all restart"
 
 HOME_MNT=/home
 ADMIN=ubuntu

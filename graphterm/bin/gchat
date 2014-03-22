@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Capture feedback and send it to stdout
+# Capture chat and send it to stdout
 
-# Usage: gfeedback 2> $GTERM_SOCKET 0<&2
+# Usage: gchat 2> $GTERM_SOCKET 0<&2
 # The stderr is piped to the graphterm socket and stdin is also read from the socket.
-# stdout displays the captured feedback, and can be piped to gfeed.
+# stdout displays the captured chat, and can be piped to gfeed.
 
 echoerr() { echo -n "$@" 1>&2; }
 echoerrlf() { echo "$@" 1>&2; }
 
-headers='{"x_gterm_response": "capture_feedback", "x_gterm_parameters": {"cookie": "'"${GTERM_COOKIE}"'"}}'
+headers='{"x_gterm_response": "capture_chat", "x_gterm_parameters": {"cookie": "'"${GTERM_COOKIE}"'"}}'
 
 esc=`printf "\033"`
 gterm_code="1155"

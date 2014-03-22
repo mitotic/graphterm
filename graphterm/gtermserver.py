@@ -416,7 +416,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     self.close()
                                     return
 
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["internal_host"]]
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "activate", Server_settings["internal_host"]]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
                                     logging.warning("gtermserver: ERROR in %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
@@ -498,7 +498,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
             wildhost = is_wildcard(host)
-            term_feedback = False
+            term_chat = False
             conn = None
             
             option = path_comps[2] if len(path_comps) > 2 else ""
@@ -553,7 +553,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
-                term_feedback = term_name in conn.allow_feedback
+                term_chat = term_name in conn.allow_chat
 
             path = host + "/" + term_name
 
@@ -671,7 +671,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "state_values": state_values, "watchers": users,
                                         "controller": controller, "super_user": is_super_user, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
-                                        "apps_url": APPS_URL, "feedback": term_feedback, "update_opts": {},
+                                        "apps_url": APPS_URL, "chat": term_chat, "update_opts": {},
                                         "state_id": self.authorized["state_id"]}]])
         except Exception, excp:
             import traceback
@@ -750,22 +750,22 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         controller = self.wildcard or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
 
         conn = None
-        allow_feedback_only = False
+        allow_chat_only = False
         if not self.wildcard:
             conn = TerminalConnection.get_connection(remote_host)
             if not conn:
                 self.write_json([["errmsg", "ERROR: Remote host %s not connected" % remote_host]])
                 return
 
-            if not controller and term_name in conn.allow_feedback:
-                allow_feedback_only = True
+            if not controller and term_name in conn.allow_chat:
+                allow_chat_only = True
 
         allow_control_request = not terminal_params["share_locked"] and not terminal_params["share_private"] and not self._webcast_paths.get(self.remote_path)
-        if is_owner or controller or allow_feedback_only or allow_control_request:
+        if is_owner or controller or allow_chat_only or allow_control_request:
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
-                if allow_feedback_only:
-                    msg_list = [msg for msg in msg_list if msg[0] == "feedback"]
+                if allow_chat_only:
+                    msg_list = [msg for msg in msg_list if msg[0] == "chat"]
                 elif not controller:
                     msg_list = [msg for msg in msg_list if msg[0] == "update_params" and msg[1] == "share_control"]
             except Exception, excp:
@@ -1016,7 +1016,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                                  ssl_options=ssl_options, max_packet_buf=2)
         self.term_dict = dict()
         self.term_count = 0
-        self.allow_feedback = set()
+        self.allow_chat = set()
 
     def shutdown(self):
         print >> sys.stderr, "Shutting down server connection %s <- %s" % (self.connection_id, self.source)
@@ -1087,11 +1087,11 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
 
             else:
                 fwd_list.append(msg)
-                if msg[0] == "terminal" and msg[1] == "graphterm_feedback":
+                if msg[0] == "terminal" and msg[1] == "graphterm_chat":
                     if msg[2]:
-                        self.allow_feedback.add(term_name)
+                        self.allow_chat.add(term_name)
                     else:
-                        self.allow_feedback.discard(term_name)
+                        self.allow_chat.discard(term_name)
 
         if websocket_id:
             ws_set = set([websocket_id])
@@ -1498,7 +1498,7 @@ def run_server(options, args):
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
     if options.daemon and options.auto_users:
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", "restart", internal_host]
+        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", "activate", internal_host]
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
             logging.warning("gtermserver: ERROR in starting up %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)

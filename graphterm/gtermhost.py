@@ -326,9 +326,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if self.lineterm:
                         self.lineterm.term_write(term_name, cmd[0].encode(self.term_encoding, "ignore"))
 
-                elif action == "feedback":
+                elif action == "chat":
                     msg = from_user + ": " + cmd[0] if from_user else cmd[0]
-                    widget_stream = WidgetStream.get_feedback_connection(lterm_cookie)
+                    widget_stream = WidgetStream.get_chat_connection(lterm_cookie)
                     if widget_stream:
                         widget_stream.send_packet(msg.encode(self.term_encoding, "ignore"))
 
@@ -598,7 +598,7 @@ else:
 
 class WidgetStream(object):
     _all_widgets = []
-    _feedbacks = {}
+    _chats = {}
 
     startseq = "\x1b[?1155;"
     startdelim = "h"
@@ -608,14 +608,14 @@ class WidgetStream(object):
         self.stream = stream
         self.address = address
         self.cookie = None
-        self.feedback = None
+        self.chat = None
         self._all_widgets.append(self)
         self.stream.set_close_callback(self.on_close)
 
     @classmethod
-    def get_feedback_connection(cls, lterm_cookie):
+    def get_chat_connection(cls, lterm_cookie):
         """Return WidgetStream instance"""
-        return cls._feedbacks.get(lterm_cookie)
+        return cls._chats.get(lterm_cookie)
 
     @classmethod
     def shutdown_all(cls):
@@ -624,7 +624,7 @@ class WidgetStream(object):
 
     def on_close(self):
         try:
-            self.set_feedback_status(None)
+            self.set_chat_status(None)
             self._all_widgets.remove(self)
             self.stream = None
         except Exception:
@@ -639,26 +639,26 @@ class WidgetStream(object):
             pass
         self.on_close()
 
-    def set_feedback_status(self, cookie=None):
+    def set_chat_status(self, cookie=None):
         active = bool(cookie)
         if active:
-            if self.feedback:
-                # Cancel previous feedback setting
-                self.set_feedback_status(None)
-            self.feedback = cookie
-            self._feedbacks[cookie] = self
+            if self.chat:
+                # Cancel previous chat setting
+                self.set_chat_status(None)
+            self.chat = cookie
+            self._chats[cookie] = self
         else:
-            cookie = self.feedback
-            if cookie and cookie in self._feedbacks:
-                del self._feedbacks[cookie]
-            self.feedback = None
+            cookie = self.chat
+            if cookie and cookie in self._chats:
+                del self._chats[cookie]
+            self.chat = None
         if not cookie:
             return
         term_info = TerminalClient.all_cookies.get(cookie)
         if not term_info:
             return
         host_connection, term_name = term_info
-        host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_feedback", active]])
+        host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_chat", active]])
 
     def next_packet(self):
         if self.stream:
@@ -687,12 +687,12 @@ class WidgetStream(object):
 
         headers, content = lineterm.parse_headers(data)
 
-        if headers["x_gterm_response"] == "capture_feedback":
-            feedback = headers["x_gterm_parameters"].get("cookie")
-            if feedback and feedback.isdigit() and feedback in TerminalClient.all_cookies:
-                self.set_feedback_status(feedback)
+        if headers["x_gterm_response"] == "capture_chat":
+            chat = headers["x_gterm_parameters"].get("cookie")
+            if chat and chat.isdigit() and chat in TerminalClient.all_cookies:
+                self.set_chat_status(chat)
             else:
-                logging.warning("gtermhost: Invalid feedback cookie %s", feedback)
+                logging.warning("gtermhost: Invalid chat cookie %s", chat)
 
         elif headers["x_gterm_response"] == "create_blob":
             blob_id = headers["x_gterm_parameters"].get("blob_id")
