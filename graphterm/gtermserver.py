@@ -1046,6 +1046,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
 
     def remote_response(self, term_name, websocket_id, msg_list):
         fwd_list = []
+        owners_only_list = []
         path = self.connection_id + "/" + term_name
         control_params = GTSocket._control_params.get(path)
         for msg in msg_list:
@@ -1084,7 +1085,13 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         continue
                     matchhost, matchterm = matchpath.split("/")
                     TerminalConnection.send_to_connection(matchhost, "request", matchterm, "", [["keypress", remote_command]])
-
+            elif  msg[0] == "terminal" and msg[1] == "graphterm_widget":
+                args = msg[2]
+                params = args[0]
+                if params["headers"]["x_gterm_parameters"].get("owners_only"):
+                    owners_only_list.append(msg)  # Handled out-of-sequence
+                else:
+                    fwd_list.append(msg)
             else:
                 fwd_list.append(msg)
                 if msg[0] == "terminal" and msg[1] == "graphterm_chat":
@@ -1122,6 +1129,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                             ws.write_message(json.dumps(multi_fwd_list))
                     else:
                         ws.write_message(json.dumps(fwd_list))
+                        if owners_only_list and ws_id in ws._control_set[ws.remote_path]:
+                            ws.write_message(json.dumps(owners_only_list))
                 except Exception, excp:
                     logging.error("remote_response: ERROR %s", excp)
                     try:
@@ -1465,6 +1474,7 @@ def run_server(options, args):
         oshell_globals = globals() if otrace and options.oshell else None
         prompt_list = options.prompts.split(",") if options.prompts else gterm.DEFAULT_PROMPTS
         term_params = {"nb_ext": options.nb_ext, "lc_export": options.lc_export, "no_pyindent": options.no_pyindent}
+        widget_port = options.widget_port if options.widget_port > 0 else (gterm.DEFAULT_HTTP_PORT-2 if options.widget_port else 0)
         Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST, internal_host,
                                                          server_port=internal_port,
                                                          connect_kw={"ssl_options": internal_client_ssl,
@@ -1478,8 +1488,7 @@ def run_server(options, args):
                                                                      "term_params": term_params,
                                                                      "blob_host": options.blob_host,
                                                                      "lterm_logfile": options.lterm_logfile,
-                                                                     "widget_port":
-                                                                       (gterm.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
+                                                                     "widget_port": widget_port},
                                                          oshell_globals=oshell_globals,
                                                          oshell_init="gtermserver.trc",
                                                          oshell_unsafe=True,
@@ -1639,8 +1648,8 @@ def main():
                       help="Lineterm logfile")
     parser.add_option("logging", default=False, opt_type="flag",
                       help="Log to ~/.graphterm/graphterm.log")
-    parser.add_option("widgets", default=False, opt_type="flag",
-                      help="Activate widgets on port %d" % (gterm.DEFAULT_HTTP_PORT-2))
+    parser.add_option("widget_port", default=0, opt_type="int",
+                      help="Port for widgets port (default: 0) (-1 for %d)" % (gterm.DEFAULT_HOST_PORT-2))
 
     parser.add_option("daemon", default="",
                       help="daemon=start/stop/restart/status")

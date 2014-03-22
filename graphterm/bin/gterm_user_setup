@@ -10,6 +10,9 @@ ADMIN=ubuntu
 GRAPHTERM_DIR=.graphterm
 GRAPHTERM_AUTH=graphterm_auth
 
+# Base port for widgets
+WBASE=8000
+
 if [ $# -lt 1 ]; then
     echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name]]"
     exit 1
@@ -70,7 +73,7 @@ fi
 
 for host in $host_list; do
     # Update authentication code for host/user
-    if [ "$host" != "$ADMIN" ]; then
+    if [ "$host" != "$ADMIN" ] && [ -d $HOME_MNT/$host/$GRAPHTERM_DIR ]; then
 	/usr/local/bin/gauth -w --admin=$ADMIN --server=$server $host
         if [ "$server" = "localhost" ]; then
 	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/$GRAPHTERM_AUTH.${host}
@@ -80,6 +83,7 @@ for host in $host_list; do
 	chown ${host}:$host $auth_file
 
         # Start client for host
-	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file $host
+        uid=`id -u $host`
+	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file --widget_port=$((WBASE+uid)) $host
     fi
 done

@@ -409,31 +409,37 @@ body.mobilescreen .pagelet.gterm-fullwindow {
     height: 95%;
 }
 
-/* Widget */
-#session-widgetcontainer {
-    opacity: 1.0;
-    z-index: 2000;
-    position: fixed;
-    top: 1.5em;
-    right: 1em;
-    width: 35%;
-    height: 35%;
-    overflow-y: scroll;
-}
-
+/* Chat */
 .session-term .session-chat {
     opacity: 0.6;
-    z-index: 2000;
+    z-index: 3000;
     position: fixed;
-    bottom: 1em;
+    top: 2.0em;
     right: 1em;
-    width: 5em;
-    height: 1em;
+    width: 10em;
+    height: 1.2em;
     overflow: hidden;
 }
 
 .session-term:not(.gterm-chat) .session-chat {
     display: none;
+}
+
+#terminal.gterm-alert .gterm-menubar-container,
+#terminal.gterm-alert #session-alert-button {
+    background-color: red;
+}
+
+/* Widget */
+#session-widgetcontainer {
+    opacity: 1.0;
+    z-index: 2000;
+    position: fixed;
+    top: 3.5em;
+    right: 1em;
+    width: 35%;
+    height: 35%;
+    overflow-y: scroll;
 }
 
 img.gterm-fullimg {

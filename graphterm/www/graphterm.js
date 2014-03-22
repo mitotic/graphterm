@@ -2456,6 +2456,19 @@ function GTPasteSpecialEnd(buttonElem) {
     setTimeout(ScrollTop, 200);
 }
 
+function gtermAlert(event) {
+    gtermAlertSend(!$("#terminal").hasClass("gterm-alert"));
+}
+
+function gtermAlertSend(status) {
+    gWebSocket.write([["chat", "alert"+(!!status)+"\n"]]);
+    gtermAlertUpdate(status);
+}
+
+function gtermAlertUpdate(status) {
+    $("#terminal").toggleClass("gterm-alert", status);
+}
+
 function gtermChatStatus(status) {
     gChat = status;
     $("#session-term").toggleClass("gterm-chat", gChat);
@@ -4820,6 +4833,7 @@ function GTReady() {
     $("#gterm-header .headfoot-icon").bindclick(gtermMenuClickHandler);
     $("#session-footermenu .headfoot").bindclick(gtermMenuClickHandler);
     $("#session-chat-button").bindclick(gtermChatHandler);
+    $("#session-alert-button").bindclick(gtermAlert);
 
     //window.addEventListener("dragover", GTDragOver);
     window.addEventListener("drop", GTDropHandler);

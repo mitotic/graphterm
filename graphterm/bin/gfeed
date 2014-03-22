@@ -22,9 +22,16 @@ pagelet_html = """<script>
 var GTPageletMaxFeeds = 20;
 function GTPageletJSON(pageletElem, feed) {
     // Display new feed, sliding it into the top line
-    $('<li>'+feed+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
-    if (pageletElem.find("ul li").length > GTPageletMaxFeeds)
-        pageletElem.find("ul li:last-child").remove();
+    feed = $.trim(feed);
+    if (_.str.endsWith(feed, "alerttrue")) {
+        gtermAlertUpdate(true);
+    } else if (_.str.endsWith(feed, "alertfalse")) {
+        gtermAlertUpdate(false);
+    } else {
+        $('<li>'+feed+'<p></li>').hide().prependTo(pageletElem.find("ul")).slideDown("slow").animate({opacity: 1.0});
+        if (pageletElem.find("ul li").length > GTPageletMaxFeeds)
+            pageletElem.find("ul li:last-child").remove();
+    }
 }
 
 </script>
@@ -46,6 +53,7 @@ parser.add_option("-c", "--csv", dest="csv", action="store_true", help="CSV inpu
 parser.add_option("-j", "--json", dest="json", action="store_true",  help="JSON input")
 parser.add_option("", "--opacity", dest="opacity", default=1.0,
                   help="Feed opacity (default: 1.0)")
+parser.add_option("", "--owner", dest="owner", action="store_true", help="Display widget for owners only")
 
 (options, args) = parser.parse_args()
 
@@ -56,6 +64,10 @@ if options.opacity:
 Json_headers = {"content_type": "text/json"}
 Json_headers["x_gterm_response"] = "pagelet_json"
 Json_headers["x_gterm_parameters"] = {}
+
+if options.owner:
+    add_headers["owners_only"] = True
+    Json_headers["x_gterm_parameters"]["owners_only"] = True
 
 gterm.write_pagelet(pagelet_html, display="fullscreen", dir=os.getcwd(), add_headers=add_headers)
 while True:

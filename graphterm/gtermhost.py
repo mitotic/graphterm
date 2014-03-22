@@ -6,6 +6,7 @@
 import base64
 import cgi
 import calendar
+import collections
 import datetime
 import email.utils
 import functools
@@ -306,6 +307,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 elif action == "reconnect":
                     if self.lineterm:
                         self.lineterm.reconnect(term_name, cmd[0])
+                        widget_pagelet = WidgetStream.get_widget_pagelet(lterm_cookie)
+                        if widget_pagelet:
+                            self.screen_callback(term_name, cmd[0], "graphterm_widget", widget_pagelet)
 
                 elif action == "set_size":
                     if term_name != OSHELL_NAME:
@@ -328,9 +332,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "chat":
                     msg = from_user + ": " + cmd[0] if from_user else cmd[0]
-                    widget_stream = WidgetStream.get_chat_connection(lterm_cookie)
-                    if widget_stream:
-                        widget_stream.send_packet(msg.encode(self.term_encoding, "ignore"))
+                    chat_widget = WidgetStream.get_chat_widget(lterm_cookie)
+                    if chat_widget:
+                        chat_widget.send_packet(msg.encode(self.term_encoding, "ignore"))
 
                 elif action == "save_data":
                     # save_data <save_params> <filedata>
@@ -598,7 +602,8 @@ else:
 
 class WidgetStream(object):
     _all_widgets = []
-    _chats = {}
+    _term_pagelets = {}
+    _chat_widgets = {}
 
     startseq = "\x1b[?1155;"
     startdelim = "h"
@@ -607,15 +612,20 @@ class WidgetStream(object):
     def __init__(self, stream, address):
         self.stream = stream
         self.address = address
-        self.cookie = None
-        self.chat = None
+        self.packet_cookie = ""
+        self.chat_cookie = ""
         self._all_widgets.append(self)
         self.stream.set_close_callback(self.on_close)
 
     @classmethod
-    def get_chat_connection(cls, lterm_cookie):
-        """Return WidgetStream instance"""
-        return cls._chats.get(lterm_cookie)
+    def get_chat_widget(cls, lterm_cookie):
+        """Return chat WidgetStream instance"""
+        return cls._chat_widgets.get(lterm_cookie)
+
+    @classmethod
+    def get_widget_pagelet(cls, lterm_cookie):
+        """Return widget pagelet associated with terminal"""
+        return cls._term_pagelets.get(lterm_cookie)
 
     @classmethod
     def shutdown_all(cls):
@@ -624,7 +634,10 @@ class WidgetStream(object):
 
     def on_close(self):
         try:
-            self.set_chat_status(None)
+            if self.chat_cookie:
+                self.set_chat_status(False)
+                self._chat_widgets.pop(self.chat_cookie, None)
+                self.chat_cookie = ""
             self._all_widgets.remove(self)
             self.stream = None
         except Exception:
@@ -639,26 +652,12 @@ class WidgetStream(object):
             pass
         self.on_close()
 
-    def set_chat_status(self, cookie=None):
-        active = bool(cookie)
-        if active:
-            if self.chat:
-                # Cancel previous chat setting
-                self.set_chat_status(None)
-            self.chat = cookie
-            self._chats[cookie] = self
-        else:
-            cookie = self.chat
-            if cookie and cookie in self._chats:
-                del self._chats[cookie]
-            self.chat = None
-        if not cookie:
-            return
-        term_info = TerminalClient.all_cookies.get(cookie)
+    def set_chat_status(self, status):
+        term_info = TerminalClient.all_cookies.get(self.chat_cookie)
         if not term_info:
             return
         host_connection, term_name = term_info
-        host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_chat", active]])
+        host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_chat", bool(status)]])
 
     def next_packet(self):
         if self.stream:
@@ -672,14 +671,14 @@ class WidgetStream(object):
         data = data[:-len(self.startdelim)].strip()
         if not data.isdigit() or data not in TerminalClient.all_cookies:
             return self.shutdown()
-        self.cookie = data
+        self.packet_cookie = data
         if self.stream:
             self.stream.read_until(self.endseq, self.receive_packet)
 
     def receive_packet(self, data):
         data = data[:-len(self.endseq)]
 
-        term_info = TerminalClient.all_cookies.get(self.cookie)
+        term_info = TerminalClient.all_cookies.get(self.packet_cookie)
         if not term_info:
             return self.shutdown()
 
@@ -687,14 +686,22 @@ class WidgetStream(object):
 
         headers, content = lineterm.parse_headers(data)
 
-        if headers["x_gterm_response"] == "capture_chat":
-            chat = headers["x_gterm_parameters"].get("cookie")
-            if chat and chat.isdigit() and chat in TerminalClient.all_cookies:
-                self.set_chat_status(chat)
-            else:
-                logging.warning("gtermhost: Invalid chat cookie %s", chat)
+        resp_type = headers["x_gterm_response"]
 
-        elif headers["x_gterm_response"] == "create_blob":
+        if resp_type == "capture_chat":
+            chat_cookie = headers["x_gterm_parameters"].get("cookie")
+            if chat_cookie == self.packet_cookie:  # Redundant?
+                prev_widget = self.get_chat_widget(chat_cookie)
+                if prev_widget and prev_widget is not self:
+                    # Only one active chat widget per terminal at a time
+                    prev_widget.shutdown()
+                self.chat_cookie = chat_cookie
+                self._chat_widgets[chat_cookie] = self
+                self.set_chat_status(True)
+            else:
+                logging.warning("gtermhost: Invalid chat cookie %s", chat_cookie)
+
+        elif resp_type == "create_blob":
             blob_id = headers["x_gterm_parameters"].get("blob_id")
             if not blob_id:
                 logging.warning("gtermhost: No id for blob creation")
@@ -705,9 +712,11 @@ class WidgetStream(object):
 
         else:
             params = {"validated": True, "headers": headers}
-            host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_widget", [params,
-                                                 base64.b64encode(content) if content else ""]]])
-        self.cookie = None
+            args = [params, base64.b64encode(content) if content else ""]
+            if resp_type == "pagelet":
+                self._term_pagelets[self.packet_cookie] = args
+            host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_widget", args]])
+        self.packet_cookie = ""
         self.next_packet()
 
     def send_packet(self, data):
@@ -820,6 +829,7 @@ def run_host(options, args):
 
     key_version = "1" if auth_code else None
     server_port = options.server_port or port or gterm.DEFAULT_HOST_PORT
+    widget_port = options.widget_port if options.widget_port > 0 else (gterm.DEFAULT_HTTP_PORT-2 if options.widget_port else 0)
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=server_port,
                                                          connect_kw={"command": options.shell_command,
@@ -829,8 +839,7 @@ def run_host(options, args):
                                                                      "key_secret": auth_code or None,
                                                                      "key_version": key_version,
                                                                      "key_id": str(server_port),
-                                                                     "widget_port":
-                                                                     (gterm.DEFAULT_HTTP_PORT-2 if options.widgets else 0)},
+                                                                     "widget_port": widget_port},
                                                          oshell_globals=oshell_globals,
                                                          oshell_unsafe=True,
                                                          oshell_no_input=(not options.oshell_input))
@@ -883,8 +892,8 @@ def main():
                       help="Allow stdin input otrace/oshell")
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
-    parser.add_option("", "--widgets", dest="widgets", action="store_true",
-                      help="Activate widgets on port %d" % (gterm.DEFAULT_HTTP_PORT-2))
+    parser.add_option("", "--widget_port", dest="widget_port", default=0,
+                      help="Port for widgets port (default: 0) (-1 for %d)" % (gterm.DEFAULT_HOST_PORT-2), type="int")
     parser.add_option("", "--term_type", dest="term_type", default="",
                       help="Terminal type (linux/screen/xterm)")
     parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",
