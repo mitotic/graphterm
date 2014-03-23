@@ -2456,6 +2456,17 @@ function GTPasteSpecialEnd(buttonElem) {
     setTimeout(ScrollTop, 200);
 }
 
+function gtermCloneSession(event) {
+    // Clone session, if embedded
+    if (self.location.hostname != top.location.hostname)
+	return;
+    var url = self.location.pathname;
+    if (!_.str.endsWith(url, "/watch/"))
+	url += "watch/";
+    url += '?qauth='+getAuth();
+    window.open(url, "_blank");
+}
+
 function gtermAlert(event) {
     gtermAlertSend(!$("#terminal").hasClass("gterm-alert"));
 }
@@ -3268,7 +3279,7 @@ function OpenNew(host, term_name, options) {
     var new_url = window.location.protocol+"/"+"/"+window.location.host+"/"+path+"/?qauth="+getAuth(); // Split the double slash to avoid confusing the JS minifier
     console.log("open", new_url);
     var target = (term_name == "new") ? "_blank" : path;
-    window.open(new_url, target=target);
+    window.open(new_url, target);
 }
 
 function load(path) {
@@ -4832,6 +4843,7 @@ function GTReady() {
     $("#session-footermenu select").change(gtermBottomSelectHandler);
     $("#gterm-header .headfoot-icon").bindclick(gtermMenuClickHandler);
     $("#session-footermenu .headfoot").bindclick(gtermMenuClickHandler);
+    $("#menubar-sessionlabel-link").bindclick(gtermCloneSession);
     $("#session-chat-button").bindclick(gtermChatHandler);
     $("#session-alert-button").bindclick(gtermAlert);
 

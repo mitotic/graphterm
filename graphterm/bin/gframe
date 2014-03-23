@@ -29,6 +29,7 @@ form_parser = gterm.FormParser(usage=usage, title="Display URL/file/stdin conten
 
 form_parser.add_argument(label="URL/filename: ", help="URL/filename to display (optional)")
 form_parser.add_option("prefix", "", short="p", help="URL/path prefix")
+form_parser.add_option("suffix", "", short="s", help="URL/path suffix")
 form_parser.add_option("opacity", 1.0, short="o", help="Frame opacity (default: 1.0)")
 form_parser.add_option("columns", 0, short="c", help="Columns")
 form_parser.add_option("width", "", short="w", help="Frame width (pixels/%)")
@@ -45,7 +46,7 @@ form_parser.add_option("terminal", False, short="t", help="Interpret all argumen
 if args:
     iframe_urls = []
     for arg in args:
-        arg = options.prefix + arg
+        arg = options.prefix + arg + options.suffix
         if arg.startswith("http:") or arg.startswith("https:"):
             iframe_urls.append(arg)
         elif options.terminal:

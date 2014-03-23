@@ -222,7 +222,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def is_super(cls, user):
-        return user and user in cls._super_users
+        return (user and user in cls._super_users) or (not user and cls.get_auth_type() == cls.NULL_AUTH)
+
+    @classmethod
+    def is_super_or_local(cls, user, auth_type):
+        return cls.is_super(user) or (auth_type == cls.LOCAL_AUTH and cls.get_auth_type() == cls.LOCAL_AUTH)
 
     @classmethod
     def set_auth_code(cls, value, local=False):
@@ -584,7 +588,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 start_private =  self._auth_type > self.LOCAL_AUTH and (self._auth_type < self.MULTI_AUTH or Server_settings["allow_share"])
                 terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
                                    "share_private": start_private,
-                                   "share_tandem": False,
+                                   "share_tandem": False, "nb_name": "",
                                    "owner": user, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params
@@ -1000,7 +1004,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     host_secrets = {}
     @classmethod
     def get_matching_paths(cls, regexp, user, state_id, auth_type):
-        is_super_user = GTSocket.is_super(user) or (auth_type == GTSocket.LOCAL_AUTH and GTSocket.get_auth_type() == GTSocket.LOCAL_AUTH)
+        is_super_user = GTSocket.is_super_or_local(user, auth_type)
         matchpaths = []
         for host, conn in cls._all_connections.iteritems():
             for term_name in conn.term_dict:
@@ -1073,6 +1077,11 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 self.term_dict = dict((key, "") for key in msg[1]["term_names"])
             elif msg[0] == "file_response":
                 ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
+            elif  msg[0] == "terminal" and msg[1] in ("note_open", "note_close"):
+                terminal_params = GTSocket.get_terminal_params(path)
+                note_params = msg[2][0] if msg[1] == "note_open" else {}
+                terminal_params["nb_name"] = note_params.get("name", "Untitled") if msg[1] == "note_open" else ""
+                fwd_list.append(msg)
             elif  msg[0] == "terminal" and msg[1] == "remote_command":
                 # Send input to matching paths, if created by same user or session
                 include_self = msg[2][0]
@@ -1087,6 +1096,59 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         continue
                     matchhost, matchterm = matchpath.split("/")
                     TerminalConnection.send_to_connection(matchhost, "request", matchterm, "", [["keypress", remote_command]])
+            elif  msg[0] == "terminal" and msg[1] == "graphterm_output":
+                args = msg[2]
+                params = args[0]
+                if params["headers"]["x_gterm_response"] != "admin_command":
+                    # Transmit graphterm output
+                    fwd_list.append(msg)
+                else:
+                    action_params = params["headers"]["x_gterm_parameters"]
+                    action = action_params["action"]
+                    action_args = action_params["args"]
+                    is_super_user = GTSocket.is_super_or_local(control_params["owner"], GTSocket._auth_type)
+                    errmsg = ""
+                    content = ""
+                    if not is_super_user:
+                        errmsg = "User not authorized for administration\n"
+                    else:
+                        try: 
+                            if action == "terminals":
+                                regexp = re.compile(action_args[0]) if action_args else None
+                                all_paths = []
+                                hostnames = TerminalConnection.get_connection_ids()
+                                hostnames.sort()
+                                for hostname in hostnames:
+                                    conn = TerminalConnection.get_connection(hostname)
+                                    if not conn:
+                                        continue
+                                    term_list = []
+                                    for tname in conn.term_dict:
+                                        path = hostname + "/" + tname
+                                        path_nb = path
+                                        tparams = GTSocket._control_params.get(path)
+                                        nb_name = ""
+                                        if tparams:
+                                            nb_name = tparams.get("nb_name", "")
+                                            if nb_name:
+                                                path_nb += ":"+nb_name
+                                        if regexp and not regexp.match(path_nb):
+                                            continue
+                                        term_list.append(path)
+                                    term_list.sort()
+                                    all_paths += term_list
+                                content = "\n".join(all_paths) + "\n"
+                            else:
+                                errmsg = "Invalid admin action: "+action+"\n"
+                        except Exception, excp:
+                            errmsg = "Error in admin action "+action+": "+str(excp)+"\n"
+                                    
+                    save_params = {"content_type": "text/plain", "x_gterm_location": "remote",
+                                   "x_gterm_filepath": "", "x_gterm_encoding": "base64"}
+                    if errmsg:
+                        save_params["x_gterm_error"] = errmsg
+                    resp_list = [["save_data", save_params, base64.b64encode(content)]]
+                    self.send_request("request", term_name, control_params["owner"], resp_list)
             elif  msg[0] == "terminal" and msg[1] == "graphterm_widget":
                 args = msg[2]
                 params = args[0]

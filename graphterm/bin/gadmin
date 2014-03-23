@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+#
+
+"""
+gadmin: Perform server administration actions
+
+Usage:
+        gadmin terminals '.*/tty1'       # Python wildcard
+        gadmin terminals '.*:'           # Python wildcard for all notebook terminals
+        gadmin terminals '.*:Exercise2'  # Python wildcard for particular notebook terminals
+
+        # Virtual lab dashboard
+        gframe -f -t -p / -s /watch `gadmin terminals`
+
+        # Click on session label ("terminal URL") in embedded window to open new full window)
+        # Upload files using gupload
+        # Download files by right clicking gls output
+        # Open notebook file by clicking gls output
+        # Create new notebook from menu
+"""
+
+import base64
+import json
+import os
+import sys
+import termios
+import tty
+
+from optparse import OptionParser
+
+import gterm
+
+usage = "usage: %prog action [args]"
+parser = OptionParser(usage=usage)
+parser.add_option("-v", "--verbose",
+                  action="store_true", dest="verbose", default=False,
+                  help="Verbose output")
+parser.add_option("-o", "--stdout",
+                  action="store_true", dest="stdout", default=False,
+                  help="Use STDOUT for pagelet output")
+
+(options, args) = parser.parse_args()
+
+if not args:
+    print >> sys.stderr, parser.get_usage()
+    sys.exit(1)
+
+Headers = {"content_type": "text/plain"}
+Headers["x_gterm_response"] = "admin_command"
+Headers["x_gterm_parameters"] = {"action": args[0], "is_tty": sys.stdout.isatty(), "args": args[1:]}
+
+gterm.wrap_write("", headers=Headers, stderr=not options.stdout)
+
+(errmsg, headers, content) = gterm.receive_data(stderr=not options.stdout)
+
+if not errmsg:
+    errmsg = headers.get("x_gterm_error", "")
+
+if errmsg:
+    print >> sys.stderr, errmsg
+    sys.exit(1)
+
+content_type = headers.get("content_type", "")
+if content_type == "text/html":
+    gterm.wrap_write(content, stderr=not options.stdout)
+else:
+    if options.stdout:
+        sys.stderr.write(content)
+    else:
+        sys.stdout.write(content)
+    

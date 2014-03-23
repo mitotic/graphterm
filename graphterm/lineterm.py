@@ -3186,6 +3186,9 @@ class Multiplex(object):
             winsz = termios.TIOCSWINSZ if termios.TIOCSWINSZ < 0 else struct.unpack('i',struct.pack('I',termios.TIOCSWINSZ))[0]
             fcntl.ioctl(term.fd, winsz, struct.pack("HHHH",height,width,0,0))
 
+    def get_terminal(self, term_name):
+        return self.proc.get(term_name)
+
     def term_names(self):
         with self.lock:
             return self.proc.keys()

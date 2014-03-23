@@ -306,10 +306,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "reconnect":
                     if self.lineterm:
-                        self.lineterm.reconnect(term_name, cmd[0])
+                        response_id = cmd[0]
+                        self.lineterm.reconnect(term_name, response_id)
                         widget_pagelet = WidgetStream.get_widget_pagelet(lterm_cookie)
                         if widget_pagelet:
-                            self.screen_callback(term_name, cmd[0], "graphterm_widget", widget_pagelet)
+                            self.send_request_threadsafe("response", term_name, response_id, [["terminal", "graphterm_widget", widget_pagelet]])
 
                 elif action == "set_size":
                     if term_name != OSHELL_NAME:
