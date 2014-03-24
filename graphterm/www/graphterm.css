@@ -423,6 +423,13 @@ body.mobilescreen .pagelet.gterm-fullwindow {
     font-weight: bold;
 }
 
+/* Help */
+#gterm-header-container .gterm-menu-help-key {
+    font-weight: bold;
+}
+#gterm-header-container .gterm-menu-help-value {
+}
+
 /* Chat */
 .session-term .session-chat {
     opacity: 0.6;

@@ -37,7 +37,7 @@ import gterm
 CONFIG_HELP = """Steps to acquire consumer and access tokens:
   1. Register an application with twitter at dev.twitter.com
   2. Find authentication info at https://dev.twitter.com/docs/auth/tokens-devtwittercom
-  3. Save authentication tokens in ~/.twitter_auth using the following format (JSON):
+  3. Save authentication tokens in ~/.twitter_auth using the following JSON format (with consumer key/secret corresponding to the API key/secret):
 """
 
 AUTH_FORMAT = """
@@ -345,6 +345,7 @@ def check_auth_file(auth_file):
 
 Default_auth_file = "~/.twitter_auth"
 
+Out_tty = False
 if len(sys.argv) < 2:
     check_auth_file(Default_auth_file)
 

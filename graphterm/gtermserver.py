@@ -100,6 +100,9 @@ RSS_FEED_URL = "http://code.mindmeldr.com/graphterm/graphterm-announce/posts.xml
 def cgi_escape(s):
     return cgi.escape(s) if s else ""
 
+def get_qauth(state_id):
+    return state_id[:AUTH_DIGITS]
+
 Episode4 = """
 
 
@@ -455,7 +458,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
             qauth = query_data.get("qauth", [""])[0]
-            if not Server_settings["no_formcheck"] and not cauth and (not qauth or qauth != self.authorized["state_id"][:AUTH_DIGITS]):
+            if not Server_settings["no_formcheck"] and not cauth and (not qauth or qauth != get_qauth(self.authorized["state_id"])):
                 # Invalid query auth; clear any form data (always cleared for webcasts and when user is first authorized)
                 query_data = {}
 
@@ -536,8 +539,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if tparams:
                             term_owner = self.is_creator(user, path)
                             if not tparams["share_private"] or term_owner:
-                                stealable = term_owner or not tparams["share_locked"]
-                                term_list.append( [term_name, stealable, len(self._control_set[path]), len(self._watch_dict[path])] )
+                                connectable = not self._control_set.get(path) and (term_owner or self._auth_type == self.LOCAL_AUTH)
+                                stealable = not connectable and not tparams["share_locked"] 
+                                term_list.append( [term_name, connectable, stealable, len(self._watch_dict[path])] )
                     term_list.sort()
                     allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
@@ -551,7 +555,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     if self.request_query and qauth:
                         redir_url += "?"+self.request_query
                     else:
-                        redir_url += "?qauth="+self.authorized["state_id"][:AUTH_DIGITS]
+                        redir_url += "?qauth="+get_qauth(self.authorized["state_id"])
                     self.write_json([["redirect", redir_url, self.authorized["state_id"]]])
                     self.close()
                     return
@@ -1151,8 +1155,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                             path_nb += "@"
                                         if regexp and not regexp.match(path_nb):
                                             continue
-                                        qauth = tparams["state_id"][:AUTH_DIGITS]
-                                        term_label = '<a href="/'+path+'/watch/?qauth='+qauth+'" target="_blank">'+cgi_escape(path_nb)+'</a><br>' if isatty else path
+                                        qauth = get_qauth(control_params["state_id"])
+                                        term_label = '<a href="/'+path+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(path_nb)+'</a><br>' if isatty else path
                                         term_list.append(term_label)
                                     term_list.sort()
                                     all_paths += term_list

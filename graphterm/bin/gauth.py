@@ -8,24 +8,18 @@ gauth: Display graphterm authentication code for user
 import os
 import sys
 import urllib
-from optparse import OptionParser
 
 import gterm
 
 def main():
-    usage = "usage: %prog [-a admin_username] username"
-    parser = OptionParser(usage=usage)
-    parser.add_option("-a", "--admin", dest="admin", default="",
-                      help="Admin username")
-    parser.add_option("-m", "--mail", dest="mail", action="store_true",
-                      help="Display info for mailing etc.")
-    parser.add_option("-g", "--group", dest="group", action="store_true",
-                      help="Display group code")
-    parser.add_option("-s", "--server", dest="server", default="localhost",
-                      help="External server name (default: localhost)")
-    parser.add_option("-w", "--write",
-                      action="store_true", dest="write", default=False,
-                      help="Write authentication file for user (for superuser use)")
+    usage = "usage: %prog [-h ... ] username"
+    parser = gterm.FormParser(usage=usage, title="Display graphterm authentication code for user: ", command="gauth")
+    parser.add_argument(label="", help="Username")
+    parser.add_option("admin", "ubuntu", short="a", help="Admin username (default: ubuntu)")
+    parser.add_option("mail", False, short="m", help="Display info for mailing etc.")
+    parser.add_option("group", False, short="g", help="Display group code")
+    parser.add_option("server", "localhost", short="s", help="External server name (default: localhost)")
+    parser.add_option("write", False, short="w", help="Write authentication file for user (for superuser use)")
 
     (options, args) = parser.parse_args()
 

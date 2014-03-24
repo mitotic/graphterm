@@ -215,22 +215,99 @@
               </li>
               <li><a href="#" class="gterm-only-notebook">notebook shortcuts &#x25b9;</a>
                 <ul>
-                  <li>Shift-Enter: run cell</li>
-                  <li>Ctrl-Enter: run in-place</li>
-                  <li>Ctrl-c: interrupt/exit</li>
-                  <li>Ctrl-m a: insert above</li>
-                  <li>Ctrl-m b: insert below</li>
-                  <li>Ctrl-m c: code cell</li>
-                  <li>Ctrl-m d: delete cell</li>
-                  <li>Ctrl-m j: move up</li>
-                  <li>Ctrl-m k: move down</li>
-                  <li>Ctrl-m l: toggle slide mode</li>
-                  <li>Ctrl-m m: markdown cell</li>
-                  <li>Ctrl-m n: next cell</li>
-                  <li>Ctrl-m p: previous cell</li>
-                  <li>Ctrl-m r: read cell</li>
-                  <li>Ctrl-m s: save notebook</li>
-                  <li>Ctrl-m w: write cell</li>
+                  <li><span class="gterm-menu-help-key">Shift-Enter:</span><span class="gterm-menu-help-value"> run cell</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-Enter:</span><span class="gterm-menu-help-value"> run in-place</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-c:</span><span class="gterm-menu-help-value"> interrupt/exit</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m a:</span><span class="gterm-menu-help-value"> insert above</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m b:</span><span class="gterm-menu-help-value"> insert below</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m c:</span><span class="gterm-menu-help-value"> code cell</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m d:</span><span class="gterm-menu-help-value"> delete cell</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m j:</span><span class="gterm-menu-help-value"> move up</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m k:</span><span class="gterm-menu-help-value"> move down</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m l:</span><span class="gterm-menu-help-value"> toggle slide mode</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m m:</span><span class="gterm-menu-help-value"> markdown cell</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m n:</span><span class="gterm-menu-help-value"> next cell</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m p:</span><span class="gterm-menu-help-value"> previous cell</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m r:</span><span class="gterm-menu-help-value"> read cell</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m s:</span><span class="gterm-menu-help-value"> save notebook</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m w:</span><span class="gterm-menu-help-value"> write cell</span></li>
+                </ul>
+              </li>
+              <li><a href="#">commands &#x25b9;</a>
+                <ul>
+                  <li><span class="gterm-menu-help-key">ec2launch:</span><span class="gterm-menu-help-value">
+                  Launch cloud instance using Amazon EC2
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">ec2list:</span><span class="gterm-menu-help-value">
+                  List running Amazon EC2 cloud instances
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gadmin:</span><span class="gterm-menu-help-value">
+                  Administer GraphTerm server
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gauth:</span><span class="gterm-menu-help-value">
+                  Display user authentication codes for a multiuser environment
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gbrowse:</span><span class="gterm-menu-help-value">
+                  Open files/URLs in browser (gbrowse -h)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gchat:</span><span class="gterm-menu-help-value">
+                  Capture chat and send to stdout (e.g., gchat 2> $GTERM_SOCKET 0<&2)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gcp:</span><span class="gterm-menu-help-value">
+                  GraphTerm-aware copy command supporting drag-and-drop for source/dest (Usage: gcp source dest)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gfeed:</span><span class="gterm-menu-help-value">
+                  Display stdin input linse as a "feed" (e.g., gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gframe:</span><span class="gterm-menu-help-value">
+                  Display file or raw HTML from stdin or terminals in inline iframe(s)
+                  (e.g., gframe ex.html OR gframe -r 300 -l 50 -c 4 -b -t -p tty a b c d '[abcd]'
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gimage:</span><span class="gterm-menu-help-value">
+                  Display images inline (or fullscreen) (e.g., gimage *.png)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gjs:</span><span class="gterm-menu-help-value">
+                  Execute arbitrary Javascript in GraphTerm (e.g., gjs -e 'location="/"' OR gjs alert 'Hello World')
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gls:</span><span class="gterm-menu-help-value">
+                  Graph-term aware gls supporting clickable links and drag-and-drop (e.g., gls *.ipynb)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gmenu:</span><span class="gterm-menu-help-value">
+                  Command-line access to all menu operations (e.g., gmenu view collapse OR gmenu collapse)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gopen:</span><span class="gterm-menu-help-value">
+                  Wrapper for OS-specific 'open' command to open files (e.g. gopen filename)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gqrcode:</span><span class="gterm-menu-help-value">
+                  Display QR code (Usage: gqrcode URL)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">greveal:</span><span class="gterm-menu-help-value">
+                  Display slideshow using reveal.js (e.g., greveal markdownfile.md | grfame -f)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gsh:</span><span class="gterm-menu-help-value">
+                  Execute command in another terminal session, with wildcard support (e.g., gsh /local/tty[ab] ls)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gterm:</span><span class="gterm-menu-help-value">
+                  Open new terminal session (e.g. gterm host/session)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gtutor:</span><span class="gterm-menu-help-value">
+                  Inline version of pythontutor.com (e.g., gtutor program.py)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gtweet:</span><span class="gterm-menu-help-value">
+                  Receive/send tweets (e.g. gtweet Hello World OR gtweet -w -f -s topic > $GTERM_SOCKET &)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gupload:</span><span class="gterm-menu-help-value">
+                  Upload local files to remote session via browser (e.g., gupload filename OR gupload | ...)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">gvi:</span><span class="gterm-menu-help-value">
+                  GraphTerm-aware text editor (e.g., gvi info.txt)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">ystock:</span><span class="gterm-menu-help-value">
+                  Display stock price (e.g., ystock goog)
+                  </span></li>
+                  <li><span class="gterm-menu-help-key">yweather:</span><span class="gterm-menu-help-value">
+                  Display weather info (e.g., yweather new york)
+                  </span></li>
                 </ul>
               </li>
             </ul>

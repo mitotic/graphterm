@@ -357,15 +357,19 @@ function gtermListTerminals(user, host, allow_new, terminals) {
     if (terminals.length) {
 	$("#gterm-terminal-list-table").append('<tr><td><em>Sessions</em></td></tr>\n')
 	for (var j=0; j<terminals.length; j++) {
+            // [term_name, connectable, stealable, watch_count]
+	    var term_name = terminals[j][0];
 	    var term_html = '<tr>';
-	    term_html += '<td class="gterm-terminal-list-name">'+terminals[j][0]+(terminals[j][3] > 1 ? ('('+terminals[j][3]+')') : '') + '</td> ';
-	    term_html += '<td> <a href="/'+host+'/'+terminals[j][0]+'/watch/?qauth='+getAuth()+'">watch</a></td>';
-	    if (terminals[j][1]) {
-		// Stealable
-		if (terminals[j][2])
-		    term_html += '<td> <a href="/'+host+'/'+terminals[j][0]+'/steal/?qauth='+getAuth()+'">steal</a></td>';
-		else
-		    term_html += '<td> <a href="/'+host+'/'+terminals[j][0]+'/?qauth='+getAuth()+'">connect</a></td>';
+	    term_html += '<td class="gterm-terminal-list-name">'+term_name+(terminals[j][3] > 1 ? ('('+terminals[j][3]+')') : '') + '</td> ';
+	    if (terminals[j][2]) {
+		// Stealable session
+		term_html += '<td> <a href="/'+host+'/'+term_name+'/?qauth='+getAuth()+'">watch</a></td>';
+		term_html += '<td> <a href="/'+host+'/'+term_name+'/steal/?qauth='+getAuth()+'">steal</a></td>';
+	    } else {
+		// Not stealable; check if session is connectable
+		term_html += '<td> <a href="/'+host+'/'+term_name+'/watch/?qauth='+getAuth()+'">watch</a></td>';
+		if (terminals[j][1])
+		    term_html += '<td> <a href="/'+host+'/'+term_name+'/?qauth='+getAuth()+'">connect</a></td>';
 	    }
 	    term_html += '</tr>';
 	    $("#gterm-terminal-list-table").append(term_html);

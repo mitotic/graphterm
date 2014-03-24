@@ -34,7 +34,7 @@ from optparse import OptionParser
 API_VERSION = "0.35.0"
 API_MIN_VERSION = "0.35"
 
-HEX_DIGITS = 20
+HEX_DIGITS = 20          # Digits to be retained for HMAC, auth_code etc
 SIGN_HEXDIGITS = 24
 
 GT_PREFIX = "GTERM_"
