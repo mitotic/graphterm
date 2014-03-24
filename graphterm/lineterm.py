@@ -1037,6 +1037,7 @@ class Terminal(object):
         self.note_screen_buf.clear_buf()
         self.note_screen_buf.set_cur_note(self.note_count)
         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
+        self.note_mod_offset = 0
         self.note_prompts = prompts
 
         if content is None:
@@ -1076,7 +1077,7 @@ class Terminal(object):
         if note_fill:
             filepath = os.path.join(os.path.basename(filepath), prefix+"ed"+note_tail)
         self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
-                            "shell": note_shell, "fill": note_fill}
+                            "shell": note_shell, "fill": note_fill, "mod_offset": self.note_mod_offset}
         self.screen_callback(self.term_name, "", "note_open", [self.note_params])
         if content:
             if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
@@ -1735,6 +1736,10 @@ class Terminal(object):
         cell_lines = split_lines(input_data)
         if save:
             # Update cell input
+            cur_location = self.note_cells["cellIndices"].index(cur_index)
+            if self.note_mod_offset < cur_location+1:
+                self.note_mod_offset = cur_location+1
+                self.screen_callback(self.term_name, "", "note_mod_offset", [self.note_mod_offset])
             if not self.note_params["fill"]:
                 cur_cell["cellInput"] = cell_lines
             else:

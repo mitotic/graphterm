@@ -590,7 +590,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 start_private =  self._auth_type > self.LOCAL_AUTH and (self._auth_type < self.MULTI_AUTH or Server_settings["allow_share"])
                 terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
                                    "share_private": start_private,
-                                   "share_tandem": False, "nb_name": "",
+                                   "share_tandem": False,
+                                   "alert_status": False,
+                                   "nb_name": "", "nb_mod_offset": 0,
                                    "owner": user, "state_id": self.authorized["state_id"]}
                 terminal_params.update(Term_settings)
                 self._control_params[path] = terminal_params
@@ -796,6 +798,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 elif msg[0] == "server_log":
                     logging.warning("gtermserver_log: %s", msg[1])
+                elif msg[0] == "chat" and msg[1].strip() in ("alerttrue", "alertfalse"):
+                    terminal_params["alert_status"] = (msg[1].strip() == "alerttrue")
                 elif msg[0] == "reconnect_host":
                     if conn:
                         # Close host connection (should automatically reconnect)
@@ -1079,10 +1083,14 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 self.term_dict = dict((key, "") for key in msg[1]["term_names"])
             elif msg[0] == "file_response":
                 ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
-            elif  msg[0] == "terminal" and msg[1] in ("note_open", "note_close"):
+            elif  msg[0] == "terminal" and msg[1] in ("note_open", "note_close", "note_mod_offset"):
+                args = msg[2]
                 terminal_params = GTSocket.get_terminal_params(path)
-                note_params = msg[2][0] if msg[1] == "note_open" else {}
-                terminal_params["nb_name"] = note_params.get("name", "Untitled") if msg[1] == "note_open" else ""
+                if msg[1] == "note_mod_offset":
+                    terminal_params["nb_mod_offset"] = args[0]
+                else:
+                    note_params = args[0] if msg[1] == "note_open" else {}
+                    terminal_params["nb_name"] = note_params.get("name", "Untitled") if msg[1] == "note_open" else ""
                 fwd_list.append(msg)
             elif  msg[0] == "terminal" and msg[1] == "remote_command":
                 # Send input to matching paths, if created by same user or session
@@ -1134,8 +1142,13 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                         nb_name = ""
                                         if tparams:
                                             nb_name = tparams.get("nb_name", "")
+                                            nb_mod_offset = tparams.get("nb_mod_offset", "")
                                             if nb_name:
                                                 path_nb += ":"+nb_name
+                                                if nb_mod_offset:
+                                                    path_nb += "#"+str(nb_mod_offset)
+                                        if tparams.get("alert_status"):
+                                            path_nb += "@"
                                         if regexp and not regexp.match(path_nb):
                                             continue
                                         qauth = tparams["state_id"][:AUTH_DIGITS]
