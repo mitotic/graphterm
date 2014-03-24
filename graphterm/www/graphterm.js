@@ -328,11 +328,11 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
     else
 	$("#authcodecontainer").hide();
 	
-    $("#authmessage").text(msg||"");
-    $("#authenticate").show();
+    $("#authmessage").html(msg||"");
 
     $("#terminal").hide();
     $("#session-container").hide();
+    $("#authenticate").show();
 
     $(document).unbind("keydown");
     $(document).unbind("keypress");
@@ -349,13 +349,58 @@ function Authenticate(evt) {
     return false;
 }
 
+function gtermListTerminals(user, host, allow_new, terminals) {
+    $("#terminal").hide();
+    $("#session-container").hide();
+
+    var header = (user ? 'GraphTerm User: <b>'+user+'</b><br>\n' : '') + 'GraphTerm Host: <b>' + host + '</b>\n';
+    if (terminals.length) {
+	$("#gterm-terminal-list-table").append('<tr><td><em>Sessions</em></td></tr>\n')
+	for (var j=0; j<terminals.length; j++) {
+	    var term_html = '<tr>';
+	    term_html += '<td class="gterm-terminal-list-name">'+terminals[j][0]+(terminals[j][3] > 1 ? ('('+terminals[j][3]+')') : '') + '</td> ';
+	    term_html += '<td> <a href="/'+host+'/'+terminals[j][0]+'/watch/?qauth='+getAuth()+'">watch</a></td>';
+	    if (terminals[j][1]) {
+		// Stealable
+		if (terminals[j][2])
+		    term_html += '<td> <a href="/'+host+'/'+terminals[j][0]+'/steal/?qauth='+getAuth()+'">steal</a></td>';
+		else
+		    term_html += '<td> <a href="/'+host+'/'+terminals[j][0]+'/?qauth='+getAuth()+'">connect</a></td>';
+	    }
+	    term_html += '</tr>';
+	    $("#gterm-terminal-list-table").append(term_html);
+	}
+    } else if (!allow_new) {
+	header += 'No GraphTerm sessions currently accessible<br>';
+    }
+    $(document).unbind("keydown");
+    $(document).unbind("keypress");
+    $("body").unbind("paste");
+
+    $("#gterm-terminal-list-header").html(header);
+    $("#gterm-terminal-list").show();
+    if (allow_new)
+	$("#gterm-terminal-list-open").show();
+    else
+	$("#gterm-terminal-list-open").hide();
+
+    $("#gterm-terminal-list").rebind("submit", gtermOpenTerminal);
+    $("#gterm-terminal-list-input").focus();
+}
+
+function gtermOpenTerminal(evt) {
+    console.log("gtermOpenTerminal", evt);
+    window.location = location.pathname+($("#gterm-terminal-list-input").val() || "new")+"/?qauth="+getAuth();
+    return false;
+}
+
 function Connect(auth_user, auth_code, connect_cookie) {
     gWebSocket = new GTWebSocket(auth_user, auth_code, connect_cookie);
 }
 
 function SignOut() {
     setCookie("GRAPHTERM_AUTH", null);
-    $("body").html('Signed out.<p><a href="/">Sign in again</a>');
+    $("body").html('Signed out from GraphTerm.<p><a href="/">Sign in again</a>');
 }
 
 function setupTerminal() {
@@ -987,6 +1032,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
             } else if (action == "setup") {
 		$("#authenticate").hide();
+		$("#gterm-terminal-list").hide();
 		$("#terminal").show();
 		$("#session-container").show();
 		gParams = command[1];
@@ -1041,27 +1087,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "term_list") {
 		if (command[1])
 		    setCookie("GRAPHTERM_AUTH", command[1]);
-		var user = command[2];
-		var host = command[3];
-		var allow_new = command[4];
-		var terms = command[5];
-		var term_html = '<p>' + (user ? 'User: <b>'+user+'</b><br>\n' : '') + 'Host: <b>' + host + '</b>\n';
-		if (allow_new || terms.length) {
-		    term_html += '<p>Connect to GraphTerm session:<p><ol>';
-		    for (var j=0; j<terms.length; j++) {
-			term_html += '<li>';
-			term_html += '<a href="/'+host+'/'+terms[j][0]+'/?qauth='+getAuth()+'">'+terms[j][0]+'</a>';
-		        if (terms[j][1])
-			    term_html += '(<a href="/'+host+'/'+terms[j][0]+'/steal/?qauth='+getAuth()+'">steal</a>)';
-			term_html += '</li>';
-		    }
-		    if (allow_new)
-			term_html += '<li><a href="/'+host+'/new/?qauth='+getAuth()+'"><b><em>new</em></b></a></li>';
-		} else {
-		    term_html += 'No GraphTerm sessions currently accessible<br>';
-		}
-		term_html += '</ol> <p><a href="/">Back to Hosts Available</a> <p><a href="#" onclick="SignOut();">Sign out</a>';
-		$("body").html(term_html);
+		gtermListTerminals(command[2], command[3], command[4], command[5]); 
 
             } else if (action == "log") {
 		var logPrefix = command[1];
@@ -2288,7 +2314,8 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	StealSession();
 	break;
     case "detach":
-	window.location = "/";
+	var comps = location.pathname.split("/");
+	window.location = ((comps.length > 1) ? ('/'+comps[1]) : '') + '/?qauth='+getAuth();
 	break;
     case "reconnect":
 	ReconnectHost();
@@ -4846,6 +4873,9 @@ function GTReady() {
     $("#menubar-sessionlabel-link").bindclick(gtermCloneSession);
     $("#session-chat-button").bindclick(gtermChatHandler);
     $("#session-alert-button").bindclick(gtermAlert);
+
+    $("#authenticate").hide();
+    $("#gterm-terminal-list").hide();
 
     //window.addEventListener("dragover", GTDragOver);
     window.addEventListener("drop", GTDropHandler);

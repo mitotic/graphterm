@@ -49,6 +49,20 @@
     <input id="authsubmit" type="submit" value="Authenticate"/>
   </form> <!-- authenticate -->
 
+  <form id="gterm-terminal-list" method="get" action="/unknown">
+    <p>
+    <span id="gterm-terminal-list-header"></span>
+    <table id="gterm-terminal-list-table">
+    </table>
+    <div id="gterm-terminal-list-open">
+      <input id="gterm-terminal-list-input" name="termname" type="text" value="new"/>
+      <input id="gterm-terminal-list-button" type="submit" value="Create session"/>
+    </div>
+    <p>
+    <a href="/">Back to Hosts Available</a>
+    <p><a href="#" onclick="SignOut();">Sign out</a>
+  </form> <!-- terminals -->
+
   <div id="terminal" class="terminal">
     <div id="gterm-header" class="gterm-header">
       <div id="gterm-header-container">

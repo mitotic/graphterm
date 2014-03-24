@@ -388,11 +388,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if code == gterm.compute_hmac(self._auth_code, cauth):
                                 self.authorized = self.add_state(user, self._auth_type)
                             else:
-                                auth_message = "Enter authentication code (found in %s), or use 'gterm' command" % gterm.get_auth_filename(server=Server_settings["host"])
+                                auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command" % gterm.get_auth_filename(server=Server_settings["host"])
                         else:
-                            auth_message = "Please specify username (letters/digits/hyphens, starting with letter)."
+                            auth_message = "<h3>GraphTerm Login</h3><p>Please specify username (letters/digits/hyphens, starting with letter)."
                             if Server_settings["auto_users"] and os.path.exists(Auto_add_file):
-                                auth_message += " If new user, leave code blank."
+                                auth_message += "<br><em>If new user, enter your group code to create account.</em>"
                     elif self._auth_type == self.NAME_AUTH:
                         # Name-only authentication
                         if user not in self._all_users:
@@ -535,7 +535,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             term_owner = self.is_creator(user, path)
                             if not tparams["share_private"] or term_owner:
                                 stealable = term_owner or not tparams["share_locked"]
-                                term_list.append( [term_name, stealable, len(self._watch_dict[path])] )
+                                term_list.append( [term_name, stealable, len(self._control_set[path]), len(self._watch_dict[path])] )
                     term_list.sort()
                     allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
@@ -984,7 +984,7 @@ def kill_remote(path, user):
     for ws_id in GTSocket.get_path_set(path):
         ws = GTSocket._all_websockets.get(ws_id)
         if ws:
-            ws.write_json([["body", 'CLOSED<p><a href="/">Home</a>']])
+            ws.write_json([["body", 'CLOSED TERMINAL<p><a href="/">GraphTerm Home</a>']])
             ws.close()
     host, term_name = path.split("/")
     if term_name == "*": term_name = ""
