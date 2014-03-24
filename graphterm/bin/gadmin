@@ -5,12 +5,12 @@
 gadmin: Perform server administration actions
 
 Usage:
-        gadmin terminals '.*/tty1'       # Python wildcard
-        gadmin terminals '.*:'           # Python wildcard for all notebook terminals
-        gadmin terminals '.*:Exercise2'  # Python wildcard for particular notebook terminals
+        gadmin sessions '.*/tty1'       # Python wildcard
+        gadmin sessions '.*:'           # Python wildcard for all notebook sessions
+        gadmin sessions '.*:Exercise2'  # Python wildcard for particular notebook sessions
 
         # Virtual lab dashboard
-        gframe -f -t -p / -s /watch `gadmin terminals`
+        gframe -f -t -p / -s /watch `gadmin sessions`
 
         # Click on session label ("terminal URL") in embedded window to open new full window)
         # Upload files using gupload
@@ -47,7 +47,7 @@ if not args:
 
 Headers = {"content_type": "text/plain"}
 Headers["x_gterm_response"] = "admin_command"
-Headers["x_gterm_parameters"] = {"action": args[0], "is_tty": sys.stdout.isatty(), "args": args[1:]}
+Headers["x_gterm_parameters"] = {"action": args[0], "isatty": sys.stdout.isatty(), "args": args[1:]}
 
 gterm.wrap_write("", headers=Headers, stderr=not options.stdout)
 

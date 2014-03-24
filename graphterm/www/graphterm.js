@@ -353,7 +353,7 @@ function gtermListTerminals(user, host, allow_new, terminals) {
     $("#terminal").hide();
     $("#session-container").hide();
 
-    var header = (user ? 'GraphTerm User: <b>'+user+'</b><br>\n' : '') + 'GraphTerm Host: <b>' + host + '</b>\n';
+    var header = (user ? 'User: <b>'+user+'</b><br>\n' : '') + 'Host: <b>' + host + '</b><p>\n';
     if (terminals.length) {
 	$("#gterm-terminal-list-table").append('<tr><td><em>Sessions</em></td></tr>\n')
 	for (var j=0; j<terminals.length; j++) {
@@ -1066,7 +1066,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var user = command[2];
 		var new_auto = command[3];
 		var hosts = command[4];
-		var host_html = "<p>";
+		var host_html = '<h3>GraphTerm Hosts</h3>';
 		if (user)
 		    host_html += 'User: <b>'+user + '</b><p>\n';
 		if (new_auto) {
@@ -1075,7 +1075,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		} else if (!hosts.length) {
 		    host_html += 'No GraphTerm Hosts currently available<br>';
 		} else {
-		    host_html += 'GraphTerm Hosts Available:<p>';
+		    host_html += 'Available hosts:<p>';
 		    host_html += '<ol>';
 		    for (var j=0; j<hosts.length; j++)
 			host_html += '<li><a href="/'+hosts[j]+'/?qauth='+getAuth()+'">'+hosts[j]+'</a></li>';
@@ -3234,6 +3234,11 @@ function GTTerminalInput(chr, type_ahead) {
 
     if (GTCaptureInput()) {
 	// Editing or processing form or using notebook
+	return true;
+    }
+
+    if (!gParams.controller) {
+	alert("Not controlling this terminal; keyboard input discarded.");
 	return true;
     }
 

@@ -38,6 +38,7 @@ function GTPageletJSON(pageletElem, feed) {
 <style>
 .gterm-pagelet-gfeeds-container ul {
    list-style: none;
+   color: red;
 }
 </style>
 <div class="gterm-pagelet-gfeeds-container">

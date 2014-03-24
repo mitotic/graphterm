@@ -57,6 +57,7 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
             # Create new user
 	    echo "Creating new user and group $username"
 	    useradd --user-group --create-home --home $homedir --shell /bin/bash $username
+	    sudo -u $username chmod 0711 $homedir
 
 	    sudo -u $username mkdir $homedir/$GRAPHTERM_DIR
 	    sudo -u $username chmod 0700 $homedir/$GRAPHTERM_DIR

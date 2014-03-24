@@ -399,7 +399,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             # New named user
                             self.authorized = self.add_state(user, self.NAME_AUTH)
                         else:
-                            auth_message = "User name %s already in use" % user
+                            # CGI escape username
+                            auth_message = "User name %s already in use" % cgi_escape(user)
                     else:
                         validated = False
                         if code == gterm.compute_hmac(self._auth_code, cauth):
@@ -442,7 +443,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         elif code:
                             auth_message = "Authentication failed; check user/code"
                         else:
-                            auth_message = "Validation code required for user "+user
+                            # CGI escape username
+                            auth_message = "Validation code required for user "+cgi_escape(user)
 
             if not self.authorized:
                 if self.req_path in self._webcast_paths:
@@ -1105,15 +1107,17 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 else:
                     action_params = params["headers"]["x_gterm_parameters"]
                     action = action_params["action"]
+                    isatty = action_params["isatty"]
                     action_args = action_params["args"]
                     is_super_user = GTSocket.is_super_or_local(control_params["owner"], GTSocket._auth_type)
+                    content_type = "text/html" if isatty else "text/plain"
                     errmsg = ""
                     content = ""
                     if not is_super_user:
                         errmsg = "User not authorized for administration\n"
                     else:
                         try: 
-                            if action == "terminals":
+                            if action == "sessions":
                                 regexp = re.compile(action_args[0]) if action_args else None
                                 all_paths = []
                                 hostnames = TerminalConnection.get_connection_ids()
@@ -1134,7 +1138,9 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                                 path_nb += ":"+nb_name
                                         if regexp and not regexp.match(path_nb):
                                             continue
-                                        term_list.append(path)
+                                        qauth = tparams["state_id"][:AUTH_DIGITS]
+                                        term_label = '<a href="/'+path+'/watch/?qauth='+qauth+'" target="_blank">'+cgi_escape(path_nb)+'</a><br>' if isatty else path
+                                        term_list.append(term_label)
                                     term_list.sort()
                                     all_paths += term_list
                                 content = "\n".join(all_paths) + "\n"
@@ -1143,7 +1149,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         except Exception, excp:
                             errmsg = "Error in admin action "+action+": "+str(excp)+"\n"
                                     
-                    save_params = {"content_type": "text/plain", "x_gterm_location": "remote",
+                    save_params = {"content_type": content_type, "x_gterm_location": "remote",
                                    "x_gterm_filepath": "", "x_gterm_encoding": "base64"}
                     if errmsg:
                         save_params["x_gterm_error"] = errmsg
