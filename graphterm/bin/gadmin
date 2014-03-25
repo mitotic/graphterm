@@ -5,12 +5,12 @@
 gadmin: Perform server administration actions
 
 Usage:
-        gadmin sessions '.*/tty1'       # Python wildcard
-        gadmin sessions '.*:'           # Python wildcard for all notebook sessions
-        gadmin sessions '.*:Exercise2'  # Python wildcard for particular notebook sessions
+        gadmin -a sessions '.*/tty1'       # Python wildcard
+        gadmin -a sessions '.*:'           # Python wildcard for all notebook sessions
+        gadmin -a sessions '.*:Exercise2'  # Python wildcard for particular notebook sessions
 
         # Virtual lab dashboard
-        gframe -f -t -p / -s /watch `gadmin sessions`
+        gframe -f -t -p / -s /watch `gadmin -a sessions`
 
         # Click on session label ("terminal URL") in embedded window to open new full window)
         # Upload files using gupload
@@ -26,46 +26,44 @@ import sys
 import termios
 import tty
 
-from optparse import OptionParser
-
 import gterm
 
 usage = "usage: %prog action [args]"
-parser = OptionParser(usage=usage)
-parser.add_option("-v", "--verbose",
-                  action="store_true", dest="verbose", default=False,
-                  help="Verbose output")
-parser.add_option("-o", "--stdout",
-                  action="store_true", dest="stdout", default=False,
-                  help="Use STDOUT for pagelet output")
+parser = gterm.FormParser(usage=usage, title="Administer server: ", command="gadmin")
+parser.add_argument(label="Argument 1: ", help="Argument 1")
+parser.add_option("action", ("", "sessions"), help="Action")
+parser.add_option("long", False, short="l", help="Long text output")
+parser.add_option("verbose", False, short="v", help="Verbose")
+parser.add_option("text", False, short="t", help="Text only")
 
 (options, args) = parser.parse_args()
 
-if not args:
-    print >> sys.stderr, parser.get_usage()
+if not gterm.Lterm_cookie or not sys.stdout.isatty():
+    options.text = True
+
+if not args and not options.action:
+    if options.text:
+        sys.exit(parser.get_usage())
+    gterm.write_form(parser.create_form(), command="gadmin")
     sys.exit(1)
 
 Headers = {"content_type": "text/plain"}
 Headers["x_gterm_response"] = "admin_command"
-Headers["x_gterm_parameters"] = {"action": args[0], "isatty": sys.stdout.isatty(), "args": args[1:]}
+Headers["x_gterm_parameters"] = {"action": options.action, "text_only": options.text, "long": options.long, "args": args[0:]}
 
-gterm.wrap_write("", headers=Headers, stderr=not options.stdout)
+gterm.wrap_write("", headers=Headers)
 
-(errmsg, headers, content) = gterm.receive_data(stderr=not options.stdout)
+(errmsg, headers, content) = gterm.receive_data()
 
 if not errmsg:
     errmsg = headers.get("x_gterm_error", "")
 
 if errmsg:
-    print >> sys.stderr, errmsg
-    sys.exit(1)
+    sys.exit(errmsg)
 
 content_type = headers.get("content_type", "")
 if content_type == "text/html":
-    gterm.wrap_write(content, stderr=not options.stdout)
+    gterm.wrap_write(content)
 else:
-    if options.stdout:
-        sys.stderr.write(content)
-    else:
-        sys.stdout.write(content)
+    sys.stdout.write(content)
     

@@ -104,7 +104,7 @@ class Daemon(object):
 		if pid:
 			# Already running
 			sys.exit(0)
-		else
+		else:
 			# Start the daemon
 			self.start()
 

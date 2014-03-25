@@ -24,8 +24,7 @@ def main():
     (options, args) = parser.parse_args()
 
     if not args and not options.group:
-        print >> sys.stderr, parser.get_usage()
-        sys.exit(1)
+        sys.exit(parser.get_usage())
 
     user = "" if options.group else args[0]
 

@@ -391,7 +391,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if code == gterm.compute_hmac(self._auth_code, cauth):
                                 self.authorized = self.add_state(user, self._auth_type)
                             else:
-                                auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command" % gterm.get_auth_filename(server=Server_settings["host"])
+                                auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command" % gterm.get_auth_filename(server=Server_settings["internal_host"])
                         else:
                             auth_message = "<h3>GraphTerm Login</h3><p>Please specify username (letters/digits/hyphens, starting with letter)."
                             if Server_settings["auto_users"] and os.path.exists(Auto_add_file):
@@ -1119,10 +1119,10 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 else:
                     action_params = params["headers"]["x_gterm_parameters"]
                     action = action_params["action"]
-                    isatty = action_params["isatty"]
+                    text_only = action_params["text_only"]
                     action_args = action_params["args"]
                     is_super_user = GTSocket.is_super_or_local(control_params["owner"], GTSocket._auth_type)
-                    content_type = "text/html" if isatty else "text/plain"
+                    content_type = "text/plain" if text_only else "text/html"
                     errmsg = ""
                     content = ""
                     if not is_super_user:
@@ -1156,7 +1156,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                         if regexp and not regexp.match(path_nb):
                                             continue
                                         qauth = get_qauth(control_params["state_id"])
-                                        term_label = '<a href="/'+path+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(path_nb)+'</a><br>' if isatty else path
+                                        term_label = (path_nb if action_params["long"] else path) if text_only else '<a href="/'+path+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(path_nb)+'</a><br>'
                                         term_list.append(term_label)
                                     term_list.sort()
                                     all_paths += term_list
@@ -1452,15 +1452,15 @@ def run_server(options, args):
         Term_settings = {}
 
     auth_file = ""
-    if options.auth_type == "local" or (options.auth_type == "multiuser" and not os.path.exists(gterm.get_auth_filename(server=http_host))):
+    if options.auth_type == "local" or (options.auth_type == "multiuser" and not os.path.exists(gterm.get_auth_filename(server=internal_host))):
         # Random auth code
         auth_code = GTSocket.get_auth_code()
         try:
-            gterm.write_auth_code(auth_code, server=http_host, port=http_port)
+            gterm.write_auth_code(auth_code, server=internal_host, port=http_port)
         except Exception, excp:
             print >> sys.stderr, "Error in writing authentication file: %s" % excp
             sys.exit(1)
-        auth_file = gterm.get_auth_filename(server=http_host)
+        auth_file = gterm.get_auth_filename(server=internal_host)
     else:
         if options.auth_type == "none":
             # No auth code
@@ -1470,7 +1470,7 @@ def run_server(options, args):
             auth_code = "name"
         elif options.auth_type == "multiuser":
             try:
-                auth_code, port = gterm.read_auth_code(server=http_host)
+                auth_code, port = gterm.read_auth_code(server=internal_host)
             except Exception, excp:
                 print >> sys.stderr, "Error in reading authentication file: %s" % excp
                 sys.exit(1)
@@ -1659,7 +1659,7 @@ def run_server(options, args):
 
     finally:
         if options.auth_type == "local":
-            gterm.clear_auth_code(server=http_host)
+            gterm.clear_auth_code(server=internal_host)
         if Log_file:
             Log_file.close()
     IO_loop.add_callback(stop_server)
