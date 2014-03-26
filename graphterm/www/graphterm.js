@@ -4061,7 +4061,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     //if (!gParams.controller)
     //	textElem.attr("disabled", "disabled");
     $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();
-    $("#"+this.getCellId(this.curIndex)+"-output").bind("click", bind_method(this, this.handleOutput));
+    $("#"+this.getCellId(this.curIndex)+"-output").bind("dblclick", bind_method(this, this.handleOutput));
     this.renderCell(this.splitting, this.splitting);
     this.splitting = false;
 }

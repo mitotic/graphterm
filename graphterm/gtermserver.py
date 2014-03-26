@@ -540,7 +540,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             term_owner = self.is_creator(user, path)
                             if not tparams["share_private"] or term_owner:
                                 connectable = not self._control_set.get(path) and (term_owner or self._auth_type == self.LOCAL_AUTH)
-                                stealable = not connectable and not tparams["share_locked"] 
+                                stealable = not connectable and (is_super_user or term_owner or not tparams["share_locked"])
                                 term_list.append( [term_name, connectable, stealable, len(self._watch_dict[path])] )
                     term_list.sort()
                     allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
@@ -574,7 +574,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 ##    self.write_json([["abort", "Already connected to this terminal from different window"]])
                 ##    self.close()
                 ##    return
-                if not option and self.is_creator(user, path):
+                if not option and self.is_creator(user, path) and self._control_set.get(path):
                     self.write_json([["abort", "Use 'steal' option to control this terminal"]])
                     self.close()
                     return
@@ -644,7 +644,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 controller = False
             elif self.wildcard:
                 controller = True
-            elif option == "steal" and (is_owner or not terminal_params["share_locked"]):
+            elif option == "steal" and (is_super_user or is_owner or not terminal_params["share_locked"]):
                 controller = True
                 if terminal_params["share_tandem"]:
                     self._control_set[path].add(self.websocket_id)
@@ -1151,8 +1151,10 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                                 path_nb += ":"+nb_name
                                                 if nb_mod_offset:
                                                     path_nb += "#"+str(nb_mod_offset)
-                                        if tparams.get("alert_status"):
-                                            path_nb += "@"
+                                            if tparams.get("alert_status"):
+                                                path_nb += "@"
+                                        else:
+                                            path_nb += "-"
                                         if regexp and not regexp.match(path_nb):
                                             continue
                                         qauth = get_qauth(control_params["state_id"])
@@ -1164,7 +1166,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                             else:
                                 errmsg = "Invalid admin action: "+action+"\n"
                         except Exception, excp:
-                            errmsg = "Error in admin action "+action+": "+str(excp)+"\n"
+                            import traceback
+                            errmsg = "Error in admin %s: %s\n%s" % (action, excp, traceback.format_exc())
                                     
                     save_params = {"content_type": content_type, "x_gterm_location": "remote",
                                    "x_gterm_filepath": "", "x_gterm_encoding": "base64"}

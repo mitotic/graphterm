@@ -142,7 +142,7 @@ if install_gterm:
                          "gterm_setup"]
 
 if options.pylab:
-    startup_commands += ["apt-get install -qy python-numpy python-scipy python-matplotlib python-scientific python-pandas python-jinja2 ipython"]
+    startup_commands += ["apt-get install -qy python-numpy python-scipy python-matplotlib python-mpltoolkits.basemap python-scientific python-pandas python-jinja2 ipython"]
     startup_commands += ["pip install pil qrcode"]
     startup_commands += ["pip install --upgrade ipython pyzmq"]
 

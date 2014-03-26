@@ -73,6 +73,7 @@ FILE_COMMANDS = set(["cd", "cp", "mv", "rm", "gcp", "gimages", "gls", "gopen", "
 REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
+MD_BLOB_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\(("+gterm.BLOB_PREFIX+"[^\)]+)\)")
 MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
 MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
 
@@ -1149,6 +1150,7 @@ class Terminal(object):
         ref_blobs = OrderedDict()
         prompt_num = 0
         in_prompt = 0
+        embed_fig_count = 0
         for j, cell_index in enumerate(self.note_cells["cellIndices"]):
             cell = self.note_cells["cells"][cell_index]
             if cell["cellIndex"] == self.note_cells["curIndex"]:
@@ -1161,13 +1163,36 @@ class Terminal(object):
             if format == "ipynb":
                 if j:
                     md_lines[-1] += ","
-                input_json = nb_json(cell["cellInput"], ipy_raw)
                 if cell["cellType"] in MARKUP_TYPES:
-                    md_lines += [IPYNB_JSON_MARKDOWN % dict(source=input_json)]
+                    cell_blobs = OrderedDict()
+                    cell_lines = []
+                    for line in cell["cellInput"]:
+                        if MD_BLOB_RE.match(line):
+                            # Inline blob reference
+                            match = MD_BLOB_RE.match(line)
+                            alt = match.group(1).strip() or "image"
+                            ref_id = match.group(2).strip()
+                            blob_id = gterm.get_blob_id(ref_id)
+                            if blob_id:
+                                data_uri = self.note_screen_buf.get_blob_uri(blob_id)
+                                if data_uri:
+                                    fig_prefix = "embed"
+                                    embed_fig_count += 1
+                                    ref_id = "%s-fig%d-%s" % (fig_prefix, embed_fig_count, fig_suffix)
+                                    cell_blobs[ref_id] = data_uri
+                                    line = "![image][%s]" % ref_id
+                        cell_lines.append(line)
+
+                    if cell_blobs:
+                        # Data URIs for inline images
+                        for ref_id, cell_blob in cell_blobs.iteritems():
+                            cell_lines.append("[%s]: %s" % (ref_id, cell_blob))
+
+                    md_lines += [IPYNB_JSON_MARKDOWN % dict(source=nb_json(cell_lines, ipy_raw))]
                 else:
                     prompt_num += 1
                     in_prompt = prompt_num
-                    md_lines += [IPYNB_JSON_CODE0 % dict(input=input_json, lang="python")]
+                    md_lines += [IPYNB_JSON_CODE0 % dict(input=nb_json(cell["cellInput"], ipy_raw), lang="python")]
             elif cell["cellInput"]:
                 if cell["cellType"] not in MARKUP_TYPES:
                     if curly_fence or cell["cellTypeExtra"] is not None:
@@ -1176,17 +1201,20 @@ class Terminal(object):
                         md_lines.append("```"+cell["cellType"])
 
                 for line in cell["cellInput"]:
-                    md_lines.append(line)
-                    if cell["cellType"] in MARKUP_TYPES and MD_IMAGE_RE.match(line):
-                        # Inline image
-                        match = MD_IMAGE_RE.match(line)
+                    if cell["cellType"] in MARKUP_TYPES and MD_BLOB_RE.match(line):
+                        # Inline blob
+                        match = MD_BLOB_RE.match(line)
                         alt = match.group(1).strip() or "image"
                         ref_id = match.group(2).strip()
                         blob_id = gterm.get_blob_id(ref_id)
                         if blob_id:
                             data_uri = self.note_screen_buf.get_blob_uri(blob_id)
                             if data_uri:
+                                fig_prefix = "markup"
+                                ref_id = "%s-fig%d-%s" % (fig_prefix, len(ref_blobs)+1, fig_suffix)
                                 ref_blobs[ref_id] = data_uri
+                                line = "![image][%s]" % ref_id
+                    md_lines.append(line)
 
                 if cell["cellType"] not in MARKUP_TYPES:
                     md_lines.append("```")
@@ -1253,7 +1281,7 @@ class Terminal(object):
 
         if format == "ipynb":
             md_lines += [IPYNB_JSON_FOOTER]
-        filedata = "\n".join(md_lines) + "\n"
+        filedata = "\n".join(s if isinstance(s, str) else s.encode(ENCODING, "replace") for s in md_lines) + "\n"
         save_params = {"x_gterm_filepath": fullpath, "content_type": "text/x-markdown"}
         if params.get("location") == "remote":
             save_params["x_gterm_location"] = "remote"
@@ -1733,7 +1761,7 @@ class Terminal(object):
             return
         assert cell_index == cur_index
         cur_cell = self.note_cells["cells"][cur_index]
-        cell_lines = split_lines(input_data)
+        cell_lines = split_lines(input_data.replace("\x00",""))   # Delete NULs
         if save:
             # Update cell input
             cur_location = self.note_cells["cellIndices"].index(cur_index)
