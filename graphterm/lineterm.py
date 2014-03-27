@@ -1039,6 +1039,8 @@ class Terminal(object):
         self.note_screen_buf.set_cur_note(self.note_count)
         self.note_cells = {"maxIndex": 0, "curIndex": 0, "cellIndices": [], "cells": OrderedDict()}
         self.note_mod_offset = 0
+        self.note_update_time = time.time()
+        self.note_save_time = 0
         self.note_prompts = prompts
 
         if content is None:
@@ -1118,11 +1120,70 @@ class Terminal(object):
         self.screen_callback(self.term_name, "", "note_close", [])
         self.update()
 
-    def save_notebook(self, filepath, input_data="", params={}):
+    def update_mod_offset(self):
+        cur_index = self.note_cells["curIndex"]
+        if cur_index:
+            cur_location = self.note_cells["cellIndices"].index(cur_index)
+            if self.note_mod_offset < cur_location+1:
+                self.note_mod_offset = cur_location+1
+                self.screen_callback(self.term_name, "", "note_mod_offset", [self.note_mod_offset])
+
+    def update_current_cell(self, input_data=None):
+        """Update current cell, returning current_time if contents have indeed changed, or 0
+        Set input_data to None, if no input data is provided.
+        """
+        cur_index = self.note_cells["curIndex"]
+        if not cur_index:
+            return 0
+
+        # Update input cell, if need be, and copy output from scroll buffer to output cell
+        cur_cell = self.note_cells["cells"][cur_index]
+        modified = False
+        if input_data is not None:
+            mod_input = split_lines(input_data) if input_data else []
+            if cur_cell["cellInput"] != mod_input:
+                cur_cell["cellInput"] = mod_input
+                modified = True
+        if cur_cell["cellType"] not in MARKUP_TYPES:
+            mod_output = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+            if cur_cell["cellOutput"] != mod_output:
+                cur_cell["cellOutput"] = mod_output
+                modified = True
+
+        if modified:
+            self.note_update_time = time.time()
+            return self.note_update_time
+        else:
+            return 0
+
+    def save_notebook(self, filepath="", input_data=None, params={}):
+        """input_data contains updated text for current input cell.
+        Note: Use None value for input_data to prevent updating current input cell.
+        Returns True if indeed saved.
+        """
+        alt_save = params.get("alt_save", False)
+        auto_save = params.get("auto_save", False)
+        format = params.get("format", "")
+
+        mod_time = self.update_current_cell(input_data)
+        if mod_time:
+            self.update_mod_offset()
+
+        if (alt_save or auto_save) and self.note_save_time >= self.note_update_time:
+                return False
+
+        filepath = filepath or self.note_params["file"]
         fullname = os.path.expanduser(filepath)
         fullpath = fullname if fullname.startswith("/") else self.note_params["dir"]+"/"+fullname
-        format = params.get("format", "")
         fname, fext = os.path.splitext(os.path.basename(fullpath))
+        if alt_save:
+            # Saving to alternate file (do not update save time)
+            pathdir, pathname = os.path.split(fullpath)
+            fullpath = os.path.join(pathdir, "_SAVE_"+pathname)
+        else:
+            # Saving to notebook file
+            self.note_save_time = mod_time or time.time()
+
         ipy_raw = False
         if fext in (".ipynb", ".json"):
             if fext == ".ipynb":
@@ -1153,12 +1214,6 @@ class Terminal(object):
         embed_fig_count = 0
         for j, cell_index in enumerate(self.note_cells["cellIndices"]):
             cell = self.note_cells["cells"][cell_index]
-            if cell["cellIndex"] == self.note_cells["curIndex"]:
-                # Current cell; copy output
-                cell["cellInput"] = split_lines(input_data) if input_data else []
-                if cell["cellType"] not in MARKUP_TYPES:
-                    cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
-
             cell_out = False
             if format == "ipynb":
                 if j:
@@ -1288,6 +1343,7 @@ class Terminal(object):
         else:
             save_params["x_gterm_popstatus"] = params.get("popstatus", "")
         self.save_data(save_params, filedata)
+        return True
 
     def read_ipynb(self, content):
         try:
@@ -1539,6 +1595,7 @@ class Terminal(object):
                     # Code cell encountered before new cell on this page; hide new cell
                     self.note_cells["cells"][cell_index]["cellParams"]["hidden"] = True
 
+        self.note_update_time = time.time()
         self.screen_callback(self.term_name, "", "note_add_cell",
                              [cell_index, new_cell_type, before_cell_index, self.get_cell_input()])
 
@@ -1582,6 +1639,7 @@ class Terminal(object):
         self.scroll_screen(self.active_rows)
         if cur_cell["cellType"] not in MARKUP_TYPES:
             cur_cell["cellOutput"] = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
+            self.note_update_time = time.time()
         self.note_screen_buf.clear_buf()
         self.note_cells["curIndex"] = 0
             
@@ -1604,6 +1662,7 @@ class Terminal(object):
         if next_cell["cellType"] not in MARKUP_TYPES:
             self.note_screen_buf.prefill_buf(next_cell["cellOutput"])
         next_cell["cellOutput"] = []
+        self.note_update_time = time.time()
         return cell_index
 
     def select_cell(self, cell_index=0, move_up=False, next_code=False):
@@ -1703,6 +1762,7 @@ class Terminal(object):
         cur_cell = self.note_cells["cells"][cur_index]
         cur_cell["cellType"] = cell_type
         cur_cell["cellOutput"] = []
+        self.note_update_time = time.time()
         self.screen_callback(self.term_name, "", "note_update_type", [cur_index, cell_type])
 
     def move_cell(self, move_up=False):
@@ -1714,11 +1774,13 @@ class Terminal(object):
         next_location = self.note_cells["cellIndices"].index(next_cell_index)
         self.note_cells["cellIndices"][cur_location] = next_cell_index
         self.note_cells["cellIndices"][next_location] = cur_index
+        self.note_update_time = time.time()
         self.screen_callback(self.term_name, "", "note_move_cell", [next_cell_index, move_up])
 
     def delete_cell(self, move_up=False):
         cur_index = self.note_cells["curIndex"]
         select_cell_index = self.switch_cell(delete=True, move_up=move_up)
+        self.note_update_time = time.time()
         self.screen_callback(self.term_name, "", "note_delete_cell", [cur_index, select_cell_index])
 
     def merge_above(self):
@@ -1733,6 +1795,7 @@ class Terminal(object):
             return
         next_cell["cellInput"] += cur_cell["cellInput"]
         next_cell["cellOutput"] = []
+        self.note_update_time = time.time()
         self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(next_cell["cellInput"]), next_cell_index, False])
         self.delete_cell(move_up=True)
 
@@ -1762,12 +1825,10 @@ class Terminal(object):
         assert cell_index == cur_index
         cur_cell = self.note_cells["cells"][cur_index]
         cell_lines = split_lines(input_data.replace("\x00",""))   # Delete NULs
+        self.note_update_time = time.time()
         if save:
             # Update cell input
-            cur_location = self.note_cells["cellIndices"].index(cur_index)
-            if self.note_mod_offset < cur_location+1:
-                self.note_mod_offset = cur_location+1
-                self.screen_callback(self.term_name, "", "note_mod_offset", [self.note_mod_offset])
+            self.update_mod_offset()
             if not self.note_params["fill"]:
                 cur_cell["cellInput"] = cell_lines
             else:
@@ -1894,6 +1955,7 @@ class Terminal(object):
         # Clear screen buffer
         self.scroll_screen(self.active_rows)
         self.note_screen_buf.clear_buf()
+        self.note_update_time = time.time()
         self.screen_callback(self.term_name, "", "note_erase_output", [0 if all_cells else cur_index])
 
     def clear(self):

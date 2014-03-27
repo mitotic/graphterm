@@ -357,7 +357,7 @@ function gtermListTerminals(user, host, allow_new, terminals) {
     if (terminals.length) {
 	$("#gterm-terminal-list-table").append('<tr><td><em>Sessions</em></td></tr>\n')
 	for (var j=0; j<terminals.length; j++) {
-            // [term_name, connectable, stealable, watch_count]
+            // [term_name, connectable, stealable, watch_count, idle_min]
 	    var term_name = terminals[j][0];
 	    var term_html = '<tr>';
 	    term_html += '<td class="gterm-terminal-list-name">'+term_name+(terminals[j][3] > 1 ? ('('+terminals[j][3]+')') : '') + '</td> ';
@@ -371,6 +371,7 @@ function gtermListTerminals(user, host, allow_new, terminals) {
 		if (terminals[j][1])
 		    term_html += '<td> <a href="/'+host+'/'+term_name+'/?qauth='+getAuth()+'">connect</a></td>';
 	    }
+	    term_html += '<td>idle '+terminals[j][4]+'min.</td>';
 	    term_html += '</tr>';
 	    $("#gterm-terminal-list-table").append(term_html);
 	}
@@ -1297,9 +1298,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    output = err+"";
 			}
 			console.log("> "+output);
-			gWebSocket.write([["keypress", output+"\n"]]);
-			if (gSharedCount <= 1)
-			    gWebSocket.write([["keypress", String.fromCharCode(4)]]);
+			if (response_params.echo == "terminal") {
+			    gWebSocket.write([["keypress", output+"\n"]]);
+			    if (gSharedCount <= 1)
+				gWebSocket.write([["keypress", String.fromCharCode(4)]]);
+			} else if (response_params.echo == "chat" && response_params.token) {
+			    gWebSocket.write([["chat", response_params.path, response_params.token, output]]);
+			}
 
 		    } else if (response_type == "edit_file") {
 			EndFullpage();
@@ -2355,6 +2360,10 @@ function GTMenuTerminal(selectKey, newValue, force) {
     case "paste":
 	GTPasteSpecialBegin();
 	break;
+    case "send_chat":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &");
+	break;
     case "send_interrupt":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput(String.fromCharCode(3));
@@ -2503,7 +2512,7 @@ function gtermAlert(event) {
 }
 
 function gtermAlertSend(status) {
-    gWebSocket.write([["chat", "alert"+(!!status)+"\n"]]);
+    gWebSocket.write([["chat", "", "", "alert"+(!!status)+"\n"]]);
     gtermAlertUpdate(status);
 }
 
@@ -2536,7 +2545,7 @@ function gtermChatAction(buttonElem) {
     var text = $("#gterm-chatarea-content").val();
     //console.log("popupButton", action, text);
     if (action == "send")
-	gWebSocket.write([["chat", text+"\n"]]);
+	gWebSocket.write([["chat", "", "", text+"\n"]]);
     popupClose();
 }
 
@@ -3948,6 +3957,16 @@ GTNotebook.prototype.handleKey = function(ch) {
     }
 }
 
+GTNotebook.prototype.altSave = function() {
+    this.saveNotebook("", {popstatus: "alert", alt_save: true})
+}
+
+GTNotebook.prototype.saveNotebook = function(filepath, params) {
+    // Save notebook, updating current cell input
+    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
+    gWebSocket.write([["save_notebook", filepath, textElem.val() || "", params || {}]]);
+}
+
 GTNotebook.prototype.handleCommand = function(command, newValue) {
     if (!gWebSocket || !gParams.controller)
 	return;
@@ -3961,8 +3980,7 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
     } else if (command == "save") {
 	var filepath = $.trim(window.prompt("Save as: ", this.note_params.file));
 	if (filepath) {
-	    var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
-	    gWebSocket.write([["save_notebook", filepath, textElem.val() || "", {popstatus: "alert"}]]);
+	    this.saveNotebook(filepath, {popstatus: "alert"}); 
 	}
     } else if (command == "run" || command == "runbutton") {
 	var createNew = command == "run";
@@ -4913,4 +4931,9 @@ function GTReady() {
     $(window).resize(handle_resize);
 
     Connect();
+}
+
+function alt_save_notebook() {
+    if (gNotebook)
+	gNotebook.altSave()
 }

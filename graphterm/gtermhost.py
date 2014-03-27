@@ -298,7 +298,6 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             resp_list = []
             for cmd in req_list:
                 action = cmd.pop(0)
-
                 if action == "shutdown":
                     if cmd:
                         logging.warning("gtermhost: SHUTDOWN %s", cmd[0])
@@ -332,7 +331,8 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.lineterm.term_write(term_name, cmd[0].encode(self.term_encoding, "ignore"))
 
                 elif action == "chat":
-                    msg = from_user + ": " + cmd[0] if from_user else cmd[0]
+                    # ["" or host/session, "" or token, message]
+                    msg = from_user + ": " + cmd[2]
                     chat_widget = WidgetStream.get_chat_widget(lterm_cookie)
                     if chat_widget:
                         chat_widget.send_packet(msg.encode(self.term_encoding, "ignore"))
@@ -615,6 +615,7 @@ class WidgetStream(object):
         self.address = address
         self.packet_cookie = ""
         self.chat_cookie = ""
+        self.widget_token = ""
         self._all_widgets.append(self)
         self.stream.set_close_callback(self.on_close)
 
@@ -653,12 +654,13 @@ class WidgetStream(object):
             pass
         self.on_close()
 
-    def set_chat_status(self, status):
+    def set_chat_status(self, status, widget_token=""):
         term_info = TerminalClient.all_cookies.get(self.chat_cookie)
         if not term_info:
             return
+        self.widget_token = widget_token
         host_connection, term_name = term_info
-        host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_chat", bool(status)]])
+        host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_chat", bool(status), widget_token]])
 
     def next_packet(self):
         if self.stream:
@@ -691,6 +693,7 @@ class WidgetStream(object):
 
         if resp_type == "capture_chat":
             chat_cookie = headers["x_gterm_parameters"].get("cookie")
+            widget_token = headers["x_gterm_parameters"].get("widget_token", "")
             if chat_cookie == self.packet_cookie:  # Redundant?
                 prev_widget = self.get_chat_widget(chat_cookie)
                 if prev_widget and prev_widget is not self:
@@ -698,7 +701,7 @@ class WidgetStream(object):
                     prev_widget.shutdown()
                 self.chat_cookie = chat_cookie
                 self._chat_widgets[chat_cookie] = self
-                self.set_chat_status(True)
+                self.set_chat_status(True, widget_token)
             else:
                 logging.warning("gtermhost: Invalid chat cookie %s", chat_cookie)
 

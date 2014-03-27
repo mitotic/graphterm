@@ -46,7 +46,7 @@ if options.verbose:
 
 Headers = {"content_type": "text/plain"}
 Headers["x_gterm_response"] = "eval_js"
-Headers["x_gterm_parameters"] = {}
+Headers["x_gterm_parameters"] = {"echo": "terminal"}
 
 gterm.wrap_write(js, headers=Headers, stderr=True)
 
