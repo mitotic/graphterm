@@ -494,6 +494,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         ##if LOCAL_HOST in host_list:
                         ##    host_list.remove(LOCAL_HOST)
                         pass
+                    elif Server_settings["user_groups"]:
+                        host_list = [h for h in host_list if same_group(h, user) ]
                     else:
                         if user in host_list:
                             host_list = [ user ]
@@ -515,7 +517,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 ##    self.write_json([["abort", "Local host access not allowed for user %s" % user]])
                 ##    self.close()
                 ##    return
-                if not Server_settings["allow_share"] and host != user:
+                if host != user and not same_group(host, user) and not Server_settings["allow_share"]:
                     self.write_json([["abort", "Inaccesible host %s" % host]])
                     self.close()
                     return
@@ -606,7 +608,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
                 # Note: Multiuser without allow_share implies super user has default read access
-                start_private =  self._auth_type > self.LOCAL_AUTH and (self._auth_type < self.MULTI_AUTH or Server_settings["allow_share"])
+                start_private =  Server_settings["allow_share"]
                 terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
                                    "share_private": start_private, "share_tandem": False,
                                    "alert_status": False, "widget_token": "",
@@ -855,6 +857,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             self._control_set[self.remote_path].discard(self.websocket_id)
                         elif is_super_user or is_owner or (not terminal_params["share_locked"] and
                                                            (self._auth_type <= self.LOCAL_AUTH or
+                                                            same_group(from_user, terminal_params["owner"])  or
                                                             (Server_settings["allow_share"] and
                                                              not self.is_super(terminal_params["owner"])))):
                             # Gain control
@@ -1177,6 +1180,9 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                     label_list = []
                                     for tname in conn.term_dict:
                                         tpath = thost + "/" + tname
+                                        if tpath == term_path or tname == gtermhost.OSHELL_NAME:
+                                            # Ignore self and osh
+                                            continue
                                         lpath = tpath
                                         tparams = GTSocket.get_terminal_params(tpath)
                                         nb_name = ""
@@ -1213,16 +1219,12 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                 if action_autosave:
                                     save_msg = ["save_notebook", "", None, {"auto_save": True}]
                                     for tpath in all_paths:
-                                        if tpath == term_path:
-                                            continue
                                         thost, tname = tpath.split("/")
                                         TerminalConnection.send_to_connection(thost, "request", tname,
                                                                               terminal_params["owner"], [save_msg])
                                 if action_exec:
                                     exec_msg = ["keypress", action_exec+"\n"]
                                     for tpath in all_paths:
-                                        if tpath == term_path:
-                                            continue
                                         thost, tname = tpath.split("/")
                                         TerminalConnection.send_to_connection(thost, "request", tname,
                                                                               terminal_params["owner"], [exec_msg])
@@ -1236,8 +1238,6 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                                     }
                                     js_msg = ["terminal", "graphterm_output", [{"headers": js_headers}, base64.b64encode(action_js)]]
                                     for tpath in all_paths:
-                                        if tpath == term_path:
-                                            continue
                                         ws_ids = list(GTSocket.get_terminal_control_set(tpath))
                                         if not ws_ids:
                                             continue
@@ -1489,6 +1489,22 @@ class ProxyFileHandler(tornado.web.RequestHandler):
                                                      (Cache_files and last_modified) )
         self.finish_write(headers, content, cache=cache)
 
+def same_group(user1, user2):
+    return Server_settings["user_groups"] and Server_settings["user_groups"].get(user1) and Server_settings["user_groups"].get(user1) == Server_settings["user_groups"].get(user2)
+
+def read_groups():
+    group_file = os.path.join(gterm.App_dir, "graphterm_groups.json")
+    if os.path.exists(group_file):
+        with open(group_file) as f:
+            try:
+                Server_settings["user_groups"] = {}
+                groups = json.loads(f.read())
+                for group, members in groups.iteritems():
+                    for member in members:
+                        Server_settings["user_groups"][member] = group
+                print >> sys.stderr, "user groups: ", groups
+            except Exception, excp:
+                sys.exit("Error in graphterm_groups.json file: "+str(excp))
 
 def run_server(options, args):
     global IO_loop, Http_server, Local_client, Log_file, Host_secret, Server_settings, Term_settings, Trace_shell
@@ -1529,7 +1545,11 @@ def run_server(options, args):
     Server_settings = {"host": http_host, "port": http_port,
                        "internal_host": internal_host, "internal_port": internal_port,
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
-                       "auto_users": options.auto_users, "no_formcheck": options.no_formcheck}
+                       "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
+                       "user_groups": {}}
+
+    read_groups()
+
     try:
         Term_settings = json.loads(options.term_settings or "{}")
     except Exception, excp:

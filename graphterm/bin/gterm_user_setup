@@ -85,6 +85,6 @@ for host in $host_list; do
 
         # Start client for host
         uid=`id -u $host`
-	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file --widget_port=$((WBASE+uid)) $host
+	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file --widget_port=$((WBASE+uid)) --oshell $host
     fi
 done
