@@ -1093,6 +1093,8 @@ class Terminal(object):
         self.select_cell(self.note_cells["cellIndices"][0], next_code=True)
 
     def close_notebook(self, discard=False):
+        if not self.note_cells:
+            return
         self.note_start = None
         self.leave_cell()
         if not discard:
@@ -1161,6 +1163,8 @@ class Terminal(object):
         Note: Use None value for input_data to prevent updating current input cell.
         Returns True if indeed saved.
         """
+        if not self.note_cells:
+            return False
         alt_save = params.get("alt_save", False)
         auto_save = params.get("auto_save", False)
         format = params.get("format", "")

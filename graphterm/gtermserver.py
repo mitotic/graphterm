@@ -103,6 +103,14 @@ def cgi_escape(s):
 def get_qauth(state_id):
     return state_id[:AUTH_DIGITS]
 
+def log_write(msg, notty=False):
+    if not Log_file:
+        return
+    if sys.stderr.isatty() and not notty:
+        print >> sys.stderr, msg
+    Log_file.write(msg+"\n")
+    Log_file.flush()
+
 Episode4 = """
 
 
@@ -441,13 +449,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "activate", Server_settings["internal_host"]]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
-                                    logging.warning("gtermserver: ERROR in %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
+                                    logging.warning("gtermserver: ERROR in %s %s %s %s", gterm.SETUP_USER_CMD, user, std_out, std_err)
+                                    log_write("ERROR in new user setup for %s: %s" % (user, std_err), notty=True)
                                     self.write_json([["abort", "Error in creating new user "+user]])
                                     self.close()
                                     return
-                                if Log_file:
-                                    Log_file.write("Created new user: %s\n" % user)
-                                    Log_file.flush()
+                                log_write("GTSocket.open: Created new user: %s" % user)
                             else:
                                 # Non-auto user, super user, or existing auto user; need to validate with user auth code
                                 validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
@@ -465,10 +472,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 if self.req_path in self._webcast_paths:
                     self.authorized = self.add_state(user, self.WEBCAST_AUTH)
                 else:
+                    log_write("GTSocket.open: Authentication requested: %s" % auth_message)
                     self.write_json([["authenticate", need_user, need_code, self.get_connect_cookie(), auth_message]])
                     self.close()
                     return
 
+            log_write("GTSocket.open: Authenticated: %s" % self.authorized)
             qauth = query_data.get("qauth", [""])[0]
             if not Server_settings["no_formcheck"] and not cauth and (not qauth or qauth != get_qauth(self.authorized["state_id"])):
                 # Invalid query auth; clear any form data (always cleared for webcasts and when user is first authorized)
@@ -477,6 +486,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             if not Server_settings["no_formcheck"] and not query_data and self.req_path not in self._webcast_paths:
                 # Confirm path, if no form data and not webcasting
                 if self.req_path:
+                    log_write("GTSocket.open: Confirm path %s" % self.req_path)
                     self.write_json([["confirm_path", self.authorized["state_id"], "/"+self.req_path]])
                     self.close()
                     return
@@ -703,10 +713,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "chat": term_chat, "update_opts": {},
                                         "state_id": self.authorized["state_id"]}]])
+            log_write("GTSocket.open: Opened %s:%s" % (self.remote_path, get_user(self)))
         except Exception, excp:
             import traceback
-            errmsg = "%s\n%s" % (excp, traceback.format_exc())
-            logging.warning("GTSocket.open: ERROR (%s:%s) %s", self.remote_path, get_user(self), errmsg)
+            errmsg = "GTSocket.open: ERROR (%s:%s) %s\n%s" % (self.remote_path, get_user(self), excp, traceback.format_exc())
+            logging.warning(errmsg)
+            log_write(errmsg, notty=True)
             self.close()
 
     def broadcast(self, path, msg, controller=False, include_self=False):
@@ -717,6 +729,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 ws.write_json([msg])
 
     def on_close(self):
+        log_write("GTSocket.on_close: Closing %s:%s" % (self.remote_path, get_user(self)))
         if self.authorized:
             user = self.authorized["user"]
             if user:
@@ -819,6 +832,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 elif msg[0] == "server_log":
                     logging.warning("gtermserver_log: %s", msg[1])
+                    log_write("gtermserver_log: "+msg[1], notty=True)
 
                 elif msg[0] == "reconnect_host":
                     if conn:
@@ -1385,23 +1399,23 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             host_secret = TerminalConnection.host_secrets.get(normalized_host)
 
             if not host_secret:
-                raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+                raise tornado.web.HTTPError(403, "Unauthorized access to %s (ERR1)", path)
 
             shared_secret = self.get_cookie("GRAPHTERM_HOST_"+normalized_host)
 
             if shared_secret:
                 if host_secret != shared_secret:
-                    raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+                    raise tornado.web.HTTPError(403, "Unauthorized access to %s (ERR2)", path)
             else:
                 shared_secret = self.get_argument("shared_secret", "")
                 check_host = gtermhost.get_normalized_host(self.get_argument("host", ""))
                 expect_secret = TerminalConnection.host_secrets.get(check_host)
                 if not expect_secret or expect_secret != shared_secret:
-                    raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+                    raise tornado.web.HTTPError(403, "Unauthorized access to %s (ERR3)", path)
 
             fpath_hmac = gterm.file_hmac(self.file_path, host_secret)
             if fpath_hmac != self.get_argument("hmac", ""):
-                raise tornado.web.HTTPError(403, "Unauthorized access to %s", path)
+                raise tornado.web.HTTPError(403, "Unauthorized access to %s (ERR4)", path)
 
             if bheaders:
                 # File copy is cached
@@ -1541,6 +1555,11 @@ def run_server(options, args):
     http_host = options.host
     internal_host = options.internal_host or "localhost"
     internal_port = options.internal_port or http_port-1
+    if options.https:
+        server_url = "https://"+http_host+("" if http_port == 443 else ":%d" % http_port)
+    else:
+        server_url = "http://"+http_host+("" if http_port == 80 else ":%d" % http_port)
+    new_url = server_url + "/local/new"
 
     Server_settings = {"host": http_host, "port": http_port,
                        "internal_host": internal_host, "internal_port": internal_port,
@@ -1680,6 +1699,7 @@ def run_server(options, args):
                                                                      "term_params": term_params,
                                                                      "blob_host": options.blob_host,
                                                                      "lterm_logfile": options.lterm_logfile,
+                                                                     "server_url": server_url,
                                                                      "widget_port": widget_port},
                                                          oshell_globals=oshell_globals,
                                                          oshell_init="gtermserver.trc",
@@ -1705,12 +1725,12 @@ def run_server(options, args):
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
             logging.warning("gtermserver: ERROR in starting up %s %s %s", gterm.SETUP_USER_CMD, std_out, std_err)
+            log_write("ERROR in all user setup: "+std_err, notty=True)
 
     if options.logging:
         Log_file = open(Log_filename, "a")
         print >> sys.stderr, "Logging to", Log_filename
 
-    url = "%s://%s:%d/local/new" % ("https" if options.https else "http", http_host, http_port)
     if options.terminal:
         server_nonce = GTSocket.get_connect_cookie()
         query = "?cauth="+server_nonce
@@ -1721,9 +1741,9 @@ def run_server(options, args):
         elif options.auth_type == "name" and super_users:
             query += "&user="+super_users[0]
         try:
-            gterm.open_browser(url+"/"+query)
+            gterm.open_browser(new_url+"/"+query)
         except Exception, excp:
-            print >> sys.stderr, "Error in creating terminal; please open URL %s in browser (%s)" % (url, excp)
+            print >> sys.stderr, "Error in creating terminal; please open URL %s in browser (%s)" % (new_url, excp)
             
 
     def test_fun():
@@ -1751,7 +1771,7 @@ def run_server(options, args):
         ioloop_thread = threading.Thread(target=IO_loop.start)
         ioloop_thread.start()
         time.sleep(1)   # Time to start thread
-        print >> sys.stderr, "Open URL %s in browser to connect" % url
+        print >> sys.stderr, "Open URL %s in browser to connect" % new_url
         print >> sys.stderr, "GraphTerm server started (v%s)" % about.version
         print >> sys.stderr, "Type ^C to stop"
         if Trace_shell:

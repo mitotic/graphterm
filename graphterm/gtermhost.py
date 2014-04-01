@@ -130,7 +130,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
     all_cookies = {}
     def __init__(self, host, port, host_secret="", oshell=False, io_loop=None, ssl_options={},
-                 command="", term_type="", term_encoding="utf-8", widget_port=0, prompt_list=[],
+                 command="", term_type="", term_encoding="utf-8", server_url="", widget_port=0, prompt_list=[],
                  blob_host="", term_params={}, lterm_logfile="", key_secret=None, key_version=None, key_id=None):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
@@ -149,7 +149,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
         self.terms = {}
         self.lineterm = None
-        self.server_url = ("https" if ssl_options else "http") + "://" + host + ":" + str(port+1)
+        self.server_url = server_url or (("https" if ssl_options else "http") + "://" + host + ":" + str(port+1))
         if blob_host == "wildcard":
             self.blob_server = ("https" if ssl_options else "http") + "://*." + host + ":" + str(port+1)
         elif blob_host:
@@ -843,6 +843,7 @@ def run_host(options, args):
                                                                      "key_secret": auth_code or None,
                                                                      "key_version": key_version,
                                                                      "key_id": str(server_port),
+                                                                     "server_url": options.server_url,
                                                                      "widget_port": widget_port},
                                                          oshell_globals=oshell_globals,
                                                          oshell_unsafe=True,
@@ -896,6 +897,8 @@ def main():
                       help="Allow stdin input otrace/oshell")
     parser.add_option("", "--https", dest="https", action="store_true",
                       help="Use SSL (TLS) connections for security")
+    parser.add_option("", "--server_url", dest="server_url", default="",
+                      help="Server URL (external)")
     parser.add_option("", "--widget_port", dest="widget_port", default=0,
                       help="Port for widgets port (default: 0) (-1 for %d)" % (gterm.DEFAULT_HOST_PORT-2), type="int")
     parser.add_option("", "--term_type", dest="term_type", default="",

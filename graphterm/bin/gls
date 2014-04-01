@@ -23,7 +23,7 @@ gopencmd = gterm.env("OPEN_CMD", "") or "gopen"
 gvicmd = gbrowsecmd if gterm.Export_host else gterm.env("VI_CMD", "") or "gvi"
 
 NB2CMD = {"py": "python -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py",
-          "ipynb": "ipython -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py",
+          "ipynb": "python -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py",
           "js": "node %[notebook]",
           "R": "R -q %[notebook]> |+ ",
           "sh": " %[notebook]",
