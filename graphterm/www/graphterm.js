@@ -4075,7 +4075,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     this.cellValue(inputData);
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     textElem.toggleClass("gterm-notecell-markup", cellParams.cellType in MARKUP_TYPES);
-    textElem.autoResize({extraSpace: 6});
+    textElem.autoResize({extraSpace: 6, limit: 3200});
     //if (!gParams.controller)
     //	textElem.attr("disabled", "disabled");
     $("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();

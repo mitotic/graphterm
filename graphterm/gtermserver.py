@@ -51,6 +51,7 @@ from bin import gterm
 
 import tornado.httpserver
 import tornado.ioloop
+import tornado.options
 import tornado.web
 import tornado.websocket
 
@@ -1879,6 +1880,9 @@ def main():
 
     if config_file:
         print >> sys.stderr, "***** Reading config info from %s:%s" % (config_file, options.select or "DEFAULT")
+
+    tornado.options.options.logging = "error"   # Disable tornado logging (except for errors)
+    tornado.options.parse_command_line([])      # Parse "dummy" command line
 
     if not options.daemon:
         run_server(options, args)
