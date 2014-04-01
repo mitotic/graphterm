@@ -1216,7 +1216,10 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                             lpath += "?"
                                         if action_regexp and not action_regexp.match(lpath):
                                             continue
-
+                                        
+                                        idle_min = long(time.time() - tparams["last_active"]) // 60
+                                        if idle_min:
+                                            lpath += " idle "+str(idle_min)+"min"
                                         # Matched terminal path
                                         if text_only:
                                             term_label = lpath if action_params["long"] else tpath
