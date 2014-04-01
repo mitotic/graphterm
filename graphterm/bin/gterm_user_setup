@@ -51,7 +51,7 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
 	echo "User $username already present"
     else
 	homedir=$HOME_MNT/$username
-	if [ ! -e $homedir ]; then
+	if [ -e $homedir ]; then
 	    echo "Home directory already exists"
 	else
             # Create new user
