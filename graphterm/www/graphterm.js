@@ -190,6 +190,17 @@ function epoch_time(round) {
     return round ? Math.round(time) : time;
 }
 
+function is_embedded_frame(exclude_same_host) {
+    try {
+	if (exclude_same_host)
+	    return self.location.hostname != top.location.hostname;
+	return window.frameElement && window.parent;
+    } catch(err) {
+	// If above fails due to cross-frame security
+	return true;
+    }
+}
+
 var gRawConverter = new Markdown.Converter();
 var gConverter = new Markdown.getSanitizingConverter();
 
@@ -864,7 +875,7 @@ function GTWebSocket(auth_user, auth_code, connect_cookie) {
     if (location.search)
 	this.ws_url += location.search;
     var add_params = (this.auth_user || this.auth_code) ? {user: auth_user, code: auth_code} : {};
-    if (self.location.hostname != top.location.hostname)
+    if (is_embedded_frame(true))
 	add_params.embedded = "1";
     if (connect_cookie)
 	add_params.cauth = connect_cookie;
@@ -1054,7 +1065,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    setCookie("GRAPHTERM_AUTH", gParams.state_id);
 		if (!gParams.oshell)
 		    openTerminal();
-		if (gParams.controller && gParams.display_splash && gParams.term != "osh" && !(window.frameElement && window.parent))
+		if (gParams.controller && gParams.display_splash && gParams.term != "osh" && !is_embedded_frame())
 		    GTShowSplash(true, true);
 
             } else if (action == "confirm_path") {
@@ -2020,7 +2031,7 @@ function GTMenuStateUpdate(stateValues, prefix) {
 	    GTMenuUpdateToggle(prefix+key, val);
     }
     // Float menubar for embedded terminal
-    if (window.frameElement && window.parent) {
+    if (is_embedded_frame()) {
 	$("#terminal").addClass("gterm-embed");
 	GTMenuTrigger("view_menubar", false);
     }
@@ -2369,8 +2380,14 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	    GTTerminalInput(String.fromCharCode(3));
 	break;
     case "send_parent":
-	if (window.frameElement && window.parent && window.parent.gWebSocket && window.parent.gWebSocket.terminal)
-	    window.parent.GTTerminalInput(String.fromCharCode(3));
+	if (is_embedded_frame()) {
+	    try {
+		if (window.parent.gWebSocket && window.parent.gWebSocket.terminal)
+		    window.parent.GTTerminalInput(String.fromCharCode(3));
+	    } catch(err) {
+		alert("Failed to send command to parent: "+err);
+	    }
+	}
 	break;
     }
 }
@@ -2498,7 +2515,7 @@ function GTPasteSpecialEnd(buttonElem) {
 
 function gtermCloneSession(event) {
     // Clone session, if embedded
-    if (self.location.hostname != top.location.hostname)
+    if (!is_embedded_frame())
 	return;
     var url = self.location.pathname;
     if (!_.str.endsWith(url, "/watch/"))
@@ -4846,7 +4863,7 @@ $(document).ready(function() {
     try {
 	return GTReady();
     } catch(err) {
-	$("body").text("Error in starting GraphTerm: "+err);
+	$("body").text("Error in starting GraphTerm: "+err+"\n"+err.stack);
 	return false;
     }
 });
