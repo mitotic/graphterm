@@ -386,7 +386,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 cauth = None
 
             if not Server_settings["allow_embed"] and "embedded" in query_data:
-                self.write_json([["body", "Terminal cannot be embedded in web page on different host"]])
+                self.write_json([["body", "Terminal cannot be embedded in web page on different host. Restart server with --allow_embed option to permit cross-host embedding."]])
                 self.close()
                 return
 
@@ -624,7 +624,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                    "share_private": start_private, "share_tandem": False,
                                    "alert_status": False, "widget_token": "",
                                    "last_active": time.time(), "nb_name": "", "nb_mod_offset": 0,
-                                   "owner": user, "state_id": self.authorized["state_id"]}
+                                   "owner": user, "state_id": self.authorized["state_id"], "auth_type": self.authorized["auth_type"]}
                 terminal_params.update(Term_settings)
                 self._terminal_params[path] = terminal_params
                 is_owner = True
@@ -1057,7 +1057,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     def get_matching_paths(cls, matchpath, user, state_id, auth_type):
         is_super_user = GTSocket.is_super_or_local(user, auth_type)
         matched = []
-        if isinstance(matchpath, str):
+        if isinstance(matchpath, basestring):
             terminal_params = GTSocket.get_terminal_params(matchpath)
             if terminal_params and (is_super_user or (user and user == terminal_params["owner"]) or
                                  (not user and state_id == terminal_params["state_id"])):
@@ -1109,196 +1109,204 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         return term_name
 
     def remote_response(self, term_name, websocket_id, msg_list):
-        fwd_list = []
-        owners_only_list = []
-        term_path = self.connection_id + "/" + term_name
-        terminal_params = GTSocket.get_terminal_params(term_path)
-        if terminal_params:
-            terminal_params["last_active"] = time.time()
-        for msg in msg_list:
-            if msg[0] == "term_params":
-                client_version = msg[1]["version"]
-                min_client_version = msg[1]["min_version"]
-                try:
-                    min_client_comps = gterm.split_version(min_client_version)
-                    if gterm.split_version(client_version) < gterm.split_version(about.min_version):
-                        raise Exception("Obsolete client version %s (expected %s+)" % (client_version, about.min_version))
+        try:
+            fwd_list = []
+            owners_only_list = []
+            term_path = self.connection_id + "/" + term_name
+            terminal_params = GTSocket.get_terminal_params(term_path)
+            if terminal_params:
+                terminal_params["last_active"] = time.time()
+            for msg in msg_list:
+                if msg[0] == "term_params":
+                    client_version = msg[1]["version"]
+                    min_client_version = msg[1]["min_version"]
+                    try:
+                        min_client_comps = gterm.split_version(min_client_version)
+                        if gterm.split_version(client_version) < gterm.split_version(about.min_version):
+                            raise Exception("Obsolete client version %s (expected %s+)" % (client_version, about.min_version))
 
-                    if gterm.split_version(about.version) < min_client_comps:
-                        raise Exception("Obsolete server version %s (need %d.%d+)" % (about.version, min_client_comps[0], min_client_comps[1]))
+                        if gterm.split_version(about.version) < min_client_comps:
+                            raise Exception("Obsolete server version %s (need %d.%d+)" % (about.version, min_client_comps[0], min_client_comps[1]))
 
-                except Exception, excp:
-                    errmsg = "gtermserver: Failed version compatibility check: %s" % excp
-                    logging.error(errmsg)
-                    self.send_request("request", "", "", [["shutdown", errmsg]])
-                    raise Exception(errmsg)
-                
-                self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
-                self.term_dict = dict((key, "") for key in msg[1]["term_names"])
-            elif msg[0] == "file_response":
-                ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
-            elif  msg[0] == "terminal" and msg[1] in ("note_open", "note_close", "note_mod_offset"):
-                args = msg[2]
-                if msg[1] == "note_mod_offset":
-                    terminal_params["nb_mod_offset"] = args[0]
-                else:
-                    note_params = args[0] if msg[1] == "note_open" else {}
-                    terminal_params["nb_name"] = note_params.get("name", "Untitled") if msg[1] == "note_open" else ""
-                fwd_list.append(msg)
-            elif  msg[0] == "terminal" and msg[1] == "remote_command":
-                # Send input to matching paths, if created by same user or session, or if super user
-                include_self = msg[2][0]
-                remote_path = msg[2][1]
-                remote_command = msg[2][2]
-                checkpath = wildcard2re(remote_path) if is_wildcard(remote_path) else remote_path
-                matchpaths = TerminalConnection.get_matching_paths(checkpath, terminal_params["owner"],
-                                                                   terminal_params["state_id"],
-                                                                   terminal_params["auth_type"])
-                for matchpath in matchpaths:
-                    if not include_self and matchpath == term_path:
-                        continue
-                    matchhost, matchterm = matchpath.split("/")
-                    TerminalConnection.send_to_connection(matchhost, "request", matchterm, "", [["keypress", remote_command]])
-            elif  msg[0] == "terminal" and msg[1] == "graphterm_output":
-                args = msg[2]
-                params = args[0]
-                if params["headers"]["x_gterm_response"] != "admin_command":
-                    # Transmit graphterm output
-                    fwd_list.append(msg)
-                else:
-                    action_params = params["headers"]["x_gterm_parameters"]
-                    action = action_params["action"]
-                    text_only = action_params["text_only"]
-                    action_args = action_params["args"]
-                    action_autosave = action_params.get("autosave", "")
-                    action_js = action_params.get("js", "")
-                    action_exec = action_params.get("exec", "")
-                    action_regexp = re.compile(action_args[0]) if action_args else None
-                    is_super_user = GTSocket.is_super_or_local(terminal_params["owner"], GTSocket._auth_type)
-                    content_type = "text/plain" if text_only else "text/html"
-                    errmsg = ""
-                    content = ""
-                    if not is_super_user:
-                        errmsg = "User not authorized for administration\n"
+                    except Exception, excp:
+                        errmsg = "gtermserver: Failed version compatibility check: %s" % excp
+                        logging.error(errmsg)
+                        self.send_request("request", "", "", [["shutdown", errmsg]])
+                        raise Exception(errmsg)
+
+                    self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
+                    self.term_dict = dict((key, "") for key in msg[1]["term_names"])
+                elif msg[0] == "file_response":
+                    ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
+                elif  msg[0] == "terminal" and msg[1] in ("note_open", "note_close", "note_mod_offset"):
+                    args = msg[2]
+                    if msg[1] == "note_mod_offset":
+                        terminal_params["nb_mod_offset"] = args[0]
                     else:
-                        try: 
-                            if action == "sessions":
-                                hostnames = TerminalConnection.get_connection_ids()
-                                hostnames.sort()
-                                all_paths = []
-                                all_labels = []
-                                for thost in hostnames:
-                                    conn = TerminalConnection.get_connection(thost)
-                                    if not conn:
-                                        continue
-                                    term_list = []
-                                    label_list = []
-                                    for tname in conn.term_dict:
-                                        tpath = thost + "/" + tname
-                                        if tpath == term_path or tname == gtermhost.OSHELL_NAME:
-                                            # Ignore self and osh
+                        note_params = args[0] if msg[1] == "note_open" else {}
+                        terminal_params["nb_name"] = note_params.get("name", "Untitled") if msg[1] == "note_open" else ""
+                    fwd_list.append(msg)
+                elif  msg[0] == "terminal" and msg[1] == "remote_command":
+                    # Send input to matching paths, if created by same user or session, or if super user
+                    include_self = msg[2][0]
+                    remote_path = msg[2][1]
+                    remote_command = msg[2][2]
+                    checkpath = wildcard2re(remote_path) if is_wildcard(remote_path) else remote_path
+                    matchpaths = TerminalConnection.get_matching_paths(checkpath, terminal_params["owner"],
+                                                                       terminal_params["state_id"],
+                                                                       terminal_params["auth_type"])
+                    for matchpath in matchpaths:
+                        if not include_self and matchpath == term_path:
+                            continue
+                        matchhost, matchterm = matchpath.split("/")
+                        TerminalConnection.send_to_connection(matchhost, "request", matchterm, "", [["keypress", remote_command]])
+                elif  msg[0] == "terminal" and msg[1] == "graphterm_output":
+                    args = msg[2]
+                    params = args[0]
+                    if params["headers"]["x_gterm_response"] != "admin_command":
+                        # Transmit graphterm output
+                        fwd_list.append(msg)
+                    else:
+                        action_params = params["headers"]["x_gterm_parameters"]
+                        action = action_params["action"]
+                        text_only = action_params["text_only"]
+                        action_args = action_params["args"]
+                        action_autosave = action_params.get("autosave", "")
+                        action_js = action_params.get("js", "")
+                        action_exec = action_params.get("exec", "")
+                        action_regexp = re.compile(action_args[0]) if action_args else None
+                        is_super_user = GTSocket.is_super_or_local(terminal_params["owner"], GTSocket._auth_type)
+                        content_type = "text/plain" if text_only else "text/html"
+                        errmsg = ""
+                        content = ""
+                        if not is_super_user:
+                            errmsg = "User not authorized for administration\n"
+                        else:
+                            try: 
+                                if action == "sessions":
+                                    hostnames = TerminalConnection.get_connection_ids()
+                                    hostnames.sort()
+                                    all_paths = []
+                                    all_labels = []
+                                    for thost in hostnames:
+                                        conn = TerminalConnection.get_connection(thost)
+                                        if not conn:
                                             continue
-                                        lpath = tpath
-                                        tparams = GTSocket.get_terminal_params(tpath)
-                                        nb_name = ""
-                                        if tparams:
-                                            nb_name = tparams.get("nb_name", "")
-                                            nb_mod_offset = tparams.get("nb_mod_offset", "")
-                                            if nb_name:
-                                                lpath += ":"+nb_name
-                                                if nb_mod_offset:
-                                                    lpath += "#"+str(nb_mod_offset)
-                                            if not GTSocket.get_terminal_control_set(tpath):
-                                                # No controllers
-                                                lpath += "-"
-                                            if tparams.get("alert_status"):
-                                                lpath += "@"
-                                        else:
-                                            lpath += "?"
-                                        if action_regexp and not action_regexp.match(lpath):
-                                            continue
-                                        
-                                        idle_min = long(time.time() - tparams["last_active"]) // 60
-                                        if idle_min:
-                                            lpath += " idle "+str(idle_min)+"min"
-                                        # Matched terminal path
-                                        if text_only:
-                                            term_label = lpath if action_params["long"] else tpath
-                                        else:
-                                            qauth = get_qauth(terminal_params["state_id"])
-                                            term_label = '<a href="/'+tpath+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(lpath)+'</a><br>'
-                                        term_list.append(tpath)
-                                        label_list.append(term_label)
-                                    term_list.sort()
-                                    label_list.sort()
-                                    all_paths += term_list
-                                    all_labels += label_list
-                                content = "\n".join(all_labels) + "\n"
-                                if action_autosave:
-                                    save_msg = ["save_notebook", "", None, {"auto_save": True}]
-                                    for tpath in all_paths:
-                                        thost, tname = tpath.split("/")
-                                        TerminalConnection.send_to_connection(thost, "request", tname,
-                                                                              terminal_params["owner"], [save_msg])
-                                if action_exec:
-                                    exec_msg = ["keypress", action_exec+"\n"]
-                                    for tpath in all_paths:
-                                        thost, tname = tpath.split("/")
-                                        TerminalConnection.send_to_connection(thost, "request", tname,
-                                                                              terminal_params["owner"], [exec_msg])
-                                if action_js:
-                                    # Evaluate JS expression on all matching terminals
-                                    js_headers = {"content_type": "text/plain",
-                                                    "x_gterm_response": "eval_js",
-                                                    "x_gterm_parameters": {"echo": "chat",
-                                                                           "path": term_path,
-                                                                           "token": terminal_params["widget_token"]}
-                                                    }
-                                    js_msg = ["terminal", "graphterm_output", [{"headers": js_headers}, base64.b64encode(action_js)]]
-                                    for tpath in all_paths:
-                                        ws_ids = list(GTSocket.get_terminal_control_set(tpath))
-                                        if not ws_ids:
-                                            continue
-                                        # Select single controlling terminal arbitrarily
-                                        ws = GTSocket.get_websocket(ws_ids[0])
-                                        if ws:
-                                            ws.write_json([js_msg])
-                            else:
-                                errmsg = "Invalid admin action: "+action+"\n"
-                        except Exception, excp:
-                            import traceback
-                            errmsg = "Error in admin %s: %s\n%s" % (action, excp, traceback.format_exc())
-                                    
-                    save_params = {"content_type": content_type, "x_gterm_location": "remote",
-                                   "x_gterm_filepath": "", "x_gterm_encoding": "base64"}
-                    if errmsg:
-                        save_params["x_gterm_error"] = errmsg
-                    resp_list = [["save_data", save_params, base64.b64encode(content)]]
-                    self.send_request("request", term_name, terminal_params["owner"], resp_list)
-            elif  msg[0] == "terminal" and msg[1] == "graphterm_widget":
-                args = msg[2]
-                params = args[0]
-                if params["headers"]["x_gterm_parameters"].get("owners_only"):
-                    owners_only_list.append(msg)  # Handled out-of-sequence
+                                        term_list = []
+                                        label_list = []
+                                        for tname in conn.term_dict:
+                                            tpath = thost + "/" + tname
+                                            if tpath == term_path or tname == gtermhost.OSHELL_NAME:
+                                                # Ignore self and osh
+                                                continue
+                                            lpath = tpath
+                                            tparams = GTSocket.get_terminal_params(tpath)
+                                            nb_name = ""
+                                            if tparams:
+                                                nb_name = tparams.get("nb_name", "")
+                                                nb_mod_offset = tparams.get("nb_mod_offset", "")
+                                                if nb_name:
+                                                    lpath += ":"+nb_name
+                                                    if nb_mod_offset:
+                                                        lpath += "#"+str(nb_mod_offset)
+                                                if not GTSocket.get_terminal_control_set(tpath):
+                                                    # No controllers
+                                                    lpath += "-"
+                                                if tparams.get("alert_status"):
+                                                    lpath += "@"
+                                            else:
+                                                lpath += "?"
+                                            if action_regexp and not action_regexp.match(lpath):
+                                                continue
+
+                                            idle_min = long(time.time() - tparams["last_active"]) // 60
+                                            if idle_min:
+                                                lpath += " idle "+str(idle_min)+"min"
+                                            # Matched terminal path
+                                            if text_only:
+                                                term_label = lpath if action_params["long"] else tpath
+                                            else:
+                                                qauth = get_qauth(terminal_params["state_id"])
+                                                term_label = '<a href="/'+tpath+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(lpath)+'</a><br>'
+                                            term_list.append(tpath)
+                                            label_list.append(term_label)
+                                        term_list.sort()
+                                        label_list.sort()
+                                        all_paths += term_list
+                                        all_labels += label_list
+                                    content = "\n".join(all_labels) + "\n"
+                                    if action_autosave:
+                                        save_msg = ["save_notebook", "", None, {"auto_save": True}]
+                                        for tpath in all_paths:
+                                            thost, tname = tpath.split("/")
+                                            TerminalConnection.send_to_connection(thost, "request", tname,
+                                                                                  terminal_params["owner"], [save_msg])
+                                    if action_exec:
+                                        exec_msg = ["keypress", action_exec+"\n"]
+                                        for tpath in all_paths:
+                                            thost, tname = tpath.split("/")
+                                            TerminalConnection.send_to_connection(thost, "request", tname,
+                                                                                  terminal_params["owner"], [exec_msg])
+                                    if action_js:
+                                        # Evaluate JS expression on all matching terminals
+                                        js_headers = {"content_type": "text/plain",
+                                                        "x_gterm_response": "eval_js",
+                                                        "x_gterm_parameters": {"echo": "chat",
+                                                                               "path": term_path,
+                                                                               "token": terminal_params["widget_token"]}
+                                                        }
+                                        js_msg = ["terminal", "graphterm_output", [{"headers": js_headers}, base64.b64encode(action_js)]]
+                                        for tpath in all_paths:
+                                            ws_ids = list(GTSocket.get_terminal_control_set(tpath))
+                                            if not ws_ids:
+                                                continue
+                                            # Select single controlling terminal arbitrarily
+                                            ws = GTSocket.get_websocket(ws_ids[0])
+                                            if ws:
+                                                ws.write_json([js_msg])
+                                else:
+                                    errmsg = "Invalid admin action: "+action+"\n"
+                            except Exception, excp:
+                                import traceback
+                                errmsg = "Error in admin %s: %s\n%s" % (action, excp, traceback.format_exc())
+                                log_write(errmsg)
+
+                        save_params = {"content_type": content_type, "x_gterm_location": "remote",
+                                       "x_gterm_filepath": "", "x_gterm_encoding": "base64"}
+                        if errmsg:
+                            save_params["x_gterm_error"] = errmsg
+                        resp_list = [["save_data", save_params, base64.b64encode(content)]]
+                        self.send_request("request", term_name, terminal_params["owner"], resp_list)
+                elif  msg[0] == "terminal" and msg[1] == "graphterm_widget":
+                    args = msg[2]
+                    params = args[0]
+                    if params["headers"]["x_gterm_parameters"].get("owners_only"):
+                        owners_only_list.append(msg)  # Handled out-of-sequence
+                    else:
+                        fwd_list.append(msg)
                 else:
                     fwd_list.append(msg)
+                    if msg[0] == "terminal" and msg[1] == "graphterm_chat":
+                        if msg[2]:
+                            self.allow_chat[term_name] = msg[3]
+                        else:
+                            self.allow_chat.pop(term_name, None)
+
+            if websocket_id:
+                ws_set = set([websocket_id])
             else:
-                fwd_list.append(msg)
-                if msg[0] == "terminal" and msg[1] == "graphterm_chat":
-                    if msg[2]:
-                        self.allow_chat[term_name] = msg[3]
-                    else:
-                        self.allow_chat.pop(term_name, None)
+                ws_set = set(GTSocket.get_terminal_watchers(term_path).keys())
 
-        if websocket_id:
-            ws_set = set([websocket_id])
-        else:
-            ws_set = set(GTSocket.get_terminal_watchers(term_path).keys())
-
-            for ws_id, regexp in GTSocket._wildcards.iteritems():
-                if regexp.match(term_path):
-                    ws_set.add(ws_id)
+                for ws_id, regexp in GTSocket._wildcards.iteritems():
+                    if regexp.match(term_path):
+                        ws_set.add(ws_id)
             
+        except Exception, excp:
+            logging.error("remote_response: ERROR %s", excp)
+            import traceback
+            errmsg = "Error in remote_response: %s\n%s" % (excp, traceback.format_exc())
+            log_write(errmsg)
+
         for ws_id in ws_set:
             ws = GTSocket.get_websocket(ws_id)
             if ws:
@@ -1322,7 +1330,10 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         if owners_only_list and ws_id in ws.get_terminal_control_set(ws.remote_path):
                             ws.write_message(json.dumps(owners_only_list))
                 except Exception, excp:
-                    logging.error("remote_response: ERROR %s", excp)
+                    logging.error("remote_response: write ERROR %s", excp)
+                    import traceback
+                    errmsg = "Error in websocket: %s\n%s" % (excp, traceback.format_exc())
+                    log_write(errmsg)
                     try:
                         # Close websocket on write error
                         ws.close()
