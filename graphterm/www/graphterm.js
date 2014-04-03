@@ -4749,6 +4749,7 @@ function ScrollTerm() {
 function GTermHelp() {
     GTPopAlert('<b>GraphTerm Help</b>'+
 '<p>\n&nbsp;&nbsp;<a href="/_static/docs/html/start.html" target="_blank">General help information</a>'+
+'<p>\n&nbsp;&nbsp;<a href="/_static/docs/html/virtual-lab.html" target="_blank">Virtual computer lab</a>'+
 '<p>\n&nbsp;&nbsp;<a href="/_static/docs/html/troubleshooting.html" target="_blank">Troubleshooting</a>'+
 '<p>\n&nbsp;&nbsp;<a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> (<b>NEW</b>)',
                true);

@@ -1,6 +1,6 @@
 include COPYING LICENSE.txt *.rst *.html
 recursive-include graphterm *.py *.js *.css *.html *.ipynb *.ipynb.json *.md *.rst *.txt *.gif *.jpg *.png
-recursive-include docs *.md *.rst
+recursive-include docs *.md *.rst *.html
 graft graphterm/bin
 graft graphterm/certs
 prune gterm-local
