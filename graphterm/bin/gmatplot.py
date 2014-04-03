@@ -20,10 +20,10 @@ pylab.show()       # To update previously displayed image
 pylab.show(False)  # To display new image
 
 gm.display(fig)    # To display figure
-gm.resize()        # To resize default figure
+gm.resize_fig()    # To resize default figure to fit window
 
 Note: If setting up using gm.setup(nopatch=True),
- use gm.show(), gm.figure(), gm.draw instead of pylab functions
+ use gm.show(), gm.figure(), gm.draw() instead of pylab functions
 
 """
 
@@ -137,7 +137,7 @@ def display(fig, overwrite=False, format="png", title=""):
     else:
         gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
 
-def resize(dimensions=""):
+def resize_fig(dimensions=""):
     """Resize matplotlib default window for terminal
     """
     if not pyplot_dict:

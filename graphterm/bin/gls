@@ -46,6 +46,8 @@ IMGFORMAT = '<td><a id="glsimg%(id)s" class="gterm-link gterm-imglink %(classes)
 
 TXTFORMAT = '<td><a id="glstxt%(id)s" class="gterm-link %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
 
+DLOADFORMAT = '<td><a id="glstxt%(id)s" class="gterm-link gterm-download %(classes)s" href="%(fileurl)s" download="%(filebase)s">%(filename)s</a>'
+
 Home_dir = os.path.expanduser("~")
 Work_dir = os.getenv("PWD", "") or os.getcwd()
 Parent_dir, dir_name = os.path.split(Work_dir)
@@ -63,13 +65,14 @@ def file2html(filepath, filename, filemode=0):
     fileicon = GENERIC_ICON
     filecmd = ""
     filetype = ""
+    filebase = ""
     if filename in SPECIAL_FILES:
         filetype = "directory"
     elif os.path.isdir(filepath):
         filetype = "directory"
     elif os.path.lexists(filepath):
-        basename = os.path.basename(filepath)
-        prefix, ext = os.path.splitext(basename)
+        filebase = os.path.basename(filepath)
+        prefix, ext = os.path.splitext(filebase)
         langext = ""
         if ext in (".ipynb", ".json"):
             if ext != ".ipynb":
@@ -122,10 +125,10 @@ def file2html(filepath, filename, filemode=0):
         fileicon = fileurl
 
     Id_count += 1;
-    params = {"classes": classes, "fileurl": fileurl, "filename": filename, "filetype": filetype,
-              "fileicon": fileicon, "filecmd": filecmd, "id": Id_prefix+"-"+str(Id_count)}
+    params = {"classes": classes, "fileurl": fileurl, "filename": filename, "filebase": filebase,
+              "filetype": filetype, "fileicon": fileicon, "filecmd": filecmd, "id": Id_prefix+"-"+str(Id_count)}
     
-    return IMGFORMAT % params, TXTFORMAT % params
+    return IMGFORMAT % params, DLOADFORMAT % params if options.download and params["filebase"] else TXTFORMAT % params
 
 def files2html(file_list, ncols=4):
     rows = []
@@ -170,6 +173,9 @@ parser.add_option("-f", "--fullpage",
 parser.add_option("-a", "--all",
                   action="store_true", dest="all", default=False,
                   help="Display all files, including hidden")
+parser.add_option("-d", "--download",
+                  action="store_true", dest="download", default=False,
+                  help="Display clickable file links for downloading")
 parser.add_option("-i", "--images",
                   action="store_true", dest="images", default=False,
                   help="Display image files as thumbnails")

@@ -17,9 +17,11 @@ Example:
     plot([2,4])
     plot([2,3])
     show(False)
+    resize_fig()
 
 Example 2:
-    fig = plt.figure()  # a new figure window
+    import numpy as np
+    fig = pylab.figure()  # a new figure window
     ax = fig.add_subplot(1, 1, 1)  # specify (nrows, ncols, axnum)
     x = np.linspace(0, 10, 1000)
     y = np.sin(x)
@@ -40,7 +42,7 @@ try:
     gm.setup()    # Sets up gmatplot and patches pylab
     from pylab import *
     import gterm
-    from gmatplot import display, _gterm_cell_start_hook, _gterm_cell_end_hook
+    from gmatplot import display, resize_fig, _gterm_cell_start_hook, _gterm_cell_end_hook
     import matplotlib
 
     def _gpylab_display_hook(expr):

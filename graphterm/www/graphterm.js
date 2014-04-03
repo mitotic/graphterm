@@ -798,7 +798,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     if (row_opts.autosize)
 	GTAutosizeIFrame(scrollElem);
 
-    scrollElem.find('td .gterm-link').bindclick(gtermPageletClickHandler);
+    scrollElem.find('td .gterm-link:not(.gterm-download)').bindclick(gtermPageletClickHandler);
     scrollElem.find('td img').bind("dragstart", function(evt) {evt.preventDefault();});
     scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
     scrollElem.find('.gterm-iframeclose').bindclick(CloseIFrame);
@@ -1410,7 +1410,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				if (response_params.autosize)
 				    GTAutosizeIFrame(newElem);
 			    }
-			    $(pageletSelector+' td .gterm-link').bindclick(gtermPageletClickHandler);
+			    $(pageletSelector+' td .gterm-link:not(.gterm-download)').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
 			    $(pageletSelector+' .gterm-togglelink').bindclick(gtermLinkClickHandler);
 			    $(pageletSelector+' .gterm-iframeclose').bindclick(CloseIFrame);
@@ -1691,7 +1691,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				row_html = '<pre '+id_attr+' class="row entry '+entry_class+' '+add_class+'">'+row_escaped+"\n</pre>";
 				$(row_html).appendTo("#session-bufscreen");
 			    }
-			    $("#"+entry_id+" .gterm-link").bindclick(gtermLinkClickHandler);
+			    $("#"+entry_id+" .gterm-link:not(.gterm-download)").bindclick(gtermLinkClickHandler);
 			    $("#session-bufscreen ."+entry_class+" .gterm-toggleblock .gterm-togglelink").bindclick(gtermLinkClickHandler);
 			}
 		    }
@@ -2378,6 +2378,22 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput("gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &");
 	break;
+    case "send_edit":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gvi #filename");
+	break;
+    case "send_download":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gls --download #filename");
+	break;
+    case "send_upload":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gupload ");
+	break;
+    case "send_eof":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput(String.fromCharCode(4));
+	break;
     case "send_interrupt":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput(String.fromCharCode(3));
@@ -2649,6 +2665,10 @@ function gtermPageletClickHandler(event) {
 	if (!window.confirm(confirm)) {
 	    return false;
 	}
+    }
+
+    if ($(this).attr("download")) {
+	return false;
     }
 
     var targetId = event.target ? $(event.target).attr("id") : null;
@@ -4489,7 +4509,7 @@ function ShowFinder(params, content) {
 
     $("#session-finderbody").html(finder_html);
     
-    $('#session-finderbody td .gterm-link').bindclick(gtermFinderClickHandler)
+    $('#session-finderbody td .gterm-link:not(.gterm-download)').bindclick(gtermFinderClickHandler)
 
     if (!gSplitScreen)
 	SplitScreen("finder");
