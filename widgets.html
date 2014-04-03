@@ -162,13 +162,13 @@ having recursive overlays within the overlay!</p>
 <p>A specific example of widget use is to display live feedback on the
 screen during a presentation. You can try it out in a directory that
 contains your presentation slides as images:</p>
-<div class="highlight-python"><pre>gfeedback 2&gt; $GTERM_SOCKET 0&lt;&amp;2 | gfeed &gt; $GTERM_SOCKET &amp;
+<div class="highlight-python"><pre>gchat 2&gt; $GTERM_SOCKET 0&lt;&amp;2 | gfeed &gt; $GTERM_SOCKET &amp;
 gimage -f</pre>
 </div>
-<p>The first command uses <tt class="docutils literal"><span class="pre">gfeedback</span></tt> to capture feedback from others
+<p>The first command uses <tt class="docutils literal"><span class="pre">gchat</span></tt> to capture feedback from others
 viewing the terminal session as a stream of lines from
-$GTERM_SOCKET. The viewers use the overlaid <em>feedback</em> button
-to provide feedback. The <tt class="docutils literal"><span class="pre">stdout</span></tt> from <tt class="docutils literal"><span class="pre">gfeedback</span></tt> is piped to
+$GTERM_SOCKET. The viewers use the overlaid <em>chat</em> button
+to provide feedback. The <tt class="docutils literal"><span class="pre">stdout</span></tt> from <tt class="docutils literal"><span class="pre">gchat</span></tt> is piped to
 <tt class="docutils literal"><span class="pre">gfeed</span></tt> which displays its <tt class="docutils literal"><span class="pre">stdin</span></tt> stream as a  &#8220;live feed&#8221;
 overlay, also via $GTERM_SOCKET.
 (The <tt class="docutils literal"><span class="pre">gimage</span> <span class="pre">-f</span></tt> command displays all the images in the directory as a

@@ -22,13 +22,13 @@ A specific example of widget use is to display live feedback on the
 screen during a presentation. You can try it out in a directory that
 contains your presentation slides as images::
 
-  gfeedback 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &
+  gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &
   gimage -f
 
-The first command uses ``gfeedback`` to capture feedback from others
+The first command uses ``gchat`` to capture feedback from others
 viewing the terminal session as a stream of lines from
-$GTERM_SOCKET. The viewers use the overlaid *feedback* button
-to provide feedback. The ``stdout`` from ``gfeedback`` is piped to
+$GTERM_SOCKET. The viewers use the overlaid *chat* button
+to provide feedback. The ``stdout`` from ``gchat`` is piped to
 ``gfeed`` which displays its ``stdin`` stream as a  "live feed"
 overlay, also via $GTERM_SOCKET.
 (The ``gimage -f`` command displays all the images in the directory as a
