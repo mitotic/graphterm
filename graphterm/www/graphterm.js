@@ -2374,19 +2374,19 @@ function GTMenuTerminal(selectKey, newValue, force) {
     case "paste":
 	GTPasteSpecialBegin();
 	break;
-    case "send_chat":
+    case "action_chat":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput("gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &");
 	break;
-    case "send_edit":
+    case "action_edit":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput("gvi #filename");
 	break;
-    case "send_download":
+    case "action_download":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput("gls --download #filename");
 	break;
-    case "send_upload":
+    case "action_upload":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput("gupload ");
 	break;
