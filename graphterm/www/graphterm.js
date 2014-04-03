@@ -3137,12 +3137,12 @@ function AjaxKeypress(evt) {
 	    return false;
 	}
 
-	if (!gNotebook && evt.shiftKey && !gParams.update_opts.command) {
+	if (!gNotebook && evt.shiftKey && gParams.update_opts.command) {
 	    GTMenuNotebook("new_default");
 	    return false;
 	}
 
-	if (!gNotebook && evt.ctrlKey && !gParams.update_opts.command) {
+	if (!gNotebook && evt.ctrlKey && gParams.update_opts.command) {
 	    GTMenuNotebook("open");
 	    return false;
 	}
