@@ -816,23 +816,23 @@ def run_host(options, args):
     oshell_globals = globals() if options.oshell else None
 
     auth_code = None
-    port = None
+    auth_port = None
     if options.auth_file:
         if options.auth_file != "none":
             with open(options.auth_file) as f:
                 comps = f.read().strip().split()
                 auth_code = gterm.undashify(comps[0])
-                port = int(comps[1]) if len(comps) > 1 else None
+                auth_port = int(comps[1]) if len(comps) > 1 else None
     else:
         try:
-            auth_code, port = gterm.read_auth_code(user=host_name)
+            auth_code, auth_port = gterm.read_auth_code(user=host_name)
             print >> sys.stderr, "Using auth info from default file", gterm.get_auth_filename(user=host_name)
         except Exception, excp:
             raise
             auth_code = None
 
     key_version = "1" if auth_code else None
-    server_port = options.server_port or port or gterm.DEFAULT_HOST_PORT
+    server_port = options.server_port or auth_port or gterm.DEFAULT_HOST_PORT
     widget_port = options.widget_port if options.widget_port > 0 else (gterm.DEFAULT_HTTP_PORT-2 if options.widget_port else 0)
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=server_port,

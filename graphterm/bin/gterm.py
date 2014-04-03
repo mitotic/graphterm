@@ -34,8 +34,8 @@ from optparse import OptionParser
 API_VERSION = "0.35.0"
 API_MIN_VERSION = "0.35"
 
-HEX_DIGITS = 20          # Digits to be retained for HMAC, auth_code etc
-SIGN_HEXDIGITS = 24
+HEX_DIGITS = 16          # Digits to be retained for HMAC, auth_code etc
+SIGN_HEXDIGITS = 16      # User-entered keys (should match packetserver setup)
 
 GT_PREFIX = "GTERM_"
 
@@ -150,7 +150,7 @@ def write_auth_code(code, appdir=App_dir, user="", server="", port=None):
     auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
     with open(auth_file, "w") as f:
         f.write(dashify(code))
-        if port and port != DEFAULT_HTTP_PORT:
+        if port and port != DEFAULT_HOST_PORT:
             f.write(" "+str(port))
         f.write("\n")
     os.chmod(auth_file, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)

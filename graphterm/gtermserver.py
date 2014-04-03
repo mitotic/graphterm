@@ -222,7 +222,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _auth_users = OrderedDict()
     WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, LOCAL_AUTH, MULTI_AUTH = range(5)
     # Note: WEBCAST_AUTH is used only for sockets, not for the server
-    _auth_code = uuid.uuid4().hex[:gterm.HEX_DIGITS]
+    _auth_code = uuid.uuid4().hex[:gterm.SIGN_HEXDIGITS]
     _auth_type = LOCAL_AUTH
     _wildcards = {}
     _super_users = set()
@@ -412,7 +412,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if code == gterm.compute_hmac(self._auth_code, cauth):
                                 self.authorized = self.add_state(user, self._auth_type)
                             else:
-                                auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command" % gterm.get_auth_filename(server=Server_settings["internal_host"])
+                                auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command." % gterm.get_auth_filename(server=Server_settings["internal_host"])
                         else:
                             auth_message = "<h3>GraphTerm Login</h3><p>Please specify username (letters/digits/hyphens, starting with letter)."
                             if Server_settings["auto_users"] and os.path.exists(Auto_add_file):
@@ -1591,32 +1591,32 @@ def run_server(options, args):
         Term_settings = {}
 
     auth_file = ""
-    if options.auth_type == "local" or (options.auth_type == "multiuser" and not os.path.exists(gterm.get_auth_filename(server=internal_host))):
-        # Random auth code
-        auth_code = GTSocket.get_auth_code()
-        try:
-            gterm.write_auth_code(auth_code, server=internal_host, port=http_port)
-        except Exception, excp:
-            print >> sys.stderr, "Error in writing authentication file: %s" % excp
-            sys.exit(1)
+    if options.auth_type == "none":
+        # No auth code
+        auth_code = ""
+    elif options.auth_type == "name":
+        # No auth code
+        auth_code = "name"
+    elif options.auth_type in ("local", "multiuser"):
         auth_file = gterm.get_auth_filename(server=internal_host)
-    else:
-        if options.auth_type == "none":
-            # No auth code
-            auth_code = ""
-        elif options.auth_type == "name":
-            # No auth code
-            auth_code = "name"
-        elif options.auth_type == "multiuser":
+        if os.path.exists(auth_file):
+            # Read auth code
             try:
                 auth_code, port = gterm.read_auth_code(server=internal_host)
             except Exception, excp:
                 print >> sys.stderr, "Error in reading authentication file: %s" % excp
                 sys.exit(1)
-            auth_file = gterm.get_auth_filename()
         else:
-            print >> sys.stderr, "Invalid authentication type '%s'; must be one of local/none/name/multiuser" % options.auth_type
-            sys.exit(1)
+            # Generate and write random auth code
+            auth_code = GTSocket.get_auth_code()
+            try:
+                gterm.write_auth_code(auth_code, server=internal_host, port=internal_port)
+            except Exception, excp:
+                print >> sys.stderr, "Error in writing authentication file: %s" % excp
+                sys.exit(1)
+    else:
+        print >> sys.stderr, "Invalid authentication type '%s'; must be one of local/none/name/multiuser" % options.auth_type
+        sys.exit(1)
 
     GTSocket.set_auth_code(auth_code, local=options.auth_type=="local")
 
@@ -1729,7 +1729,7 @@ def run_server(options, args):
     Http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_options)
     Http_server.listen(http_port, address=http_host)
     if auth_file:
-        print >> sys.stderr, "\nAuthentication code in file " + auth_file
+        print >> sys.stderr, "\nAuthentication code in file " + auth_file + "\nDelete authentication file and restart for new code."
         if options.auth_type == "multiuser":
             print >> sys.stderr, "Group Code: "+gterm.dashify(str(gterm.user_hmac(auth_code, "", key_version="grp")))
     else:
@@ -1798,8 +1798,8 @@ def run_server(options, args):
         print >> sys.stderr, "Interrupted"
 
     finally:
-        if options.auth_type == "local":
-            gterm.clear_auth_code(server=internal_host)
+        ##if options.auth_type == "local":
+        ##    gterm.clear_auth_code(server=internal_host)
         if Log_file:
             Log_file.close()
     IO_loop.add_callback(stop_server)

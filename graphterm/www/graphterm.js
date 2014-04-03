@@ -32,8 +32,6 @@ var gPasteActive = false;
 
 var gPasteSpecialKeycode = 15;  // Control-O shortcut for Paste Special
 
-var AUTH_DIGITS = 12;
-
 var MAX_LINE_BUFFER = 500;
 var MAX_COMMAND_BUFFER = 100;
 
@@ -165,10 +163,15 @@ var JFILENAME = 2;
 var JFILEPATH = 3;
 var JQUERY = 4;
 
-var HEX_DIGITS = 20;
+var AUTH_DIGITS = 12;      // Hex digits in form authentication HMAC
+var HEX_DIGITS = 16;       // Hex digits in user authentication HMAC
+var SIGN_HEXDIGITS = 16;   // Hex digits in user-entered keys
 
-function undashify(s) {
-    return s.replace(/-/g, "");
+function undashify(s, digits) {
+    s = s.replace(/\s+/g, "").replace(/-/g, "");
+    if (digits)
+	s = s.substr(0, digits);
+    return s;
 }
 
 function compute_hmac(key, message) {
@@ -355,7 +358,7 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
 
 function Authenticate(evt) {
     console.log("Authenticate: ", evt);
-    var authHMAC = compute_hmac(undashify($.trim($("#authcode").val()) || ""), gAuthenticatingCookie);
+    var authHMAC = compute_hmac(undashify($("#authcode").val() || "", SIGN_HEXDIGITS), gAuthenticatingCookie);
     window.location = location.pathname+"?"+$.param({cauth: gAuthenticatingCookie, code: authHMAC, user:$("#authuser").val()});
     return false;
 }
@@ -3114,12 +3117,12 @@ function AjaxKeypress(evt) {
 	    return false;
 	}
 
-	if (!gNotebook && evt.shiftKey) {
+	if (!gNotebook && evt.shiftKey && !gParams.update_opts.command) {
 	    GTMenuNotebook("new_default");
 	    return false;
 	}
 
-	if (!gNotebook && evt.ctrlKey) {
+	if (!gNotebook && evt.ctrlKey && !gParams.update_opts.command) {
 	    GTMenuNotebook("open");
 	    return false;
 	}

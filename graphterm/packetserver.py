@@ -34,7 +34,7 @@ from tornado import iostream
 from tornado import web
 
 SIGN_SEP = "|"
-SIGN_HEXDIGITS = 24
+SIGN_HEXDIGITS = 16
 SIGN_HASH = hashlib.sha256
 
 FLASH_POLICY_PORT = 843
