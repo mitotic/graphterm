@@ -13,6 +13,7 @@ import StringIO
 import hashlib
 import hmac
 import json
+import logging
 import mimetypes
 import os
 import Queue
@@ -612,6 +613,35 @@ def read_form_input(form_html, stderr=False):
         return json.loads(form_data) if form_data.strip() else None
     finally:
         termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, saved_settings)
+
+def setup_logging(log_level=logging.ERROR, filename="", file_level=None):
+    file_level = file_level or log_level
+    logger = logging.getLogger()
+    logger.setLevel(min(log_level, file_level))
+
+    formatter = logging.Formatter("%(levelname).1s%(asctime)s %(module).8s.%(lineno).04d %(message)s",
+                                  "%y%m%d/%H:%M")
+
+    if logger.handlers:
+        for handler in logger.handlers:
+            handler.setLevel(log_level)
+            handler.setFormatter(formatter)
+    else:
+        # Console handler
+        chandler = logging.StreamHandler()
+        chandler.setLevel(log_level)
+        chandler.setFormatter(formatter)
+        logger.addHandler(chandler)
+
+    if filename:
+        # File handler
+        fhandler = logging.FileHandler(filename)
+        fhandler.setLevel(file_level)
+        fhandler.setFormatter(formatter)
+        logger.addHandler(fhandler)
+
+    logging.error("")
+    logging.error("**************************%s", "Logging to "+(filename if filename else "console"))
 
 Form_template =  """<div id="gterm-form-%s" class="gterm-form"><span class="gterm-form-title">%s</span> %s
 <input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformnames="%s"></input>  <input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>

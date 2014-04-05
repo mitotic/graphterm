@@ -238,13 +238,13 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             try:
                 self.lineterm.term_write(term_name, command_line)
             except Exception, excp:
-                logging.warning("gtermhost: Error in paste_command: %s", excp)
+                logging.warning("Error in paste_command: %s", excp)
 
     def screen_callback(self, term_name, response_id, command, arg):
         # Invoked in lineterm thread; schedule callback in ioloop
         lterm_cookie, blobs = self.terms.get(term_name, [None, None])
         if not lterm_cookie:
-            logging.warning("gtermhost: Error in screen_callback: terminal %s not found for command %s", term_name, command)
+            logging.warning("Error in screen_callback: terminal %s not found for command %s", term_name, command)
             return
         if command == "create_blob":
             blob_id, headers, content = arg
@@ -300,7 +300,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                 action = cmd.pop(0)
                 if action == "shutdown":
                     if cmd:
-                        logging.warning("gtermhost: SHUTDOWN %s", cmd[0])
+                        logging.warning("SHUTDOWN %s", cmd[0])
                     self.shutdown()
 
                 elif action == "reconnect":
@@ -703,14 +703,14 @@ class WidgetStream(object):
                 self._chat_widgets[chat_cookie] = self
                 self.set_chat_status(True, widget_token)
             else:
-                logging.warning("gtermhost: Invalid chat cookie %s", chat_cookie)
+                logging.warning("Invalid chat cookie %s", chat_cookie)
 
         elif resp_type == "create_blob":
             blob_id = headers["x_gterm_parameters"].get("blob_id")
             if not blob_id:
-                logging.warning("gtermhost: No id for blob creation")
+                logging.warning("No id for blob creation")
             elif "content_length" not in headers:
-                logging.warning("gtermhost: No content_length specified for create_blob")
+                logging.warning("No content_length specified for create_blob")
             else:
                 host_connection.blob_cache.add_blob(blob_id, headers, content)
 
@@ -905,6 +905,8 @@ def main():
                       help="Terminal type (linux/screen/xterm)")
     parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",
                       help="Terminal character encoding (utf-8/latin-1/...)")
+    parser.add_option("", "--logging", dest="logging", action="store_true",
+                      help="Log to ~/.graphterm/gtermhost.log")
 
     parser.add_option("", "--daemon", dest="daemon", default="",
                       help="daemon=start/stop/restart/status")
@@ -917,6 +919,12 @@ def main():
     if not args or not HOST_RE.match(args[0]):
         print >> sys.stderr, "Invalid/missing host name"
         sys.exit(1)
+
+    if options.logging:
+        Log_filename = os.path.join(gterm.App_dir, "gtermhost.log")
+        gterm.setup_logging(logging.WARNING, Log_filename, logging.INFO)
+    else:
+        gterm.setup_logging(logging.ERROR)
 
     if not options.daemon:
         run_host(options, args)

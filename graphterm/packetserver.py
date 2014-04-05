@@ -751,7 +751,7 @@ class RPCLink(object):
                     retval = self.invoke_method(msg_obj[0], *args, **kwargs)
             except Exception, excp:
                 retval = "Error: %s: %s\n%s" % (msg_obj[0], excp, "".join(traceback.format_exc()))
-                logging.warning("RPCLink.process_packet: %s: %s", self.connection_id, retval)
+                logging.error("RPCLink.process_packet: %s: %s", self.connection_id, retval)
 
             if packet_id > 0:
                 # Acknowledge message

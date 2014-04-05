@@ -14,13 +14,14 @@ GRAPHTERM_AUTH=graphterm_auth
 WBASE=8000
 
 if [ $# -lt 1 ]; then
-    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name]]"
+    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name [gtermhost arguments]]]"
     exit 1
 fi
 
 username=$1
 action=activate
 server=localhost
+rem_args=""
 
 if [ $# -gt 1 ]; then
     action=$2
@@ -28,6 +29,11 @@ fi
 
 if [ $# -gt 2 ]; then
     server=$3
+fi
+
+if [ $# -gt 3 ]; then
+    shift 3
+    rem_args="$@"
 fi
 
 if [ ! -d $HOME_MNT ]; then
@@ -85,6 +91,6 @@ for host in $host_list; do
 
         # Start client for host
         uid=`id -u $host`
-	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file --widget_port=$((WBASE+uid)) --oshell $host
+	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file --widget_port=$((WBASE+uid)) $rem_args $host
     fi
 done
