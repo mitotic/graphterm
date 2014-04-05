@@ -1628,7 +1628,7 @@ def run_server(options, args):
                 (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
                 ]
 
-    application = tornado.web.Application(handlers)
+    application = tornado.web.Application(handlers, log_function=lambda x:None)
 
     ##logging.warning("DocRoot: "+Doc_rootdir);
 
