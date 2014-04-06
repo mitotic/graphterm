@@ -1061,10 +1061,8 @@ class Terminal(object):
             offset = len(fileprefix)
             filenum = 1+max([int(DEFAULT_FILENUM_RE.match(fname[offset:]).group(1)) for fname in glob.glob(fileprefix+"*") if DEFAULT_FILENUM_RE.match(fname[offset:])] or [0])
             filepath = DEFAULT_FILE_PREFIX+str(filenum)
-            if self.term_params.get("nb_ext"):
-                filepath += "."+self.term_params["nb_ext"]
-            elif note_command == "ipython":
-                filepath += ".ipynb"
+            if note_command.endswith("python"):
+                filepath += "." + (self.term_params["nb_ext"] or "ipynb")
             elif note_command in gterm.EXTENSIONS:
                 filepath += "." + gterm.EXTENSIONS[note_command] + ".gnb.md"
             else:

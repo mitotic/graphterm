@@ -3844,6 +3844,7 @@ function GTNotebook(params) {
     this.note_params = params;
     this.fullpage = !params.shell;
     this.slide_mode = false;
+    this.autosaved = false;
 
     if (gNotebookId[0] != gPromptIndex)
 	gNotebookId = [gPromptIndex, 0]
@@ -3868,11 +3869,12 @@ function GTNotebook(params) {
     this.curIndex = 0;
     this.openNext = false;
 					      
-    this.last_poll_time = epoch_time();
+    this.lastPollTime = epoch_time();
+    this.lastUpdateTime = epoch_time();
+    this.lastTextValue = null;
     this.passthru_stdin = false;
     this.handling_tab = null;
     this.handled_tab = false;
-    this.lastTextValue = null;
 
     this.focusing = false;
     this.splitting = false;
@@ -4291,20 +4293,32 @@ GTNotebook.prototype.update_text = function(execute, openNext, createNew) {
 	gWebSocket.write([["update_cell", this.curIndex, execute, save, text]]);
 	this.send("*", this.curIndex, ["cell_input", text]);
 	this.lastTextValue = text;
+	this.lastUpdateTime = epoch_time();
     }
 }
 
 GTNotebook.prototype.poll = function(force) {
     var cur_time = epoch_time();
-    if (!force && (cur_time - this.last_poll_time) < 0.5*POLL_SEC)
+    if (!force && (cur_time - this.lastPollTime) < 0.5*POLL_SEC)
 	return;
-    this.last_poll_time = cur_time;
+    this.lastPollTime = cur_time;
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     if (textElem.length != 1)
 	return;
+    if (gParams.nb_autosave && !this.autosaved && (cur_time - this.lastUpdateTime) > gParams.nb_autosave) {
+	this.lastUpdateTime = cur_time;
+	this.autosaved = true;
+	this.saveNotebook("", {auto_save: true});
+	$("#menubar-notelabel").text("NB: "+this.note_params.name+" (autosaved)");
+    }
     var text = textElem.val();
     if (this.lastTextValue === text)
 	return;
+    if (gParams.nb_autosave && this.autosaved && (cur_time > this.lastUpdateTime) ) {
+	this.autosaved = false;
+	$("#menubar-notelabel").text("NB: "+this.note_params.name);
+    }
+
     this.update_text(false, false);
 }
 

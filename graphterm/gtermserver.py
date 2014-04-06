@@ -610,8 +610,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 start_private =  Server_settings["allow_share"]
                 terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
                                    "share_private": start_private, "share_tandem": False,
-                                   "alert_status": False, "widget_token": "",
-                                   "last_active": time.time(), "nb_name": "", "nb_mod_offset": 0,
+                                   "alert_status": False, "widget_token": "", "last_active": time.time(),
+                                   "nb_name": "", "nb_mod_offset": 0,
                                    "owner": user, "state_id": self.authorized["state_id"], "auth_type": self.authorized["auth_type"]}
                 terminal_params.update(Term_settings)
                 self._terminal_params[path] = terminal_params
@@ -698,6 +698,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
                                         "state_values": state_values, "watchers": users,
+                                        "nb_autosave": Server_settings["nb_autosave"],
                                         "controller": controller, "super_user": is_super_user, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "chat": term_chat, "update_opts": {},
@@ -1562,7 +1563,7 @@ def run_server(options, args):
                        "internal_host": internal_host, "internal_port": internal_port,
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
-                       "user_groups": {}, "gtermhost_args": gtermhost_args}
+                       "nb_autosave": options.nb_autosave, "user_groups": {}, "gtermhost_args": gtermhost_args}
 
     read_groups()
 
@@ -1834,7 +1835,9 @@ def main():
     parser.add_option("prompts", default="",
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
     parser.add_option("nb_ext", default="",
-                      help="File extension for notebooks (default: 'ipynb' or 'py.gnb.md')")
+                      help="File extension for python notebooks ('ipynb' (default) or 'py.gnb.md')")
+    parser.add_option("nb_autosave", default=300,
+                      help="Notebook autosave interval (default: 300)", opt_type="int")
     parser.add_option("lc_export", default=False, opt_type="flag",
                       help="Export environment as locale (ssh hack)")
     parser.add_option("no_pyindent", default=False, opt_type="flag",
