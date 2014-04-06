@@ -3126,7 +3126,7 @@ function AjaxKeypress(evt) {
     if (gDebugKeys)
 	console.log("graphterm.AjaxKeypress1", gControlActive, kc, evt.ctrlKey, evt);
 
-    if (kc == 13) {  // Enter key
+    if (kc == 13 || (gWinBrowser && !gFirefoxBrowser && kc == 10 && evt.ctrlKey) ) {  // Enter key
 	if (gScriptBuffer.length && (evt.ctrlKey || gControlActive)) {
 	    // Scripted command
 	    var scriptText = gScriptBuffer.shift();
