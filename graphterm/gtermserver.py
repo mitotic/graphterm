@@ -343,7 +343,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
     def is_creator(self, user, path):
         terminal_params = self._terminal_params[path]
-        return self.is_local() or (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"])
+        return self.is_local() or (terminal_params and (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"]))
 
     def open(self):
         need_code = self._auth_type >= self.LOCAL_AUTH
@@ -439,7 +439,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "activate", Server_settings["internal_host"]] + Server_settings["gtermhost_args"]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
-                                    logging.warning("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
+                                    logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
                                     self.write_json([["abort", "Error in creating new user "+user]])
                                     self.close()
                                     return
@@ -494,7 +494,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         ##    host_list.remove(LOCAL_HOST)
                         pass
                     elif Server_settings["user_groups"]:
-                        host_list = [h for h in host_list if same_group(h, user) ]
+                        host_list = [h for h in host_list if h == user or same_group(h, user) ]
                     else:
                         if user in host_list:
                             host_list = [ user ]
@@ -558,6 +558,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 stealable = not connectable and (is_super_user or term_owner or not tparams["share_locked"])
                                 idle_min = long(time.time() - tparams["last_active"]) // 60
                                 term_list.append( [term_name, connectable, stealable, len(self._watch_dict[path]), idle_min])
+                        else:
+                            term_list.append( [term_name, True, False, len(self._watch_dict[path]), 0])
                     term_list.sort()
                     allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
@@ -706,7 +708,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             logging.info("GTSocket.open: Opened %s:%s", self.remote_path, get_user(self))
         except Exception, excp:
             import traceback
-            logging.warning("GTSocket.open: ERROR (%s:%s) %s\n%s", self.remote_path, get_user(self), excp, traceback.format_exc())
+            logging.error("GTSocket.open: ERROR (%s:%s) %s\n%s", self.remote_path, get_user(self), excp, traceback.format_exc())
             self.close()
 
     def broadcast(self, path, msg, controller=False, include_self=False):
@@ -951,7 +953,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     kill_remote(matchpath, from_user)
 
         except Exception, excp:
-            logging.warning("GTSocket.on_message: ERROR %s", excp)
+            logging.error("GTSocket.on_message: ERROR %s", excp)
             self.write_json([["errmsg", str(excp)]])
             return
 
@@ -1722,7 +1724,7 @@ def run_server(options, args):
         cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", "activate", internal_host] + Server_settings["gtermhost_args"]
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
-            logging.warning("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
+            logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
 
     if options.logging:
         Log_filename = os.path.join(gterm.App_dir, "gtermserver.log")

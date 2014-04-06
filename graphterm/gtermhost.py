@@ -159,12 +159,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         self.osh_cookie = lineterm.make_lterm_cookie()
         self.blob_cache = BlobCache()
 
-    def shutdown(self):
+    def handle_shutdown(self):
         print >> sys.stderr, "Shutting down client connection %s -> %s:%s" % (self.connection_id, self.host, self.port)
         if self.lineterm:
             self.lineterm.shutdown()
         self.lineterm = None
-        super(TerminalClient, self).shutdown()
 
     def handle_connect(self):
         global Widget_server
