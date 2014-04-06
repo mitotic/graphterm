@@ -529,7 +529,7 @@ function GetCursorText() {
 }
 
 function GTGetCommandText(n) {
-    var commandPrefix = (gWebSocket && gWebSocket.terminal) ? "entry" : gCommandPrefix
+    var commandPrefix = (gWebSocket && gWebSocket.terminal) ? "entry" : gCommandPrefix;
     var cmd_id = "#"+commandPrefix+n;
     if (gWebSocket && gWebSocket.terminal) {
 	var cmdText = $(cmd_id).text().substr($(cmd_id+" .gterm-cmd-prompt").text().length+1);
@@ -1807,7 +1807,9 @@ function GTSetCursor(elementId, cursorPos) {
 function GTHandleRecall(up_arrow) {
     // otrace version
     // Returns true/false for event handling
-    var commandId = gCommandPrefix+gEntryIndex;
+    var commandPrefix = (gWebSocket && gWebSocket.terminal) ? "entry" : gCommandPrefix;
+    var curIndex = (gWebSocket && gWebSocket.terminal) ? gPromptIndex+1 : gEntryIndex;
+    var commandId = commandPrefix+curIndex;
     var commandText = $("#"+commandId).text();
     if (gCommandBuffer == null) {
 	gCommandBuffer = commandText;  // First recall; save current command text
@@ -2937,7 +2939,8 @@ function keydownHandler(evt) {
 
     if (evt.which >= 33 && evt.which <= 46) {
 	// Special keys (arrow keys etc.)
-	if (evt.which==0 || (gWebkitBrowser && evt.charCode==0) ) {
+	if (evt.charCode == 0) {
+	    // Note: Command recall not properly implemented for terminal; default to shell
 	    if (gWebSocket && gWebSocket.terminal)
 		return AjaxKeypress(evt);
 	}
@@ -3197,7 +3200,7 @@ function AjaxKeypress(evt) {
 	else if (kc==219) k=String.fromCharCode(29); // Ctrl-]
 	else if (kc==219) k=String.fromCharCode(0);  // Ctrl-@
 
-    } else if (evt.which==0 || (gWebkitBrowser && evt.charCode==0 && kc >=33 && kc <= 46) ) {
+    } else if (evt.which==0 || (evt.charCode==0 && kc >=33 && kc <= 46) ) {
 	if (kc==9) k=String.fromCharCode(9);  // Tab
 	else if (kc==8) k=String.fromCharCode(127);  // Backspace
 	else if (kc==27) k=String.fromCharCode(27); // Escape
