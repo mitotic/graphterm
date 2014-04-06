@@ -14,14 +14,15 @@ var gFirefoxBrowser = gUserAgent.indexOf('firefox') > -1;
 var gWebkitBrowser = gUserAgent.indexOf('webkit') > -1;
 var gChromeBrowser = gUserAgent.indexOf('chrome') > -1;
 var gSafariBrowser = !gChromeBrowser && gUserAgent.indexOf('safari') > -1;
-var gIExplorer = gUserAgent.indexOf("msie") > -1;
+var gIExplorer = gUserAgent.indexOf("msie") > -1;  // Will not detect IE11, which behaves like WebKit
 var gAndroid = gUserAgent.indexOf("android") > -1;
+var gWinBrowser = gUserAgent.indexOf("windows") > -1;
 
-var gMobileBrowser = ('ontouchstart' in window) || gUserAgent.indexOf("android") > -1 || gUserAgent.indexOf("mobile") > -1 || gUserAgent.indexOf("touch") > -1;
+var gMobileBrowser = gWinBrowser ? (gUserAgent.indexOf("mobile") > -1 || gUserAgent.indexOf("arm;") > -1) : (gUserAgent.indexOf("mobile") > -1 || gUserAgent.indexOf("touch") > -1  || gUserAgent.indexOf("android") > -1 || ('ontouchstart' in window));
 
 var gSafariIPad = gSafariBrowser && gUserAgent.indexOf('ipad') > -1;
 
-var gWinPlatform = _.str.startsWith(window.navigator.platform, "Win");
+var gWinPlatform = _.str.startsWith(window.navigator.platform, "Win") || _.str.startsWith(window.navigator.platform, "WOW");
 var gMacPlatform = _.str.startsWith(window.navigator.platform, "Mac");
 
 var gDefaultEditor = gMobileBrowser ? "ckeditor" : "ace";
@@ -2920,7 +2921,7 @@ function keydownHandler(evt) {
 	return true;
 
     if (gDebugKeys)
-	console.log("graphterm.keydownHandler: ", evt.keyCode, evt.which, evt);
+	console.log("graphterm.keydownHandler: ", evt.keyCode, evt.which, evt.charCode, evt);
 
     if ((gMacPlatform && evt.metaKey && evt.which == 86) || ((!gMacPlatform && evt.ctrlKey && matchCodes(evt, 22)))) {
 	// Ctrl-V or Meta-V for paste
@@ -3994,6 +3995,8 @@ GTNotebook.prototype.handleKey = function(ch) {
 	this.handleCommand("cell_read");
     } else if (ch == "s") {
 	this.handleCommand("save");
+    } else if (ch == "u") {
+	this.handleCommand("execute");
     } else if (ch == "w") {
 	this.handleCommand("cell_write");
     }

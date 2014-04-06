@@ -71,7 +71,8 @@
         <ul id="gterm-menu" class="sf-menu gterm-menukey-firstletter">
           <li><a href="#" class="gterm-menu-img gterm-menu-splash" onclick="GTShowSplash(true,true);"><img class="gterm-logo" src="/_static/GTYY48.png" height="24"></img></a></li>
           <li id="menubar-first-item">
-            <a href="#">view</a>
+            <!-- Use altletter style in top menu to workaround firefox bug -->
+            <a href="#" class="gterm-key-altletter"><span class="gterm-key-letter">v</span>iew</a>
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="view_top">top</a></li>
               <li><a href="#" gterm-state="view_bottom">bottom</a></li>
@@ -102,7 +103,8 @@
           </li>
 
           <li>
-            <a href="#">terminal</a>
+            <!-- Use altletter style in top menu to workaround firefox bug -->
+            <a href="#" class="gterm-key-altletter"><span class="gterm-key-letter">t</span>erminal</a>
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="terminal_new">new</a></li>
               <li><a href="#" class="gterm-only-controller gterm-key-altletter" gterm-state="terminal_reload">re<span class="gterm-key-letter">l</span>oad</a></li>
@@ -138,7 +140,8 @@
           </li>
 
           <li>
-            <a href="#">notebook</a>
+            <!-- Use altletter style in top menu to workaround firefox bug -->
+            <a href="#" class="gterm-key-altletter"><span class="gterm-key-letter">n</span>otebook</a>
             <ul class="gterm-menukey-firstletter">
               <li>
                 <a href="#"  class="gterm-only-controller gterm-non-notebook">new &#x25b9;</a>
@@ -213,7 +216,8 @@
           </li>
 
           <li>
-            <a href="#">help</a>
+            <!-- Use altletter style in top menu to workaround firefox bug -->
+            <a href="#" class="gterm-key-altletter"><span class="gterm-key-letter">h</span>elp</a>
             <ul class="gterm-menukey-firstletter">
               <li><a href="#" gterm-state="help_about">about</a></li>
               <li><a href="#" gterm-state="help_updates">updates</a></li>
@@ -240,6 +244,7 @@
                   <li><span class="gterm-menu-help-key">Ctrl-m p:</span><span class="gterm-menu-help-value"> previous cell</span></li>
                   <li><span class="gterm-menu-help-key">Ctrl-m r:</span><span class="gterm-menu-help-value"> read cell</span></li>
                   <li><span class="gterm-menu-help-key">Ctrl-m s:</span><span class="gterm-menu-help-value"> save notebook</span></li>
+                  <li><span class="gterm-menu-help-key">Ctrl-m u:</span><span class="gterm-menu-help-value"> r<b>u</b>n in-place</span></li>
                   <li><span class="gterm-menu-help-key">Ctrl-m w:</span><span class="gterm-menu-help-value"> write cell</span></li>
                 </ul>
               </li>
@@ -324,7 +329,8 @@
           </li>
 
           <li>
-            <a href="#">share</a>
+            <!-- Use altletter style in top menu to workaround firefox bug -->
+            <a href="#" class="gterm-key-altletter"><span class="gterm-key-letter">s</span>hare</a>
             <ul class="gterm-menukey-firstletter">
               <li>
                 <a href="#" class="gterm-toggle-link gterm-only-controller" gterm-state="share_private" gterm-toggle="false">private <span class="gterm-toggle-status">&#x2714;</span></a>
