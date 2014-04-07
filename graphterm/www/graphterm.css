@@ -340,13 +340,13 @@ hr.sf-separator {
 }
 
 #headfoot-keyboard:focus {
-    color: green;
+    color: lightgray;
 }
 
 #headfoot-keyboard {
-    background-color: green;
-    width: 1.5em;
-    height: 1.3em;
+    background-color: lightgray;
+    width: 1em;
+    height: 1em;
     display: inline-block;
     overflow: hidden;
 }

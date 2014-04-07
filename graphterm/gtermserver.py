@@ -1566,7 +1566,8 @@ def run_server(options, args):
                        "internal_host": internal_host, "internal_port": internal_port,
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
-                       "nb_autosave": options.nb_autosave, "user_groups": {}, "gtermhost_args": gtermhost_args}
+                       "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
+                       "user_groups": {}, "gtermhost_args": gtermhost_args}
 
     read_groups()
 

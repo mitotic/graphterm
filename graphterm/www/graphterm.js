@@ -2017,6 +2017,7 @@ function GTJoin(user, joining, setup) {
 }
 
 var gMenuState = {view: {menubar: true, footer: gMobileBrowser, icons: false, theme: ""},
+		  command: {advanced: false},
                   share: {control: true, private: true, locked: false, tandem: false, webcast: false},
                   notebook: {markdown: false, page: {slide: false}} };
 var gMenuObj = null;
@@ -2394,63 +2395,54 @@ function GTMenuTerminal(selectKey, newValue, force) {
 }
 
 function GTMenuCommand(selectKey, newValue, force) {
-    console.log("GTMenuCommand: ", selectKey, newValue, force);
+    var advanced = gMenuState.command.advanced;
+    console.log("GTMenuCommand: ", selectKey, newValue, force, advanced);
+    var cmd = "";
     switch (selectKey) {
-    case "chat":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &");
+    case "advanced":
 	break;
     case "copy":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("cp OLD_FILE NEW_FILE_OR_DIR");
+	cmd = advanced ? "cp " : "cp OLD_FILE NEW_FILE_OR_DIR";
 	break;
     case "delete":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("rm FILE");
+	cmd = advanced ? "rm " : "rm FILE";
 	break;
     case "eof":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput(String.fromCharCode(4));
+	cmd = String.fromCharCode(4);
 	break;
     case "file":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gvi #filename");
+	cmd = advanced ? "gvi " : "gvi #filename";
 	break;
     case "home":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("cd; gls");
+	cmd = "cd; gls";
 	break;
     case "interrupt":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput(String.fromCharCode(3));
+	cmd = String.fromCharCode(3);
 	break;
     case "list":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gls");
+	cmd = advanced ? "gls" : "gls #filename_pattern";
 	break;
     case "nbserver":
 	if (!gParams.nb_server) {
 	    alert("nb_server option not enabled")
 	} else {
-	    if (gWebSocket && gWebSocket.terminal)
-		GTTerminalInput("gnbserver");
+	    cmd = "gnbserver";
 	}
 	break;
     case "rename":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("mv OLD_FILE NEW_FILE_OR_DIR");
+	cmd = advanced ? "mv " : "mv OLD_FILE NEW_FILE_OR_DIR";
+	break;
+    case "chat":
+	cmd = "gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &";
 	break;
     case "upload":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gupload #optional_filename");
+	cmd = advanced ? "gupload" : "gupload #optional_filename";
 	break;
     case "download":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gls --download #filename");
+	cmd = advanced ? "gls -d" : "gls --download #optional_filename";
 	break;
     case "yweather":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("yweather #location");
+	cmd = advanced ? "yweather " : "yweather #location";
 	break;
     case "parent":
 	if (is_embedded_frame()) {
@@ -2463,9 +2455,13 @@ function GTMenuCommand(selectKey, newValue, force) {
 	}
 	break;
     case "upload":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gupload ");
+	cmd = advanced ? "gupload" : "gupload ";
 	break;
+    }
+    if (cmd && gWebSocket && gWebSocket.terminal) {
+	if (advanced && !_.str.endsWith(cmd, " "))
+	    cmd += "\n";
+	GTTerminalInput(cmd);
     }
 }
 
@@ -3063,14 +3059,13 @@ function AltKeyboardFocus(evt) {
     GTSetCursor("headfoot-keyboard");
 }
 function AltKeyboardBlur(evt) {
-    serverLog("AltKeyboardBlur: "+gAltKeyboardBuffer);
     $("#headfoot-keyboard").text("");
     gAltKeyboardBuffer = "";
 }
 function AltKeyboardHandler(evt) {
     var text = $("#headfoot-keyboard").text();
     var newchars = text.length - gAltKeyboardBuffer.length;
-    serverLog("AltKeyboardHandler: "+newchars+" "+text+":"+gAltKeyboardBuffer+":"+evt.which+":"+evt.keyCode+":"+evt.charCode+" "+(text.length ? text.charCodeAt(text.length-1):""));
+    //serverLog("AltKeyboardHandler: "+newchars+" "+text+":"+gAltKeyboardBuffer+":"+evt.which+":"+evt.keyCode+":"+evt.charCode+" "+(text.length ? text.charCodeAt(text.length-1):""));
     if (newchars > 0) {
 	// Replace no-break space (\xa0) with normal space
 	var newtext = text.substr(gAltKeyboardBuffer.length).replace(/\xa0/g, " ");
@@ -4593,7 +4588,9 @@ function ResizeSplitScreen(split) {
 }
 
 function ToggleFooter() {
-    if ($("#session-term").hasClass("display-footer"))
+    var state = $("#session-term").hasClass("display-footer");
+    GTMenuUpdateToggle("view_footer", !state);
+    if (state)
 	HideFooter();
     else
 	DisplayFooter()
@@ -5088,8 +5085,6 @@ function GTReady() {
 	$("#headfoot-keyboard").focus(AltKeyboardFocus);
 	$("#headfoot-keyboard").blur(AltKeyboardBlur);
 	$("#headfoot-keyboard").keyup(AltKeyboardHandler);
-    } else {
-	$("#headfoot-keyboard").html("&#x2328");
     }
 
     $(window).resize(handle_resize);
