@@ -1821,6 +1821,8 @@ class Terminal(object):
             pass
 
     def update_cell(self, cell_index, execute, save, input_data):
+        if not self.note_cells:
+            return
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return

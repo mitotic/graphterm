@@ -2997,6 +2997,42 @@ function pasteKeyHandler(evt) {
     return true;
 }
 
+var gAltKeyboardBuffer = "";
+function AltKeyboardFocus(evt) {
+    var cursorElem = $("#gterm-pre0 .cursorspan");
+    gAltKeyboardBuffer = cursorElem.length ? prevElem[0].previousSibling.nodeValue : GTGetCurCommandText();
+    $("#headfoot-keyboard").text(gAltKeyboardBuffer);
+    GTSetCursor("headfoot-keyboard");
+}
+function AltKeyboardBlur(evt) {
+    serverLog("AltKeyboardBlur: "+gAltKeyboardBuffer);
+    $("#headfoot-keyboard").text("");
+    gAltKeyboardBuffer = "";
+}
+function AltKeyboardHandler(evt) {
+    var text = $("#headfoot-keyboard").text();
+    var newchars = text.length - gAltKeyboardBuffer.length;
+    //serverLog("AltKeyboardHandler: "+newchars+" "+text+":"+gAltKeyboardBuffer+":"+evt.which+":"+evt.keyCode+":"+evt.charCode);
+    if (newchars > 0) {
+	var newtext = text.substr(gAltKeyboardBuffer.length);
+	if (text == "L's" && gAltKeyboardBuffer == "ls") {
+	    // WORKAROUND for weird android bug that corrupts "ls" command
+	} else {
+	    GTTerminalInput(text.substr(gAltKeyboardBuffer.length), true);
+	}
+    } else if (newchars < 0) {
+	for (var j=0; j<-newchars; j++)
+	    GTTerminalInput(String.fromCharCode(127), true)
+    }
+    if (evt.keyCode == 13) {
+	$("#headfoot-keyboard").text("");
+	gAltKeyboardBuffer = "";
+    } else {
+	gAltKeyboardBuffer = text;
+    }
+    return false;
+}
+
 function keypressHandler(evt) {
     if (gPasteActive)
 	return true;
@@ -4988,6 +5024,14 @@ function GTReady() {
     // Bind window keydown/keypress events
     $(document).keydown(keydownHandler);
     $(document).keypress(keypressHandler);
+
+    if (gAndroid) {
+	$("#headfoot-keyboard").focus(AltKeyboardFocus);
+	$("#headfoot-keyboard").blur(AltKeyboardBlur);
+	$("#headfoot-keyboard").keyup(AltKeyboardHandler);
+    } else {
+	$("#headfoot-keyboard").html("&#x2328");
+    }
 
     $(window).resize(handle_resize);
 
