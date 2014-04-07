@@ -43,6 +43,8 @@ GT_PREFIX = "GTERM_"
 DEFAULT_HTTP_PORT = 8900
 DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
 
+NB_BASE_PORT = 10000
+
 Bin_dir = os.path.dirname(__file__)
 
 # Short prompt (long prompt with directory metadata fills most of row):

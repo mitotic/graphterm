@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+#
+
+"""
+gnbserver: Run PUBLIC ipython server (with password)
+"""
+
+import os
+import sys
+
+import gterm
+
+import IPython.lib.security
+
+from optparse import OptionParser
+
+import gterm
+
+NB_PROFILE = """
+c = get_config()
+
+# Kernel config
+c.IPKernelApp.pylab = 'inline'  # plotting support always
+
+# Notebook config
+#c.NotebookApp.certfile = u'/absolute/path/to/your/certificate/mycert.pem'
+c.NotebookApp.ip = '*'
+c.NotebookApp.open_browser = False
+c.NotebookApp.password = '%s'
+c.NotebookApp.port = %d
+c.NotebookApp.port_retries = 0
+"""
+
+def main():
+    usage = "usage: %prog [-s server]"
+    parser = OptionParser(usage=usage)
+    parser.add_option("-s", "--server", dest="server", default="*",
+                  help="External server name/IP address to listen on (default: '*')")
+
+    (options, args) = parser.parse_args()
+
+    uid = os.getuid()
+    user = os.getlogin()
+    auth_server = "localhost" if options.server == "*" else options.server
+
+    auth_file = gterm.get_auth_filename(user=user, server=auth_server)
+    auth_code, port = gterm.read_auth_code(user=user, server=auth_server)
+    passwd = IPython.lib.security.passwd(gterm.dashify(auth_code))
+
+    profile_name = "gipynbserver"
+    port = uid + gterm.NB_BASE_PORT
+
+    profile_dir = os.path.expanduser("~/.ipython/profile_"+profile_name)
+    if not os.path.exists(profile_dir):
+        cmd_args = ["ipython", "profile", "create", profile_name]
+        std_out, std_err = gterm.command_output(cmd_args, timeout=3)
+        print std_out
+        print std_err
+        if not os.path.exists(profile_dir):
+            sys.exit("Failed to create "+profile_dir)
+
+    profile_nb_file = os.path.join(profile_dir, "ipython_notebook_config.py")
+    with open(profile_nb_file, "w") as f:
+        f.write(NB_PROFILE % (passwd, port))
+
+    print >> sys.stderr, "Running PUBLIC ipython notebook server on port", port
+    print >> sys.stderr, "Password for user", user, "in", auth_file
+    print >> sys.stderr, ""
+
+    status = os.system("ipython notebook --profile="+profile_name)
+
+if __name__ == "__main__":
+    main()

@@ -700,6 +700,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
                                         "state_values": state_values, "watchers": users,
+                                        "nb_server": Server_settings["nb_server"],
                                         "nb_autosave": Server_settings["nb_autosave"],
                                         "controller": controller, "super_user": is_super_user, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
@@ -1840,6 +1841,8 @@ def main():
                       help="File extension for python notebooks ('ipynb' (default) or 'py.gnb.md')")
     parser.add_option("nb_autosave", default=300,
                       help="Notebook autosave interval (default: 300)", opt_type="int")
+    parser.add_option("nb_server", default=False, opt_type="flag",
+                      help="Enable PUBLIC ipython notebook server")
     parser.add_option("lc_export", default=False, opt_type="flag",
                       help="Export environment as locale (ssh hack)")
     parser.add_option("no_pyindent", default=False, opt_type="flag",

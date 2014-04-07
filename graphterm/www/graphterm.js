@@ -2429,8 +2429,12 @@ function GTMenuCommand(selectKey, newValue, force) {
 	    GTTerminalInput("gls");
 	break;
     case "nbserver":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gnbserver");
+	if (!gParams.nb_server) {
+	    alert("nb_server option not enabled")
+	} else {
+	    if (gWebSocket && gWebSocket.terminal)
+		GTTerminalInput("gnbserver");
+	}
 	break;
     case "rename":
 	if (gWebSocket && gWebSocket.terminal)
