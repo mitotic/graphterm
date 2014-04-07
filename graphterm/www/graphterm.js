@@ -18,7 +18,9 @@ var gIExplorer = gUserAgent.indexOf("msie") > -1;  // Will not detect IE11, whic
 var gAndroid = gUserAgent.indexOf("android") > -1;
 var gWinBrowser = gUserAgent.indexOf("windows") > -1;
 
-var gMobileBrowser = gWinBrowser ? (gUserAgent.indexOf("mobile") > -1 || gUserAgent.indexOf("arm;") > -1) : (gUserAgent.indexOf("mobile") > -1 || gUserAgent.indexOf("touch") > -1  || gUserAgent.indexOf("android") > -1 || ('ontouchstart' in window));
+var gTouchBrowser = gUserAgent.indexOf("touch") > -1  || 'ontouchstart' in window;
+
+var gMobileBrowser = gWinBrowser ? (gUserAgent.indexOf("mobile") > -1 || gUserAgent.indexOf("arm;") > -1) : (gUserAgent.indexOf("mobile") > -1 || gAndroid || gTouchBrowser);
 
 var gSafariIPad = gSafariBrowser && gUserAgent.indexOf('ipad') > -1;
 
@@ -2014,7 +2016,7 @@ function GTJoin(user, joining, setup) {
     $('#gterm-menu-users-container').toggleClass("menu-disabled", !$('#gterm-menu-users-list li').length);
 }
 
-var gMenuState = {view: {menubar: true, icons: false, theme: ""},
+var gMenuState = {view: {menubar: true, footer: gMobileBrowser, icons: false, theme: ""},
                   share: {control: true, private: true, locked: false, tandem: false, webcast: false},
                   notebook: {markdown: false, page: {slide: false}} };
 var gMenuObj = null;
@@ -2156,6 +2158,8 @@ function GTMenuEvent(target, setValue, force) {
 	GTMenuView(selectKey, newValue, force);
     else if (comps[0] == "terminal")
 	GTMenuTerminal(selectKey, newValue, force);
+    else if (comps[0] == "command")
+	GTMenuCommand(selectKey, newValue, force);
     else if (comps[0] == "notebook")
 	GTMenuNotebook(selectKey, newValue, force);
     else if (comps[0] == "help")
@@ -2197,6 +2201,15 @@ function GTMenuView(selectKey, newValue, force) {
     switch (comps[0]) {
     case "menubar":
 	$("#terminal").toggleClass("gterm-menubar-hide", !newValue);
+	break;
+
+    case "footer":
+	$("#session-term").toggleClass("display-footer", newValue);
+	break;
+
+    case "keyboard":   // Commented out in index.html, because it does not work properly
+	ScrollScreen();
+	$("#headfoot-keyboard").focus();
 	break;
 
     case "top":
@@ -2377,31 +2390,65 @@ function GTMenuTerminal(selectKey, newValue, force) {
     case "paste":
 	GTPasteSpecialBegin();
 	break;
-    case "action_chat":
+    }
+}
+
+function GTMenuCommand(selectKey, newValue, force) {
+    console.log("GTMenuCommand: ", selectKey, newValue, force);
+    switch (selectKey) {
+    case "chat":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput("gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &");
 	break;
-    case "action_edit":
+    case "copy":
 	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gvi #filename");
+	    GTTerminalInput("cp OLD_FILE NEW_FILE_OR_DIR");
 	break;
-    case "action_download":
+    case "delete":
 	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gls --download #filename");
+	    GTTerminalInput("rm FILE");
 	break;
-    case "action_upload":
-	if (gWebSocket && gWebSocket.terminal)
-	    GTTerminalInput("gupload ");
-	break;
-    case "send_eof":
+    case "eof":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput(String.fromCharCode(4));
 	break;
-    case "send_interrupt":
+    case "file":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gvi #filename");
+	break;
+    case "home":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("cd; gls");
+	break;
+    case "interrupt":
 	if (gWebSocket && gWebSocket.terminal)
 	    GTTerminalInput(String.fromCharCode(3));
 	break;
-    case "send_parent":
+    case "list":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gls");
+	break;
+    case "nbserver":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gnbserver");
+	break;
+    case "rename":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("mv OLD_FILE NEW_FILE_OR_DIR");
+	break;
+    case "upload":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gupload #optional_filename");
+	break;
+    case "download":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gls --download #filename");
+	break;
+    case "yweather":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("yweather #location");
+	break;
+    case "parent":
 	if (is_embedded_frame()) {
 	    try {
 		if (window.parent.gWebSocket && window.parent.gWebSocket.terminal)
@@ -2410,6 +2457,10 @@ function GTMenuTerminal(selectKey, newValue, force) {
 		alert("Failed to send command to parent: "+err);
 	    }
 	}
+	break;
+    case "upload":
+	if (gWebSocket && gWebSocket.terminal)
+	    GTTerminalInput("gupload ");
 	break;
     }
 }
@@ -2455,6 +2506,9 @@ function gtermMenuClickHandler(event) {
     console.log("gtermMenuClickHandler", $(this).attr("id"), idcomps[1]);
     var text = "";
     switch (idcomps[1]) {
+    case "kbrd":
+	$("#headfoot-keyboard").focus();
+	break;
     case "control":
 	$("#headfoot-control").toggleClass("gterm-headfoot-active");
 	gControlActive = $("#headfoot-control").hasClass("gterm-headfoot-active");
@@ -3012,17 +3066,15 @@ function AltKeyboardBlur(evt) {
 function AltKeyboardHandler(evt) {
     var text = $("#headfoot-keyboard").text();
     var newchars = text.length - gAltKeyboardBuffer.length;
-    //serverLog("AltKeyboardHandler: "+newchars+" "+text+":"+gAltKeyboardBuffer+":"+evt.which+":"+evt.keyCode+":"+evt.charCode);
+    serverLog("AltKeyboardHandler: "+newchars+" "+text+":"+gAltKeyboardBuffer+":"+evt.which+":"+evt.keyCode+":"+evt.charCode+" "+(text.length ? text.charCodeAt(text.length-1):""));
     if (newchars > 0) {
-	var newtext = text.substr(gAltKeyboardBuffer.length);
-	if (text == "L's" && gAltKeyboardBuffer == "ls") {
-	    // WORKAROUND for weird android bug that corrupts "ls" command
-	} else {
-	    GTTerminalInput(text.substr(gAltKeyboardBuffer.length), true);
-	}
+	// Replace no-break space (\xa0) with normal space
+	var newtext = text.substr(gAltKeyboardBuffer.length).replace(/\xa0/g, " ");
+	// NOTE: Android autocorrect can corrupt input when Enter is pressed!
+	GTTerminalInput(newtext, false);
     } else if (newchars < 0) {
 	for (var j=0; j<-newchars; j++)
-	    GTTerminalInput(String.fromCharCode(127), true)
+	    GTTerminalInput(String.fromCharCode(127), false)
     }
     if (evt.keyCode == 13) {
 	$("#headfoot-keyboard").text("");
@@ -3284,7 +3336,7 @@ function AjaxKeypress(evt) {
 	GTShortcutHandler(k);
 	return false;
     }
-	    
+
     if (GTTerminalInput(k, true))
 	return true;
     evt.cancelBubble = true;
@@ -4979,6 +5031,9 @@ function GTReady() {
     if (gMobileBrowser) {
 	$("body").addClass("mobilescreen");
 	ToggleFooter();
+    }
+    if (gTouchBrowser) {
+	$("body").addClass("touchscreen");
     }
     if (gSafariIPad)
 	$("body").addClass("ipadscreen");

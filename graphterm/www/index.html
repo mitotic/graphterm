@@ -78,9 +78,13 @@
               <li><a href="#" gterm-state="view_bottom">bottom</a></li>
               <li><a href="#" gterm-state="view_collapse">collapse</a></li>
               <li><a href="#" gterm-state="view_expand">expand</a></li>
+              <!--<li><a href="#" class="gterm-only-touch" gterm-state="view_keyboard">keyboard</a></li>-->
               <hr class="sf-separator">
               <li>
                 <a href="#" class="gterm-toggle-link" gterm-state="view_menubar" gterm-toggle="true">menubar <span class="gterm-toggle-status">&#x2714;</span></a>
+              </li>
+              <li>
+                <a href="#" class="gterm-toggle-link" gterm-state="view_footer" gterm-toggle="true">footer <span class="gterm-toggle-status">&#x2714;</span></a>
               </li>
               <li>
                 <a href="#" class="gterm-toggle-link" gterm-state="view_icons" gterm-toggle="false">icons <span class="gterm-toggle-status">&#x2714;</span></a>
@@ -119,23 +123,27 @@
               <li><a href="#" class="gterm-only-controller" gterm-state="terminal_paste">paste special</a></li>
               <li><a href="#" class="gterm-only-controller" gterm-state="terminal_export">export environment</a></li>
 	      <!--<li><a href="#" class="gterm-only-controller" gterm-state="terminal_append">append bash profile</a></li>-->
-              <li>
-                <a href="#"  class="gterm-only-controller">action &#x25b9;</a>
-                <ul class="gterm-menukey-firstletter">
-                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_action_chat">chat</a></li>
-                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_action_edit">edit</a></li>
-                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_action_download">download</a></li>
-                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_action_upload">upload</a></li>
-                </ul>
-              </li>
-              <li>
-                <a href="#"  class="gterm-only-controller">send &#x25b9;</a>
-                <ul class="gterm-menukey-firstletter">
-                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_send_interrupt">interrupt (^C)</a></li>
-                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_send_parent">parent interrupt</a></li>
-                  <li><a href="#" class="gterm-only-controller" gterm-state="terminal_send_eof">end of file (^D)</a></li>
-                </ul>
-              </li>
+            </ul>
+          </li>
+
+          <li>
+            <!-- Use altletter style in top menu to workaround firefox bug -->
+            <a href="#" class="gterm-key-altletter"><span class="gterm-key-letter">c</span>ommand</a>
+            <ul class="gterm-menukey-firstletter">
+              <li><a href="#" class="gterm-only-controller gterm-key-altletter" gterm-state="command_chat">ch<span class="gterm-key-letter">a</span>t</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_copy">copy file (cp)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_delete">delete file (rm)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_eof">end of file (^D)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_file">file edit (gvi)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_home">home directory (cd)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_interrupt">interrupt (^C)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_list">list files (gls)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_nbserver">notebook server</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_parent">parent interrupt</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_rename">rename file (mv)</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_upload">upload</a></li>
+              <li><a href="#" class="gterm-only-controller gterm-key-altletter" gterm-state="command_download">do<span class="gterm-key-letter">w</span>nload</a></li>
+              <li><a href="#" class="gterm-only-controller" gterm-state="command_yweather">yahoo weather</a></li>
             </ul>
           </li>
 
@@ -427,6 +435,7 @@
 <span id="session-screen-testrow">01234567890123456789012345678901234567890123456789012345678901234567890123456789</span>
 </pre>
               <div id="session-footermenu" class="session-footermenu">
+                <span id="headfoot-kbrd"   class="headfoot">Kbrd</span>
                 <span id="headfoot-keyboard" class="headfoot" contenteditable></span>&nbsp;
                 <span id="headfoot-control" class="headfoot toggle">Ctrl</span>
                 <span id="headfoot-top"     class="headfoot">Top</span>&nbsp;
