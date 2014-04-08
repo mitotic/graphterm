@@ -6,6 +6,7 @@ gnbserver: Run PUBLIC ipython server (with password)
 """
 
 import os
+import pwd
 import sys
 
 import gterm
@@ -23,9 +24,9 @@ c = get_config()
 c.IPKernelApp.pylab = 'inline'  # plotting support always
 
 # Notebook config
-#c.NotebookApp.certfile = u'/absolute/path/to/your/certificate/mycert.pem'
 c.NotebookApp.ip = '*'
 c.NotebookApp.open_browser = False
+%s  # Certificate setting
 c.NotebookApp.password = '%s'
 c.NotebookApp.port = %d
 c.NotebookApp.port_retries = 0
@@ -34,14 +35,20 @@ c.NotebookApp.port_retries = 0
 def main():
     usage = "usage: %prog [-s server]"
     parser = OptionParser(usage=usage)
+    parser.add_option("-c", "--certfile", dest="certfile", default="",
+                  help="Path to SSL certificate file")
     parser.add_option("-s", "--server", dest="server", default="*",
                   help="External server name/IP address to listen on (default: '*')")
 
     (options, args) = parser.parse_args()
 
     uid = os.getuid()
-    user = os.getlogin()
+    user = pwd.getpwuid(uid).pw_name
     auth_server = "localhost" if options.server == "*" else options.server
+
+    certline = ""
+    if options.certfile:
+        certline = "c.NotebookApp.certfile = '%s'" % options.certfile
 
     auth_file = gterm.get_auth_filename(user=user, server=auth_server)
     auth_code, port = gterm.read_auth_code(user=user, server=auth_server)
@@ -61,7 +68,7 @@ def main():
 
     profile_nb_file = os.path.join(profile_dir, "ipython_notebook_config.py")
     with open(profile_nb_file, "w") as f:
-        f.write(NB_PROFILE % (passwd, port))
+        f.write(NB_PROFILE % (certline, passwd, port))
 
     print >> sys.stderr, "Running PUBLIC ipython notebook server on port", port
     print >> sys.stderr, "Password for user", user, "in", auth_file

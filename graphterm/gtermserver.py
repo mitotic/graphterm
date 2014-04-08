@@ -162,6 +162,10 @@ class BlockingCall(object):
         self.io_loop.add_callback(functools.partial(callback, ret_value))
 
 server_cert_gen_cmds = [
+    'openssl req -x509 -nodes -days %(expdays)d -newkey rsa:%(keysize)d -batch -subj /O=GraphTerm/CN=%(hostname)s -keyout %(keyfile)s -out %(certfile)s',
+    'openssl x509 -noout -fingerprint -in %(certfile)s',
+    ]
+server_cert_gen_cmds_long = [
     'openssl genrsa -out %(hostname)s.key %(keysize)d',
     'openssl req -new -key %(hostname)s.key -out %(hostname)s.csr -batch -subj "/O=GraphTerm/CN=%(hostname)s"',
     'openssl x509 -req -days %(expdays)d -in %(hostname)s.csr -signkey %(hostname)s.key -out %(hostname)s.crt',
@@ -171,13 +175,14 @@ server_cert_gen_cmds = [
 client_cert_gen_cmds = [
     'openssl genrsa -out %(clientprefix)s.key %(keysize)d',
     'openssl req -new -key %(clientprefix)s.key -out %(clientprefix)s.csr -batch -subj "/O=GraphTerm/CN=%(clientname)s"',
-    'openssl x509 -req -days %(expdays)d -in %(clientprefix)s.csr -CA %(hostname)s.crt -CAkey %(hostname)s.key -set_serial 01 -out %(clientprefix)s.crt',
+    'openssl x509 -req -days %(expdays)d -in %(clientprefix)s.csr -CA %(certfile)s -CAkey %(keyfile)s -set_serial 01 -out %(clientprefix)s.crt',
     "openssl pkcs12 -export -in %(clientprefix)s.crt -inkey %(clientprefix)s.key -out %(clientprefix)s.p12 -passout pass:%(clientpassword)s"
     ]
 
-def ssl_cert_gen(hostname="localhost", clientname="gterm-local", cwd=None, new=False):
+def ssl_cert_gen(certfile, keyfile="", hostname="localhost", cwd=None, new=False, clientname=""):
     """Return fingerprint of self-signed server certficate, creating a new one, if need be"""
-    params = {"hostname": hostname, "keysize": 1024, "expdays": 1024,
+    params = {"certfile": certfile, "keyfile": keyfile or certfile,
+              "hostname": hostname, "keysize": 1024, "expdays": 1024,
               "clientname": clientname, "clientprefix":"%s-%s" % (hostname, clientname),
               "clientpassword": "password",}
     cmd_list = server_cert_gen_cmds if new else server_cert_gen_cmds[-1:]
@@ -187,7 +192,7 @@ def ssl_cert_gen(hostname="localhost", clientname="gterm-local", cwd=None, new=F
         if std_err:
             logging.warning("gtermserver: SSL keygen %s %s", std_out, std_err)
     fingerprint = std_out
-    if new:
+    if new and clientname:
         for cmd in client_cert_gen_cmds:
             cmd_args = lineterm.shlex_split_str(cmd % params)
             std_out, std_err = gterm.command_output(cmd_args, cwd=cwd, timeout=15)
@@ -1641,19 +1646,31 @@ def run_server(options, args):
 
     ssl_options = None
     if options.https or options.client_cert:
-        cert_dir = gterm.App_dir
-        server_name = "localhost"
-        certfile = cert_dir+"/"+server_name+".crt"
-        keyfile = cert_dir+"/"+server_name+".key"
+        if options.certfile:
+            certfile = options.certfile
+            cert_dir = os.path.dirname(certfile) or os.getcwd()
+            if certfile.endswith(".crt"):
+                keyfile = certfile[:-4] + ".key"
+            else:
+                keyfile = ""
+        else:
+            cert_dir = gterm.App_dir
+            server_name = "localhost"
+            certfile = cert_dir+"/"+server_name+".pem"
+            keyfile = ""
 
-        new = not (os.path.exists(certfile) and os.path.exists(keyfile))
-        fingerprint = ssl_cert_gen(server_name, cwd=cert_dir, new=new)
+        new = not os.path.exists(certfile) and (not keyfile or not os.path.exists(keyfile))
+        print >> sys.stderr, "Generating" if new else "Using", "SSL cert", certfile
+        fingerprint = ssl_cert_gen(certfile, keyfile, server_name, cwd=cert_dir, new=new, clientname="gterm-local" if options.client_cert else "")
         if not fingerprint:
             print >> sys.stderr, "gtermserver: Failed to generate server SSL certificate"
             sys.exit(1)
         print >> sys.stderr, fingerprint
 
-        ssl_options = {"certfile": certfile, "keyfile": keyfile}
+        ssl_options = {"certfile": certfile}
+        if keyfile:
+            ssl_options["keyfile"] = keyfile
+
         if options.client_cert:
             if options.client_cert == ".":
                 ssl_options["ca_certs"] = certfile
@@ -1856,6 +1873,8 @@ def main():
                       help="Allow automatic user creation")
     parser.add_option("no_formcheck", default=False, opt_type="flag",
                       help="Disable form checking (INSECURE)")
+    parser.add_option("certfile", default="",
+                      help="Path to server cert file")
     parser.add_option("client_cert", default="",
                       help="Path to client CA cert (or '.')")
     parser.add_option("term_type", default="",
