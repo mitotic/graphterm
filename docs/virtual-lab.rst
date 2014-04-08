@@ -21,11 +21,12 @@ personal access code, as you will need it for logging in later. You
 may optionally enter your email address at this point. (If you forget
 your personal access code, the instructor can retrieve it for you.)
 
-*Note:* If the URL is of the ``https//..." form, you may encounter
+*Note:* If the URL is of the ``https//...`` form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
 exception. The instructor may ask you to ignore these warnings and
 accept the certificate, if the GraphTerm server has been configured to
-use a self-signed certificate..
+use a self-signed certificate. Also, self-signed certificates do not
+work with Safari on the Mac; use Chrome or Firefox instead.
 
 *On Windows:* The Google Chrome and Firefox browsers work best, but
 Internet Explorer 10 should also be usable, with some limitations.

@@ -1578,9 +1578,9 @@ def run_server(options, args):
         server_url = "http://"+external_host+("" if external_port == 80 else ":%d" % external_port)
     new_url = server_url + "/local/new"
 
-    gtermhost_args = ["--server_url", server_url]
+    gtermhost_args = ["--server_url="+server_url]
     if options.widget_port:
-        gtermhost_args += ["--widget_port", options.widget_port]
+        gtermhost_args.append("--widget_port=%d" % options.widget_port)
     if options.https:
         gtermhost_args.append("--https")
     if options.oshell:
