@@ -1568,15 +1568,21 @@ def run_server(options, args):
 
     http_port = options.port
     http_host = options.host
+    external_host = options.external_host or http_host
+    external_port = options.external_port or http_port
     internal_host = options.internal_host or "localhost"
     internal_port = options.internal_port or http_port-1
     if options.https:
-        server_url = "https://"+http_host+("" if http_port == 443 else ":%d" % http_port)
+        server_url = "https://"+external_host+("" if external_port == 443 else ":%d" % external_port)
     else:
-        server_url = "http://"+http_host+("" if http_port == 80 else ":%d" % http_port)
+        server_url = "http://"+external_host+("" if external_port == 80 else ":%d" % external_port)
     new_url = server_url + "/local/new"
 
-    gtermhost_args = []
+    gtermhost_args = ["--server_url", server_url]
+    if options.widget_port:
+        gtermhost_args += ["--widget_port", options.widget_port]
+    if options.https:
+        gtermhost_args.append("--https")
     if options.oshell:
         gtermhost_args.append("--oshell")
     if options.logging:
@@ -1753,7 +1759,7 @@ def run_server(options, args):
     else:
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
-    if options.daemon and options.auto_users:
+    if options.auto_users:
         cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", "activate", internal_host] + Server_settings["gtermhost_args"]
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
@@ -1845,6 +1851,10 @@ def main():
 
     parser.add_option("terminal", default=False, opt_type="flag",
                       help="Open new terminal window")
+    parser.add_option("external_host", default="",
+                      help="external host name (or IP address), if different from host")
+    parser.add_option("external_port", default=0,
+                      help="external port, if different from port", opt_type="int")
     parser.add_option("internal_host", default="",
                       help="internal host name (or IP address) (default: localhost)")
     parser.add_option("internal_port", default=0,

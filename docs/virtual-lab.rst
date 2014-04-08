@@ -17,9 +17,15 @@ name and the access code. If you are creating a new account, you will
 need to obtain the *group access code* from the instructor. 
 
 If you just created a new user account, note down your user name and
-personal access code, or email it to yourself. You will need it for
-logging in later. (If you forget your personal access code, the
-instructor can retrieve it for you.)
+personal access code, as you will need it for logging in later. You
+may optionally enter your email address at this point. (If you forget
+your personal access code, the instructor can retrieve it for you.)
+
+*Note:* If the URL is of the ``https//..." form, you may encounter
+warning messages about untrusted certificates, and be asked to make an
+exception. The instructor may ask you to ignore these warnings and
+accept the certificate, if the GraphTerm server has been configured to
+use a self-signed certificate..
 
 *On Windows:* The Google Chrome and Firefox browsers work best, but
 Internet Explorer 10 should also be usable, with some limitations.
@@ -104,18 +110,6 @@ the Mac and *Control-V* on other systems). If the keyboard command
 does not work, you can try the *terminal->paste special* menu option.
 
 
-Running IPython Notebook server
---------------------------------------------------------------------------------------------
-
-If your instructor has permitted it, you can run your own
-password-proteced public IPython Notebook server on the remote machine
-using the ``gnbserver`` command. You can access it using your browser,
-with an URL of the form ``http://hostname.domain:port``, where
-``port`` is the port number output by the ``gnbserver`` command. The
-notebook password is the same as the access code for your user
-account.
-
-
 GraphTerm notebook interface
 --------------------------------------------------------------------------------------------
 
@@ -164,6 +158,22 @@ To exit the python command line, type *Control-D* or the following
 command::
 
     >>> exit()
+
+
+Running IPython Notebook server
+--------------------------------------------------------------------------------------------
+
+If your instructor has permitted it, you can run your own
+password-proteced public IPython Notebook server on the remote machine
+using the ``gnbserver`` command. You can access it using your browser,
+with an URL of the form ``https://hostname.domain:port``, where
+``port`` is the port number output by the ``gnbserver`` command. The
+notebook password is the same as the access code for your user
+account.
+
+*Note:* If each person runs their own copy of the IPython Notebook
+server, it can degrade performance on a shared computer. Whenever
+possible, use the lightweight GraphTerm notebook interface described above.
 
 
 Downloading files
