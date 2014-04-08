@@ -35,8 +35,8 @@ c.NotebookApp.port_retries = 0
 def main():
     usage = "usage: %prog [-s server]"
     parser = OptionParser(usage=usage)
-    parser.add_option("-c", "--certfile", dest="certfile", default="",
-                  help="Path to SSL certificate file")
+    parser.add_option("-c", "--certfile", dest="certfile", default="/var/graphterm/localhost.pem",
+                  help="Path to SSL certificate file (default: /var/graphterm/localhost.pem)")
     parser.add_option("-s", "--server", dest="server", default="*",
                   help="External server name/IP address to listen on (default: '*')")
 
@@ -48,6 +48,8 @@ def main():
 
     certline = ""
     if options.certfile:
+        if not os.path.exists(options.certfile):
+            sys.exit("ERROR: SSL cert file "+options.certfile+" not found!")
         certline = "c.NotebookApp.certfile = '%s'" % options.certfile
 
     auth_file = gterm.get_auth_filename(user=user, server=auth_server)

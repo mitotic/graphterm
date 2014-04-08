@@ -100,11 +100,13 @@ SETUP_USER_CMD = os.path.join(Bin_dir, "gterm_user_setup")
 
 APP_DIRNAME = ".graphterm"
 APP_AUTH_FILENAME = "graphterm_auth"
+APP_EMAIL_FILENAME = "graphterm_email"
 APP_SECRET_FILENAME = "graphterm_secret"
 SIGN_SEP = "|"
 
 App_dir = os.path.join(os.path.expanduser("~"), APP_DIRNAME)
 App_auth_file = os.path.join(App_dir, APP_AUTH_FILENAME)
+App_email_file = os.path.join(App_dir, APP_EMAIL_FILENAME)
 App_secret_file = os.path.join(App_dir, APP_SECRET_FILENAME)
 
 def dashify(s, n=4):

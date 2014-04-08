@@ -335,15 +335,21 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
     gAuthenticatingCookie = connect_cookie;
     $("#authcode").val("");
 
-    if (need_user)
+    if (need_user) {
+	if (need_user != "_")
+	    $("#authuser").val(need_user);
 	$("#authusercontainer").show();
-    else
+    } else {
 	$("#authusercontainer").hide();
+    }
 
-    if (need_code)
+    if (need_code) {
+	if (need_code != "_")
+	    $("#authcode").val(need_code);
 	$("#authcodecontainer").show();
-    else
+    } else {
 	$("#authcodecontainer").hide();
+    }
 	
     $("#authmessage").html(msg||"");
 
@@ -363,6 +369,13 @@ function Authenticate(evt) {
     console.log("Authenticate: ", evt);
     var authHMAC = compute_hmac(undashify($("#authcode").val() || "", SIGN_HEXDIGITS), gAuthenticatingCookie);
     window.location = location.pathname+"?"+$.param({cauth: gAuthenticatingCookie, code: authHMAC, user:$("#authuser").val()});
+    return false;
+}
+
+var gEmailForm = '<form id="emailaddrform" method="get" action="/unknown"><span id="emailaddrcontainer">E-mail: <input id="emailaddr" name="email" type="text"/></span> <input id="emailsubmit" type="submit" value="Submit Email"/></form>';
+
+function EmailSubmit(evt) {
+    window.location = '/?'+$.param({qauth: getAuth(), email:$("#emailaddr").val()});
     return false;
 }
 
@@ -1093,7 +1106,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    host_html += 'User: <b>'+user + '</b><p>\n';
 		if (new_auto) {
 		    var mail_body = "User: "+user+"\nCode: "+new_auto+"\nURL: "+window.location.protocol+"/"+"/"+window.location.host+"/\n";
-		    host_html += 'Created new user <b>'+user+'</b>.<br>User authentication code is<br>&nbsp;<b>'+new_auto+'</b><br>Copy this information for future use or <a href="mailto:?subject=Graphterm%20code&body='+encodeURIComponent(mail_body)+'">email it to yourself</a>.<p>Click <a href="/">here</a> to open a terminal.<br>';
+		    host_html += 'Created new user with authentication code:<br>&nbsp;<b>'+new_auto+'</b><br>Copy this information for future use or <a href="mailto:?subject=Graphterm%20code&body='+encodeURIComponent(mail_body)+'">email it to yourself</a>.<p><a href="/">Click here</a> to open a terminal.<p>Optionally, you can enter an email address below. It will be used only for password recovery.<br>'+gEmailForm;
 		} else if (!hosts.length) {
 		    host_html += 'No GraphTerm Hosts currently available<br>';
 		} else {
@@ -1105,6 +1118,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		}
 		host_html += '<p><a href="#" onclick="SignOut();">Sign out</a>';
 		$("body").html(host_html);
+		if (new_auto) {
+		    $("#emailaddrform").rebind("submit", EmailSubmit);
+		    $("#emailaddr").focus();
+		}
 
             } else if (action == "term_list") {
 		if (command[1])

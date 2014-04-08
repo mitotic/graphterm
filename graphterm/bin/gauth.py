@@ -6,6 +6,7 @@ gauth: Display graphterm authentication code for user
 """
 
 import os
+import pwd
 import sys
 import urllib
 
@@ -17,6 +18,7 @@ def main():
     parser.add_argument(label="", help="Username")
     parser.add_option("admin", "ubuntu", short="a", help="Admin username (default: ubuntu)")
     parser.add_option("mail", False, short="m", help="Display info for mailing etc.")
+    parser.add_option("notebook", False, short="n", help="Display notebook URL")
     parser.add_option("group", False, short="g", help="Display group code")
     parser.add_option("server", "localhost", short="s", help="External server name (default: localhost)")
     parser.add_option("write", False, short="w", help="Write authentication file for user (for superuser use)")
@@ -40,7 +42,16 @@ def main():
         mail_body = "\nUser: "+user+"\n" if user else "\nGroup "
         mail_body += "Code: "+gterm.dashify(user_code)+"\n"
         mail_body += "URL: "+gterm.URL+"\n"
-        mail_url = 'mailto:?subject=Graphterm%20code&body='+urllib.quote(mail_body)
+        if user and options.notebook:
+            prefix, sep, suffix = gterm.URL.rpartition(":")
+            mail_body += "Notebook URL: %s:%d\n" % (prefix if suffix.isdigit() else gterm.URL, gterm.NB_BASE_PORT+pwd.getpwnam(user).pw_uid)
+        email_addr = ""
+        try:
+            with open(gterm.App_email_file, "r") as f:
+                email_addr = f.read().strip()
+        except Exception, excp:
+            pass
+        mail_url = 'mailto:'+email_addr+'?subject=Graphterm%20code&body='+urllib.quote(mail_body)
         if gterm.Lterm_cookie:
             gterm.wrap_write(mail_body.replace("\n","<br>")+'<p>Click <a href="'+mail_url+'">here</a> to email it')
         else:

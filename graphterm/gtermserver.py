@@ -351,10 +351,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return self.is_local() or (terminal_params and (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"]))
 
     def open(self):
-        need_code = self._auth_type >= self.LOCAL_AUTH
-        need_user = self._auth_type == self.NAME_AUTH or self._auth_type >= self.MULTI_AUTH
-
         user = ""
+        code = ""
         try:
             auth_message = "Please authenticate"
             if COOKIE_NAME in self.request.cookies:
@@ -467,6 +465,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.authorized = self.add_state(user, self.WEBCAST_AUTH)
                 else:
                     logging.info("GTSocket.open: Authentication requested: %s", auth_message)
+                    need_user = "_" if (self._auth_type == self.NAME_AUTH or self._auth_type >= self.MULTI_AUTH) else ""
+                    need_code = "_" if (self._auth_type >= self.LOCAL_AUTH) else ""
+                    if Server_settings["https"]:
+                        if need_user:
+                            need_user = user or need_user
+                        if need_code:
+                            need_code = code or need_code
+
                     self.write_json([["authenticate", need_user, need_code, self.get_connect_cookie(), auth_message]])
                     self.close()
                     return
@@ -492,6 +498,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             is_super_user = self.is_super(user) or self.is_local()
 
             if len(path_comps) < 1 or not path_comps[0]:
+                email_addr = query_data.get("email", [""])[0]
+                if email_addr:
+                    try:
+                        with open(gterm.App_email_file, "w") as f:
+                            f.write(email_addr+"\n")
+                    except Exception, excp:
+                        logging.warning("ERROR in writing email: %s", excp)
+
                 host_list = TerminalConnection.get_connection_ids()
                 if self._auth_type >= self.MULTI_AUTH and not is_super_user:
                     if Server_settings["allow_share"]:
@@ -1567,7 +1581,7 @@ def run_server(options, args):
         gtermhost_args.append("--oshell")
     if options.logging:
         gtermhost_args.append("--logging")
-    Server_settings = {"host": http_host, "port": http_port,
+    Server_settings = {"host": http_host, "port": http_port, "https": options.https,
                        "internal_host": internal_host, "internal_port": internal_port,
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
