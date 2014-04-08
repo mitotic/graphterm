@@ -1579,8 +1579,6 @@ def run_server(options, args):
     new_url = server_url + "/local/new"
 
     gtermhost_args = ["--server_url="+server_url]
-    if options.widget_port:
-        gtermhost_args.append("--widget_port=%d" % options.widget_port)
     if options.https:
         gtermhost_args.append("--https")
     if options.oshell:
