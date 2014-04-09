@@ -449,7 +449,7 @@ function setupTerminal() {
 }
 
 function handle_resize() {
-    console.log("handle_resize:");
+    //console.log("handle_resize:");
     gRows = Math.max(2, Math.floor($(window).height()/gRowHeight)-1);
     gCols = Math.max(3, Math.floor($(window).width()/gColWidth)-1);
     if (gWebSocket && gParams.controller)
@@ -732,7 +732,7 @@ function GTClearTerminal() {
 }
 
 function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
-    console.log("GTAppendPagelet:", row_params);
+    //console.log("GTAppendPagelet:", row_params);
     var row_opts = row_params[JOPTS];
     var overwrite = !!row_opts.overwrite;
     var pagelet_id = row_opts.pagelet_id || "";
@@ -2118,7 +2118,7 @@ function GTMenuUpdateToggle(stateKey, newValue, force) {
 }
 
 function GTMenuHandler(evt) {
-    console.log("GTMenuHandler: ", evt);
+    //console.log("GTMenuHandler: ", evt);
     if (!$(this).hasClass("gterm-menu-splash"))
 	GTReceivedUserInput("menuhandler");
     if (gShortcutMenus)
@@ -2163,7 +2163,7 @@ function GTMenuEvent(target, setValue, force) {
     if ($(target).hasClass("gterm-non-notebook") && gNotebook)
 	return false;
     var stateKey = $(target).attr("gterm-state");
-    console.log("GTMenuEvent: ", stateKey, target);
+    //console.log("GTMenuEvent: ", stateKey, target);
     if (!stateKey)
 	return null;
 
@@ -2333,7 +2333,7 @@ function GTMenuShare(selectKey, newValue, force) {
 }
 
 function GTMenuTop(topKey, force) {
-    console.log("GTMenuTop: ", topKey, force);
+    //console.log("GTMenuTop: ", topKey, force);
     switch (topKey) {
     case "steal":
 	if (!gMenuState.share.locked) {
@@ -2729,7 +2729,7 @@ function gtermLinkClickHandler(event) {
 	return false;
     }
 
-    console.log("gtermLinkClickHandler", file_url, options);
+    //console.log("gtermLinkClickHandler", file_url, options);
     return false;
 }
 
@@ -3809,7 +3809,7 @@ function RunPrefixMethod(obj, method) {
 
 var gFullpageDisplay = null;
 function StartFullpage(display, split) {
-    console.log("StartFullpage: ", display, split);
+    //console.log("StartFullpage: ", display, split);
     gFullpageDisplay = display;
     $("#session-bufscreen").addClass(gFullpageDisplay)
     if (display == "fullpage") {
