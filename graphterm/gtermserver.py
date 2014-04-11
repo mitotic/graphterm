@@ -439,7 +439,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     self.close()
                                     return
 
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "activate", Server_settings["internal_host"]] + Server_settings["gtermhost_args"]
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["internal_host"]] + Server_settings["gtermhost_args"]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
                                     logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
@@ -1332,8 +1332,10 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                             ws.write_message(json.dumps(owners_only_list))
                 except Exception, excp:
                     logging.error("remote_response: write ERROR %s", excp)
-                    import traceback
-                    logging.info("Error in websocket: %s\n%s", excp, traceback.format_exc())
+                    closed_excp = getattr(tornado.websocket, "WebSocketClosedError", None)
+                    if not closed_excp or not isinstance(excp, closed_excp):
+                        import traceback
+                        logging.info("Error in websocket: %s\n%s", excp, traceback.format_exc())
                     try:
                         # Close websocket on write error
                         ws.close()
@@ -1521,20 +1523,6 @@ class ProxyFileHandler(tornado.web.RequestHandler):
 def same_group(user1, user2):
     return Server_settings["user_groups"] and Server_settings["user_groups"].get(user1) and Server_settings["user_groups"].get(user1) == Server_settings["user_groups"].get(user2)
 
-def read_groups():
-    group_file = os.path.join(gterm.App_dir, "graphterm_groups.json")
-    if os.path.exists(group_file):
-        with open(group_file) as f:
-            try:
-                Server_settings["user_groups"] = {}
-                groups = json.loads(f.read())
-                for group, members in groups.iteritems():
-                    for member in members:
-                        Server_settings["user_groups"][member] = group
-                print >> sys.stderr, "user groups: ", groups
-            except Exception, excp:
-                sys.exit("Error in graphterm_groups.json file: "+str(excp))
-
 def run_server(options, args):
     global IO_loop, Http_server, Local_client, Host_secret, Server_settings, Term_settings, Trace_shell
     import signal
@@ -1585,14 +1573,17 @@ def run_server(options, args):
         gtermhost_args.append("--oshell")
     if options.logging:
         gtermhost_args.append("--logging")
+
+    groups, membership_dict = gterm.read_groups()
+    if groups:
+        print >> sys.stderr, "user groups: ", groups
+
     Server_settings = {"host": http_host, "port": http_port, "https": options.https,
                        "internal_host": internal_host, "internal_port": internal_port,
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
                        "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
-                       "user_groups": {}, "gtermhost_args": gtermhost_args}
-
-    read_groups()
+                       "user_groups": membership_dict, "gtermhost_args": gtermhost_args}
 
     try:
         Term_settings = json.loads(options.term_settings or "{}")
@@ -1758,7 +1749,8 @@ def run_server(options, args):
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
     if options.auto_users:
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", "activate", internal_host] + Server_settings["gtermhost_args"]
+        action = "activate" if options.no_reset else "restart"
+        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, internal_host] + Server_settings["gtermhost_args"]
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
             logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
@@ -1893,6 +1885,8 @@ def main():
                       help="Allow sharing of terminals between multiple users")
     parser.add_option("auto_users", default=False, opt_type="flag",
                       help="Allow automatic user creation")
+    parser.add_option("no_reset", default=False, opt_type="flag",
+                      help="Do not reset existing host connections")
     parser.add_option("no_formcheck", default=False, opt_type="flag",
                       help="Disable form checking (INSECURE)")
     parser.add_option("certfile", default="",

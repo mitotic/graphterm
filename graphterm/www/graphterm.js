@@ -2449,6 +2449,9 @@ function GTMenuCommand(selectKey, newValue, force) {
     case "rename":
 	cmd = advanced ? "mv " : "mv OLD_FILE NEW_FILE_OR_DIR";
 	break;
+    case "make":
+	cmd = advanced ? "mkdir " : "mkdir DIRECTORY_NAME";
+	break;
     case "chat":
 	cmd = "gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &";
 	break;

@@ -22,6 +22,7 @@ echoerrlf ""
 echoerr "${esc}[?${gterm_code}l"
 
 while true; do
+    sleep 1
     read INPUT
     echo $INPUT
 done

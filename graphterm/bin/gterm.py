@@ -101,10 +101,14 @@ SETUP_USER_CMD = os.path.join(Bin_dir, "gterm_user_setup")
 APP_DIRNAME = ".graphterm"
 APP_AUTH_FILENAME = "graphterm_auth"
 APP_EMAIL_FILENAME = "graphterm_email"
+APP_GROUPS_FILENAME = "graphterm_groups.json"
 APP_SECRET_FILENAME = "graphterm_secret"
 SIGN_SEP = "|"
 
-App_dir = os.path.join(os.path.expanduser("~"), APP_DIRNAME)
+def get_app_dir(user=""):
+    return os.path.join(os.path.expanduser("~"+user), APP_DIRNAME)
+    
+App_dir = get_app_dir() # For current user
 App_auth_file = os.path.join(App_dir, APP_AUTH_FILENAME)
 App_email_file = os.path.join(App_dir, APP_EMAIL_FILENAME)
 App_secret_file = os.path.join(App_dir, APP_SECRET_FILENAME)
@@ -166,6 +170,21 @@ def clear_auth_code(appdir=App_dir, user="", server=""):
         os.remove(auth_file)
     except Exception:
         pass
+
+def read_groups(user=""):
+    group_file = os.path.join(get_app_dir(user), APP_GROUPS_FILENAME)
+    groups = {}
+    membership = {}
+    if os.path.exists(group_file):
+        with open(group_file) as f:
+            try:
+                groups = json.loads(f.read())
+                for group, members in groups.iteritems():
+                    for member in members:
+                        membership[member] = group
+            except Exception, excp:
+                sys.exit("Error in reading group from %s: %s" % (group_file, excp))
+    return groups, membership
 
 def compute_hmac(key, message, hex_digits=HEX_DIGITS):
     return hmac.new(str(key), message, digestmod=hashlib.sha256).hexdigest()[:hex_digits]
