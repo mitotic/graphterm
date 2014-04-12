@@ -51,9 +51,6 @@ AJAX_EDITORS = set(["ace", "ckeditor", "textarea"])
 
 OSHELL_NAME = "osh"
 
-##SHELL_CMD = "bash -l"
-SHELL_CMD = "/bin/bash"
-
 HTML_ESCAPES = ["\x1b[?1155;", "h",
                 "\x1b[?1155l"]
 
@@ -129,54 +126,38 @@ class BlobCache(object):
 class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
     _all_connections = {}
     all_cookies = {}
-    def __init__(self, host, port, host_secret="", oshell=False, io_loop=None, ssl_options={},
-                 command="", term_type="", term_encoding="utf-8", server_url="", widget_port=0, prompt_list=[],
-                 blob_host="", term_params={}, lterm_logfile="", key_secret=None, key_version=None, key_id=None):
+    def __init__(self, host, port, host_secret="", io_loop=None, ssl_options={},
+                 key_secret=None, key_version=None, key_id=None, lterm_logfile=""):
         super(TerminalClient, self).__init__(host, port, io_loop=io_loop,
                                              ssl_options=ssl_options, max_packet_buf=3,
                                              reconnect_sec=RETRY_SEC, server_type="frame",
                                              key_secret=key_secret, key_version=key_version, key_id=key_id)
         self.host_secret = host_secret
-        self.oshell = oshell
 
-        self.command = command or SHELL_CMD
-        self.term_type = term_type
-        self.term_encoding = term_encoding
-        self.widget_port = widget_port
-        self.prompt_list = prompt_list
-        self.term_params = term_params
         self.lterm_logfile = lterm_logfile
 
         self.terms = {}
         self.lineterm = None
-        self.server_url = server_url or (("https" if ssl_options else "http") + "://" + host + ":" + str(port+1))
-        if blob_host == "wildcard":
-            self.blob_server = ("https" if ssl_options else "http") + "://*." + host + ":" + str(port+1)
-        elif blob_host:
-            self.blob_server = ("https" if ssl_options else "http") + "://" + blob_host + ":" + str(port+1)
-        else:
-            self.blob_server = blob_host
+        self.blob_server = ""
         self.osh_cookie = lineterm.make_lterm_cookie()
         self.blob_cache = BlobCache()
+        self.host_settings = {}
+        self.widget_port = 0
+        self.log_filename = ""
 
     def handle_shutdown(self):
-        print >> sys.stderr, "Shutting down client connection %s -> %s:%s" % (self.connection_id, self.host, self.port)
+        logging.warning("Shutting down client connection %s -> %s:%s", self.connection_id, self.host, self.port)
         if self.lineterm:
             self.lineterm.shutdown()
         self.lineterm = None
 
     def handle_connect(self):
-        global Widget_server
         normalized_host = get_normalized_host(self.connection_id)
         self.remote_response("", "", [["term_params", {"version": about.version,
                                                   "min_version": about.min_version,
                                                   "host_secret": self.host_secret,
                                                   "normalized_host": normalized_host,
                                                   "term_names": self.terms.keys()}]])
-        if self.widget_port and not Widget_server:
-            Widget_server = WidgetServer()
-            Widget_server.listen(self.widget_port, address="localhost")
-            print >> sys.stderr, "GraphTerm widgets listening on %s:%s" % ("localhost", self.widget_port)
         
     def add_oshell(self):
         self.add_term(OSHELL_NAME, self.osh_cookie)
@@ -211,12 +192,13 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             version_str = gterm.API_VERSION
             if gterm.API_MIN_VERSION and version_str != gterm.API_MIN_VERSION and not version_str.startswith(gterm.API_MIN_VERSION+"."):
                 version_str += "/" + gterm.API_MIN_VERSION
-            self.lineterm = lineterm.Multiplex(self.screen_callback, command=(command or self.command),
+            self.lineterm = lineterm.Multiplex(self.screen_callback, command=(command or self.host_settings["command"]),
                                                shared_secret=self.host_secret, host=self.connection_id,
-                                               server_url=self.server_url, term_type=self.term_type,
+                                               server_url=self.host_settings["server_url"],
+                                               term_type=self.host_settings["term_type"],
                                                api_version=version_str, widget_port=self.widget_port,
-                                               prompt_list=self.prompt_list, blob_server=self.blob_server,
-                                               term_params=self.term_params, logfile=self.lterm_logfile)
+                                               prompt_list=self.host_settings["prompt_list"], blob_server=self.blob_server,
+                                               term_params=self.host_settings["lterm_params"], logfile=self.lterm_logfile)
         term_name, lterm_cookie, alert_msg = self.lineterm.terminal(term_name, height=height, width=width,
                                                                     winheight=winheight, winwidth=winwidth,
                                                                     parent=parent)
@@ -256,13 +238,44 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         else:
             self.send_request_threadsafe("response", term_name, response_id, [["terminal", command, arg]])
 
+    def term_reconnect(self, host_settings):
+        global Widget_server
+        if self.host_settings and self.host_settings != host_settings:
+            logging.error("ERROR: Host settings mismatch: %s vs. %s" % (self.host_settings, host_settings))
+
+        self.host_settings = host_settings
+
+        if self.connection_id != gterm.LOCAL_HOST and not self.log_filename and (self.host_settings["logging"] or Options.logging):
+            self.log_filename = os.path.join(gterm.App_dir, "gtermhost.log")
+            gterm.setup_logging(logging.WARNING, self.log_filename, logging.INFO)
+            logging.warning("*************************Logging to file %s", self.log_filename)
+
+        if self.host_settings["widget_port"] > 0:
+            self.widget_port = widget_port
+        elif self.host_settings["widget_port"] < 0:
+            self.widget_port = gterm.DEFAULT_HTTP_PORT-2 if self.connection_id == gterm.LOCAL_HOST else gterm.WIDGET_BASE_PORT+os.getuid()
+        else:
+            self.widget_port = 0
+        
+        if self.host_settings["blob_host"] == "wildcard":
+            self.blob_server = ("https" if self.host_settings["https"] else "http") + "://*." + self.host + ":" + str(self.port+1)
+        elif self.host_settings["blob_host"]:
+            self.blob_server = ("https" if self.host_settings["https"] else "http") + "://" + self.host_settings["blob_host"] + ":" + str(self.port+1)
+        else:
+            self.blob_server = ""
+
+        if self.widget_port and not Widget_server:
+            Widget_server = WidgetServer()
+            Widget_server.listen(self.widget_port, address="localhost")
+            logging.warning("GraphTerm widgets listening on %s:%s", "localhost", self.widget_port)
+
     def remote_response(self, term_name, websocket_id, message_list):
         self.send_request_threadsafe("response", term_name, websocket_id, message_list)
 
     def remote_request(self, term_name, from_user, req_list):
         """
         Setup commands:
-          reconnect
+          reconnect <response_id> <host_settings>
 
         Input commands:
           incomplete_input <line>
@@ -303,6 +316,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     self.shutdown()
 
                 elif action == "reconnect":
+                    self.term_reconnect(cmd[1])
                     if self.lineterm:
                         response_id = cmd[0]
                         self.lineterm.reconnect(term_name, response_id)
@@ -327,14 +341,14 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
 
                 elif action == "keypress":
                     if self.lineterm:
-                        self.lineterm.term_write(term_name, cmd[0].encode(self.term_encoding, "ignore"))
+                        self.lineterm.term_write(term_name, cmd[0].encode(self.host_settings["term_encoding"], "ignore"))
 
                 elif action == "chat":
                     # ["" or host/session, "" or token, message]
                     msg = from_user + ": " + cmd[2]
                     chat_widget = WidgetStream.get_chat_widget(lterm_cookie)
                     if chat_widget:
-                        chat_widget.send_packet(msg.encode(self.term_encoding, "ignore"))
+                        chat_widget.send_packet(msg.encode(self.host_settings["term_encoding"], "ignore"))
 
                 elif action == "save_data":
                     # save_data <save_params> <filedata>
@@ -562,7 +576,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         except Exception, excp:
             import traceback
             errmsg = "%s\n%s" % (excp, traceback.format_exc())
-            print >> sys.stderr, "TerminalClient.remote_request: "+errmsg
+            logging.error("TerminalClient.remote_request: %s", errmsg)
             self.remote_response(term_name, "", [["errmsg", errmsg]])
             ##self.shutdown()
 
@@ -810,7 +824,6 @@ def gterm_connect(host_name, server_addr, server_port=gterm.DEFAULT_HOST_PORT, c
 def run_host(options, args):
     global Gterm_host, Host_secret, Trace_shell, Xterm, Killterm
     host_name = args[0]
-    protocol = "https" if options.https else "http"
 
     oshell_globals = globals() if options.oshell else None
 
@@ -832,18 +845,14 @@ def run_host(options, args):
 
     key_version = "1" if auth_code else None
     server_port = options.server_port or auth_port or gterm.DEFAULT_HOST_PORT
-    widget_port = options.widget_port if options.widget_port > 0 else (gterm.DEFAULT_HTTP_PORT-2 if options.widget_port else 0)
+    internal_client_ssl = {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": options.internal_certfile} if options.internal_certfile else None
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=server_port,
-                                                         connect_kw={"command": options.shell_command,
-                                                                     "term_type": options.term_type,
-                                                                     "term_encoding": options.term_encoding,
-                                                                     "prompt_list": gterm.DEFAULT_PROMPTS,
+                                                         connect_kw={"ssl_options": internal_client_ssl,
                                                                      "key_secret": auth_code or None,
                                                                      "key_version": key_version,
                                                                      "key_id": str(server_port),
-                                                                     "server_url": options.server_url,
-                                                                     "widget_port": widget_port},
+                                                                     "lterm_logfile": options.lterm_logfile},
                                                          oshell_globals=oshell_globals,
                                                          oshell_unsafe=True,
                                                          oshell_no_input=(not options.oshell_input))
@@ -877,6 +886,7 @@ def run_host(options, args):
 
 
 def main():
+    global Options
     from optparse import OptionParser
     usage = "usage: gtermhost [-h ... options] <hostname>"
     parser = OptionParser(usage=usage)
@@ -888,30 +898,22 @@ def main():
     parser.add_option("", "--auth_file", dest="auth_file", default="",
                       help="Server auth file")
 
-    parser.add_option("", "--shell_command", dest="shell_command", default=SHELL_CMD,
-                      help="Shell command (default: %s) % SHELL_CMD")
     parser.add_option("", "--oshell", dest="oshell", action="store_true",
                       help="Activate otrace/oshell")
     parser.add_option("", "--oshell_input", dest="oshell_input", action="store_true",
                       help="Allow stdin input otrace/oshell")
-    parser.add_option("", "--https", dest="https", action="store_true",
-                      help="Use SSL (TLS) connections for security")
-    parser.add_option("", "--server_url", dest="server_url", default="",
-                      help="Server URL (external)")
-    parser.add_option("", "--widget_port", dest="widget_port", default=0,
-                      help="Port for widgets port (default: 0) (-1 for %d)" % (gterm.DEFAULT_HOST_PORT-2), type="int")
-    parser.add_option("", "--term_type", dest="term_type", default="",
-                      help="Terminal type (linux/screen/xterm)")
-    parser.add_option("", "--term_encoding", dest="term_encoding", default="utf-8",
-                      help="Terminal character encoding (utf-8/latin-1/...)")
+    parser.add_option("", "--internal_certfile", dest="internal_certfile", default="",
+                      help="Internal SSL certfile")
     parser.add_option("", "--logging", dest="logging", action="store_true",
                       help="Log to ~/.graphterm/gtermhost.log")
+    parser.add_option("", "--lterm_logfile", dest="lterm_logfile", default="",
+                      help="Lineterm logfile")
 
     parser.add_option("", "--daemon", dest="daemon", default="",
                       help="daemon=start/stop/restart/status")
 
-    (options, args) = parser.parse_args()
-    if len(args) != 1 and options.daemon != "stop":
+    (Options, args) = parser.parse_args()
+    if len(args) != 1 and Options.daemon != "stop":
         print >> sys.stderr, usage
         sys.exit(1)
 
@@ -919,20 +921,16 @@ def main():
         print >> sys.stderr, "Invalid/missing host name"
         sys.exit(1)
 
-    if options.logging:
-        Log_filename = os.path.join(gterm.App_dir, "gtermhost.log")
-        gterm.setup_logging(logging.WARNING, Log_filename, logging.INFO)
-    else:
-        gterm.setup_logging(logging.ERROR)
+    gterm.setup_logging(logging.ERROR)
 
-    if not options.daemon:
-        run_host(options, args)
+    if not Options.daemon:
+        run_host(Options, args)
     else:
         from daemon import ServerDaemon
         host_name = args[0]
         pidfile = "/tmp/gtermhost."+host_name+".pid"
-        daemon = ServerDaemon(pidfile, functools.partial(run_host, options, args))
-        daemon.daemon_run(options.daemon)
+        daemon = ServerDaemon(pidfile, functools.partial(run_host, Options, args))
+        daemon.daemon_run(Options.daemon)
 
 if __name__ == "__main__":
     main()

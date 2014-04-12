@@ -40,9 +40,17 @@ SIGN_HEXDIGITS = 16      # User-entered keys (should match packetserver setup)
 
 GT_PREFIX = "GTERM_"
 
+LOCAL_HOST = "local"
+
+HOME_MNT = "/home"
+
+##SHELL_CMD = "bash -l"
+SHELL_CMD = "/bin/bash"
+
 DEFAULT_HTTP_PORT = 8900
 DEFAULT_HOST_PORT = DEFAULT_HTTP_PORT - 1
 
+WIDGET_BASE_PORT = 8000
 NB_BASE_PORT = 10000
 
 Bin_dir = os.path.dirname(__file__)

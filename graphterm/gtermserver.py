@@ -87,12 +87,6 @@ REQUEST_TIMEOUT = 15
 AUTH_DIGITS = 12    # Form authentication code hex-digits
                     # Note: Less than half of the 32 hex-digit state id should be used for form authentication
 
-PROTOCOL = "http"
-
-LOCAL_HOST = "local"
-
-HOME_MNT = "/home"
-
 RSS_FEED_URL = "http://code.mindmeldr.com/graphterm/graphterm-announce/posts.xml"
 
 def cgi_escape(s):
@@ -391,7 +385,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     user = query_data.get("user", [""])[0].lower()
                     code = query_data.get("code", [""])[0]
 
-                    if user and (user == LOCAL_HOST or not gtermhost.USER_RE.match(user)):
+                    if user and (user == gterm.LOCAL_HOST or not gtermhost.USER_RE.match(user)):
                         # Username "local" is not allowed to prevent localhost access
                         self.write_json([["abort", "Invalid username '%s'; must start with letter and include only letters/digits/hyphen" % user]])
                         self.close()
@@ -429,7 +423,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             key_version = "1" if self._auth_type >= self.MULTI_AUTH else None
                             group_secret = gterm.user_hmac(self._auth_code, "", key_version="grp")
 
-                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(HOME_MNT+"/"+user) and (code == gterm.compute_hmac(group_secret, cauth)):
+                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(gterm.HOME_MNT+"/"+user) and (code == gterm.compute_hmac(group_secret, cauth)):
                                 # New auto user; group code validation required
                                 validated = True
                                 new_auto_user = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
@@ -509,8 +503,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 host_list = TerminalConnection.get_connection_ids()
                 if self._auth_type >= self.MULTI_AUTH and not is_super_user:
                     if Server_settings["allow_share"]:
-                        ##if LOCAL_HOST in host_list:
-                        ##    host_list.remove(LOCAL_HOST)
+                        ##if gterm.LOCAL_HOST in host_list:
+                        ##    host_list.remove(gterm.LOCAL_HOST)
                         pass
                     elif Server_settings["user_groups"]:
                         host_list = [h for h in host_list if h == user or same_group(h, user) ]
@@ -531,7 +525,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 return
 
             if self._auth_type >= self.MULTI_AUTH and not is_super_user:
-                ##if host == LOCAL_HOST:
+                ##if host == gterm.LOCAL_HOST:
                 ##    self.write_json([["abort", "Local host access not allowed for user %s" % user]])
                 ##    self.close()
                 ##    return
@@ -622,7 +616,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if path not in self._terminal_params:
                 # Initialize parameters for new terminal
-                allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or (host != LOCAL_HOST and host == user) or (host == LOCAL_HOST and is_super_user))
+                allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or (host != gterm.LOCAL_HOST and host == user) or (is_super_user and (host == gterm.LOCAL_HOST or term_name == gtermhost.OSHELL_NAME)) )
                 if not allow_host_access:
                     self.write_json([["abort", "Unable to create terminal on host %s" % host]])
                     self.close()
@@ -660,7 +654,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.websocket_id = str(self._counter[0])
 
             if is_wildcard(path):
-                allow_wild_card = (not self._super_users and self.authorized["auth_type"] > self.NULL_AUTH and self._auth_type <= self.LOCAL_AUTH) or is_super_user or (host != LOCAL_HOST and host == user)
+                allow_wild_card = (not self._super_users and self.authorized["auth_type"] > self.NULL_AUTH and self._auth_type <= self.LOCAL_AUTH) or is_super_user or (host != gterm.LOCAL_HOST and host == user)
                 if not allow_wild_card:
                     self.write_json([["abort", "User not authorized for wildcard path"]])
                     self.close()
@@ -703,7 +697,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             display_splash = controller and self._counter[0] <= 2
             normalized_host, host_secret = "", ""
             if not self.wildcard:
-                TerminalConnection.send_to_connection(host, "request", term_name, user, [["reconnect", self.websocket_id]])
+                TerminalConnection.send_to_connection(host, "request", term_name, user, [["reconnect", self.websocket_id, Host_settings]])
                 normalized_host = gtermhost.get_normalized_host(host)
                 if self.authorized["auth_type"] > self.WEBCAST_AUTH:
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
@@ -1090,12 +1084,15 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         self.term_count = 0
         self.allow_chat = dict()
 
+    def new_connection(self, *args, **kwargs):
+        super(TerminalConnection, self).new_connection(*args, **kwargs)
+        logging.warning("New connection from %s <- %s", self.connection_id, self.source)
+
     def shutdown(self):
-        print >> sys.stderr, "Shutting down server connection %s <- %s" % (self.connection_id, self.source)
+        logging.warning("Shutting down server connection %s <- %s", self.connection_id, self.source)
         super(TerminalConnection, self).shutdown()
 
     def on_close(self):
-        print >> sys.stderr, "Closing server connection %s <- %s" % (self.connection_id, self.source)
         super(TerminalConnection, self).on_close()
 
     def handle_close(self):
@@ -1524,7 +1521,7 @@ def same_group(user1, user2):
     return Server_settings["user_groups"] and Server_settings["user_groups"].get(user1) and Server_settings["user_groups"].get(user1) == Server_settings["user_groups"].get(user2)
 
 def run_server(options, args):
-    global IO_loop, Http_server, Local_client, Host_secret, Server_settings, Term_settings, Trace_shell
+    global IO_loop, Http_server, Local_client, Host_secret, Host_settings, Server_settings, Term_settings, Trace_shell
     import signal
 
     class AuthHandler(tornado.web.RequestHandler):
@@ -1566,13 +1563,9 @@ def run_server(options, args):
         server_url = "http://"+external_host+("" if external_port == 80 else ":%d" % external_port)
     new_url = server_url + "/local/new"
 
-    gtermhost_args = ["--server_url="+server_url]
-    if options.https:
-        gtermhost_args.append("--https")
+    gtermhost_args = []
     if options.oshell:
         gtermhost_args.append("--oshell")
-    if options.logging:
-        gtermhost_args.append("--logging")
 
     groups, membership_dict = gterm.read_groups()
     if groups:
@@ -1585,6 +1578,12 @@ def run_server(options, args):
                        "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
                        "user_groups": membership_dict, "gtermhost_args": gtermhost_args}
 
+    Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "no_pyindent": options.no_pyindent, "lc_export": options.lc_export},
+                     "term_type": options.term_type, "term_encoding": options.term_encoding,
+                     "blob_host": options.blob_host, "command": options.shell_command,
+                     "prompt_list": options.prompts.split(",") if options.prompts else gterm.DEFAULT_PROMPTS,
+                     "https": options.https, "logging": options.logging,
+                     "widget_port": options.widget_port, "server_url": server_url}
     try:
         Term_settings = json.loads(options.term_settings or "{}")
     except Exception, excp:
@@ -1695,7 +1694,7 @@ def run_server(options, args):
     if auth_code and auth_code != "name":
         key_secret = auth_code
         key_version = "1"
-        local_key_secret = gterm.user_hmac(key_secret, LOCAL_HOST, key_version=key_version)
+        local_key_secret = gterm.user_hmac(key_secret, gterm.LOCAL_HOST, key_version=key_version)
     else:
         key_secret = None
         key_version = None
@@ -1711,24 +1710,13 @@ def run_server(options, args):
         Local_client, Host_secret, Trace_shell = None, None, None
     else:
         oshell_globals = globals() if otrace and options.oshell else None
-        prompt_list = options.prompts.split(",") if options.prompts else gterm.DEFAULT_PROMPTS
-        term_params = {"nb_ext": options.nb_ext, "lc_export": options.lc_export, "no_pyindent": options.no_pyindent}
-        widget_port = options.widget_port if options.widget_port > 0 else (gterm.DEFAULT_HTTP_PORT-2 if options.widget_port else 0)
-        Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(LOCAL_HOST, internal_host,
+        Local_client, Host_secret, Trace_shell = gtermhost.gterm_connect(gterm.LOCAL_HOST, internal_host,
                                                          server_port=internal_port,
                                                          connect_kw={"ssl_options": internal_client_ssl,
-                                                                     "command": options.shell_command,
-                                                                     "term_type": options.term_type,
-                                                                     "term_encoding": options.term_encoding,
                                                                      "key_secret": local_key_secret,
                                                                      "key_version": key_version,
                                                                      "key_id": str(internal_port),
-                                                                     "prompt_list": prompt_list,
-                                                                     "term_params": term_params,
-                                                                     "blob_host": options.blob_host,
-                                                                     "lterm_logfile": options.lterm_logfile,
-                                                                     "server_url": server_url,
-                                                                     "widget_port": widget_port},
+                                                                     "lterm_logfile": options.lterm_logfile},
                                                          oshell_globals=oshell_globals,
                                                          oshell_init="gtermserver.trc",
                                                          oshell_unsafe=True,
@@ -1859,8 +1847,8 @@ def main():
 
     parser.add_option("super_users", default="",
                       help="Super user list: root,admin,...")
-    parser.add_option("shell_command", default="",
-                      help="Shell command")
+    parser.add_option("shell_command", default=gterm.SHELL_CMD,
+                      help="Shell command (default: %s)" % gterm.SHELL_CMD)
     parser.add_option("oshell", default=False, opt_type="flag",
                       help="Activate otrace/oshell")
     parser.add_option("oshell_input", default=False, opt_type="flag",
