@@ -663,9 +663,6 @@ def setup_logging(log_level=logging.ERROR, filename="", file_level=None):
         fhandler.setFormatter(formatter)
         logger.addHandler(fhandler)
 
-    logging.error("")
-    logging.error("**************************%s", "Logging to "+(filename if filename else "console"))
-
 Form_template =  """<div id="gterm-form-%s" class="gterm-form"><span class="gterm-form-title">%s</span> %s
 <input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformnames="%s"></input>  <input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>
 </div>"""
@@ -715,12 +712,13 @@ class FormParser(object):
                 self.parser.add_option(short, "--"+name, dest=name, default=default,
                                        help=help)
 
-    def create_input_html(self, id_suffix):
+    def create_input_html(self, id_suffix, prefill_opts={}):
         input_list = []
         first_arg = True
         arg_count = len(self.arg_list)
         for j, opt_info in enumerate(self.arg_list + self.opt_list):
             opt_name, opt_default, opt_short, opt_label, opt_help = opt_info
+            opt_curval = prefill_opts.get(opt_name, opt_default)
             if opt_label:
                 label = opt_label
             elif j < arg_count:
@@ -739,21 +737,20 @@ class FormParser(object):
             if j < arg_count:
                 classes += ' gterm-input-arg'
             if isinstance(opt_default, bool):
-                if opt_default:
+                if opt_curval:
                     attrs += " checked"
                 input_html = Input_checkbox_template % (id_suffix, opt_name, opt_name, classes, attrs)
 
             elif isinstance(opt_default, (basestring, float, int, long)):
                 if first_arg:
                     attrs += ' autofocus="autofocus"'
-                input_html = Input_text_template % (id_suffix, opt_name, opt_name, classes, str(opt_default).replace('"', "&quot;"), attrs)
+                input_html = Input_text_template % (id_suffix, opt_name, opt_name, classes, str(opt_curval).replace('"', "&quot;"), attrs)
 
             elif isinstance(opt_default, (list, tuple)):
                 opt_list = []
-                opt_sel = "selected"
                 for opt_value in opt_default:
+                    opt_sel = "selected" if opt_value == opt_curval else ""
                     opt_list.append(Select_option_template % (opt_value, opt_sel, opt_value or "Select..."))
-                    opt_sel = ""
                 input_html = Select_template % (id_suffix, opt_name, opt_name, classes, "\n".join(opt_list))
 
             if j >= arg_count:
@@ -768,11 +765,22 @@ class FormParser(object):
             
         return "\n".join(input_list)
 
-    def create_form(self, id_suffix=None):
+    def create_form(self, id_suffix=None, prefill=None):
+        """
+        id_suffix: Form id suffix
+        prefill: (options, args) for prefilling
+        """
         if not id_suffix:
-            id_suffix = "1%09d" % random.randrange(0, 10**9)    
+            id_suffix = "1%09d" % random.randrange(0, 10**9)
+        prefill_opts = {}
+        if prefill:
+            for j, argval in enumerate(prefill[1]):
+                prefill_opts["arg"+str(j+1)] = argval
+            for opt_info in self.opt_list:
+                if hasattr(prefill[0], opt_info[0]):
+                    prefill_opts[opt_info[0]] = getattr(prefill[0], opt_info[0])
         opt_names = ",".join(x[0] for x in (self.arg_list+self.opt_list))
-        input_html = self.create_input_html(id_suffix)
+        input_html = self.create_input_html(id_suffix, prefill_opts=prefill_opts)
         return Form_template % (id_suffix, self.title, input_html, id_suffix, opt_names) 
         
     def parse_args(self, args=None, stderr=False):

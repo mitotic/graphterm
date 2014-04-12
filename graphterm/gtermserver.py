@@ -442,7 +442,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["internal_host"]] + Server_settings["gtermhost_args"]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
-                                    logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
+                                    logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
                                     self.write_json([["abort", "Error in creating new user "+user]])
                                     self.close()
                                     return
@@ -1758,8 +1758,10 @@ def run_server(options, args):
     if options.logging:
         Log_filename = os.path.join(gterm.App_dir, "gtermserver.log")
         gterm.setup_logging(logging.WARNING, Log_filename, logging.INFO)
+        logging.error("**************************Logging to %s", Log_filename)
     else:
         gterm.setup_logging(logging.ERROR)
+        logging.error("**************************Logging to console")
 
     if options.terminal:
         server_nonce = GTSocket.get_connect_cookie()
