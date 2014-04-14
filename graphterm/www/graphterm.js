@@ -3702,7 +3702,7 @@ function GTEndForm(text, cancel) {
     } else {
 	if (gFormIndex)
 	    gWebSocket.write([["clear_last_entry", gFormIndex+""]]);
-	if (gForm && gForm.form_command)
+	if (gForm)
 	    gWebSocket.term_input(text+"\n", false, gForm.form_command);
     }
     if (gFormIndex)
