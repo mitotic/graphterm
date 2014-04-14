@@ -28,15 +28,13 @@ Quick start
 The following steps allow yout quickly launch a "virtual computer lab"
 with multi-user support.
 
- 1. If you do not have an `AWS <http://aws.amazon.com/>`_ account,
-    get one by
-   `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html>`_
+ 1. If you do not have an `AWS <http://aws.amazon.com/>`_ account,  get one by
+    `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html>`_
     The AWS account will be linked to your standard Amazon account.
 
- 2. Create an SSH key pair to access your AWS instances by `clicking here
-   <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_. You
-   need to name the key pair ``ec2key`` to be able to use the
-   ``ec2ssh`` and ``ec2scp`` commands.
+ 2. Create an SSH key pair to access your AWS instances by `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_. You
+    need to name the key pair ``ec2key`` to be able to use the
+    ``ec2ssh`` and ``ec2scp`` commands.
 
  3. Install ``graphterm`` on your local computer using the following commands::
 
@@ -59,30 +57,35 @@ with multi-user support.
     pair name. Choose ``auth_type`` as ``multiuser``.
 
  6. After cloud server has completed configuration, which can take
-    several minutes, type the following command using the IP address of
+    several minutes, type the following command using the domain name of
     the newly created server to login to the password-less super user account ``ubuntu``::
 
-    ec2ssh ubuntu@aws_ip_address
+    ec2ssh ubuntu@aws_domain_name
 
- 7.  Run the following command on the AWS instance to verify that the graphterm server is
-  running::
+ 7.  Run the following command on the AWS instance to verify that the graphterm server is running::
 
     ps -ef|grep gtermserver
 
  8.  Run the following command in the AWS instance to display the *master access code*::
 
-    cat ~/.graphterm/_gterm_auth.txt
+    cat ~/.graphterm/@aws_domain_name_gterm_auth.txt
 
- 9. Use the URL http://aws_ip_address to open a new graphtem window on the AWS
+ 9. Use the URL http://aws_domain_name to open a new graphtem window on the AWS
     server, with  user name ``ubuntu`` and the *master access code*
 
- 10. Run the following command in the AWS graphterm window to display
-    the group access code::
+ 10. Use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
+    download the executable script ``gterm.py`` to your local computer
+    and save the master access code in the local file
+    ``~/.graphterm/@aws_domain_name_gterm_auth.txt`` to use the
+    following local command to create remote graphterm windows:
+
+    gterm.py -u ubuntu http://aws_domain_name
+
+ 11. Run the following command in the AWS graphterm window to display  the group access code::
 
     gauth -g -m ubuntu
 
- 11. Run the following command on your local computer to list and/or
-    kill your AWS instances::
+ 12. Run the following command on your local computer to list and/or kill your AWS instances::
 
     ec2list
 

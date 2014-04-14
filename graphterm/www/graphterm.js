@@ -2349,6 +2349,9 @@ function GTMenuTop(topKey, force) {
     case "new":
 	OpenNew();
 	break;
+    case "detach":
+	DetachSession()
+	break;
     case "run":
 	gNotebook.handleCommand("runbutton", true);
 	break;
@@ -2371,8 +2374,7 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	StealSession();
 	break;
     case "detach":
-	var comps = location.pathname.split("/");
-	window.location = ((comps.length > 1) ? ('/'+comps[1]) : '') + '/?qauth='+getAuth();
+	DetachSession()
 	break;
     case "reconnect":
 	ReconnectHost();
@@ -3514,6 +3516,11 @@ function StealSession() {
     var steal_url = window.location.protocol+"/"+"/"+window.location.host+"/"+gParams.host+"/"+gParams.term+"/steal"; // Split the double slash to avoid confusing the JS minifier
     console.log("StealSession: ", steal_url);
     window.location = steal_url;
+}
+
+function DetachSession() {
+    var comps = window.location.pathname.split("/");
+    window.location = ((comps.length > 1) ? ('/'+comps[1]) : '') + '/?qauth='+getAuth();
 }
 
 function Webcast(start) {

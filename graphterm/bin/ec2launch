@@ -133,6 +133,7 @@ SecurityGroups = [
     ]
 
 setup_file = "SETUP_STATUS"
+setup_errfile = "SETUP_ERROR"
 
 startup_commands = ["#!/bin/bash",
 "AWS_PUBLIC_HOST=`curl http://169.254.169.254/latest/meta-data/public-hostname`",
@@ -234,11 +235,12 @@ startup_commands += ["echo ec2launch SETUP COMPLETED"]
 
 startup_commands += ["EOF",
                      "/bin/bash /root/ec2launch.sh >/root/ec2launch.log 2>&1",
-                     "if [ $? -eq 0 ]; then",
-                     "  sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file,
-                     "else",
-                     "  tail -5 /root/ec2launch.log > ~" + gterm_user + "/" + setup_file,
-                     "fi"]
+                     "if [ $? -ne 0 ]; then",
+                     "  sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_errfile,
+                     "fi",
+                     "sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file,
+                     "tail -10 /root/ec2launch.log > ~" + gterm_user + "/" + setup_file,
+                     ]
 startup_script = "\n".join(startup_commands) + "\n"
 
 if options.verbose:
@@ -319,7 +321,7 @@ if not os.path.exists(key_file):
 
 wait_cmd = "while [ ! -f "+setup_file+" ]; do sleep 1; done; echo "+setup_file+"; cat "+setup_file
 if copy_files and options.install:
-    wait_cmd += "; if [ ! -s "+setup_file+" ]; then "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install"
+    wait_cmd += "; if [ ! -f "+setup_errfile+" ]; then "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install > install.log"
     if install_cmd:
         wait_cmd += "; "+install_cmd
     wait_cmd += "; fi"
@@ -402,7 +404,7 @@ if nameservers:
     print >> sys.stderr, ""
 
 print >> sys.stderr, "Waiting for remote setup to complete..."
-time.sleep(30)
+time.sleep(45)
 
 if copy_files:
     scp_cmd_args = ["scp", "-i", os.path.expanduser("~/.ssh/ec2key.pem"), "-o", "StrictHostKeyChecking=no"] + copy_files + [gterm_user+"@"+public_dns_name+":"]

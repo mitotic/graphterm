@@ -620,21 +620,29 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if path not in self._terminal_params:
                 # Initialize parameters for new terminal
-                allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or (host != gterm.LOCAL_HOST and host == user) or (is_super_user and (host == gterm.LOCAL_HOST or term_name == gtermhost.OSHELL_NAME)) )
-                if not allow_host_access:
-                    self.write_json([["abort", "Unable to create terminal on host %s" % host]])
-                    self.close()
-                    return
+                if host != gterm.LOCAL_HOST and term_name != gtermhost.OSHELL_NAME:
+                    # Super/group user can create/view terminals for other users, but does not own them
+                    term_owner = host
+                else:
+                    term_owner = user
+                if is_super_user: 
+                    allow_host_access = True
+                else:
+                    allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or host == user or (same_group(host, user) and term_name in TerminalConnection.get_connection(host,{})) )
+                    if not allow_host_access:
+                        self.write_json([["abort", "Unable to create terminal on host %s" % host]])
+                        self.close()
+                        return
                 # Note: Multiuser without allow_share implies super user has default read access
                 start_private =  Server_settings["allow_share"]
                 terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
                                    "share_private": start_private, "share_tandem": False,
                                    "alert_status": False, "widget_token": "", "last_active": time.time(),
                                    "nb_name": "", "nb_mod_offset": 0,
-                                   "owner": user, "state_id": self.authorized["state_id"], "auth_type": self.authorized["auth_type"]}
+                                   "owner": term_owner, "state_id": self.authorized["state_id"], "auth_type": self.authorized["auth_type"]}
                 terminal_params.update(Term_settings)
                 self._terminal_params[path] = terminal_params
-                is_owner = True
+                is_owner = (term_owner == user)
             else:
                 # Existing terminal
                 terminal_params = self._terminal_params[path]
