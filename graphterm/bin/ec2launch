@@ -21,8 +21,6 @@ import gterm
 ssh_dir = os.path.expanduser("~/.ssh")
 gterm_user = "ubuntu"
 
-STATUS_CHECK = 'if [ $? -ne 0 ]; then echo "Error in %s" >> /root/ec2launch.log; fi'
-
 usage = "usage: %prog [-h ... ] <instance-tag|full-domain-name>"
 
 form_parser = gterm.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname (e.g., tagname.graphterm.net): ", command="ec2launch -f")
@@ -32,13 +30,9 @@ form_parser.add_option("key_name", "ec2key", help="Instance management SSH key n
 form_parser.add_option("ami", "ami-2f8f9246", help="Instance OS (default: Ubuntu 12.04LTS amd64, us-east-1, rel. 20140408)")
 form_parser.add_option("https", False, help="Use https for security")
 form_parser.add_option("auth_type", ("local", "none", "name", "multiuser"), help="Authentication type (local/none/name/multiuser)")
-form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to")
-form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
-form_parser.add_option("copy_files", "", help="List of files to copy (space separated, e.g., .twitter_auth)")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("netcdf", False, help="Install NetCDF")
 form_parser.add_option("R", False, help="Install R")
-form_parser.add_option("auto_users", False, help="Automatically create new users")
 form_parser.add_option("allow_embedding", False, help="Allow cross-domain iframe embedding")
 form_parser.add_option("allow_share", False, help="Allow sharing between users")
 form_parser.add_option("notebook_server", False, help="Allow passord-proetected access to IPython Notebook server")
@@ -46,6 +40,9 @@ form_parser.add_option("logging", False, help="Enable logging")
 form_parser.add_option("oshell", False, help="Enable OTrace shell")
 form_parser.add_option("screen", False, help="Run server/host using GNU screen")
 form_parser.add_option("other_opts", "", help="Other options for gtermserver (space-separated)")
+form_parser.add_option("install", "", help="Tar file to install on startup (with optional '; command' suffix)")
+form_parser.add_option("copy_files", "", help="List of files to copy (space separated, e.g., .twitter_auth)")
+form_parser.add_option("connect_to_gterm", "", help="Full domain name of GraphTerm server to connect to (for hosts)")
 form_parser.add_option("dry_run", False, help="Dry run")
 form_parser.add_option("verbose", False, help="Verbose")
 ##form_parser.add_option("wildcard", False, help="Enable wildcard subdomains")
@@ -106,11 +103,7 @@ if options.copy_files:
     copy_files += options.copy_files.split()
 
 auth_type = options.auth_type.strip()
-allow_host_connect = auth_type and auth_type not in ("name", "none")
-multi_user = (auth_type == "multiuser")
-
-if allow_host_connect and auth_type not in ("local", "multiuser"):
-    raise Exception("Specifying auth code as argument is insecure")
+allow_host_connect = auth_type in ("local", "multiuser")
 
 GroupRule = collections.namedtuple("GroupRule",
                                    ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
@@ -135,13 +128,16 @@ SecurityGroups = [
         GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
         GroupRule("tcp", "80", "80", "0.0.0.0/0", None),
         GroupRule("tcp", "443", "443", "0.0.0.0/0", None),
-        GroupRule("tcp", "8000", "12000", "0.0.0.0/0", None),
+        GroupRule("tcp", "10000", "12000", "0.0.0.0/0", None),
         ]),
     ]
 
-setup_file = "SETUP_OVER"
+setup_file = "SETUP_STATUS"
 
 startup_commands = ["#!/bin/bash",
+"AWS_PUBLIC_HOST=`curl http://169.254.169.254/latest/meta-data/public-hostname`",
+"AWS_PUBLIC_IP=`curl http://169.254.169.254/latest/meta-data/public-ipv4`",
+"AWS_LOCAL_IP=`curl http://169.254.169.254/latest/meta-data/local-ipv4`",
 "cat > /root/ec2launch.sh << EOF",
 "#!/bin/bash",
 "set -e -x",
@@ -182,10 +178,6 @@ command_line += " --widget_port=-1"
 
 if options.https:
     command_line += " --https"
-if options.auto_users:
-    if not multi_user:
-        raise Exception("Must specify auth_type=multiuser to enable auto_users")
-    command_line += " --auto_users --super_users=ubuntu"
 if options.allow_embedding:
     command_line += " --allow_embedding"
 if options.allow_share:
@@ -201,43 +193,52 @@ if options.oshell:
     if options.screen:
         command_line += " --oshell_input"
 
-init_command = ""
-fwall_command = ""
+init_commands = []
+fwall_commands = []
 if options.connect_to_gterm:
     security_groups = [host_group]
     server_name, sep, server_domain = options.connect_to_gterm.partition(".")
     if not server_domain:
         raise Exception("Must specify fully qualified domain name to connect to GraphTerm server")
     host_name = instance_name if instance_domain == server_domain else instance_tag
-    init_command = command_line + " --server_addr="+ options.connect_to_gterm+" "+host_name
-    startup_commands += [ init_command ]
+    command_line += " --server_addr="+ options.connect_to_gterm+" "+host_name
+    init_commands = [ command_line ]
 else:
     security_groups = [nb_server_group if options.notebook_server else server_group]
 
     external_port = 443 if options.https else 80
-    host_domain = instance_tag if instance_domain else "`curl http://169.254.169.254/latest/meta-data/public-hostname`"
-    fwall_command = "iptables -t nat -A PREROUTING -p tcp --dport %d -j REDIRECT --to 8900" % external_port
-    startup_commands += [ fwall_command ]
-    if install_gterm and auth_type:
-        init_command = command_line + ' --auth_type="'+options.auth_type+'" --host='+host_domain+(" --external_port=%d" % external_port)
-        ##if options.wildcard:
-        ##    init_command += " --blob_host=wildcard"
-        startup_commands += [ init_command ]
+    public_host = instance_tag if instance_domain else "${AWS_PUBLIC_HOST}"
+    local_ip = "${AWS_LOCAL_IP}"
+    fwall_commands = ["iptables -t nat -A PREROUTING -p tcp --dport %d -j REDIRECT --to %d" % (external_port, gterm.DEFAULT_HTTP_PORT),
+                      "iptables -t nat -A OUTPUT --dst %s -p tcp --dport %d -j DNAT --to-destination %s:%d" % (local_ip, external_port, local_ip, gterm.DEFAULT_HTTP_PORT)]
+    command_line += " --auth_type="+options.auth_type
+    if auth_type == "multiuser":
+        command_line += " --auto_users --super_users=ubuntu"
+    command_line += " --host=%s --external_port=%d" % (public_host, external_port)
+    ##if options.wildcard:
+    ##    command_line += " --blob_host=wildcard"
+    if install_gterm:
+        init_commands = [ command_line ]
 
-if init_command or fwall_command:
-    startup_commands += [ "echo '"+init_command+"' > /etc/init.d/graphterm",
-                          "echo '"+fwall_command+"' >> /etc/init.d/graphterm",
-                          "chmod +x /etc/init.d/graphterm",
+initwall_commands = fwall_commands + init_commands
+if initwall_commands:
+    startup_commands += initwall_commands
+    for cmd in initwall_commands: 
+       startup_commands += [ 'echo "'+cmd+'" > /etc/init.d/graphterm' ]
+    startup_commands += [ "chmod +x /etc/init.d/graphterm",
                           "update-rc.d graphterm defaults"]
 
-startup_commands += ["sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file]
 startup_commands += ["echo ''"]
 startup_commands += ["echo Do 'pip uninstall dap' to eliminate dap module loading errors for Ubuntu 12.04LTS"]
 startup_commands += ["echo ec2launch SETUP COMPLETED"]
 
 startup_commands += ["EOF",
                      "/bin/bash /root/ec2launch.sh >/root/ec2launch.log 2>&1",
-                     STATUS_CHECK % "ec2launch.sh"]
+                     "if [ $? -eq 0 ]; then",
+                     "  sudo -u "+gterm_user+" -i touch ~" + gterm_user + "/" + setup_file,
+                     "else",
+                     "  tail -5 /root/ec2launch.log > ~" + gterm_user + "/" + setup_file,
+                     "fi"]
 startup_script = "\n".join(startup_commands) + "\n"
 
 if options.verbose:
@@ -316,12 +317,20 @@ if not os.path.exists(key_file):
     key_pair.save(ssh_dir)
     os.chmod(key_file, 0600)
 
+wait_cmd = "while [ ! -f "+setup_file+" ]; do sleep 1; done; echo "+setup_file+"; cat "+setup_file
+if copy_files and options.install:
+    wait_cmd += "; if [ ! -s "+setup_file+" ]; then "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install"
+    if install_cmd:
+        wait_cmd += "; "+install_cmd
+    wait_cmd += "; fi"
+
 if options.dry_run:
     print >> sys.stderr, "run_instances:", dict(image_id=options.ami,
                                                 instance_type=options.type,
                                                 key_name=options.key_name,
                                                 security_groups=security_groups)
-    print >> sys.stderr, "startup_script:", startup_script
+    print >> sys.stderr, "STARTUP_SCRIPT:\n", startup_script
+    print >> sys.stderr, "WAIT_CMD:\n", wait_cmd
     sys.exit(1)
 
 # Create security groups as needed
@@ -386,7 +395,6 @@ print >> sys.stderr, "   ec2ssh ubuntu@"+(instance_tag if instance_domain else p
 
 ssh_cmd_args = ["ssh", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
                 "-o", "StrictHostKeyChecking=no", gterm_user+"@"+public_dns_name]
-wait_cmd = "while [ ! -f "+setup_file+" ]; do sleep 1; done"
 
 if nameservers:
     print >> sys.stderr, "***NOTE*** Please add the following nameservers for domain "+instance_domain
@@ -404,10 +412,6 @@ if copy_files:
         print out
     if err:
         print err
-    if options.install:
-        wait_cmd += "; "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install"
-        if install_cmd:
-            wait_cmd += "; "+install_cmd
 
 print >> sys.stderr, " ".join(ssh_cmd_args)
 print >> sys.stderr, wait_cmd

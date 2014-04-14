@@ -13,8 +13,8 @@ from boto.route53.connection import Route53Connection
 import gterm
 
 AUTH_FORMAT = """[Credentials]
-access_key_id = %(access_key_id)s
-secret_access_key = %(secret_access_key)s
+aws_access_key_id = %(access_key_id)s
+aws_secret_access_key = %(secret_access_key)s
 """
 
 Auth_parser = gterm.FormParser(title='Enter AWS Access Credentials<br>(Usually at <a href="https://portal.aws.amazon.com/gp/aws/securityCredentials" target="_blank">https://portal.aws.amazon.com/gp/aws/securityCredentials</a>)<p>')
