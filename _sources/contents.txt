@@ -11,6 +11,7 @@ Documentation contents
    start
    troubleshooting
    implementation
+   virtual-setup
    virtual-lab
    screenshots
    tutorials
