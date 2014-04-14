@@ -2448,7 +2448,10 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
                     exec_context["queue"].put(("", "ERROR in executing '%s': %s" % (line, excp)))
 
             if Term_attr:
-                save_attr = termios.tcgetattr(sys.stdin.fileno())
+                try:
+                    save_attr = termios.tcgetattr(sys.stdin.fileno())
+                except Exception:
+                    save_attr = None
             thrd = threading.Thread(target=execute_in_thread)
             thrd.start()
             try:
@@ -2457,7 +2460,8 @@ In directory /osh/patches, "unpatch *" will unpatch all currently patched method
                 exec_context["proc"].kill()
                 # Restore terminal attributes
                 if Term_attr:
-                    termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, save_attr)
+                    if save_attr:
+                        termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, save_attr)
                 return ("", "Timed out command execution '%s'" % (line,))
 
         except Exception, excp:
