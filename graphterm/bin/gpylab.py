@@ -66,7 +66,6 @@ try:
 except ImportError:
     print >> sys.stderr, "NOTE: Plotting modules not loaded"
 
-if __name__ == "__main__":
+if __name__ == "__main__" and sys.flags.interactive:
     import gterm
-    gterm.nbmode()
-    gterm.process_args()
+    gterm.nb_setup()

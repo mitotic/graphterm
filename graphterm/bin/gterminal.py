@@ -9,6 +9,7 @@ import logging
 import os
 import random
 import sys
+import urlparse
 
 import tornado.httpclient
 
@@ -63,7 +64,7 @@ def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, u
 def main():
     global Http_addr, Http_port
     from optparse import OptionParser
-    usage = "usage: gterm [-h ... options] [[host/]session]"
+    usage = "usage: gterm [-h ... options] [URL | [/host/]session]"
     parser = OptionParser(usage=usage)
 
     parser.add_option("", "--https", dest="https", action="store_true",
@@ -74,8 +75,6 @@ def main():
                       help="Browser application name (OS X only)")
     parser.add_option("-u", "--user", dest="user", default="",
                       help="User name")
-    parser.add_option("-s", "--server", dest="server", default="",
-                      help="Remote server domain name")
     parser.add_option("-p", "--port", dest="port", default=0,
                       help="Remote server port", type="int")
     parser.add_option("", "--client_cert", dest="client_cert", default="",
@@ -85,15 +84,29 @@ def main():
 
     (options, args) = parser.parse_args()
     protocol = "https" if options.https else "http"
-
+    server = ""
     path = ""
+    port = None
     if args:
-        if "/" in args[0]:
-            path = args[0]
+        if args[0] and ":" not in args[0]:
+            if args[0][0].isalpha():
+                path = (gterm.Host or "local") + "/" + args[0]
+            elif args[0].startswith("/"):
+                path = args[0][1:]
         else:
-            path = (gterm.Host or "local") + "/" + args[0]
+            try:
+                comps = urlparse.urlparse(args[0])
+                server, sep, port = comps[1].partition(":")
+                if port:
+                    port = int(port)
+            except Exception, excp:
+                sys.exit("Invalid URL argument: "+str(excp))
+            protocol = comps[0]
+            if not port:
+                port = 443 if protocol == "https" else 80
+            path = comps[2][1:]
 
-    if not options.server and gterm.Lterm_cookie:
+    if not server and gterm.Lterm_cookie:
         # Open new terminal window from within graphterm window
         path = path or (gterm.Host + "/" + "new")
         url = gterm.URL + "/" + path
@@ -103,11 +116,11 @@ def main():
 
     if options.noauth:
         auth_code = "none"
-        port = None
     else:
-        auth_code, port = gterm.read_auth_code(user=options.user, server=options.server)
+        auth_code, tem_port = gterm.read_auth_code(user=options.user, server=server)
+        port = port or tem_port
 
-    Http_addr = options.server or "localhost"
+    Http_addr = server or "localhost"
     Http_port = options.port or port or gterm.DEFAULT_HTTP_PORT
 
     client_nonce = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leading zeros when stringified

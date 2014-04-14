@@ -8,7 +8,7 @@
 HOME_MNT=/home
 ADMIN=ubuntu
 GRAPHTERM_DIR=.graphterm
-GRAPHTERM_AUTH=graphterm_auth
+GRAPHTERM_AUTH=_gterm_auth.txt
 
 if [ $# -lt 1 ]; then
     echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name [gtermhost arguments]]]"
@@ -80,9 +80,9 @@ for host in $host_list; do
     if [ "$host" != "$ADMIN" ] && [ -d $HOME_MNT/$host/$GRAPHTERM_DIR ]; then
 	/usr/local/bin/gauth -w --admin=$ADMIN --server=$server $host
         if [ "$server" = "localhost" ]; then
-	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/$GRAPHTERM_AUTH.${host}
+	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/${host}$GRAPHTERM_AUTH
 	else
-	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/$GRAPHTERM_AUTH.${host}@$server
+	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/${host}@$server$GRAPHTERM_AUTH
         fi
 	chown ${host}:$host $auth_file
 

@@ -229,14 +229,17 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return cls.is_super(user) or (auth_type == cls.LOCAL_AUTH and cls.get_auth_type() == cls.LOCAL_AUTH)
 
     @classmethod
-    def set_auth_code(cls, value, local=False):
-        cls._auth_code = value
-        if not value:
-            cls._auth_type = cls.NULL_AUTH
-        elif value == "name":
-            cls._auth_type = cls.NAME_AUTH
+    def set_auth_code(cls, auth_type, code=""):
+        if auth_type in ("none", "name"):
+            cls._auth_type = cls.NULL_AUTH if auth_type == "none" else cls.NAME_AUTH
+            cls._auth_code = ""
+        elif auth_type in ("local", "multiuser"):
+            cls._auth_type = cls.LOCAL_AUTH if auth_type == "local" else cls.MULTI_AUTH
+            code = code.strip()
+            assert code, "Must provide non-blank auth_code"
+            cls._auth_code = code
         else:
-            cls._auth_type = cls.LOCAL_AUTH if local else cls.MULTI_AUTH
+            sys.exit("Invalid auth_type: %s" % auth_type)
 
     @classmethod
     def get_auth_code(cls):
@@ -398,7 +401,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if code == gterm.compute_hmac(self._auth_code, cauth):
                                 self.authorized = self.add_state(user, self._auth_type)
                             else:
-                                auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command." % gterm.get_auth_filename(server=Server_settings["internal_host"])
+                                auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command." % gterm.get_auth_filename(server=Server_settings["external_host"])
                         else:
                             auth_message = "<h3>GraphTerm Login</h3><p>Please specify username (letters/digits/hyphens, starting with letter)."
                             if Server_settings["auto_users"] and os.path.exists(Auto_add_file):
@@ -433,7 +436,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     self.close()
                                     return
 
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["internal_host"]] + Server_settings["gtermhost_args"]
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"]] + Server_settings["gtermhost_args"]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
                                     logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
@@ -519,7 +522,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 return
 
             host = path_comps[0].lower()
-            if not host or not gtermhost.HOST_RE.match(host):
+            wildhost = is_wildcard(host)
+
+            if not host or (not wildhost and not gtermhost.HOST_RE.match(host)):
                 self.write_json([["abort", "Invalid characters in host name"]])
                 self.close()
                 return
@@ -534,7 +539,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
-            wildhost = is_wildcard(host)
             term_chat = False
             conn = None
             
@@ -1533,14 +1537,15 @@ def run_server(options, args):
             if not client_nonce:
                 raise tornado.web.HTTPError(401)
             server_nonce = GTSocket.get_connect_cookie()
-            if GTSocket.get_auth_type() >= GTSocket.MULTI_AUTH:
+            auth_type = GTSocket.get_auth_type()
+            if auth_type >= GTSocket.MULTI_AUTH and user:
                 hmac_key = gterm.user_hmac(GTSocket.get_auth_code(), user, key_version=key_version)
-            elif GTSocket.get_auth_type() == GTSocket.LOCAL_AUTH:
+            elif auth_type >= GTSocket.LOCAL_AUTH:
                 hmac_key = GTSocket.get_auth_code()
             else:
                 hmac_key = "none"
             try:
-                client_token, server_token = gterm.auth_token(hmac_key, "graphterm", Server_settings["host"], Server_settings["port"], client_nonce, server_nonce)
+                client_token, server_token = gterm.auth_token(hmac_key, "graphterm", Server_settings["external_host"], Server_settings["external_port"], client_nonce, server_nonce)
             except Exception:
                 raise tornado.web.HTTPError(401)
 
@@ -1564,6 +1569,10 @@ def run_server(options, args):
     new_url = server_url + "/local/new"
 
     gtermhost_args = []
+    if external_host != "localhost":
+        gtermhost_args.append("--external_host=%s" % external_host)
+    if internal_port != gterm.DEFAULT_HOST_PORT:
+        gtermhost_args.append("--server_port=%d" % internal_port)
     if options.oshell:
         gtermhost_args.append("--oshell")
 
@@ -1572,6 +1581,7 @@ def run_server(options, args):
         print >> sys.stderr, "user groups: ", groups
 
     Server_settings = {"host": http_host, "port": http_port, "https": options.https,
+                       "external_host": external_host, "external_port": external_port,
                        "internal_host": internal_host, "internal_port": internal_port,
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
@@ -1591,18 +1601,15 @@ def run_server(options, args):
         Term_settings = {}
 
     auth_file = ""
-    if options.auth_type == "none":
+    if options.auth_type in ("none", "name"):
         # No auth code
         auth_code = ""
-    elif options.auth_type == "name":
-        # No auth code
-        auth_code = "name"
     elif options.auth_type in ("local", "multiuser"):
-        auth_file = gterm.get_auth_filename(server=internal_host)
+        auth_file = gterm.get_auth_filename(server=external_host)
         if os.path.exists(auth_file):
             # Read auth code
             try:
-                auth_code, port = gterm.read_auth_code(server=internal_host)
+                auth_code, ext_port = gterm.read_auth_code(server=external_host)
             except Exception, excp:
                 print >> sys.stderr, "Error in reading authentication file: %s" % excp
                 sys.exit(1)
@@ -1610,7 +1617,7 @@ def run_server(options, args):
             # Generate and write random auth code
             auth_code = GTSocket.get_auth_code()
             try:
-                gterm.write_auth_code(auth_code, server=internal_host, port=internal_port)
+                gterm.write_auth_code(auth_code, server=external_host, port=external_port)
             except Exception, excp:
                 print >> sys.stderr, "Error in writing authentication file: %s" % excp
                 sys.exit(1)
@@ -1618,7 +1625,7 @@ def run_server(options, args):
         print >> sys.stderr, "Invalid authentication type '%s'; must be one of local/none/name/multiuser" % options.auth_type
         sys.exit(1)
 
-    GTSocket.set_auth_code(auth_code, local=options.auth_type=="local")
+    GTSocket.set_auth_code(options.auth_type, code=auth_code)
 
     if options.auth_type == "multiuser":
         if options.auto_users:
@@ -1691,14 +1698,14 @@ def run_server(options, args):
 
     internal_server_ssl = {"certfile": certfile, "keyfile": keyfile} if options.internal_https else None
     internal_client_ssl = {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": certfile} if options.internal_https else None
-    if auth_code and auth_code != "name":
-        key_secret = auth_code
-        key_version = "1"
-        local_key_secret = gterm.user_hmac(key_secret, gterm.LOCAL_HOST, key_version=key_version)
-    else:
-        key_secret = None
+    if options.auth_type in ("none", "name"):
         key_version = None
-        local_key_secret = key_secret
+        key_secret = None
+        local_key_secret = None
+    else:
+        key_version = "1"
+        key_secret = auth_code
+        local_key_secret = gterm.user_hmac(key_secret, gterm.LOCAL_HOST, key_version=key_version)
     TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
                                         key_secret=key_secret, key_version=key_version,
                                         key_id=str(internal_port), ssl_options=internal_server_ssl)
@@ -1738,7 +1745,7 @@ def run_server(options, args):
 
     if options.auto_users:
         action = "activate" if options.no_reset else "restart"
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, internal_host] + Server_settings["gtermhost_args"]
+        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host] + Server_settings["gtermhost_args"]
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if std_err:
             logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)

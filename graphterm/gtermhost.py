@@ -790,7 +790,7 @@ def gterm_connect(host_name, server_addr, server_port=gterm.DEFAULT_HOST_PORT, c
     host_secret = "%016x" % random.randrange(0, 2**64)
 
     host_connection = TerminalClient.get_client(host_name,
-                         connect=(server_addr, server_port, host_secret, bool(oshell_globals)),
+                         connect=(server_addr, server_port, host_secret),
                           connect_kw=connect_kw)
 
     Host_connections[host_secret] = host_connection
@@ -828,23 +828,23 @@ def run_host(options, args):
     oshell_globals = globals() if options.oshell else None
 
     auth_code = None
-    auth_port = None
+    ext_port = None
     if options.auth_file:
         if options.auth_file != "none":
             with open(options.auth_file) as f:
                 comps = f.read().strip().split()
                 auth_code = gterm.undashify(comps[0])
-                auth_port = int(comps[1]) if len(comps) > 1 else None
+                ext_port = int(comps[1]) if len(comps) > 1 else None
     else:
         try:
-            auth_code, auth_port = gterm.read_auth_code(user=host_name)
-            print >> sys.stderr, "Using auth info from default file", gterm.get_auth_filename(user=host_name)
+            auth_code, ext_port = gterm.read_auth_code(user=host_name, server=options.external_host)
+            print >> sys.stderr, "Using auth info from default file", gterm.get_auth_filename(user=host_name, server=options.external_host)
         except Exception, excp:
             raise
             auth_code = None
 
     key_version = "1" if auth_code else None
-    server_port = options.server_port or auth_port or gterm.DEFAULT_HOST_PORT
+    server_port = options.server_port or gterm.DEFAULT_HOST_PORT
     internal_client_ssl = {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": options.internal_certfile} if options.internal_certfile else None
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=server_port,
@@ -895,6 +895,8 @@ def main():
                       help="Server hostname (or IP address) (default: localhost)")
     parser.add_option("", "--server_port", dest="server_port", default=0,
                       help="Server port (default: %d)" % gterm.DEFAULT_HOST_PORT, type="int")
+    parser.add_option("", "--external_host", dest="external_host", default="",
+                      help="external host name (or IP address), if different from server_addr")
     parser.add_option("", "--auth_file", dest="auth_file", default="",
                       help="Server auth file")
 

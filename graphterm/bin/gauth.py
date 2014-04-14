@@ -21,8 +21,8 @@ def main():
     parser.add_option("mail", False, short="m", help="Display info for mailing etc.")
     parser.add_option("notebook", False, short="n", help="Display notebook URL")
     parser.add_option("group", False, short="g", help="Display group code")
-    parser.add_option("subject", "GraphTerm remote access", short="s", help="Email subject line")
-    parser.add_option("server", "localhost", help="External server name (default: localhost)")
+    parser.add_option("subject", "GraphTerm remote access", help="Email subject line")
+    parser.add_option("server", "localhost", short="s", help="External server name (default: localhost)")
     parser.add_option("tail", "", help="Tail portion of message")
     parser.add_option("write", False, short="w", help="Write authentication file for user (for superuser use)")
 
