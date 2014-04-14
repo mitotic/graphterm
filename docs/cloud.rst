@@ -19,7 +19,10 @@ these scripts, and also need to install the ``boto`` python module.
 
 If you do not have an `AWS <http://aws.amazon.com/>`_ account,
 `get one <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html>`_
-(this will be linked to your standard Amazon account). If you own a
+(this will be linked to your standard Amazon account).
+
+
+If you own a
 domain name, say ``myterm.com``, that you wish to use for your
 cloud server, then you should also activate the
 AWS `Route 53 <http://aws.amazon.com/route53/faqs/#Getting_started_with_Route_53>`_
