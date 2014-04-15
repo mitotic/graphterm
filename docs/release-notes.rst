@@ -3,7 +3,49 @@ Release Notes
 .. contents::
 
 
-0.40.2 (February 3, 2013)
+0.49.0 (April 14, 2014)
+---------------------------------------------------------------------------------
+  - Full implementation of ``multiuser`` authentication type to create
+    virtual computer lab, with automatic creation of new users
+
+  - Implemented ``gadmin`` command to monitor and administer multiple
+    users
+
+  - Implemented user groups for collaboration
+
+  - Implemented notebook cell modification tracking
+
+  - Improved chat capability, with terminal alert option
+
+  - Implemented ``gnbserver`` command to run public IPython notebook
+    servers on a per-user basis
+
+  - Implemented notebook autosave
+
+  - Implemented ``gls --download`` option
+
+  - Tested ``https`` options with self-signed certificate
+
+  - Improved support for iOS and Android touch devices (tablets and
+    phones)
+
+  - Introduced ``command`` menu for useful actions
+
+  - Improved browser support (especially Windows browsers)
+
+  - Cleaned up authentication types
+
+  - Improved ``gterm`` command to launch terminals
+
+  - Fixed cross-domain embedding
+
+  - Fixed wildcard access to ``osh`` terminals
+
+  - Improved EC2 instance launching
+
+  - Improved logging
+
+0.40.2 (February 3, 2014)
 ---------------------------------------------------------------------------------
 
   - Updated EC2 launching

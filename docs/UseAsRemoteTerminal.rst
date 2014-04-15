@@ -72,7 +72,7 @@ home using the URL::
     http://localhost:8901/local/tty1
 
 You will need to enter the authentication code from the file
-``~/.graphterm/graphterm_auth` on your work computer.
+``~/.graphterm/_gterm_auth.txt` on your work computer.
 (If you forgot to detach your work terminal before leaving, use the
 *steal* menu button to steal control of the session.)
 

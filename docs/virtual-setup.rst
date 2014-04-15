@@ -79,7 +79,7 @@ with multi-user support.
     ``~/.graphterm/@aws_domain_name_gterm_auth.txt`` to use the
     following local command to create remote graphterm windows:
 
-    gterm.py -u ubuntu http://aws_domain_name
+    gterm.py -u ubuntu --browser=Firefox http://aws_domain_name
 
  11. Run the following command in the AWS graphterm window to display  the group access code::
 
@@ -274,7 +274,7 @@ Configuring groups
 --------------------------------------------------------------------------------------------
 
 In the multiuser authentication mode, user groups can be configured
-the file ``~/.graphterm_groups.json`` containing a JSON formatted
+the file ``~/.graphterm/gterm_groups.json`` containing a JSON formatted
 dictionary, e.g.::
 
     {"group1": ["user1", "user2"],

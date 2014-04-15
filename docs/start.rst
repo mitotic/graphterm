@@ -24,9 +24,10 @@ To start the ``GraphTerm`` server, use the command::
 
 This will run the  server and open a GraphTerm terminal window
 using the default browser.  You can open additional GraphTerm
-terminal windows using the following command::
+terminal windows using the following::
 
-    gterm [session_name]
+    gterm [session_name_or_URL]
+    gterm -u ubuntu --browser="Google Chrome" https://example.com:8900
 
 where the terminal session name argument is optional.
 You can also access the GraphTerm server directly
@@ -37,7 +38,7 @@ Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
 
 If you use the browser directly, you will need to enter
 the authentication code stored in the file
-``~/.graphterm/graphterm_auth``. (The ``gterm``
+``~/.graphterm/_gterm_auth.txt``. (The ``gterm``
 command enters this code for you automatically.)
 In the ``graphterm`` browser page, select the GraphTerm host you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
