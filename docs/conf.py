@@ -18,8 +18,8 @@ templates_path = ['_templates']
 exclude_patterns = ['_build']
 
 project = 'GraphTerm'
-copyright = '2012, R. Saravanan'
-version = "0.34.0"
+copyright = '2012, 2013, 2014 R. Saravanan'
+version = "0.49.0"
 release = version
 if about:
     version = about.version

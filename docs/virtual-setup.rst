@@ -43,7 +43,7 @@ with multi-user support.
 
  4. Run graphterm on your local computer::
 
-    gtermserver --auth_code=none
+    gtermserver --auth_type=none
 
     The above command should automatically open up a GraphTerm window in
     your browser. You can open one using the URL http://localhost:8900
