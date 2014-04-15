@@ -248,7 +248,7 @@ server, with  user name <tt class="docutils literal"><span class="pre">ubuntu</s
 and save the master access code in the local file
 <tt class="docutils literal"><span class="pre">~/.graphterm/&#64;aws_domain_name_gterm_auth.txt</span></tt> to use the
 following local command to create remote graphterm windows:</p>
-<p>gterm.py -u ubuntu <a class="reference external" href="http://aws_domain_name">http://aws_domain_name</a></p>
+<p>gterm.py -u ubuntu &#8211;browser=Firefox <a class="reference external" href="http://aws_domain_name">http://aws_domain_name</a></p>
 </div></blockquote>
 <ol class="arabic simple" start="11">
 <li>Run the following command in the AWS graphterm window to display  the group access code:</li>
@@ -416,7 +416,7 @@ gadmin -a sessions [regexp]</pre>
 <div class="section" id="configuring-groups">
 <h2><a class="toc-backref" href="#id12">Configuring groups</a><a class="headerlink" href="#configuring-groups" title="Permalink to this headline">¶</a></h2>
 <p>In the multiuser authentication mode, user groups can be configured
-the file <tt class="docutils literal"><span class="pre">~/.graphterm_groups.json</span></tt> containing a JSON formatted
+the file <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_groups.json</span></tt> containing a JSON formatted
 dictionary, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s">&quot;group1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;user1&quot;</span><span class="p">,</span> <span class="s">&quot;user2&quot;</span><span class="p">],</span>
  <span class="s">&quot;group2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;user3&quot;</span><span class="p">,</span> <span class="s">&quot;user4&quot;</span><span class="p">,</span> <span class="s">&quot;user5&quot;</span><span class="p">]}</span>

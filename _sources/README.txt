@@ -154,7 +154,7 @@ Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
 
 If you use the browser directly, you will need to enter
 the authentication code stored in the file
-``~/.graphterm/graphterm_auth``. (The ``gterm``
+``~/.graphterm/_gterm_auth.txt``. (The ``gterm``
 command enters this code for you automatically.)
 
 Once you have a terminal, try out the following commands::

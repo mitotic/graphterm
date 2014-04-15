@@ -243,9 +243,9 @@ more installation options.)</p>
 </div>
 <p>This will run the  server and open a GraphTerm terminal window
 using the default browser.  You can open additional GraphTerm
-terminal windows using the following command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gterm</span> <span class="p">[</span><span class="n">session_name</span><span class="p">]</span>
-</pre></div>
+terminal windows using the following:</p>
+<div class="highlight-python"><pre>gterm [session_name_or_URL]
+gterm -u ubuntu --browser="Google Chrome" https://example.com:8900</pre>
 </div>
 <p>where the terminal session name argument is optional.
 You can also access the GraphTerm server directly
@@ -255,7 +255,7 @@ Firefox, Safari, or IE10 (Chrome works best), by entering the following URL:</p>
 </div>
 <p>If you use the browser directly, you will need to enter
 the authentication code stored in the file
-<tt class="docutils literal"><span class="pre">~/.graphterm/graphterm_auth</span></tt>. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
+<tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt>. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
 command enters this code for you automatically.)
 In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm host you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
