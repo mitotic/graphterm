@@ -33,7 +33,7 @@ form_parser.add_option("auth_type", ("local", "none", "name", "multiuser"), help
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("netcdf", False, help="Install NetCDF")
 form_parser.add_option("R", False, help="Install R")
-form_parser.add_option("allow_embedding", False, help="Allow cross-domain iframe embedding")
+form_parser.add_option("allow_embed", False, help="Allow cross-domain iframe embedding")
 form_parser.add_option("allow_share", False, help="Allow sharing between users")
 form_parser.add_option("notebook_server", False, help="Allow passord-proetected access to IPython Notebook server")
 form_parser.add_option("logging", False, help="Enable logging")
@@ -179,8 +179,8 @@ command_line += " --widget_port=-1"
 
 if options.https:
     command_line += " --https"
-if options.allow_embedding:
-    command_line += " --allow_embedding"
+if options.allow_embed:
+    command_line += " --allow_embed"
 if options.allow_share:
     command_line += " --allow_share"
 if options.notebook_server:
@@ -230,7 +230,8 @@ if initwall_commands:
                           "update-rc.d graphterm defaults"]
 
 startup_commands += ["echo ''"]
-startup_commands += ["echo Do 'pip uninstall dap' to eliminate dap module loading errors for Ubuntu 12.04LTS"]
+startup_commands += ["echo WORKAROUND: Doing 'pip uninstall dap' to eliminate dap module loading errors for Ubuntu 12.04LTS"]
+startup_commands += ["yes | pip uninstall dap"]
 startup_commands += ["echo ec2launch SETUP COMPLETED"]
 
 startup_commands += ["EOF",
