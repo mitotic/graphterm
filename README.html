@@ -183,15 +183,21 @@ backwards-compatible with <tt class="docutils literal"><span class="pre">xterm</
 graphical features as needed. These features can help impove your
 terminal workflow by integrating clickable folder navigation with
 command line operations and
-letting you view image/HTML output without a separate window.
-You can use the GraphTerm API to build &#8220;mashups&#8221; of web applications
+letting you view image/HTML output without a separate window.</p>
+<p>The GraphTerm server can be configured to support multiple users, to
+create a browser-based <em>virtual computer lab</em> for teaching and
+collaboration. The &#8220;lab instructor&#8221; can access all the terminal
+sessions via a &#8220;dashboard&#8221; and monitor the progress of each user in
+carrying out assigned activities, such as entering code in a
+&#8220;notebook&#8221;. Lab users can collaboratively view and enter shell
+commands in each others&#8217;, edit files and notebooks etc.</p>
+<p>You can use the GraphTerm API to build &#8220;mashups&#8221; of web applications
 that work seamlessly within the terminal.  Sample mashups include:</p>
 <blockquote>
 <div><ul class="simple">
 <li><tt class="docutils literal"><span class="pre">greveal</span></tt>: Inline version of <tt class="docutils literal"><span class="pre">reveal.js</span></tt> to display Markdown files as slideshows</li>
 <li><tt class="docutils literal"><span class="pre">gtutor</span></tt>: Inline version of <a class="reference external" href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
 <li><tt class="docutils literal"><span class="pre">yweather</span></tt>: Using Yahoo weather API to display weather</li>
-<li><tt class="docutils literal"><span class="pre">ystock</span></tt>: Using Yahoo finance API to display stock price history</li>
 </ul>
 </div></blockquote>
 <p>GraphTerm builds upon two earlier projects,
@@ -225,7 +231,7 @@ level).</li>
 <li>a <strong>virtual computer lab</strong> for teaching and demonstrations.
 The GraphTerm server can be set up in the cloud
 and accessed by multiple users using their laptop/mobile browsers.
-You can then share presentations using <tt class="docutils literal"><span class="pre">landslide</span></tt> or <tt class="docutils literal"><span class="pre">reveal.js</span></tt>, trace code execution,
+You can then share shell commands and presentations, trace code execution,
 interact with other users, etc.</li>
 <li>a <strong>collaborative terminal</strong> that can be remotely accessed
 by multiple users simultaneously, to run programs, edit files etc.
@@ -283,25 +289,31 @@ version, at <a class="reference external" href="https://github.com/mitotic/graph
 <div class="section" id="quick-start">
 <span id="index-2"></span><h2><a class="toc-backref" href="#id9">Quick Start</a><a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
 <p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span>
 </pre></div>
 </div>
 <p>This will run the  server and open a GraphTerm terminal window
-using the default browser.  You can open additional GraphTerm
-terminal windows using the following command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gterm</span> <span class="p">[</span><span class="n">session_name</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>where the terminal session name argument is optional.
-You can also access the GraphTerm server directly
+using the default browser. For multi-user computers,
+omit the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option
+when starting the server, and enter the authentication code stored in
+the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> as needed. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
+command can automatically enter this code for you.)</p>
+<p>You can access the GraphTerm server
 using a browser that supports websockets, such as Google Chrome,
 Firefox, Safari, or IE10 (Chrome works best), by entering the following URL:</p>
 <div class="highlight-python"><pre>http://localhost:8900</pre>
 </div>
-<p>If you use the browser directly, you will need to enter
-the authentication code stored in the file
-<tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt>. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
-command enters this code for you automatically.)</p>
+<p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm host you
+wish to connect to and create a new terminal session. (Note: The GraphTerm
+host is different from the network hostname for the server.)
+Within a GraphTerm window, you can use <em>terminal/new</em> menu option, or
+type the command <tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">new</span></tt>, to create a new GraphTerm session</p>
+<p>You can also open additional GraphTerm terminal windows using
+the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gterm</span> <span class="p">[</span><span class="n">session_name</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>where the terminal session name argument is optional.</p>
 <p>Once you have a terminal, try out the following commands:</p>
 <div class="highlight-python"><pre>gls &lt;directory&gt;
 gvi &lt;text-filename&gt;</pre>
@@ -323,10 +335,10 @@ tutorials for more info on using GraphTerm.</p>
 See the <a class="reference external" href="http://code.mindmeldr.com/graphterm/tutorials.html">Tutorials and Talks</a>
 page for more advanced usage examples.</p>
 <p>You can also use the following command:</p>
-<div class="highlight-python"><pre>glandslide -o graphterm-talk1.md | gframe -f</pre>
+<div class="highlight-python"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f</pre>
 </div>
-<p>to view a slideshow about GraphTerm within GraphTerm (type <tt class="docutils literal"><span class="pre">h</span></tt> for
-help and <tt class="docutils literal"><span class="pre">q</span></tt> to quit)..</p>
+<p>to view a slideshow about GraphTerm within GraphTerm.
+Type <tt class="docutils literal"><span class="pre">b</span></tt> three times in quick succession to exit the slideshow.</p>
 <p>There is a <a class="reference external" href="https://groups.google.com/group/graphterm">Google Groups mailing list</a>
 for announcements of new releases, posting questions related to
 GraphTerm etc. You can also follow <a class="reference external" href="https://twitter.com/intent/user?screen_name=graphterm">&#64;graphterm</a> on Twitter for updates.</p>
@@ -338,7 +350,7 @@ GraphTerm etc. You can also follow <a class="reference external" href="https://t
 <div><ul>
 <li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
 </li>
-<li><p class="first"><em>Platforms:</em>  The <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.</p>
+<li><p class="first"><em>Platforms:</em>  The <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server is pure-python, but with some OS-specific calls for file,  shell, and  terminal-related operations. It has been tested only on Linux and  Mac OS X so far.</p>
 </li>
 <li><dl class="first docutils">
 <dt><em>Current limitations:</em></dt>
@@ -415,7 +427,7 @@ menu plugin</li>
     </div>
 
     <div class="footer">
-        &copy; Copyright 2012, 2013, 2014 R. Saravanan.
+        &copy; Copyright 2012-2014 R. Saravanan.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
 <div class="footer">

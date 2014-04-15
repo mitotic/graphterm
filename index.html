@@ -173,6 +173,17 @@ graphical features as needed.
 These features can help impove your terminal workflow by
 integrating clickable folder navigation with command line operations and
 letting you view image/HTML output without a separate window.
+
+<p>
+The GraphTerm server can be configured to support multiple users, to
+create a browser-based <em>virtual computer lab</em> for teaching and
+collaboration. The "lab instructor" can access all the terminal
+sessions via a "dashboard" and monitor the progress of each user in
+carrying out assigned activities, such as entering code in a
+"notebook". Lab users can collaboratively view and enter shell
+commands in each others', edit files and notebooks etc.
+
+<p>
 You can use the GraphTerm API to build "mashups" of web applications
 that work seamlessly within
 the terminal. Sample mashups include:
@@ -182,11 +193,10 @@ the terminal. Sample mashups include:
  <li> <tt>greveal</tt>: Inline version of <tt>reveal.js</tt> to display Markdown files as slideshows</li>
  <li> <tt>gtutor</tt>: Inline version of <a href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
  <li> <tt>yweather</tt>: Using Yahoo weather API to display weather</li>
- <li> <tt>ystock</tt>: Using Yahoo finance API to display stock price history</li>
 </ul>
 
 <p>
- GraphTerm builds
+GraphTerm builds
 upon two earlier projects, 
 <a href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm </a>
 which implemented a terminal using the Mozilla framework and
@@ -218,7 +228,7 @@ Possible applications of GraphTerm include:
   <li>a <b>virtual computer lab</b> for teaching and demonstrations.
   The GraphTerm server can be set up <a href="cloud.html">in the cloud</a>
   and accessed by multiple users using their laptop/mobile browsers.
-  You can then share presentations using <tt>landslide</tt> or <tt>reveal.js</tt>, 
+  You can then share shell commands and presentations, 
   <a href="screenshots.html#code-tracing-using-online-version-of-python-tutor">trace code execution</a>,
   interact with other users, etc.
   </li>
@@ -288,7 +298,7 @@ and (vi) notebook mode using the standard python interpreter.</p>
     </div>
 
     <div class="footer">
-        &copy; Copyright 2012, 2013, 2014 R. Saravanan.
+        &copy; Copyright 2012-2014 R. Saravanan.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
 <div class="footer">

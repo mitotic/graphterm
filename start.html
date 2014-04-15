@@ -238,46 +238,44 @@ sudo gterm_setup            # Sets up the command toolchain</pre>
 <p>(See the <a class="reference internal" href="README.html#installation"><em>Installation</em></a> section of the <a class="reference internal" href="README.html"><em>README</em></a> file for
 more installation options.)</p>
 <p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span>
 </pre></div>
 </div>
 <p>This will run the  server and open a GraphTerm terminal window
-using the default browser.  You can open additional GraphTerm
-terminal windows using the following:</p>
-<div class="highlight-python"><pre>gterm [session_name_or_URL]
-gterm -u ubuntu --browser="Google Chrome" https://example.com:8900</pre>
-</div>
-<p>where the terminal session name argument is optional.
-You can also access the GraphTerm server directly
+using the default browser. For multi-user computers,
+omit the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option
+when starting the server, and enter the authentication code stored in
+the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> as needed. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
+command can automatically enter this code for you.)</p>
+<p>You can access the GraphTerm server
 using a browser that supports websockets, such as Google Chrome,
 Firefox, Safari, or IE10 (Chrome works best), by entering the following URL:</p>
 <div class="highlight-python"><pre>http://localhost:8900</pre>
 </div>
-<p>If you use the browser directly, you will need to enter
-the authentication code stored in the file
-<tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt>. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
-command enters this code for you automatically.)
-In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm host you
+<p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm host you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
 host is different from the network hostname for the server.)
 Within a GraphTerm window, you can use <em>terminal/new</em> menu option, or
 type the command <tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">new</span></tt>, to create a new GraphTerm session</p>
+<p>You can also open additional GraphTerm terminal windows using
+the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
+<div class="highlight-python"><pre>gterm [session_name]
+gterm -u ubuntu --browser="Google Chrome" https://example.com:8900</pre>
+</div>
+<p>where the terminal session name argument is optional.</p>
 <p>Type  <tt class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">-h</span></tt> to view all options for starting the server.
 You can use the
 <tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the server in the background. The
 <tt class="docutils literal"><span class="pre">--host=hostname</span></tt> option is useful for listening on a public IP address instead
 of the default <tt class="docutils literal"><span class="pre">localhost</span></tt>. The <tt class="docutils literal"><span class="pre">--lc_export</span></tt> option can be used to
 export the GraphTerm environment across SSH via the locale variables
-(which sometimes works).</p>
-<p>If you are using GraphTerm for teaching or demonstration purposes, where
-security is not important, you can start the server as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">terminal</span>
-</pre></div>
-</div>
-<p>Note that <tt class="docutils literal"><span class="pre">none</span></tt> is all lowercase in the above command and indicates
-that no authentication is required. Another useful option is <tt class="docutils literal"><span class="pre">--auth_type=name</span></tt>
-to enable simple name-based sharing. (For more on running publicly
-accessible servers, see <a class="reference internal" href="cloud.html#cloud"><em>GraphTerm in the cloud</em></a>.)</p>
+(which sometimes works).
+The <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> no authentication option is useful for
+teaching or demonstration purposes, or on a single-user lapttop/desktop,
+where security is not important.
+Another useful no authentication option is <tt class="docutils literal"><span class="pre">--auth_type=name</span></tt>
+which enables simple name-based sharing. (For more on running publicly
+accessible GraphTerm servers on the cloud, see <a class="reference internal" href="virtual-setup.html#virtual-setup"><em>Setting up a Virtual Computer Lab in the cloud</em></a>.)</p>
 <p>Within the terminal, try out the following commands:</p>
 <div class="highlight-python"><pre>hello_gterm.sh
 gls &lt;directory&gt;
@@ -779,7 +777,7 @@ machine, allowing commands like <tt class="docutils literal"><span class="pre">g
     </div>
 
     <div class="footer">
-        &copy; Copyright 2012, 2013, 2014 R. Saravanan.
+        &copy; Copyright 2012-2014 R. Saravanan.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
 <div class="footer">

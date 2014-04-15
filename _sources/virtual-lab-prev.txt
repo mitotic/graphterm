@@ -1,7 +1,7 @@
 .. _virtual-lab:
 
 *********************************************************************************
- Virtual Computer Lab using GraphTerm: Tips for Students
+ Virtual Computer Lab using GraphTerm
 *********************************************************************************
 .. contents::
 
@@ -16,25 +16,17 @@ Open the URL provided by the instructor (usually of the form
 name and the access code. If you are creating a new account, you will
 need to obtain the *group access code* from the instructor. 
 
+If you just created a new user account, note down your user name and
+personal access code, as you will need it for logging in later. You
+may optionally enter your email address at this point. (If you forget
+your personal access code, the instructor can retrieve it for you.)
+
 *Note:* If the URL is of the ``https//...`` form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
 exception. The instructor may ask you to ignore these warnings and
 accept the certificate, if the GraphTerm server has been configured to
 use a self-signed certificate. Also, self-signed certificates do not
 work with Safari on the Mac; use Chrome or Firefox instead.
- 
-If you just created a new user account, note down your user name and
-personal access code, as you will need it for logging in later. You
-may optionally enter your email address at this point. If you forget
-your personal access code, the instructor can retrieve it for you.  If
-you have a Mac/Linux desktop/laptop, you can download the executable
-python script ``$GTERM_DIR/bin/gterm.py`` and type the following
-command on your desktop/laptop::
-
-    gterm.py -u user http://hostname.domain:8900
-
-to open a terminal on the remote server without having to type in the
-access code (after the first time).
 
 *On Windows:* The Google Chrome and Firefox browsers work best, but
 Internet Explorer 10 should also be usable, with some limitations.
@@ -93,25 +85,21 @@ If your instructor has enabled sharing for all, or created sharing
 groups, you can view and control terminals belonging to other users,
 who will appear as additional hosts.
 
-You can *watch* someone else's terminal, without controlling it,
-simply by selecting a different host from the list.  You can also
-*steal* control of someone else's terminal, if the terminal owner has
-previously unchecked the *share->locked* menu option. (To regain
-control, the terminal owner would have to steal it back.)
+You can *watch* someone else's terminal, without controlling it, if
+the *share->locked* menu option is not set. Using the
+*terminal->action->chat* option, you can enable chat communication
+between all watchers for a terminal session. If chatting is enabled,
+an *alert* button also becomes available to attract the attention of
+the watchers (which may include the instructor).
 
-*Chatting*: Using the *command->chat* option, you can enable chat
-communication between all watchers for a terminal session.  The
-command needs to be invoked at the shell prompt, *before* running the
-python interpreter or opening a notebook, and it displays a *chat*
-button near the top right corner. When chatting, an *alert* button
-also becomes available to *attract the attention of the watchers
-(which may include the *instructor).
+You can also *steal* control of someone else's terminal, if the
+*share->locked* menu option is not set. To regain control, the
+terminal owner would have to steal it back.
 
-There is also an experimental option for unlocked terminals,
-*share->tandem*, which allows two people to control a terminal
-simultaneously. However, sometimes this can lead to unpredictable
-results, due to the time lags between terminal operations by multiple
-users.
+There is an experimental option, *share->tandem*, which allows two
+people to control a terminal simultaneously. However, sometimes this
+can lead to unpredictable effects, due to the time lags between
+terminal operations.
 
 
 Pasting text into the terminal
@@ -184,9 +172,9 @@ with an URL of the form ``https://hostname.domain:port``, where
 notebook password is the same as the access code for your user
 account.
 
-*Note:* If each person is running their own copy of the IPython Notebook
-server, it can degrade performance on a shared computer. Please
-shut down the server when you are done using it.
+*Note:* If each person runs their own copy of the IPython Notebook
+server, it can degrade performance on a shared computer. Whenever
+possible, use the lightweight GraphTerm notebook interface described above.
 
 
 Downloading files

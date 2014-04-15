@@ -256,9 +256,27 @@ Using https
 
 You can run the ``gtermserver`` with the ``--https`` option enabled
 for limited security. By default, it will create a self-signed
-certificate stored in ``~/.graphterm/localhost.pem`` (To reuse this
-certificate for the IPython public notebook server, copy it to
-``/var/graphterm/localhost.pem`` to make it accessible to all users.)
+certificate stored in ``~/.graphterm/localhost.pem``. Inform users
+that self-signed certificates will generate multiple browser warning
+messages.  (For maximum security, you can purchase a domain
+certificate signed by an authority, which is often available through
+the domain registrar.)
+
+
+Running a public IPython Notebook server
+--------------------------------------------------------------------------------------------
+
+Specifying the ``--nb_server`` when starting up the GraphTerm server
+enables a menu option allowing each user to run to run the the
+``gnbserver`` command which starts up a public IPython Notebook server
+listening on a unique port number that is tied to the user's Unix user
+ID. (A similar option for ``ec2launch`` opens up these ports for
+public access.)
+
+If using ``https``, the self-signed certificate created for the
+GraphTerm server can be re-used for the IPython public notebook
+server, by copying the file ``~/.graphterm/localhost.pem`` to
+``/var/graphterm/localhost.pem`` to make it accessible to all users.
 
 
 Administering the GraphTerm server

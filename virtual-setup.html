@@ -122,6 +122,7 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#starting-and-stopping-graphterm-server">Starting and stopping GraphTerm server</a></li>
 <li><a class="reference internal" href="#access-codes">Access codes</a></li>
 <li><a class="reference internal" href="#using-https">Using https</a></li>
+<li><a class="reference internal" href="#running-a-public-ipython-notebook-server">Running a public IPython Notebook server</a></li>
 <li><a class="reference internal" href="#administering-the-graphterm-server">Administering the GraphTerm server</a></li>
 <li><a class="reference internal" href="#configuring-groups">Configuring groups</a></li>
 <li><a class="reference internal" href="#secondary-cloud-instances">Secondary cloud instances</a></li>
@@ -175,9 +176,10 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#starting-and-stopping-graphterm-server" id="id8">Starting and stopping GraphTerm server</a></li>
 <li><a class="reference internal" href="#access-codes" id="id9">Access codes</a></li>
 <li><a class="reference internal" href="#using-https" id="id10">Using https</a></li>
-<li><a class="reference internal" href="#administering-the-graphterm-server" id="id11">Administering the GraphTerm server</a></li>
-<li><a class="reference internal" href="#configuring-groups" id="id12">Configuring groups</a></li>
-<li><a class="reference internal" href="#secondary-cloud-instances" id="id13">Secondary cloud instances</a></li>
+<li><a class="reference internal" href="#running-a-public-ipython-notebook-server" id="id11">Running a public IPython Notebook server</a></li>
+<li><a class="reference internal" href="#administering-the-graphterm-server" id="id12">Administering the GraphTerm server</a></li>
+<li><a class="reference internal" href="#configuring-groups" id="id13">Configuring groups</a></li>
+<li><a class="reference internal" href="#secondary-cloud-instances" id="id14">Secondary cloud instances</a></li>
 </ul>
 </li>
 </ul>
@@ -401,12 +403,27 @@ script to manually configure new users.</p>
 <h2><a class="toc-backref" href="#id10">Using https</a><a class="headerlink" href="#using-https" title="Permalink to this headline">¶</a></h2>
 <p>You can run the <tt class="docutils literal"><span class="pre">gtermserver</span></tt> with the <tt class="docutils literal"><span class="pre">--https</span></tt> option enabled
 for limited security. By default, it will create a self-signed
-certificate stored in <tt class="docutils literal"><span class="pre">~/.graphterm/localhost.pem</span></tt> (To reuse this
-certificate for the IPython public notebook server, copy it to
-<tt class="docutils literal"><span class="pre">/var/graphterm/localhost.pem</span></tt> to make it accessible to all users.)</p>
+certificate stored in <tt class="docutils literal"><span class="pre">~/.graphterm/localhost.pem</span></tt>. Inform users
+that self-signed certificates will generate multiple browser warning
+messages.  (For maximum security, you can purchase a domain
+certificate signed by an authority, which is often available through
+the domain registrar.)</p>
+</div>
+<div class="section" id="running-a-public-ipython-notebook-server">
+<h2><a class="toc-backref" href="#id11">Running a public IPython Notebook server</a><a class="headerlink" href="#running-a-public-ipython-notebook-server" title="Permalink to this headline">¶</a></h2>
+<p>Specifying the <tt class="docutils literal"><span class="pre">--nb_server</span></tt> when starting up the GraphTerm server
+enables a menu option allowing each user to run to run the the
+<tt class="docutils literal"><span class="pre">gnbserver</span></tt> command which starts up a public IPython Notebook server
+listening on a unique port number that is tied to the user&#8217;s Unix user
+ID. (A similar option for <tt class="docutils literal"><span class="pre">ec2launch</span></tt> opens up these ports for
+public access.)</p>
+<p>If using <tt class="docutils literal"><span class="pre">https</span></tt>, the self-signed certificate created for the
+GraphTerm server can be re-used for the IPython public notebook
+server, by copying the file <tt class="docutils literal"><span class="pre">~/.graphterm/localhost.pem</span></tt> to
+<tt class="docutils literal"><span class="pre">/var/graphterm/localhost.pem</span></tt> to make it accessible to all users.</p>
 </div>
 <div class="section" id="administering-the-graphterm-server">
-<h2><a class="toc-backref" href="#id11">Administering the GraphTerm server</a><a class="headerlink" href="#administering-the-graphterm-server" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Administering the GraphTerm server</a><a class="headerlink" href="#administering-the-graphterm-server" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">gadmin</span></tt> command performs administrative actions to manage
 users:</p>
 <div class="highlight-python"><pre># Display status for all terminals with path name matching python regexp
@@ -414,7 +431,7 @@ gadmin -a sessions [regexp]</pre>
 </div>
 </div>
 <div class="section" id="configuring-groups">
-<h2><a class="toc-backref" href="#id12">Configuring groups</a><a class="headerlink" href="#configuring-groups" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id13">Configuring groups</a><a class="headerlink" href="#configuring-groups" title="Permalink to this headline">¶</a></h2>
 <p>In the multiuser authentication mode, user groups can be configured
 the file <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_groups.json</span></tt> containing a JSON formatted
 dictionary, e.g.:</p>
@@ -424,7 +441,7 @@ dictionary, e.g.:</p>
 </div>
 </div>
 <div class="section" id="secondary-cloud-instances">
-<h2><a class="toc-backref" href="#id13">Secondary cloud instances</a><a class="headerlink" href="#secondary-cloud-instances" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id14">Secondary cloud instances</a><a class="headerlink" href="#secondary-cloud-instances" title="Permalink to this headline">¶</a></h2>
 <p>Secondary cloud instances can connect to the GraphTerm server on
 the primary instance using the command:</p>
 <div class="highlight-python"><pre>gtermhost --daemon=start --server_addr=&lt;server_domain_or_address&gt; &lt;secondary_host_name&gt;</pre>
@@ -460,7 +477,7 @@ connect secondary cloud instances.</p>
     </div>
 
     <div class="footer">
-        &copy; Copyright 2012, 2013, 2014 R. Saravanan.
+        &copy; Copyright 2012-2014 R. Saravanan.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
 <div class="footer">

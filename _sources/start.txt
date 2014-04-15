@@ -20,31 +20,34 @@ more installation options.)
 
 To start the ``GraphTerm`` server, use the command::
 
-    gtermserver --terminal
+    gtermserver --terminal --auth_type=none
 
 This will run the  server and open a GraphTerm terminal window
-using the default browser.  You can open additional GraphTerm
-terminal windows using the following::
+using the default browser. For multi-user computers,
+omit the ``--auth_type=none`` option
+when starting the server, and enter the authentication code stored in
+the file ``~/.graphterm/_gterm_auth.txt`` as needed. (The ``gterm``
+command can automatically enter this code for you.)
 
-    gterm [session_name_or_URL]
-    gterm -u ubuntu --browser="Google Chrome" https://example.com:8900
-
-where the terminal session name argument is optional.
-You can also access the GraphTerm server directly
+You can access the GraphTerm server
 using a browser that supports websockets, such as Google Chrome,
 Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
 
     http://localhost:8900
 
-If you use the browser directly, you will need to enter
-the authentication code stored in the file
-``~/.graphterm/_gterm_auth.txt``. (The ``gterm``
-command enters this code for you automatically.)
 In the ``graphterm`` browser page, select the GraphTerm host you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
 host is different from the network hostname for the server.)
 Within a GraphTerm window, you can use *terminal/new* menu option, or
-type the command ``gmenu new``, to create a new GraphTerm session
+type the command ``gmenu new``, to create a new GraphTerm session 
+
+You can also open additional GraphTerm terminal windows using
+the ``gterm`` command::
+
+    gterm [session_name]
+    gterm -u ubuntu --browser="Google Chrome" https://example.com:8900
+
+where the terminal session name argument is optional.
 
 Type  ``gtermserver -h`` to view all options for starting the server.
 You can use the
@@ -53,16 +56,12 @@ You can use the
 of the default ``localhost``. The ``--lc_export`` option can be used to
 export the GraphTerm environment across SSH via the locale variables
 (which sometimes works).
-
-If you are using GraphTerm for teaching or demonstration purposes, where
-security is not important, you can start the server as follows::
-
-    gtermserver --auth_type=none --terminal
-
-Note that ``none`` is all lowercase in the above command and indicates
-that no authentication is required. Another useful option is ``--auth_type=name``
-to enable simple name-based sharing. (For more on running publicly
-accessible servers, see :ref:`cloud`.)
+The ``--auth_type=none`` no authentication option is useful for
+teaching or demonstration purposes, or on a single-user lapttop/desktop,
+where security is not important.
+Another useful no authentication option is ``--auth_type=name``
+which enables simple name-based sharing. (For more on running publicly
+accessible GraphTerm servers on the cloud, see :ref:`virtual-setup`.)
 
 Within the terminal, try out the following commands::
 
