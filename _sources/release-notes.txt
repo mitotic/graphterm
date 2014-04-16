@@ -3,8 +3,15 @@ Release Notes
 .. contents::
 
 
+0.50.0 (April 15, 2014)
+---------------------------------------------------------------------------------
+
+ - Cosmetic changes (notebook CSS margins, font size)
+
+
 0.49.0 (April 14, 2014)
 ---------------------------------------------------------------------------------
+
   - Full implementation of ``multiuser`` authentication type to create
     virtual computer lab, with automatic creation of new users
 
