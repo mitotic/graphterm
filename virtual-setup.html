@@ -246,6 +246,11 @@ the newly created server to login to the password-less super user account <tt cl
 <ol class="arabic simple" start="9">
 <li>Use the URL <a class="reference external" href="http://aws_domain_name">http://aws_domain_name</a> to open a new graphtem window on the AWS
 server, with  user name <tt class="docutils literal"><span class="pre">ubuntu</span></tt> and the <em>master access code</em></li>
+<li>Run the following command in the AWS graphterm window to display  the group access code:</li>
+</ol>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">gauth</span> <span class="pre">-g</span> <span class="pre">-m</span> <span class="pre">ubuntu</span></tt></div></blockquote>
+<ol class="arabic simple" start="11">
 <li>Use the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> to
 download the executable script <tt class="docutils literal"><span class="pre">gterm.py</span></tt> to your local computer
 and save the master access code in the local file
@@ -254,11 +259,6 @@ following local command to create remote graphterm windows:</li>
 </ol>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">gterm.py</span> <span class="pre">-u</span> <span class="pre">ubuntu</span> <span class="pre">--browser=Firefox</span> <span class="pre">http://aws_domain_name</span></tt></div></blockquote>
-<ol class="arabic simple" start="11">
-<li>Run the following command in the AWS graphterm window to display  the group access code:</li>
-</ol>
-<blockquote>
-<div><tt class="docutils literal"><span class="pre">gauth</span> <span class="pre">-g</span> <span class="pre">-m</span> <span class="pre">ubuntu</span></tt></div></blockquote>
 <ol class="arabic simple" start="12">
 <li>Run the following command on your local computer to list and/or kill your AWS instances:</li>
 </ol>
