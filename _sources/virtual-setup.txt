@@ -38,11 +38,12 @@ with multi-user support.
 
  2. Create an SSH key pair to access your AWS instances by `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_. You
     need to name the key pair ``ec2key`` to be able to use the
-    ``ec2ssh`` and ``ec2scp`` commands.
+    ``ec2ssh`` and ``ec2scp`` commands bundled with GraphTerm.
 
  3. Install ``graphterm`` on your local computer using the following commands:
 
     ``easy_install graphterm``
+
     ``gterm_setup``
 
  4. Run graphterm on your local computer:
@@ -50,25 +51,33 @@ with multi-user support.
     ``gtermserver --auth_type=none``
 
     The above command should automatically open up a GraphTerm window in
-    your browser. You can open one using the URL http://localhost:8900
+    your browser. You can also open one using the URL http://localhost:8900
 
  5. Run the following command within the graphterm window:
 
     ``ec2launch``
 
-    The first time, you will be asked to enter your AWS access credentials, which will
-    be stored in the local file ``~/.boto``.  Also, enter the SSH key
-    pair name. Choose ``auth_type`` as ``multiuser``.
+    The first time, you will be asked to enter your AWS access
+    credentials, which will be stored in the local file ``~/.boto``.
+    Then run the command again, enter a tagname (e.g., ``testlab``),
+    choose ``auth_type`` as ``multiuser``, and select the ``pylab``
+    and ``netcdf`` options. When you press the *submit* button, the
+    generated command line look should like:
 
- 6. After cloud server has completed configuration, which can take
-    several minutes, type the following command using the domain name of
-    the newly created server to login to the password-less super user account ``ubuntu``:
+    ``ec2launch -f --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --auth_type=multiuser --pylab --netcdf testlab``
+
+ 6. After the new cloud server has completed configuration, which can
+    take several minutes, its IP address and domain name will be
+    displayed. Type the following command using the new domain name to
+    login to the password-less super user account ``ubuntu``:
 
     ``ec2ssh ubuntu@aws_domain_name``
 
  7.  Run the following command on the AWS instance to verify that the graphterm server is running:
 
-    ``ps -ef|grep gtermserver``
+    ``ps -ef | grep gtermserver``
+
+    If not, check for errors in the setup procedure by typing ``sudo tail /root/ec2launch.log``
 
  8.  Run the following command in the AWS instance to display the *master access code*:
 
@@ -77,19 +86,22 @@ with multi-user support.
  9. Use the URL http://aws_domain_name to open a new graphtem window on the AWS
     server, with  user name ``ubuntu`` and the *master access code*
 
- 10. Run the following command in the AWS graphterm window to display  the group access code:
+ 10. Run the following command in the AWS graphterm window to display the group access code which should be entered by new users:
 
     ``gauth -g -m ubuntu``
 
- 11. Use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
+    Distribute this code and a printed copy of :doc:`virtual-lab` to
+    all lab users.
+
+ 11. Optionally, use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
      download the executable script ``gterm.py`` to your local computer
      and save the master access code in the local file
-     ``~/.graphterm/@aws_domain_name_gterm_auth.txt`` to use the
-     following local command to create remote graphterm windows:
+     ``~/.graphterm/@aws_domain_name_gterm_auth.txt``. Then use the
+     following local command to easily create remote graphterm windows:
 
     ``gterm.py -u ubuntu --browser=Firefox http://aws_domain_name``
 
- 12. Run the following command on your local computer to list and/or kill your AWS instances:
+ 12. Run the following command on your local graphterm window to list and/or kill your AWS instances:
 
     ``ec2list``
 

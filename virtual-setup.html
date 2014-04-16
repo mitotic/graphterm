@@ -211,33 +211,40 @@ The AWS account will be linked to your standard Amazon account.</p>
 </li>
 <li><p class="first">Create an SSH key pair to access your AWS instances by <a class="reference external" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html">clicking here</a>. You
 need to name the key pair <tt class="docutils literal"><span class="pre">ec2key</span></tt> to be able to use the
-<tt class="docutils literal"><span class="pre">ec2ssh</span></tt> and <tt class="docutils literal"><span class="pre">ec2scp</span></tt> commands.</p>
+<tt class="docutils literal"><span class="pre">ec2ssh</span></tt> and <tt class="docutils literal"><span class="pre">ec2scp</span></tt> commands bundled with GraphTerm.</p>
 </li>
 <li><p class="first">Install <tt class="docutils literal"><span class="pre">graphterm</span></tt> on your local computer using the following commands:</p>
-<p><tt class="docutils literal"><span class="pre">easy_install</span> <span class="pre">graphterm</span></tt>
-<tt class="docutils literal"><span class="pre">gterm_setup</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">easy_install</span> <span class="pre">graphterm</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">gterm_setup</span></tt></p>
 </li>
 <li><p class="first">Run graphterm on your local computer:</p>
 <p><tt class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">--auth_type=none</span></tt></p>
 <p>The above command should automatically open up a GraphTerm window in
-your browser. You can open one using the URL <a class="reference external" href="http://localhost:8900">http://localhost:8900</a></p>
+your browser. You can also open one using the URL <a class="reference external" href="http://localhost:8900">http://localhost:8900</a></p>
 </li>
 <li><p class="first">Run the following command within the graphterm window:</p>
 <p><tt class="docutils literal"><span class="pre">ec2launch</span></tt></p>
-<p>The first time, you will be asked to enter your AWS access credentials, which will
-be stored in the local file <tt class="docutils literal"><span class="pre">~/.boto</span></tt>.  Also, enter the SSH key
-pair name. Choose <tt class="docutils literal"><span class="pre">auth_type</span></tt> as <tt class="docutils literal"><span class="pre">multiuser</span></tt>.</p>
+<p>The first time, you will be asked to enter your AWS access
+credentials, which will be stored in the local file <tt class="docutils literal"><span class="pre">~/.boto</span></tt>.
+Then run the command again, enter a tagname (e.g., <tt class="docutils literal"><span class="pre">testlab</span></tt>),
+choose <tt class="docutils literal"><span class="pre">auth_type</span></tt> as <tt class="docutils literal"><span class="pre">multiuser</span></tt>, and select the <tt class="docutils literal"><span class="pre">pylab</span></tt>
+and <tt class="docutils literal"><span class="pre">netcdf</span></tt> options. When you press the <em>submit</em> button, the
+generated command line look should like:</p>
+<p><tt class="docutils literal"><span class="pre">ec2launch</span> <span class="pre">-f</span> <span class="pre">--type=m3.medium</span> <span class="pre">--key_name=ec2key</span> <span class="pre">--ami=ami-2f8f9246</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--pylab</span> <span class="pre">--netcdf</span> <span class="pre">testlab</span></tt></p>
 </li>
-<li><p class="first">After cloud server has completed configuration, which can take
-several minutes, type the following command using the domain name of
-the newly created server to login to the password-less super user account <tt class="docutils literal"><span class="pre">ubuntu</span></tt>:</p>
+<li><p class="first">After the new cloud server has completed configuration, which can
+take several minutes, its IP address and domain name will be
+displayed. Type the following command using the new domain name to
+login to the password-less super user account <tt class="docutils literal"><span class="pre">ubuntu</span></tt>:</p>
 <p><tt class="docutils literal"><span class="pre">ec2ssh</span> <span class="pre">ubuntu&#64;aws_domain_name</span></tt></p>
 </li>
 <li><p class="first">Run the following command on the AWS instance to verify that the graphterm server is running:</p>
 </li>
 </ol>
 <blockquote>
-<div><tt class="docutils literal"><span class="pre">ps</span> <span class="pre">-ef|grep</span> <span class="pre">gtermserver</span></tt></div></blockquote>
+<div><p><tt class="docutils literal"><span class="pre">ps</span> <span class="pre">-ef</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">gtermserver</span></tt></p>
+<p>If not, check for errors in the setup procedure by typing <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">tail</span> <span class="pre">/root/ec2launch.log</span></tt></p>
+</div></blockquote>
 <ol class="arabic simple" start="8">
 <li>Run the following command in the AWS instance to display the <em>master access code</em>:</li>
 </ol>
@@ -246,21 +253,24 @@ the newly created server to login to the password-less super user account <tt cl
 <ol class="arabic simple" start="9">
 <li>Use the URL <a class="reference external" href="http://aws_domain_name">http://aws_domain_name</a> to open a new graphtem window on the AWS
 server, with  user name <tt class="docutils literal"><span class="pre">ubuntu</span></tt> and the <em>master access code</em></li>
-<li>Run the following command in the AWS graphterm window to display  the group access code:</li>
+<li>Run the following command in the AWS graphterm window to display the group access code which should be entered by new users:</li>
 </ol>
 <blockquote>
-<div><tt class="docutils literal"><span class="pre">gauth</span> <span class="pre">-g</span> <span class="pre">-m</span> <span class="pre">ubuntu</span></tt></div></blockquote>
+<div><p><tt class="docutils literal"><span class="pre">gauth</span> <span class="pre">-g</span> <span class="pre">-m</span> <span class="pre">ubuntu</span></tt></p>
+<p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
+all lab users.</p>
+</div></blockquote>
 <ol class="arabic simple" start="11">
-<li>Use the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> to
+<li>Optionally, use the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> to
 download the executable script <tt class="docutils literal"><span class="pre">gterm.py</span></tt> to your local computer
 and save the master access code in the local file
-<tt class="docutils literal"><span class="pre">~/.graphterm/&#64;aws_domain_name_gterm_auth.txt</span></tt> to use the
-following local command to create remote graphterm windows:</li>
+<tt class="docutils literal"><span class="pre">~/.graphterm/&#64;aws_domain_name_gterm_auth.txt</span></tt>. Then use the
+following local command to easily create remote graphterm windows:</li>
 </ol>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">gterm.py</span> <span class="pre">-u</span> <span class="pre">ubuntu</span> <span class="pre">--browser=Firefox</span> <span class="pre">http://aws_domain_name</span></tt></div></blockquote>
 <ol class="arabic simple" start="12">
-<li>Run the following command on your local computer to list and/or kill your AWS instances:</li>
+<li>Run the following command on your local graphterm window to list and/or kill your AWS instances:</li>
 </ol>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">ec2list</span></tt></div></blockquote>
