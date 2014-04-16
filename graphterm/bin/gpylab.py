@@ -44,6 +44,7 @@ try:
     import gterm
     from gmatplot import display, resize_fig, _gterm_cell_start_hook, _gterm_cell_end_hook
     import matplotlib
+    matplotlib.rcParams.update({'font.size': 8})
 
     def _gpylab_display_hook(expr):
         if isinstance(expr, matplotlib.figure.Figure):
