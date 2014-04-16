@@ -22,7 +22,7 @@ def main():
     parser.add_option("notebook", False, short="n", help="Display notebook URL")
     parser.add_option("group", False, short="g", help="Display group code")
     parser.add_option("subject", "GraphTerm remote access", help="Email subject line")
-    parser.add_option("server", "localhost", short="s", help="External server name (default: localhost)")
+    parser.add_option("server", "", short="s", help="External server name")
     parser.add_option("tail", "", help="Tail portion of message")
     parser.add_option("write", False, short="w", help="Write authentication file for user (for superuser use)")
 
@@ -31,6 +31,8 @@ def main():
     if not args and not options.group:
         sys.exit(parser.get_usage())
 
+    server = options.server or gterm.Server
+
     user = "" if options.group else args[0]
 
     if options.admin:
@@ -38,7 +40,7 @@ def main():
     else:
         admin_dir = gterm.App_dir
 
-    auth_code, port = gterm.read_auth_code(appdir=admin_dir, server=options.server)
+    auth_code, port = gterm.read_auth_code(appdir=admin_dir, server=server)
     user_code = gterm.user_hmac(auth_code, "", key_version="grp") if options.group else gterm.user_hmac(auth_code, user, key_version="1")
 
     if options.mail:
@@ -65,7 +67,7 @@ def main():
     elif options.write:
         user_dir = os.path.join(os.path.expanduser("~"+user), gterm.APP_DIRNAME)
         gterm.create_app_directory(appdir=user_dir)
-        gterm.write_auth_code(user_code, appdir=user_dir, user=user, server=options.server)
+        gterm.write_auth_code(user_code, appdir=user_dir, user=user, server=server)
     else:
         print gterm.dashify(user_code)
 

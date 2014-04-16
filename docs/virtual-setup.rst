@@ -77,17 +77,17 @@ with multi-user support.
  9. Use the URL http://aws_domain_name to open a new graphtem window on the AWS
     server, with  user name ``ubuntu`` and the *master access code*
 
- 10. Use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
+ 10. Run the following command in the AWS graphterm window to display  the group access code:
+
+    ``gauth -g -m ubuntu``
+
+ 11. Use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
      download the executable script ``gterm.py`` to your local computer
      and save the master access code in the local file
      ``~/.graphterm/@aws_domain_name_gterm_auth.txt`` to use the
      following local command to create remote graphterm windows:
 
     ``gterm.py -u ubuntu --browser=Firefox http://aws_domain_name``
-
- 11. Run the following command in the AWS graphterm window to display  the group access code:
-
-    ``gauth -g -m ubuntu``
 
  12. Run the following command on your local computer to list and/or kill your AWS instances:
 
