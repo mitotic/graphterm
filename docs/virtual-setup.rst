@@ -22,7 +22,11 @@ used to test new versions of GraphTerm by running them in the "cloud".
 You will need to have an AWS account to use these scripts, and also
 need to install the ``boto`` python module.
 
-Quick start
+A companion section provides information on :doc:`virtual-lab` after
+it has been set up. It can be printed and distributed to the users to
+serve as a quick start guide.
+
+Quick setup
 --------------------------------------------------------------------------------------------
 
 The following steps allow yout quickly launch a "virtual computer lab"
@@ -36,21 +40,21 @@ with multi-user support.
     need to name the key pair ``ec2key`` to be able to use the
     ``ec2ssh`` and ``ec2scp`` commands.
 
- 3. Install ``graphterm`` on your local computer using the following commands::
+ 3. Install ``graphterm`` on your local computer using the following commands:
 
-    easy_install graphterm
-    gterm_setup
+    ``easy_install graphterm``
+    ``gterm_setup``
 
- 4. Run graphterm on your local computer::
+ 4. Run graphterm on your local computer:
 
-    gtermserver --auth_type=none
+    ``gtermserver --auth_type=none``
 
     The above command should automatically open up a GraphTerm window in
     your browser. You can open one using the URL http://localhost:8900
 
- 5. Run the following command within the graphterm window::
+ 5. Run the following command within the graphterm window:
 
-    ec2launch
+    ``ec2launch``
 
     The first time, you will be asked to enter your AWS access credentials, which will
     be stored in the local file ``~/.boto``.  Also, enter the SSH key
@@ -58,36 +62,36 @@ with multi-user support.
 
  6. After cloud server has completed configuration, which can take
     several minutes, type the following command using the domain name of
-    the newly created server to login to the password-less super user account ``ubuntu``::
+    the newly created server to login to the password-less super user account ``ubuntu``:
 
-    ec2ssh ubuntu@aws_domain_name
+    ``ec2ssh ubuntu@aws_domain_name``
 
- 7.  Run the following command on the AWS instance to verify that the graphterm server is running::
+ 7.  Run the following command on the AWS instance to verify that the graphterm server is running:
 
-    ps -ef|grep gtermserver
+    ``ps -ef|grep gtermserver``
 
- 8.  Run the following command in the AWS instance to display the *master access code*::
+ 8.  Run the following command in the AWS instance to display the *master access code*:
 
-    cat ~/.graphterm/@aws_domain_name_gterm_auth.txt
+    ``cat ~/.graphterm/@aws_domain_name_gterm_auth.txt``
 
  9. Use the URL http://aws_domain_name to open a new graphtem window on the AWS
     server, with  user name ``ubuntu`` and the *master access code*
 
  10. Use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
-    download the executable script ``gterm.py`` to your local computer
-    and save the master access code in the local file
-    ``~/.graphterm/@aws_domain_name_gterm_auth.txt`` to use the
-    following local command to create remote graphterm windows:
+     download the executable script ``gterm.py`` to your local computer
+     and save the master access code in the local file
+     ``~/.graphterm/@aws_domain_name_gterm_auth.txt`` to use the
+     following local command to create remote graphterm windows:
 
-    gterm.py -u ubuntu --browser=Firefox http://aws_domain_name
+    ``gterm.py -u ubuntu --browser=Firefox http://aws_domain_name``
 
- 11. Run the following command in the AWS graphterm window to display  the group access code::
+ 11. Run the following command in the AWS graphterm window to display  the group access code:
 
-    gauth -g -m ubuntu
+    ``gauth -g -m ubuntu``
 
- 12. Run the following command on your local computer to list and/or kill your AWS instances::
+ 12. Run the following command on your local computer to list and/or kill your AWS instances:
 
-    ec2list
+    ``ec2list``
 
 Domain name and IP address
 --------------------------------------------------------------------------------------------
@@ -256,9 +260,27 @@ Using https
 
 You can run the ``gtermserver`` with the ``--https`` option enabled
 for limited security. By default, it will create a self-signed
-certificate stored in ``~/.graphterm/localhost.pem`` (To reuse this
-certificate for the IPython public notebook server, copy it to
-``/var/graphterm/localhost.pem`` to make it accessible to all users.)
+certificate stored in ``~/.graphterm/localhost.pem``. Inform users
+that self-signed certificates will generate multiple browser warning
+messages.  (For maximum security, you can purchase a domain
+certificate signed by an authority, which is often available through
+the domain registrar.)
+
+
+Running a public IPython Notebook server
+--------------------------------------------------------------------------------------------
+
+Specifying the ``--nb_server`` when starting up the GraphTerm server
+enables a menu option allowing each user to run to run the the
+``gnbserver`` command which starts up a public IPython Notebook server
+listening on a unique port number that is tied to the user's Unix user
+ID. (A similar option for ``ec2launch`` opens up these ports for
+public access.)
+
+If using ``https``, the self-signed certificate created for the
+GraphTerm server can be re-used for the IPython public notebook
+server, by copying the file ``~/.graphterm/localhost.pem`` to
+``/var/graphterm/localhost.pem`` to make it accessible to all users.
 
 
 Administering the GraphTerm server

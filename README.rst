@@ -18,14 +18,21 @@ graphical features as needed. These features can help impove your
 terminal workflow by integrating clickable folder navigation with
 command line operations and
 letting you view image/HTML output without a separate window.
+
+The GraphTerm server can be configured to support multiple users, to
+create a browser-based *virtual computer lab* for teaching and
+collaboration. The "lab instructor" can access all the terminal
+sessions via a "dashboard" and monitor the progress of each user in
+carrying out assigned activities, such as entering code in a
+"notebook". Lab users can collaboratively view and enter shell
+commands in each other's terminals, edit files and notebooks etc.
+
 You can use the GraphTerm API to build "mashups" of web applications
 that work seamlessly within the terminal.  Sample mashups include:
 
  - ``greveal``: Inline version of ``reveal.js`` to display Markdown files as slideshows
  - ``gtutor``: Inline version of `pythontutor.com <http://pythontutor.com>`_ for visual tracing of python programs
  - ``yweather``: Using Yahoo weather API to display weather
- - ``ystock``: Using Yahoo finance API to display stock price history
- 
 
 GraphTerm builds upon two earlier projects, 
 `XMLTerm <http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html>`_
@@ -62,7 +69,7 @@ applications for GraphTerm, such as:
  - a **virtual computer lab** for teaching and demonstrations.
    The GraphTerm server can be set up in the cloud
    and accessed by multiple users using their laptop/mobile browsers.
-   You can then share presentations using ``landslide`` or ``reveal.js``, trace code execution,
+   You can then share shell commands and presentations, trace code execution,
    interact with other users, etc.
 
  - a **collaborative terminal** that can be remotely accessed
@@ -137,25 +144,33 @@ Quick Start
 
 To start the ``GraphTerm`` server, use the command::
 
-    gtermserver --terminal
+    gtermserver --terminal --auth_type=none
 
 This will run the  server and open a GraphTerm terminal window
-using the default browser.  You can open additional GraphTerm
-terminal windows using the following command::
+using the default browser. For multi-user computers,
+omit the ``--auth_type=none`` option
+when starting the server, and enter the authentication code stored in
+the file ``~/.graphterm/_gterm_auth.txt`` as needed. (The ``gterm``
+command can automatically enter this code for you.)
 
-    gterm [session_name]
-
-where the terminal session name argument is optional.
-You can also access the GraphTerm server directly
+You can access the GraphTerm server
 using a browser that supports websockets, such as Google Chrome,
 Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
 
     http://localhost:8900
 
-If you use the browser directly, you will need to enter
-the authentication code stored in the file
-``~/.graphterm/_gterm_auth.txt``. (The ``gterm``
-command enters this code for you automatically.)
+In the ``graphterm`` browser page, select the GraphTerm host you
+wish to connect to and create a new terminal session. (Note: The GraphTerm
+host is different from the network hostname for the server.)
+Within a GraphTerm window, you can use *terminal/new* menu option, or
+type the command ``gmenu new``, to create a new GraphTerm session 
+
+You can also open additional GraphTerm terminal windows using
+the ``gterm`` command::
+
+    gterm [session_name]
+
+where the terminal session name argument is optional.
 
 Once you have a terminal, try out the following commands::
 
@@ -171,7 +186,10 @@ See `Getting Started with GraphTerm <http://code.mindmeldr.com/graphterm/start.h
 and the
 `Using Graphical Features
 <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_
-tutorials for more info on using GraphTerm.
+tutorials for more info on using GraphTerm. You can also
+`set up a virtual computer lab
+<http://code.mindmeldr.com/graphterm/virtual-setup.html>`_
+using GraphTerm.
 
 .. index:: documentation, support
 
@@ -185,10 +203,10 @@ page for more advanced usage examples.
 
 You can also use the following command::
 
-  glandslide -o graphterm-talk1.md | gframe -f
+  greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
 
-to view a slideshow about GraphTerm within GraphTerm (type ``h`` for
-help and ``q`` to quit)..
+to view a slideshow about GraphTerm within GraphTerm.
+Type ``b`` three times in quick succession to exit the slideshow.
 
 There is a `Google Groups mailing list <https://groups.google.com/group/graphterm>`_
 for announcements of new releases, posting questions related to
@@ -203,7 +221,7 @@ Caveats and Limitations
 
  - *Reliability:*  This software has not been subject to extensive testing. Use at your own risk.
 
- - *Platforms:*  The ``GraphTerm`` client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The ``GraphTerm`` server is pure-python, but with some OS-specific calls for file,  shell, and   terminal-related operations. It has been tested only on Linux and  Mac OS X so far.
+ - *Platforms:*  The ``GraphTerm`` client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The ``GraphTerm`` server is pure-python, but with some OS-specific calls for file,  shell, and  terminal-related operations. It has been tested only on Linux and  Mac OS X so far.
 
  - *Current limitations:*
           * Support for ``xterm`` escape sequences is incomplete.

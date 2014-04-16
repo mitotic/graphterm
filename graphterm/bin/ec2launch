@@ -128,6 +128,8 @@ SecurityGroups = [
         GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
         GroupRule("tcp", "80", "80", "0.0.0.0/0", None),
         GroupRule("tcp", "443", "443", "0.0.0.0/0", None),
+        GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if allow_host_connect else host_group),
+        GroupRule("tcp", "8900", "8900", "0.0.0.0/0", None),
         GroupRule("tcp", "10000", "12000", "0.0.0.0/0", None),
         ]),
     ]

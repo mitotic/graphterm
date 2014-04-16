@@ -20,31 +20,34 @@ more installation options.)
 
 To start the ``GraphTerm`` server, use the command::
 
-    gtermserver --terminal
+    gtermserver --terminal --auth_type=none
 
 This will run the  server and open a GraphTerm terminal window
-using the default browser.  You can open additional GraphTerm
-terminal windows using the following::
+using the default browser. For multi-user computers,
+omit the ``--auth_type=none`` option
+when starting the server, and enter the authentication code stored in
+the file ``~/.graphterm/_gterm_auth.txt`` as needed. (The ``gterm``
+command can automatically enter this code for you.)
 
-    gterm [session_name_or_URL]
-    gterm -u ubuntu --browser="Google Chrome" https://example.com:8900
-
-where the terminal session name argument is optional.
-You can also access the GraphTerm server directly
+You can access the GraphTerm server
 using a browser that supports websockets, such as Google Chrome,
 Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
 
     http://localhost:8900
 
-If you use the browser directly, you will need to enter
-the authentication code stored in the file
-``~/.graphterm/_gterm_auth.txt``. (The ``gterm``
-command enters this code for you automatically.)
 In the ``graphterm`` browser page, select the GraphTerm host you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
 host is different from the network hostname for the server.)
 Within a GraphTerm window, you can use *terminal/new* menu option, or
-type the command ``gmenu new``, to create a new GraphTerm session
+type the command ``gmenu new``, to create a new GraphTerm session 
+
+You can also open additional GraphTerm terminal windows using
+the ``gterm`` command::
+
+    gterm [session_name]
+    gterm -u ubuntu --browser="Google Chrome" https://example.com:8900
+
+where the terminal session name argument is optional.
 
 Type  ``gtermserver -h`` to view all options for starting the server.
 You can use the
@@ -53,16 +56,12 @@ You can use the
 of the default ``localhost``. The ``--lc_export`` option can be used to
 export the GraphTerm environment across SSH via the locale variables
 (which sometimes works).
-
-If you are using GraphTerm for teaching or demonstration purposes, where
-security is not important, you can start the server as follows::
-
-    gtermserver --auth_type=none --terminal
-
-Note that ``none`` is all lowercase in the above command and indicates
-that no authentication is required. Another useful option is ``--auth_type=name``
-to enable simple name-based sharing. (For more on running publicly
-accessible servers, see :ref:`cloud`.)
+The ``--auth_type=none`` no authentication option is useful for
+teaching or demonstration purposes, or on a single-user lapttop/desktop,
+where security is not important.
+Another useful no authentication option is ``--auth_type=name``
+which enables simple name-based sharing. (For more on running publicly
+accessible GraphTerm servers on the cloud, see :ref:`virtual-setup`.)
 
 Within the terminal, try out the following commands::
 
@@ -100,13 +99,17 @@ The commands reside in the directory ``$GTERM_DIR/bin`` and include the followin
 
    ``gbrowse [filename|URL]``    To view files/URLs in a separate browser window
 
+   ``gcp source dest`` Copy command supporting drag-and-drop for source/destination
+
+   ``gfeed`` Display *stdin* input lines as a "feed"
+
    ``gframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) within
    an inline *iframe*  (see  :ref:`d3cloud_shot`)
 
    ``gimage [-f] [filenames]``     To view images inline, or as a
    fullpage slideshow (with ``-f`` option)
 
-   ``gjs java script command``   Execute Javascript in the client browser
+   ``gjs javascript command``   Execute Javascript in the client browser
 
    ``glandslide [options] file.md``   A GraphTerm-aware version of
    Landslide, a web-based slideshow program  (see  :ref:`landslide_shot`)
@@ -129,12 +132,14 @@ The commands reside in the directory ``$GTERM_DIR/bin`` and include the followin
 
    ``gsnowflake.py``  An inline plotting demo for the SVG module ``svgwrite``
 
-   ``gtweet [-s keywords] | tweet``  To send, search, or receive
-   tweets  (see  :ref:`tweet_shot`)
+   ``gterm`` Launch new GraphTerm windows (from outside browser)
 
    ``gtutor [...] example.py``  A command-line version of the Online
    Python Tutorial  at `pythontutor.com <http://pythontutor.com>`_
    (see :ref:`pytutor_shot`)
+
+   ``gtweet [-s keywords] | tweet``  To send, search, or receive
+   tweets  (see  :ref:`tweet_shot`)
 
    ``gupload [filename|directory]`` To upload files from desktop into
    the terminal
@@ -160,9 +165,9 @@ Visual cues
 In the default theme, *blue* color denotes text that can be *clicked*
 or *tapped* (see  :ref:`ls_shot`). The action triggered by clicking depends upon two
 factors, whether there is text in the current command line,
-and whether the Control modifier in the *Bottom menu* is active.
-Click on the last displayed prompt to toggle display of the *Bottom
-menu*. Clicking on other prompts toggles display of the command
+and whether the Control modifier in the *Footer menu* is active.
+Click on the last displayed prompt to toggle display of the *Footer menu*.
+Clicking on other prompts toggles display of the command
 output (unless the Control modifier is used, in which case the
 entire command line is copied and pasted.)
 
@@ -225,7 +230,6 @@ preceding level names may be omitted, as long as there is no ambiguity, e.g.::
 Command recall
 --------------------------------------------------------------------------------------------
 
-
 If the command line is empty, *up/down arrows* will use the underlying
 shell for command recall (like Control-P and Control-N). If the
 command line contains any text, including whitespace,
@@ -243,19 +247,19 @@ Copy/paste
 
 For certain browsers (e.g., desktop Chrome/Firefox),
 the usual *Command-V* or *Control-V* key sequence should directly
-paste text from the clipboard. If that doesn't work, there are a couple
-of other ways to paste text.
-First, you can use the keyboard shortcut *Control-O* to open a
+paste text from the clipboard.
+Alternatively, for some browsers, you can *click on the cursor*
+before beginning the paste operation and then paste the text directly.
+(This second technique may not always work well for text copied from non-plain
+text sources, such as a web page.)
+
+If the above do not work, you can use the keyboard shortcut *Control-O* to open a
 popup window, paste the text into the popup window using the
 browser's paste menu command or a keyboard shortcut,
 such as *Command/Control-V*, and then type *Control-O* again to
 insert the text at the GraphTerm cursor location.
-(The popup paste window can also be accessed using the *terminal/paste
-special* menu item.)
-Alternatively, for some browsers, and on the iPad, you can *click on the cursor*
-before beginning the paste operation and then paste the text directly.
-This second technique may not always work well for text copied from non-plain
-text sources, such as a web page.
+(The popup paste window can also be accessed using the *terminal/paste special*
+menu item.)
 
 .. index:: drag and drop
 
@@ -275,10 +279,17 @@ this time. Look at the command line for the feedback.)
 iPad/Android tablet usage
 --------------------------------------------------------------------------------------------
 
-Tap on the cursor to display virtual keyboard on the tablet. The
-*Bottom menu*, exposed by clicking on the last displayed prompt, can be
-quite useful on a tablet. (On Android, you may need to tap a couple of
-more times on the cursor after the keyboard is displayed.)
+GraphTerm can be used on touch devices (phones/tablets), with some
+limitations. Use the *view/footer* menu to enter keyboard input, send
+special characters, access arrow keys etc. Tap the *Kbrd* in the
+footer to display the keyboard.
+(The *Footer menu* display can also be toggled by clicking on the last
+displayed prompt.)
+
+*Note:* You should turn off the *Autocapitalize* and *Autocorrect*
+features in the language/keyboard settings if you want to do a lot of
+typing on touch devices.
+
 
 .. index:: themes
 
@@ -328,6 +339,7 @@ See the function ``main`` in this file for sample plotting code.
  - Use ``show()`` to update image
  - Use ``show(False)`` to display new image
  - Use ``display(fig)`` to display figure
+ - Use ``resize_fig()`` to resize figure
 
 
 .. index:: pandas, DataFrame
@@ -676,7 +688,7 @@ If you do not wish to have a GraphTerm process running on
 the remote machine, you can still use many features though GraphTerm
 running on your local machine, because all communication takes place
 via the standard output of the remote process. One quick solution is
-use the *terminal -> export environment* menu option to set the Bash
+use the *terminal/export environment* menu option to set the Bash
 shell environment variables on the remote computer. This will allow
 some, but not all, of GraphTerm's features to work on the remote
 session.
