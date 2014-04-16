@@ -44,6 +44,39 @@ body.ipadscreen  {
     /* font-weight: bold; */
 }
 
+/* Notebook text styles */
+
+.pagelet-notebook .gterm-notecell-container .gterm-notecell-text,
+ .pagelet-notebook .gterm-notecell-container .gterm-notecell-scroll,
+ .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown {
+    font-size: 14px;
+}
+
+.pagelet-notebook {
+    margin-left: 2.5em;
+}
+.pagelet-notebook .gterm-notecell-container {
+    margin-top: 1.0em;
+    margin-bottom: 1.0em;
+}
+
+.pagelet-notebook .gterm-notecell-container .gterm-notecell-input,
+.pagelet-notebook .gterm-notecell-container .gterm-notecell-output:not(.gterm-notecell-markdown),
+.pagelet-notebook .gterm-notecell-container .gterm-notecell-screen {
+    margin-left: 2.5em;
+}
+
+.pagelet-notebook .gterm-notecell-container .gterm-notecell-output.gterm-notecell-markdown h1 {
+    padding-top: 1.0em;
+    padding-bottom: 0.75em;
+}
+
+.pagelet-notebook .gterm-notecell-container .gterm-notecell-output.gterm-notecell-markdown h2,
+.pagelet-notebook .gterm-notecell-container .gterm-notecell-output.gterm-notecell-markdown h3 {
+    padding-top: 1em;
+    padding-bottom: 0.5em;
+}
+
 /* Menubar styles */
 
 #terminal:not(.gterm-menubar-hide):not(.gterm-altmode) #gterm-header {
