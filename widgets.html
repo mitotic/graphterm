@@ -181,7 +181,8 @@ $GTERM_SOCKET. The viewers use the overlaid <em>chat</em> button
 to provide feedback. The <tt class="docutils literal"><span class="pre">stdout</span></tt> from <tt class="docutils literal"><span class="pre">gchat</span></tt> is piped to
 <tt class="docutils literal"><span class="pre">gfeed</span></tt> which displays its <tt class="docutils literal"><span class="pre">stdin</span></tt> stream as a  &#8220;live feed&#8221;
 overlay, also via $GTERM_SOCKET.</p>
-<p>To display a live twitter feed as an overlay on a presentation, you can use the commands:</p>
+<p>To display a live twitter feed as an overlay on a presentation, you can use the
+commands:</p>
 <div class="highlight-python"><pre>gtweet -w -f -s topic &gt; $GTERM_SOCKET &amp;
 greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f</pre>
 </div>

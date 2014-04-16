@@ -303,11 +303,13 @@ The commands reside in the directory <tt class="docutils literal"><span class="p
 <div><p><tt class="docutils literal"><span class="pre">d3cloud</span> <span class="pre">[file]</span></tt> To display file (or stdin) content as a word
 cloud (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
 <p><tt class="docutils literal"><span class="pre">gbrowse</span> <span class="pre">[filename|URL]</span></tt>    To view files/URLs in a separate browser window</p>
+<p><tt class="docutils literal"><span class="pre">gcp</span> <span class="pre">source</span> <span class="pre">dest</span></tt> Copy command supporting drag-and-drop for source/destination</p>
+<p><tt class="docutils literal"><span class="pre">gfeed</span></tt> Display <em>stdin</em> input lines as a &#8220;feed&#8221;</p>
 <p><tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">[-f]</span> <span class="pre">[filename|URL]</span></tt>    To view files/URLs (or HTML from stdin) within
 an inline <em>iframe</em>  (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
 <p><tt class="docutils literal"><span class="pre">gimage</span> <span class="pre">[-f]</span> <span class="pre">[filenames]</span></tt>     To view images inline, or as a
 fullpage slideshow (with <tt class="docutils literal"><span class="pre">-f</span></tt> option)</p>
-<p><tt class="docutils literal"><span class="pre">gjs</span> <span class="pre">java</span> <span class="pre">script</span> <span class="pre">command</span></tt>   Execute Javascript in the client browser</p>
+<p><tt class="docutils literal"><span class="pre">gjs</span> <span class="pre">javascript</span> <span class="pre">command</span></tt>   Execute Javascript in the client browser</p>
 <p><tt class="docutils literal"><span class="pre">glandslide</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>   A GraphTerm-aware version of
 Landslide, a web-based slideshow program  (see  <a class="reference internal" href="screenshots.html#landslide-shot"><em>Web slideshows using Landslide</em></a>)</p>
 <p><tt class="docutils literal"><span class="pre">gload</span> <span class="pre">terminal_name</span></tt> Load a new terminal in the current window</p>
@@ -319,11 +321,12 @@ Landslide, a web-based slideshow program  (see  <a class="reference internal" hr
 <p><tt class="docutils literal"><span class="pre">greveal</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>    A GraphTerm-aware interface to <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>, a web-based slideshow program</p>
 <p><tt class="docutils literal"><span class="pre">gsh</span> <span class="pre">terminal_name</span> <span class="pre">command</span> <span class="pre">args</span></tt> Execute command in the specified terminal (all output appears in terminal_name</p>
 <p><tt class="docutils literal"><span class="pre">gsnowflake.py</span></tt>  An inline plotting demo for the SVG module <tt class="docutils literal"><span class="pre">svgwrite</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">gtweet</span> <span class="pre">[-s</span> <span class="pre">keywords]</span> <span class="pre">|</span> <span class="pre">tweet</span></tt>  To send, search, or receive
-tweets  (see  <a class="reference internal" href="screenshots.html#tweet-shot"><em>Live tweet stream using gtweet</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gterm</span></tt> Launch new GraphTerm windows (from outside browser)</p>
 <p><tt class="docutils literal"><span class="pre">gtutor</span> <span class="pre">[...]</span> <span class="pre">example.py</span></tt>  A command-line version of the Online
 Python Tutorial  at <a class="reference external" href="http://pythontutor.com">pythontutor.com</a>
 (see <a class="reference internal" href="screenshots.html#pytutor-shot"><em>Code tracing using online version of Python Tutor</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gtweet</span> <span class="pre">[-s</span> <span class="pre">keywords]</span> <span class="pre">|</span> <span class="pre">tweet</span></tt>  To send, search, or receive
+tweets  (see  <a class="reference internal" href="screenshots.html#tweet-shot"><em>Live tweet stream using gtweet</em></a>)</p>
 <p><tt class="docutils literal"><span class="pre">gupload</span> <span class="pre">[filename|directory]</span></tt> To upload files from desktop into
 the terminal</p>
 <p><tt class="docutils literal"><span class="pre">gvi</span> <span class="pre">filename</span></tt>   Open file using a browser-based visual editor</p>
@@ -339,9 +342,9 @@ the terminal</p>
 <p>In the default theme, <em>blue</em> color denotes text that can be <em>clicked</em>
 or <em>tapped</em> (see  <a class="reference internal" href="screenshots.html#ls-shot"><em>ls vs. gls</em></a>). The action triggered by clicking depends upon two
 factors, whether there is text in the current command line,
-and whether the Control modifier in the <em>Bottom menu</em> is active.
-Click on the last displayed prompt to toggle display of the <em>Bottom
-menu</em>. Clicking on other prompts toggles display of the command
+and whether the Control modifier in the <em>Footer menu</em> is active.
+Click on the last displayed prompt to toggle display of the <em>Footer menu</em>.
+Clicking on other prompts toggles display of the command
 output (unless the Control modifier is used, in which case the
 entire command line is copied and pasted.)</p>
 </div>
@@ -400,19 +403,18 @@ will cancel the command recall process.</p>
 <span id="index-6"></span><h3><a class="toc-backref" href="#id15">Copy/paste</a><a class="headerlink" href="#copy-paste" title="Permalink to this headline">¶</a></h3>
 <p>For certain browsers (e.g., desktop Chrome/Firefox),
 the usual <em>Command-V</em> or <em>Control-V</em> key sequence should directly
-paste text from the clipboard. If that doesn&#8217;t work, there are a couple
-of other ways to paste text.
-First, you can use the keyboard shortcut <em>Control-O</em> to open a
+paste text from the clipboard.
+Alternatively, for some browsers, you can <em>click on the cursor</em>
+before beginning the paste operation and then paste the text directly.
+(This second technique may not always work well for text copied from non-plain
+text sources, such as a web page.)</p>
+<p>If the above do not work, you can use the keyboard shortcut <em>Control-O</em> to open a
 popup window, paste the text into the popup window using the
 browser&#8217;s paste menu command or a keyboard shortcut,
 such as <em>Command/Control-V</em>, and then type <em>Control-O</em> again to
 insert the text at the GraphTerm cursor location.
-(The popup paste window can also be accessed using the <em>terminal/paste
-special</em> menu item.)
-Alternatively, for some browsers, and on the iPad, you can <em>click on the cursor</em>
-before beginning the paste operation and then paste the text directly.
-This second technique may not always work well for text copied from non-plain
-text sources, such as a web page.</p>
+(The popup paste window can also be accessed using the <em>terminal/paste special</em>
+menu item.)</p>
 </div>
 <div class="section" id="drag-and-drop">
 <span id="index-7"></span><h3><a class="toc-backref" href="#id16">Drag and drop</a><a class="headerlink" href="#drag-and-drop" title="Permalink to this headline">¶</a></h3>
@@ -426,10 +428,15 @@ this time. Look at the command line for the feedback.)</p>
 </div>
 <div class="section" id="ipad-android-tablet-usage">
 <span id="index-8"></span><h3><a class="toc-backref" href="#id17">iPad/Android tablet usage</a><a class="headerlink" href="#ipad-android-tablet-usage" title="Permalink to this headline">¶</a></h3>
-<p>Tap on the cursor to display virtual keyboard on the tablet. The
-<em>Bottom menu</em>, exposed by clicking on the last displayed prompt, can be
-quite useful on a tablet. (On Android, you may need to tap a couple of
-more times on the cursor after the keyboard is displayed.)</p>
+<p>GraphTerm can be used on touch devices (phones/tablets), with some
+limitations. Use the <em>view/footer</em> menu to enter keyboard input, send
+special characters, access arrow keys etc. Tap the <em>Kbrd</em> in the
+footer to display the keyboard.
+(The <em>Footer menu</em> display can also be toggled by clicking on the last
+displayed prompt.)</p>
+<p><em>Note:</em> You should turn off the <em>Autocapitalize</em> and <em>Autocorrect</em>
+features in the language/keyboard settings if you want to do a lot of
+typing on touch devices.</p>
 </div>
 <div class="section" id="themes">
 <span id="index-9"></span><h3><a class="toc-backref" href="#id18">Themes</a><a class="headerlink" href="#themes" title="Permalink to this headline">¶</a></h3>
@@ -465,6 +472,7 @@ See the function <tt class="docutils literal"><span class="pre">main</span></tt>
 <li>Use <tt class="docutils literal"><span class="pre">show()</span></tt> to update image</li>
 <li>Use <tt class="docutils literal"><span class="pre">show(False)</span></tt> to display new image</li>
 <li>Use <tt class="docutils literal"><span class="pre">display(fig)</span></tt> to display figure</li>
+<li>Use <tt class="docutils literal"><span class="pre">resize_fig()</span></tt> to resize figure</li>
 </ul>
 </div></blockquote>
 </div>
@@ -723,7 +731,7 @@ reverse forwarding should not be used.</em></p>
 the remote machine, you can still use many features though GraphTerm
 running on your local machine, because all communication takes place
 via the standard output of the remote process. One quick solution is
-use the <em>terminal -&gt; export environment</em> menu option to set the Bash
+use the <em>terminal/export environment</em> menu option to set the Bash
 shell environment variables on the remote computer. This will allow
 some, but not all, of GraphTerm&#8217;s features to work on the remote
 session.</p>

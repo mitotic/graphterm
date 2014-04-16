@@ -25,7 +25,7 @@ collaboration. The "lab instructor" can access all the terminal
 sessions via a "dashboard" and monitor the progress of each user in
 carrying out assigned activities, such as entering code in a
 "notebook". Lab users can collaboratively view and enter shell
-commands in each others', edit files and notebooks etc.
+commands in each other's terminals, edit files and notebooks etc.
 
 You can use the GraphTerm API to build "mashups" of web applications
 that work seamlessly within the terminal.  Sample mashups include:
@@ -186,7 +186,10 @@ See `Getting Started with GraphTerm <http://code.mindmeldr.com/graphterm/start.h
 and the
 `Using Graphical Features
 <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_
-tutorials for more info on using GraphTerm.
+tutorials for more info on using GraphTerm. You can also
+`set up a virtual computer lab
+<http://code.mindmeldr.com/graphterm/virtual-setup.html>`_
+using GraphTerm.
 
 .. index:: documentation, support
 

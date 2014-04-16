@@ -44,8 +44,9 @@ to provide feedback. The ``stdout`` from ``gchat`` is piped to
 ``gfeed`` which displays its ``stdin`` stream as a  "live feed"
 overlay, also via $GTERM_SOCKET.
 
-To display a live twitter feed as an overlay on a presentation, you can use the commands::
+To display a live twitter feed as an overlay on a presentation, you can use the
+commands::
 
-   gtweet -w -f -s topic > $GTERM_SOCKET &
-   greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
+  gtweet -w -f -s topic > $GTERM_SOCKET &
+  greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
 

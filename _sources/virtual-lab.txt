@@ -1,7 +1,7 @@
 .. _virtual-lab:
 
 *********************************************************************************
- Virtual Computer Lab using GraphTerm: Tips for Students
+Using the GraphTerm Virtual Computer Lab
 *********************************************************************************
 .. contents::
 
@@ -20,8 +20,8 @@ need to obtain the *group access code* from the instructor.
 warning messages about untrusted certificates, and be asked to make an
 exception. The instructor may ask you to ignore these warnings and
 accept the certificate, if the GraphTerm server has been configured to
-use a self-signed certificate. Also, self-signed certificates do not
-work with Safari on the Mac; use Chrome or Firefox instead.
+use a self-signed certificate. *Also, self-signed certificates do not
+work with Safari on the Mac; use Chrome or Firefox instead.*
  
 If you just created a new user account, note down your user name and
 personal access code, as you will need it for logging in later. You
@@ -48,7 +48,7 @@ name, and then you can connect to an existing terminal session or
 create a new terminal session. You can choose a specific name for a
 new terminal session, or type the special name ``new`` to
 automatically choose names like ``tty1``, ``tty2`` etc. You can also
-create new terminals as needed using the *terminal->new* menu option.
+create new terminals as needed using the *terminal/new* menu option.
 
 You can type standard Unix commands, like ``cd``, ``ls``, ``cp``
 etc. in the terminal. The *command* menu lists some commonly used
@@ -56,7 +56,7 @@ commands. Often, it is preferable to use the GraphTerm-aware ``gls``
 command, instead of the standard ``ls`` command, as it allows you to
 navigate directories by clicking.
 
-To leave a terminal session, use the *terminal->detach* option, which
+To leave a terminal session, use the *terminal/detach* option, which
 will return you to the list of terminals. Detaching a terminal still
 keeps it alive, and you connect to it at a later time, without losing
 its state. For example, you can create a terminal at work, and later
@@ -75,14 +75,14 @@ more of the following:
    *Control-D* to exit the python interpreter. (Remember to save the
    notebook before exiting, if necessary.)
 
- - Use the *command->interrupt* menu option or type *Control-C* to
+ - Use the *command/interrupt* menu option or type *Control-C* to
    interrupt the currently running program.
 
  - For embedded frames or "fullscreen" programs. use the
-   *command->parent interrupt* menu option to interrupt the currently
+   *command/parent interrupt* menu option to interrupt the currently
    running program in the parent window.
 
- - Use the *terminal->reload* menu option or the browser's reload
+ - Use the *terminal/reload* menu option or the browser's reload
    button to reload the web page.
 
 
@@ -96,19 +96,19 @@ who will appear as additional hosts.
 You can *watch* someone else's terminal, without controlling it,
 simply by selecting a different host from the list.  You can also
 *steal* control of someone else's terminal, if the terminal owner has
-previously unchecked the *share->locked* menu option. (To regain
+previously unchecked the *share/locked* menu option. (To regain
 control, the terminal owner would have to steal it back.)
 
-*Chatting*: Using the *command->chat* option, you can enable chat
+*Chatting*: Using the *command/chat* option, you can enable chat
 communication between all watchers for a terminal session.  The
 command needs to be invoked at the shell prompt, *before* running the
 python interpreter or opening a notebook, and it displays a *chat*
 button near the top right corner. When chatting, an *alert* button
-also becomes available to *attract the attention of the watchers
-(which may include the *instructor).
+also becomes available to attract the attention of the watchers
+(which may include the instructor).
 
 There is also an experimental option for unlocked terminals,
-*share->tandem*, which allows two people to control a terminal
+*share/tandem*, which allows two people to control a terminal
 simultaneously. However, sometimes this can lead to unpredictable
 results, due to the time lags between terminal operations by multiple
 users.
@@ -120,7 +120,7 @@ Pasting text into the terminal
 To paste copied text into the terminal, click on the *red cursor* and
 then use the standard paste command on your computer (*Command-V* on
 the Mac and *Control-V* on other systems). If the keyboard command
-does not work, you can try the *terminal->paste special* menu option.
+does not work, you can try the *terminal/paste special* menu option.
 
 
 GraphTerm notebook interface
@@ -142,7 +142,7 @@ Opening python notebooks in GraphTerm
 --------------------------------------------------------------------------------------------
 
 To open a new python notebook, use the menu command
-*notebook->new->pylab* 
+*notebook/new/pylab* 
 
 To open an existing notebook, use the ``gls`` command to list your
 notebooks, e,g.::
@@ -161,10 +161,10 @@ Once you have opened a notebook, you can use *Control-Enter* or
 Saving and exiting python notebooks
 --------------------------------------------------------------------------------------------
 
-To save the notebook, use the menu command *notebook->save*
+To save the notebook, use the menu command *notebook/save*
 
 To exit the notebook mode, you can simply type *Control-C* or use the
-*notebook->quit* menu option. This returns you to the python command
+*notebook/quit* menu option. This returns you to the python command
 line, with the chevron (>>>) prompt.
 
 To exit the python command line, type *Control-D* or the following
@@ -184,7 +184,7 @@ with an URL of the form ``https://hostname.domain:port``, where
 notebook password is the same as the access code for your user
 account.
 
-*Note:* If each person is running their own copy of the IPython Notebook
+*Note:* If each user is running their own copy of the IPython Notebook
 server, it can degrade performance on a shared computer. Please
 shut down the server when you are done using it.
 
@@ -234,7 +234,7 @@ letter of the menu item to be selected. For example, the key sequence
 
 In notebook mode, several keyboard shortcuts with the prefix
 *Control-m* are also available, similar to IPython Notebook. See
-*help->notebook shortcuts* menu option for more info.
+*help/notebook shortcuts* menu option for more info.
 
 
 Windows-specific tips
@@ -256,7 +256,7 @@ Tips for Android/iPhone/IPad
 ---------------------------------------------------------------------------------------------
 
 GraphTerm can be used on touch devices (phones/tablets), with some
-limitations. Use the *view->footer* menu to enter keyboard input, send
+limitations. Use the *view/footer* menu to enter keyboard input, send
 special characters, access arrow keys etc. Tap the *Kbrd* in the
 footer to display the keyboard.
 
