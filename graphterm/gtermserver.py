@@ -461,7 +461,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 if self.req_path in self._webcast_paths:
                     self.authorized = self.add_state(user, self.WEBCAST_AUTH)
                 else:
-                    logging.info("GTSocket.open: Authentication requested: %s", auth_message)
                     need_user = "_" if (self._auth_type == self.NAME_AUTH or self._auth_type >= self.MULTI_AUTH) else ""
                     need_code = "_" if (self._auth_type >= self.LOCAL_AUTH) else ""
                     if Server_settings["https"]:

@@ -44,7 +44,7 @@ def main():
 
     uid = os.getuid()
     user = pwd.getpwuid(uid).pw_name
-    auth_server = "localhost" if options.server == "*" else options.server
+    auth_server = gterm.Server if options.server == "*" else options.server
 
     certline = ""
     if options.certfile:

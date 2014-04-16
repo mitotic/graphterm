@@ -77,6 +77,12 @@ Shared_secret = env("SHARED_SECRET", lc=True)
 URL = env("URL", "http://localhost:%d" % DEFAULT_HTTP_PORT)
 Blob_server = env("BLOB_SERVER", "")
 
+Server, _, Server_port = urlparse.urlparse(URL)[1].partition(":")
+if Server_port:
+    Server_port = int(Server_port)
+else:
+    Server_port = 443 if URL.startswith("https:") else 80
+
 _, Host, Session = Path.split("/") if Path else ("", "", "") 
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
                 "\x1b[?1155l"]
