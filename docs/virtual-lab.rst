@@ -68,6 +68,17 @@ Troubleshooting
 
 If the terminal is unresponsive (i.e., appears to "hang"), try one or
 more of the following:
+ 
+ - Do what you would normally do in a Unix terminal, type
+   ``Control-C``  to interrupt the currently running program. You can
+   also use the *command/interrupt* menu option instead.
+
+ - If you are in the fullscreen graphics mode (e.g., using
+   ``gframe``), you may need to click on the top of the terminal
+   portion of the window to get the input focus out of the embedded
+   frame and then type ``Control-C``.  You can also try the
+   *command/parent interrupt* menu option to interrupt the currently
+   running program in the parent window.
 
  - Are you in the notebook mode? If so, the notebook name will appear
    on the top, with the prefix "NB". To exit the notebook mode, use
@@ -75,15 +86,9 @@ more of the following:
    *Control-D* to exit the python interpreter. (Remember to save the
    notebook before exiting, if necessary.)
 
- - Use the *command/interrupt* menu option or type *Control-C* to
-   interrupt the currently running program.
-
- - For embedded frames or "fullscreen" programs. use the
-   *command/parent interrupt* menu option to interrupt the currently
-   running program in the parent window.
-
  - Use the *terminal/reload* menu option or the browser's reload
-   button to reload the web page.
+   button to reload the web page. *Copy/paste any displayed code in
+   notebook cells before reloading, as you may lose it.*
 
 
 Sharing terminal sessions

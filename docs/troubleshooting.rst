@@ -15,12 +15,29 @@ Terminal
 My terminal is unresponsive?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If your terminal appears to hang, do what you would normally do in a
-terminal, type ``Control-C``. If you are in the fullscreen graphics
-mode (e.g., using ``gframe``), you may need to click on the top of
-the terminal portion of the window to get the input focus out of the
-``iframe`` and then type ``Control-C``. Finally, *refreshing the browser*
-by reloading the page may also fix the problem.
+If the terminal is unresponsive (i.e., appears to "hang"), try one or
+more of the following:
+ 
+ - Do what you would normally do in a Unix terminal, type
+   ``Control-C``  to interrupt the currently running program. You can
+   also use the *command/interrupt* menu option instead.
+
+ - If you are in the fullscreen graphics mode (e.g., using
+   ``gframe``), you may need to click on the top of the terminal
+   portion of the window to get the input focus out of the embedded
+   frame and then type ``Control-C``.  You can also try the
+   *command/parent interrupt* menu option to interrupt the currently
+   running program in the parent window.
+
+ - Are you in the notebook mode? If so, the notebook name will appear
+   on the top, with the prefix "NB". To exit the notebook mode, use
+   the *notebook-quit* menu option, or type *Control-C* and then type
+   *Control-D* to exit the python interpreter. (Remember to save the
+   notebook before exiting, if necessary.)
+
+ - Use the *terminal/reload* menu option or the browser's reload
+   button to reload the web page. *Copy/paste any displayed code in
+   notebook cells before reloading, as you may lose it.*
 
 .. index:: permission denied
  
@@ -64,24 +81,22 @@ permanent solution, see the :ref:`ssh` section.)
 How do I paste text?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For certain browsers (e.g., desktop Chrome/Firefox),
-the usual *Command-V* or *Control-V* key sequence should directly
-paste text from the clipboard. If that doesn't work there are a couple
-of other ways to paste text.
-First, you can use the keyboard shortcut *Control-O* to open a
-popup window, paste the text into the popup window using the
-browser's paste menu command or a keyboard shortcut,
-such as *Command/Control-V*, and then type *Control-O* again to
-insert the text at the GraphTerm cursor location.
-(The popup paste window can also be accessed using the *terminal/paste
-special* menu item.)
-Alternatively, for some browsers, and on the iPad, you can *click on the cursor*
-before beginning the paste operation and then paste the text directly.
-This second technique may not always work well for text copied from non-plain
-text sources, such as a web page.
-A final workaround is to paste the
-text into a temporary location as plain text (such as in a plain text
-editor), and then copy/paste it from there to GraphTerm.
+For certain browsers (e.g., desktop Chrome/Firefox), the usual
+*Command-V* or *Control-V* key sequence should directly paste text
+from the clipboard.  Alternatively, for some browsers, you can *click
+on the cursor* before beginning the paste operation and then paste the
+text directly.  This second technique may not always work well for
+text copied from non-plain text sources, such as a web page. A
+workaround for this case is to paste the text into a temporary
+location as plain text (such as in a plain text editor), and then
+copy/paste it from there to GraphTerm.
+
+If the above do not work, you can use the keyboard shortcut
+*Control-O* to open a popup window, paste the text into the popup
+window using the browser's paste menu command or a keyboard shortcut,
+such as *Command/Control-V*, and then type *Control-O* again to insert
+the text at the GraphTerm cursor location.  (The popup paste window
+can also be accessed using the *terminal/paste special* menu item.)
 
 
 Inline graphics and notebook mode
@@ -104,7 +119,7 @@ How do I specify the format for saving a notebook?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The notebook save file format is determined by the filename extension,
-i.e., ``.ipynb`` or ``.md``.
+i.e., ``.ipynb`` or ``.py.gnb.md``.
 
 
 Session sharing
@@ -173,19 +188,16 @@ server is running.
 Using GraphTerm on tablets
 -------------------------------------------------------------------------------
 
-How do I access the virtual keyboard on the iPad?
+How do I access the virtual keyboard on iPad/Android?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*Tap the cursor* access the virtual keyboard on the iPad. If the
-command line ends up behind the keyboard, retract the keyboard
-and tap the cursor again.
+GraphTerm can be used on touch devices (phones/tablets), with some
+limitations. Use the *view/footer* menu to enter keyboard input, send
+special characters, access arrow keys etc. Tap the *Kbrd* in the
+footer to display the keyboard.
 
-How do I access the virtual keyboard on Android?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-GraphTerm currently works on Android devices, but not very well.  *Tap
-the cursor* to activate the virtual keyboard on Android tablets. Then
-tap it two more times and then start typing. Use the bottom menu bar
-for convenience, especially the *Enter* option.
+*Note:* You should turn off the *Autocapitalize* and *Autocorrect*
+features in the language/keyboard settings if you want to do a lot of
+typing on touch devices.
 
 
