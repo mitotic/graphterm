@@ -1882,6 +1882,8 @@ class Terminal(object):
                         tem_line = "".join([" "]*indent)
                         if self.note_params["command"] == "ipython":
                             tem_line += "#"
+                        elif not tem_line:
+                            tem_line = " "
                         tem_lines.append(tem_line)
                     prev_blank = True
                     continue
@@ -1899,6 +1901,8 @@ class Terminal(object):
                     tem_line = "".join([" "]*indent)
                     if self.note_params["command"] == "ipython":
                         tem_line += "#"
+                    elif not tem_line:
+                        tem_line = " "
                     tem_lines.append(tem_line)
                 tem_lines.append(line)
                 indent = new_indent
