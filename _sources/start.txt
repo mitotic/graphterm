@@ -250,16 +250,18 @@ the usual *Command-V* or *Control-V* key sequence should directly
 paste text from the clipboard.
 Alternatively, for some browsers, you can *click on the cursor*
 before beginning the paste operation and then paste the text directly.
-(This second technique may not always work well for text copied from non-plain
-text sources, such as a web page.)
+This second technique may not always work well for text copied from non-plain
+text sources, such as a web page. A
+workaround for this case is to paste the text into a temporary
+location as plain text (such as in a plain text editor), and then
+copy/paste it from there to GraphTerm.
 
-If the above do not work, you can use the keyboard shortcut *Control-O* to open a
-popup window, paste the text into the popup window using the
-browser's paste menu command or a keyboard shortcut,
-such as *Command/Control-V*, and then type *Control-O* again to
-insert the text at the GraphTerm cursor location.
-(The popup paste window can also be accessed using the *terminal/paste special*
-menu item.)
+If the above do not work, you can use the keyboard shortcut
+*Control-O* to open a popup window, paste the text into the popup
+window using the browser's paste menu command or a keyboard shortcut,
+such as *Command/Control-V*, and then type *Control-O* again to insert
+the text at the GraphTerm cursor location.  (The popup paste window
+can also be accessed using the *terminal/paste special* menu item.)
 
 .. index:: drag and drop
 
