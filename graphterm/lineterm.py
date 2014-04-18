@@ -1202,6 +1202,11 @@ class Terminal(object):
         elif not fext:
             fullpath += ".gnb.md"
             fext = ".md"
+        update_filename = False
+        if self.note_params["name"] != fname:
+            self.note_params["name"] = fname
+            self.note_params["file"] = fullpath
+            update_filename = True
         save_fill = os.path.splitext(fname)[0].endswith("-fill")
         fig_suffix = safe_filename(fname)
         curly_fence = fname.endswith(".R") or self.note_params["command"] == "R"
@@ -1340,6 +1345,8 @@ class Terminal(object):
             md_lines += [IPYNB_JSON_FOOTER]
         filedata = "\n".join(s if isinstance(s, str) else s.encode(ENCODING, "replace") for s in md_lines) + "\n"
         save_params = {"x_gterm_filepath": fullpath, "content_type": "text/x-markdown"}
+        if update_filename:
+            save_params["x_gterm_updatename"] = self.note_params["name"]
         if params.get("location") == "remote":
             save_params["x_gterm_location"] = "remote"
         else:
@@ -2793,6 +2800,7 @@ class Terminal(object):
         status = ""
         location = params.get("x_gterm_location", "")
         filepath = params.get("x_gterm_filepath", "")
+        update_name = params.get("x_gterm_updatename", "")
         encoded = params.get("x_gterm_encoding") == "base64"
         if location != "remote":
             filepath = os.path.expanduser(filepath)
@@ -2808,7 +2816,7 @@ class Terminal(object):
                 status = str(excp)
 
             if params.get("x_gterm_popstatus"):
-                self.screen_callback(self.term_name, "", "save_status", [filepath, status])
+                self.screen_callback(self.term_name, "", "save_status", [filepath, update_name, status])
 
             if params.get("x_gterm_sendstatus"):
                 params["x_gterm_status"] = status
@@ -2824,7 +2832,7 @@ class Terminal(object):
                     self.pty_write(send_data)
             except (IOError, OSError), excp:
                 print >> sys.stderr, "lineterm: Error in writing to %s (%s %s)" % (self.term_name, excp.__class__, excp)
-                self.screen_callback(self.term_name, "", "save_status", [filepath, str(excp)])
+                self.screen_callback(self.term_name, "", "save_status", [filepath, update_name, str(excp)])
                 
 
     def get_finder(self, kind, directory=""):

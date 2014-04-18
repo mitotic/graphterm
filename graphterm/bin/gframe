@@ -129,7 +129,7 @@ for j, url in enumerate(iframe_urls):
 
 if not options.noheader:
     if options.fullscreen:
-        iframe_html = '<span class="gterm-iframeexpand gterm-iframeheader">&#x29c9;</span><span class="gterm-iframeclose gterm-iframeheader">&#x2a2f;</span>' + iframe_html
+        iframe_html = '<span class="gterm-iframeheader gterm-iframeexpand">&#x29c9;</span><span class="gterm-iframeclose gterm-iframeheader">&#x2a2f;</span>' + iframe_html
     else:
         container_id = "gframecontainer%09d" % random.randrange(0, 10**9)
         iframe_html = '<div id="'+container_id+'"> <span class="gterm-iframeheader gterm-iframedelete" gterm-iframe-container="'+container_id+'">&#215;</span>' + iframe_html + '</div>'

@@ -684,7 +684,6 @@ div.gterm-notecell-output.gterm-notecell-markdown,
 }
 
 span.gterm-iframeexpand {
-    position: absolute;
     top: 0px;
     left: 5px;
     padding: 2px;
@@ -696,7 +695,7 @@ span.gterm-iframeexpand {
 span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
     position: absolute;
     top: 0px;
-    right: 5px;
+    right: 8px;
     padding: 2px;
     font-size: 1.3em;
     font-weight: bold;
@@ -709,6 +708,7 @@ span.gterm-iframedelete {
     float: right;
     cursor: pointer;
     padding: 0;
+    margin-right: 8px;
 }
 
 /* Paste pop styles */

@@ -818,6 +818,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     scrollElem.find('td img').bind("dragstart", function(evt) {evt.preventDefault();});
     scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
     scrollElem.find('.gterm-iframeclose').bindclick(CloseIFrame);
+    scrollElem.find('.gterm-iframedelete').bindclick(CloseIFrame);
     scrollElem.find('.gterm-iframeexpand').bindclick(ExpandIFrame);
     GTDropBindings(scrollElem.find(' .droppable'));
 
@@ -1224,7 +1225,12 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    GTPopAlert("ERROR: "+cmd_arg[0]);
 
 		} else if (cmd_type == "save_status") {
-		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[1] || "saved"));
+		    if (gNotebook && cmd_arg[1]) {
+			gNotebook.note_params.file = cmd_arg[0];
+			gNotebook.note_params.name = cmd_arg[1];
+			$("#menubar-notelabel").text("NB: "+gNotebook.note_params.name)
+		    }
+		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[2] || "saved"));
 
  		} else if (cmd_type == "frame_msg") {
 		    try {
@@ -1433,6 +1439,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    $(pageletSelector+' td .gterm-link:not(.gterm-download)').bindclick(gtermPageletClickHandler);
 			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
 			    $(pageletSelector+' .gterm-togglelink').bindclick(gtermLinkClickHandler);
+			    $(pageletSelector+' .gterm-iframedelete').bindclick(CloseIFrame);
 			    $(pageletSelector+' .gterm-iframeclose').bindclick(CloseIFrame);
 			    $(pageletSelector+' .gterm-iframeexpand').bindclick(ExpandIFrame);
 			    GTDropBindings($(pageletSelector+' .droppable'));
@@ -4567,7 +4574,11 @@ function CloseIFrame(evt) {
 	gtermInterruptHandler();
 }
 function ExpandIFrame(evt) {
-    load("full");
+    var containerId = $(evt.target).attr("gterm-iframe-container");
+    if (containerId)
+	window.location = $("#"+containerId+" iframe").attr("src");
+    else
+	load("full");
 }
 
 function EndFullpage(frameId) {
