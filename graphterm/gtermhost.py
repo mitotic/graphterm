@@ -157,6 +157,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                                                   "min_version": about.min_version,
                                                   "host_secret": self.host_secret,
                                                   "normalized_host": normalized_host,
+                                                  "term_prefs": gterm.read_prefs(),
                                                   "term_names": self.terms.keys()}]])
         
     def add_oshell(self):
@@ -354,6 +355,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     # save_data <save_params> <filedata>
                     if self.lineterm:
                         self.lineterm.save_data(term_name, cmd[0], cmd[1])
+
+                elif action == "save_prefs":
+                    # save_prefs <prefs_dict>
+                    prefs_file, status = gterm.write_prefs(cmd[0])
+                    self.send_request_threadsafe("response", term_name, "", [["terminal", "save_status", [prefs_file, "", status]] ])
 
                 elif action == "click_paste":
                     # click_paste: text, file_url, {command:, clear_last:, normalize:, enter:}

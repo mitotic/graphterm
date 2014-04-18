@@ -885,6 +885,7 @@ function GTWebSocket(auth_user, auth_code, connect_cookie) {
 
     this.webcast = false;
     this.theme = "default";
+    this.fontsize = "normal";
     this.alt_mode = false;
 
     this.repeat_command = "";
@@ -2040,7 +2041,7 @@ function GTJoin(user, joining, setup) {
     $('#gterm-menu-users-container').toggleClass("menu-disabled", !$('#gterm-menu-users-list li').length);
 }
 
-var gMenuState = {view: {menubar: true, footer: gMobileBrowser, icons: false, theme: ""},
+var gMenuState = {view: {menubar: true, footer: gMobileBrowser, icons: false, fontsize: "", theme: ""},
 		  command: {advanced: false},
                   share: {control: true, private: true, locked: false, tandem: false, webcast: false},
                   notebook: {markdown: false, page: {slide: false}} };
@@ -2058,10 +2059,17 @@ function GTMenuStateUpdate(stateValues, prefix) {
     prefix = prefix || "";
     for (var key in stateValues) {
 	var val = stateValues[key];
-	if (_.isObject(val))
+	if (_.isObject(val)) {
 	    GTMenuStateUpdate(val, prefix+key+"_");
-	else
-	    GTMenuUpdateToggle(prefix+key, val);
+	} else {
+	    if (key == "view_fontsize" || key == "view_theme"|| key == "view_icons") {
+		var selval = key.substr(5);
+		GTMenuView(selval+"_"+val, val);
+		gMenuState.view[selval] = val;
+	    } else {
+		GTMenuUpdateToggle(prefix+key, val);
+	    }
+	}
     }
     // Float menubar for embedded terminal
     if (is_embedded_frame()) {
@@ -2077,6 +2085,9 @@ function GTMenuRefresh() {
     var curTheme = gMenuState.view.theme;
     if (curTheme)
 	GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="view_theme_'+curTheme+'"]'))
+    var curFontsize = gMenuState.view.fontsize;
+    if (curFontsize)
+	GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="view_fontsize_'+curFontsize+'"]'))
 }
 
 function GTMenuRefreshToggle(target, update, newValue) {
@@ -2260,6 +2271,21 @@ function GTMenuView(selectKey, newValue, force) {
 	$("#terminal").toggleClass("showicons", gWebSocket.icons);
 	break;
 
+    case "fontsize":
+	// Select fontsize
+	if (gWebSocket.fontsize != comps[1]) {
+	    if (gWebSocket.fontsize)
+		$("body").removeClass("gterm-fsize-"+gWebSocket.fontsize);
+	    if (!comps[1] || comps[1] == "normal") {
+		gWebSocket.fontsize = "normal";
+	    } else {
+		
+		gWebSocket.fontsize = comps[1];
+		$("body").addClass("gterm-fsize-"+gWebSocket.fontsize);
+	    }
+	}
+	break;
+
     case "theme":
 	// Select theme
 	var three_d = (newValue.substr(newValue.length-2) == "3d");
@@ -2283,6 +2309,11 @@ function GTMenuView(selectKey, newValue, force) {
        }
 
       break;
+
+    case "save":
+	if (gWebSocket && gWebSocket.terminal)
+	    gWebSocket.write([["save_prefs", {view: {icons: gMenuState.view.icons, fontsize: gMenuState.view.fontsize, theme: gMenuState.view.theme} }]]);
+	break;
     }
 }
 

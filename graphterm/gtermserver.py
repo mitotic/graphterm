@@ -706,15 +706,18 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.broadcast(path, ["join", get_user(self), True])
 
             display_splash = controller and self._counter[0] <= 2
-            normalized_host, host_secret = "", ""
+            normalized_host, host_secret, term_prefs = "", "", {}
             if not self.wildcard:
                 TerminalConnection.send_to_connection(host, "request", term_name, user, [["reconnect", self.websocket_id, Host_settings]])
                 normalized_host = gtermhost.get_normalized_host(host)
+                term_prefs = TerminalConnection.term_prefs.get(normalized_host)
                 if self.authorized["auth_type"] > self.WEBCAST_AUTH:
                     host_secret = TerminalConnection.host_secrets.get(normalized_host)
 
             parent_term = conn.term_dict.get(term_name, "") if conn else ""
             state_values = terminal_params.copy()
+            for k, v in term_prefs.get("view",{}).items():
+                state_values["view_"+k] = v
             state_values.pop("state_id", None)
             state_values["share_webcast"] = bool(path in self._webcast_paths)
             state_values["allow_webcast"] = bool(self._auth_type <= self.LOCAL_AUTH or is_super_user or Server_settings["allow_share"])
@@ -961,6 +964,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 elif not kill_term:
                     req_list.append(msg)
+                    if msg[0] == "save_prefs":
+                        normalized_host = gtermhost.get_normalized_host(remote_host)
+                        if normalized_host in TerminalConnection.term_prefs:
+                            TerminalConnection.term_prefs[normalized_host].get("view",{}).update(msg[1].get("view",{}))
+
                     if msg[0] == "chat" and msg[3].strip() in ("alerttrue", "alertfalse"):
                         terminal_params["alert_status"] = (msg[3].strip() == "alerttrue")
 
@@ -1066,6 +1074,7 @@ def wildcard2re(path):
 class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     _all_connections = {}
     host_secrets = {}
+    term_prefs = {}
     @classmethod
     def get_matching_paths(cls, matchpath, user, state_id, auth_type):
         is_super_user = GTSocket.is_super_or_local(user, auth_type)
@@ -1150,6 +1159,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     raise Exception(errmsg)
 
                 self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
+                self.term_prefs[msg[1]["normalized_host"]] = msg[1]["term_prefs"]
                 self.term_dict = dict((key, "") for key in msg[1]["term_names"])
             elif msg[0] == "file_response":
                 ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))

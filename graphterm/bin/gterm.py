@@ -119,6 +119,7 @@ APP_DIRNAME = ".graphterm"
 APP_AUTH_FILENAME = "_gterm_auth.txt"
 APP_EMAIL_FILENAME = "gterm_email.txt"
 APP_GROUPS_FILENAME = "gterm_groups.json"
+APP_PREFS_FILENAME = "gterm_prefs.json"
 APP_SECRET_FILENAME = "gterm_secret"
 SIGN_SEP = "|"
 
@@ -199,6 +200,27 @@ def read_groups(user=""):
             except Exception, excp:
                 sys.exit("Error in reading group from %s: %s" % (group_file, excp))
     return groups, membership
+
+def read_prefs(user=""):
+    prefs_file = os.path.join(get_app_dir(user), APP_PREFS_FILENAME)
+    prefs = {}
+    if os.path.exists(prefs_file):
+        with open(prefs_file) as f:
+            try:
+                prefs = json.loads(f.read())
+            except Exception, excp:
+                logging.error("Error in reading prefs from %s: %s" % (prefs_file, excp))
+    return prefs
+
+def write_prefs(prefs_dict, user=""):
+    prefs_file = os.path.join(get_app_dir(user), APP_PREFS_FILENAME)
+    try:
+        with open(prefs_file, "w") as f:
+            f.write(json.dumps(prefs_dict)+"\n")
+        return prefs_file, "Saved preferences"
+    except Exception, excp:
+        logging.error("Error in writing prefs to %s: %s", prefs_file, excp)
+        return prefs_file, "ERROR in saving prefs"
 
 def compute_hmac(key, message, hex_digits=HEX_DIGITS):
     return hmac.new(str(key), message, digestmod=hashlib.sha256).hexdigest()[:hex_digits]

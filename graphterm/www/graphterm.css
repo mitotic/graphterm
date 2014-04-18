@@ -26,17 +26,31 @@ body.bold, body.bold pre, body.bold .gterm-prewrap, body.bold td {
     font-weight: bold;
 }
 
-/* Body screen styles (with button label font sizes) */
-body.smallscreen  {
-    font-size: 12px;
-}
-body.mediumscreen {
+body:not(.gterm-fsize-smallest) #terminal.gterm-embed,
+body:not(.gterm-fsize-smallest) #terminal.gterm-embed pre,
+body:not(.gterm-fsize-smallest) #terminal.gterm-embed .gterm-prewrap {
     font-size: 14px;
 }
-body.largescreen  {
+
+/* Body screen styles (with button label font sizes) */
+body.gterm-fsize-smallest,
+body.gterm-fsize-smallest pre,
+body.gterm-fsize-smallest .gterm-prewrap {
+    font-size: 12px;
+}
+body.gterm-fsize-smaller,
+body.gterm-fsize-smaller pre,
+body.gterm-fsize-smaller .gterm-prewrap {
+    font-size: 14px;
+}
+body.gterm-fsize-normal,
+body.gterm-fsize-normal pre,
+body.gterm-fsize-normal .gterm-prewrap {
     font-size: 16px;
 }
-body.extralargescreen  {
+body.gterm-fsize-larger,
+body.gterm-fsize-larger pre,
+body.gterm-fsize-larger .gterm-prewrap {
     font-size: 18px;
 }
 
@@ -373,11 +387,11 @@ hr.sf-separator {
 }
 
 #headfoot-keyboard:focus {
-    color: lightgray;
+    color: gray;
 }
 
 #headfoot-keyboard {
-    background-color: lightgray;
+    background-color: gray;
     width: 1em;
     height: 1em;
     display: inline-block;
