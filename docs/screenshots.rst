@@ -99,6 +99,26 @@ GraphTerm Notebook mode running R
 
    <hr style="margin-bottom: 3em;">
 
+.. _dark_theme_shot:
+
+Themes
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-dark-theme.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Showing the basic dark theme, with two embedded terminals to illustrate the
+   contrast with the default and bold themes
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
 .. _stars3d_shot:
 
 stars3d theme, with icons enabled
