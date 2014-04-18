@@ -101,16 +101,16 @@ GraphTerm Notebook mode running R
 
 .. _dark_theme_shot:
 
-Dark theme
+Themes
 ==================================================
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-dark-theme.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-dark-theme.png
    :align: center
    :width: 90%
    :figwidth: 85%
 
-   Showing dark theme, with two embedded terminal to illustrate the
-   contrast with the default theme
+   Showing the basic dark theme, with two embedded terminals to illustrate the
+   contrast with the default and bold themes
 
    ..
 
