@@ -9,51 +9,64 @@
 
 
 This section describes how to configure a Virtual Computer Lab using
-GraphTerm on a Linux server. If you are using the Amazon Web Services
-(AWS), most of these configuration steps described below are
-automatically carried out by the ``ec2launch`` command. If you are
+GraphTerm on a Linux server. If you do not already have a Linux server
+available, you can easily create one on demand using Amazon Web
+Services (AWS). Most of the AWS configuration steps described below
+are automatically carried out by the ``ec2launch`` command. (If you are
 using a different cloud computing service, you can either modify
-``ec2launch`` or write your own script to configure the server.
-
-The GraphTerm distribution includes the scripts ``ec2launch, ec2list,
-ec2scp,`` and ``ec2ssh`` to launch and monitor AWS Elastic Computing
-Cloud (EC2) instances running a GraphTerm server. These scripts are
-used to test new versions of GraphTerm by running them in the "cloud".
-You will need to have an AWS account to use these scripts, and also
-need to install the ``boto`` python module.
+``ec2launch`` or write your own script to configure the server.)
 
 A companion section provides information on :doc:`virtual-lab` after
 it has been set up. It can be printed and distributed to the users to
 serve as a quick start guide.
 
+The GraphTerm distribution includes the convenience scripts
+``ec2launch, ec2list, ec2scp,`` and ``ec2ssh`` to launch and monitor
+AWS Elastic Computing Cloud (EC2) instances running a GraphTerm
+server. You will need to have an AWS account to use these scripts, and
+also need to install the ``boto`` python module. (These scripts are
+routinely used during GraphTerm development to test new versions by
+running them in the "cloud". )
+
 Quick setup
 --------------------------------------------------------------------------------------------
 
-The following steps allow yout quickly launch a "virtual computer lab"
+The following steps allow you to quickly launch a "virtual computer lab"
 with multi-user support.
 
- 1. If you do not have an `AWS <http://aws.amazon.com/>`_ account,  get one by
-    `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html>`_
-    The AWS account will be linked to your standard Amazon account.
-
- 2. Create an SSH key pair to access your AWS instances by `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_. You
-    need to name the key pair ``ec2key`` to be able to use the
-    ``ec2ssh`` and ``ec2scp`` commands bundled with GraphTerm.
-
- 3. Install ``graphterm`` on your local computer using the following commands:
+ 1. Install ``graphterm`` on your computer using the following two commands:
 
     ``easy_install graphterm``
 
     ``gterm_setup``
 
- 4. Run graphterm on your local computer:
+ 2. If this computer is a pristine Linux/Mac server where you want to run the
+    multiuser GraphTerm server, with automatic new user creation,
+    configure an user (named, say, ``ubuntu``) with
+    `password-less <http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password>`_
+    ``sudo`` privileges, use the following command to start the
+    GraphTerm server and then *skip to Step 8*:
+
+   ``sudo gtermserver --daemon=start --widget_port=-1 --auth_type=multiuser --auto_users --super_users=ubuntu --port=80 --host=server_domain_name_or_ip``
+
+ 3. If you do not already have a server, you should obtain an `AWS <http://aws.amazon.com/>`_ account by
+    `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html>`_.
+    The AWS account will be linked to your standard Amazon account.
+
+ 4. Create an SSH key pair to access your AWS instances by `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_. You
+    need to name the key pair ``ec2key`` to be able to use the
+    ``ec2ssh`` and ``ec2scp`` commands bundled with GraphTerm.
+
+ 5. Run graphterm on your local (single-user) computer:
 
     ``gtermserver --auth_type=none``
 
     The above command should automatically open up a GraphTerm window in
     your browser. You can also open one using the URL http://localhost:8900
+    (*Note:* This is insecure on a shared, multi-user, computer; omit
+    the ``--auth_type=none`` server option in that case.)
 
- 5. Run the following command within the graphterm window:
+ 6. Run the following command within the graphterm window to create a Linux server:
 
     ``ec2launch``
 
@@ -66,42 +79,44 @@ with multi-user support.
 
     ``ec2launch -f --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --auth_type=multiuser --pylab --netcdf testlab``
 
- 6. After the new cloud server has completed configuration, which can
-    take several minutes, its IP address and domain name will be
+ 7. After the new AWS Linux server has completed configuration, which can
+    take several minutes, its IP address and *server domain name* will be
     displayed. Type the following command using the new domain name to
     login to the password-less super user account ``ubuntu``:
 
-    ``ec2ssh ubuntu@aws_domain_name``
+    ``ec2ssh ubuntu@server_domain_name``
 
- 7.  Run the following command on the AWS instance to verify that the graphterm server is running:
+ 8.  Run the following command on the server to verify that ``gtermserver`` is running:
 
     ``ps -ef | grep gtermserver``
 
-    If not, check for errors in the setup procedure by typing ``sudo tail /root/ec2launch.log``
+    If not, check for errors in the AWS setup procedure by typing ``sudo tail /root/ec2launch.log``
 
- 8.  Run the following command in the AWS instance to display the *master access code*:
+ 9.  Run the following command on the server to display the *master access code*:
 
-    ``cat ~/.graphterm/@aws_domain_name_gterm_auth.txt``
+    ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
- 9. Use the URL http://aws_domain_name to open a new graphtem window on the AWS
-    server, with  user name ``ubuntu`` and the *master access code*
+    (Ignore the port number following the hexadecimal access code.)
 
- 10. Run the following command in the AWS graphterm window to display the group access code which should be entered by new users:
+ 10. Use the URL http://server_domain_name to open a new graphtem window on the
+    server, with the super user name (``ubuntu`` in our case) and the *master access code*
+
+ 11. Run the following command in your graphterm window to display the group access code which should be entered by new users:
 
     ``gauth -g -m ubuntu``
 
     Distribute this code and a printed copy of :doc:`virtual-lab` to
     all lab users.
 
- 11. Optionally, use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
+ 12. Optionally, use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
      download the executable script ``gterm.py`` to your local computer
      and save the master access code in the local file
-     ``~/.graphterm/@aws_domain_name_gterm_auth.txt``. Then use the
+     ``~/.graphterm/@server_domain_name_gterm_auth.txt``. Then use the
      following local command to easily create remote graphterm windows:
 
-    ``gterm.py -u ubuntu --browser=Firefox http://aws_domain_name``
+    ``gterm.py -u ubuntu --browser=Firefox http://server_domain_name``
 
- 12. Run the following command on your local graphterm window to list and/or kill your AWS instances:
+ 13. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
 
     ``ec2list``
 
@@ -214,7 +229,7 @@ To stop a running server, type::
 
 If you are not using ``ec2launch``, you can start the server explicitly from the command line, e.g.::
 
-    gtermserver --daemon=start --widget_port=-1 --auth_type=multiuser --auto_users --super_users=ubuntu --allow_embedding --nb_server --https --external_port=443 --host=domain_or_ip
+    gtermserver --daemon=start --widget_port=-1 --auth_type=multiuser --auto_users --super_users=ubuntu --allow_embed --nb_server --https --external_port=443 --host=domain_or_ip
 
 The above options configure the server for multiuser authentication,
 with https. (``ec2launch`` automatically configures port forwarding

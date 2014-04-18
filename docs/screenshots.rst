@@ -258,6 +258,47 @@ Graphical code editing using a "cloud" editor
 
    <hr style="margin-bottom: 3em;">
 
+.. _gadmin_terminals_shot:
+
+Dashboard for a "virtual computer lab" - listing user terminal activity
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-users.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Showing the instructor "dashboard" in the virtual computer lab,
+   with a listing of all user terminals, including notebook names and
+   modified cell count.
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+.. _gadmin_terminals_shot:
+
+Dashboard for a "virtual computer lab" - viewing user terminals
+==================================================
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   Showing the instructor "dashboard" in the virtual computer lab,
+   with embedded views of student terminals.
+
+   ..
+
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
 .. _pytutor_shot:
 
 Code tracing using online version of Python Tutor

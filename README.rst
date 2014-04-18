@@ -22,9 +22,10 @@ letting you view image/HTML output without a separate window.
 The GraphTerm server can be configured to support multiple users, to
 create a browser-based *virtual computer lab* for teaching and
 collaboration. The "lab instructor" can access all the terminal
-sessions via a "dashboard" and monitor the progress of each user in
-carrying out assigned activities, such as entering code in a
-"notebook". Lab users can collaboratively view and enter shell
+sessions via a "dashboard" and
+`monitor the progress <http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals>`_
+of each user in carrying out assigned activities, such as entering code in a
+"notebook" (see :ref:`gadmin_terminals_shot`). Lab users can collaboratively view and enter shell
 commands in each other's terminals, edit files and notebooks etc.
 
 You can use the GraphTerm API to build "mashups" of web applications
