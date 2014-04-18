@@ -295,13 +295,29 @@ typing on touch devices.
 
 .. index:: themes
 
+.. _themes:
+
 Themes
 --------------------------------------------------------------------------------------------
 
+Themes, selected using the menubar, are a work in progress. There is a
+simple *dark* theme available, which can be modified by editing the
+file ``graphterm/www/themes.dark.css``. The 3-D perspective theme is a
+very primitive implementation which only works on Chrome/Safari (see
+:ref:`stars3d_shot`).
 
-Themes, selected using the menubar, are a work in progress, especially
-the 3-D perspective theme, which only works on Chrome/Safari ((see  :ref:`stars3d_shot`).
 
+.. index:: preferences, prefs, defaults
+
+.. _preferences:
+
+Preferences
+--------------------------------------------------------------------------------------------
+
+Default terminal preferences, such as font size and themes, are stored
+in the file ``gterm_prefs.json`` in your home directory.  The *view/save*
+menu option can be used to save the current terminal configuration as
+the default preference.
 
 .. index:: terminal type
 
