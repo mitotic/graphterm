@@ -35,8 +35,8 @@ import uuid
 
 from optparse import OptionParser
 
-API_VERSION = "0.35.0"
-API_MIN_VERSION = "0.35"
+API_VERSION = "0.50.0"
+API_MIN_VERSION = "0.50"
 
 HEX_DIGITS = 16          # Digits to be retained for HMAC, auth_code etc
 SIGN_HEXDIGITS = 16      # User-entered keys (should match packetserver setup)
@@ -44,8 +44,6 @@ SIGN_HEXDIGITS = 16      # User-entered keys (should match packetserver setup)
 GT_PREFIX = "GTERM_"
 
 LOCAL_HOST = "local"
-
-HOME_MNT = "/home"
 
 ##SHELL_CMD = "bash -l"
 SHELL_CMD = "/bin/bash"
@@ -115,9 +113,12 @@ FILE_URI_PREFIX = "file://"
 
 SETUP_USER_CMD = os.path.join(Bin_dir, "gterm_user_setup")
 
+DEFAULT_HOME_VOLUME = "/home"
+
 APP_DIRNAME = ".graphterm"
 APP_AUTH_FILENAME = "_gterm_auth.txt"
 APP_EMAIL_FILENAME = "gterm_email.txt"
+APP_GROUPCODE_FILENAME = "gterm_gcode.txt"
 APP_GROUPS_FILENAME = "gterm_groups.json"
 APP_PREFS_FILENAME = "gterm_prefs.json"
 APP_SECRET_FILENAME = "gterm_secret"
@@ -154,6 +155,30 @@ def create_app_directory(appdir=App_dir):
     if os.path.isdir(appdir) and os.stat(appdir).st_mode != 0700:
         # Protect App directory
         os.chmod(appdir, 0700)
+
+def is_user(username, home_volume=""):
+    return os.path.exists((home_volume or DEFAULT_HOME_VOLUME)+"/"+username)
+
+def read_email(appdir=App_dir):
+    email_file = os.path.join(appdir, APP_EMAIL_FILENAME)
+    if not os.path.exists(email_file):
+        return ""
+    try:
+        with open(email_file) as f:
+            return f.read().strip().lower()
+    except Exception, excp:
+        logging.warning("Error in reading email from %s: %s", email_file, excp)
+        return ""
+
+def write_email(addr, appdir=App_dir):
+    email_file = os.path.join(appdir, APP_EMAIL_FILENAME)
+    try:
+        with open(email_file, "w") as f:
+            f.write(addr+"\n")
+            return email_file
+    except Exception, excp:
+        logging.error("Error in writing email to %s: %s", email_file, excp)
+        return ""
 
 def get_auth_filename(appdir=App_dir, user="", server=""):
     prefix = user or ""
@@ -240,6 +265,8 @@ def split_version(version_str):
 
 Min_version = split_version(Min_version_str or Version_str) 
 Api_version = split_version(API_VERSION)
+
+EMAIL_RE = re.compile(r'([\w\-\.\+]+@(\w[\w\-]+\.)+[\w\-]+)') # Simple regexp, but allows underscore in domain names
 
 GTERM_DIRECTIVE_RE = re.compile(r"^\s*<!--gterm\s+(\w+)(\s.*)?-->")
 def parse_gterm_directive(text):

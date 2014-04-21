@@ -23,13 +23,14 @@ gterm_user = "ubuntu"
 
 usage = "usage: %prog [-h ... ] <instance-tag|full-domain-name>"
 
-form_parser = gterm.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname (e.g., tagname.graphterm.net): ", command="ec2launch -f")
+form_parser = gterm.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname (e.g., tagname OR tagname.domain): ", command="ec2launch -f")
 form_parser.add_argument(label="", help="Instance hostname")
 form_parser.add_option("type", ("m3.medium", "m3.large", "c3.large", "r3.large", "r3.xlarge", "m1.small", "t1.micro"), help="Instance type")
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-2f8f9246", help="Instance OS (default: Ubuntu 12.04LTS amd64, us-east-1, rel. 20140408)")
-form_parser.add_option("https", False, help="Use https for security")
+form_parser.add_option("gmail_addr", "", help="Full gmail address, user@gmail.com, for use in Google authentication")
 form_parser.add_option("auth_type", ("local", "none", "name", "multiuser"), help="Authentication type (local/none/name/multiuser)")
+form_parser.add_option("https", False, help="Use https for security")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("netcdf", False, help="Install NetCDF")
 form_parser.add_option("R", False, help="Install R")
@@ -216,7 +217,7 @@ else:
                       "iptables -t nat -A OUTPUT --dst %s -p tcp --dport %d -j DNAT --to-destination %s:%d" % (local_ip, external_port, local_ip, gterm.DEFAULT_HTTP_PORT)]
     command_line += " --auth_type="+options.auth_type
     if auth_type == "multiuser":
-        command_line += " --auto_users --super_users=ubuntu"
+        command_line += " --auto_users --super_users="+gterm_user
     command_line += " --host=%s --external_port=%d" % (public_host, external_port)
     ##if options.wildcard:
     ##    command_line += " --blob_host=wildcard"
@@ -231,9 +232,12 @@ if initwall_commands:
     startup_commands += [ "chmod +x /etc/init.d/graphterm",
                           "update-rc.d graphterm defaults"]
 
+if options.gmail_addr:
+    startup_commands += ["sudo -u "+gterm_user+" mkdir -p ~"+gterm_user+"/.graphterm"]
+    startup_commands += ["sudo -u "+gterm_user+" echo "+options.gmail_addr+" > ~"+gterm_user+"/.graphterm/gterm_email.txt"]
 startup_commands += ["echo ''"]
 startup_commands += ["echo WORKAROUND: Doing 'pip uninstall dap' to eliminate dap module loading errors for Ubuntu 12.04LTS"]
-startup_commands += ["yes | pip uninstall dap"]
+startup_commands += ["yes | pip uninstall dap || true"]
 startup_commands += ["echo ec2launch SETUP COMPLETED"]
 
 startup_commands += ["EOF",
@@ -396,7 +400,7 @@ if hosted_zone:
 
 print >> sys.stderr, "Created EC2 instance %s: id=%s, ip=%s, domain=%s" % (instance_tag, instance_id, public_ip_addr, public_dns_name)
 print >> sys.stderr, "To check setup progress, type:"
-print >> sys.stderr, "   ec2ssh ubuntu@"+(instance_tag if instance_domain else public_ip_addr)+" sudo tail -f /root/ec2launch.log"
+print >> sys.stderr, "   ec2ssh "+gterm_user+"@"+(instance_tag if instance_domain else public_ip_addr)+" sudo tail -f /root/ec2launch.log"
 
 ssh_cmd_args = ["ssh", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
                 "-o", "StrictHostKeyChecking=no", gterm_user+"@"+public_dns_name]

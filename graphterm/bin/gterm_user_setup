@@ -11,13 +11,14 @@ GRAPHTERM_DIR=.graphterm
 GRAPHTERM_AUTH=_gterm_auth.txt
 
 if [ $# -lt 1 ]; then
-    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name [gtermhost arguments]]]"
+    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name [(email|-) [gtermhost arguments]]]]"
     exit 1
 fi
 
 username=$1
 action=activate
 server=localhost
+email=""
 rem_args=""
 
 if [ $# -gt 1 ]; then
@@ -29,7 +30,14 @@ if [ $# -gt 2 ]; then
 fi
 
 if [ $# -gt 3 ]; then
-    shift 3
+    email=$4
+    if [ "$email" = "-" ]; then
+	email=""
+    fi
+fi
+
+if [ $# -gt 4 ]; then
+    shift 4
     rem_args="$@"
 fi
 
@@ -68,6 +76,10 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
             # Lock user password (i.e., no direct logins allowed)
 	    passwd -l $username
 
+            if [ "$email" != "" ]; then
+		sudo -u $username touch $homedir/$GRAPHTERM_DIR/gterm_email.txt
+		sudo -u $username echo "$email" >> $homedir/$GRAPHTERM_DIR/gterm_email.txt
+	    fi
 	fi
     fi
 else

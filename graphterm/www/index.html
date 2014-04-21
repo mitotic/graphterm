@@ -44,7 +44,9 @@
     <span id="authmessage"></span>
     <p>
     <span id="authusercontainer">User: <input id="authuser" name="user" type="text"/><br></span>
-    <span id="authcodecontainer">Code: <input id="authcode" name="code" type="password"/><br></span>
+    <span id="authcodecontainer">Code: <input id="authcode" name="code" type="password"/>
+      <span id="authgoogcontainer">OR <button id="authgoog">Use Google Auth</button></span>
+    </span><br>
     <span id="authcodecomment"></span>
     <p>
     <input id="authsubmit" type="submit" value="Authenticate"/>
@@ -434,8 +436,8 @@
           </div> <!-- session-findercontainer -->
 
           <div id="session-screencontainer"><div id="session-screenfold"></div><div id="session-screenfix">
-<!-- default size: 25x60 -->
-<pre class="session-screen" id="session-screen">0
+<!-- default size: 25x80 -->
+<pre class="session-screen" id="session-testscreen">0
 1
 2
 3
@@ -459,8 +461,9 @@
 1
 2
 3
-<span id="session-screen-testrow">01234567890123456789012345678901234567890123456789012345678901234567890123456789</span>
+<span id="session-testscreen-testrow">01234567890123456789012345678901234567890123456789012345678901234567890123456789</span>
 </pre>
+              <pre class="session-screen" id="session-screen"></pre>
               <div id="session-footermenu" class="session-footermenu">
                 <span id="headfoot-kbrd"   class="headfoot">Kbrd</span>
                 <span id="headfoot-keyboard" class="headfoot" contenteditable></span>&nbsp;

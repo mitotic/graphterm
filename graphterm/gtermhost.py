@@ -151,14 +151,15 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             self.lineterm.shutdown()
         self.lineterm = None
 
-    def handle_connect(self):
+    def connection_validated(self):
         normalized_host = get_normalized_host(self.connection_id)
+        host_params = {"host_secret": self.host_secret, "host_email": gterm.read_email()}
         self.remote_response("", "", [["term_params", {"version": about.version,
-                                                  "min_version": about.min_version,
-                                                  "host_secret": self.host_secret,
-                                                  "normalized_host": normalized_host,
-                                                  "term_prefs": gterm.read_prefs(),
-                                                  "term_names": self.terms.keys()}]])
+                                                       "min_version": about.min_version,
+                                                       "normalized_host": normalized_host, 
+                                                       "host_params": host_params,
+                                                       "term_prefs": gterm.read_prefs(),
+                                                       "term_names": self.terms.keys()}]])
         
     def add_oshell(self):
         self.add_term(OSHELL_NAME, self.osh_cookie)
@@ -277,6 +278,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         """
         Setup commands:
           reconnect <response_id> <host_settings>
+          set_email <email>
 
         Input commands:
           incomplete_input <line>
@@ -324,6 +326,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         widget_pagelet = WidgetStream.get_widget_pagelet(lterm_cookie)
                         if widget_pagelet:
                             self.send_request_threadsafe("response", term_name, response_id, [["terminal", "graphterm_widget", widget_pagelet]])
+
+                elif action == "set_email":
+                    gterm.write_email(cmd[0])
 
                 elif action == "set_size":
                     if term_name != OSHELL_NAME:

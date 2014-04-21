@@ -331,27 +331,33 @@ function getAuth() {
     return getCookie("GRAPHTERM_AUTH").substr(0,AUTH_DIGITS);
 }
 
-function AuthPage(need_user, need_code, connect_cookie, msg) {
-    gAuthenticatingCookie = connect_cookie;
+function AuthPage(auth_params) {
+    //console.log("AuthPage", auth_params);
+    gAuthenticatingCookie = auth_params.cookie;
     $("#authcode").val("");
 
-    if (need_user) {
-	if (need_user != "_")
-	    $("#authuser").val(need_user);
+    if (auth_params.need_user) {
+	if (auth_params.need_user != "_")
+	    $("#authuser").val(auth_params.need_user);
 	$("#authusercontainer").show();
     } else {
 	$("#authusercontainer").hide();
     }
 
-    if (need_code) {
-	if (need_code != "_")
-	    $("#authcode").val(need_code);
+    if (auth_params.need_code) {
+	if (auth_params.need_code != "_")
+	    $("#authcode").val(auth_params.need_code);
 	$("#authcodecontainer").show();
     } else {
 	$("#authcodecontainer").hide();
     }
+
+    if (auth_params.goog_auth)
+	$("#authgoogcontainer").show()
+    else
+	$("#authgoogcontainer").hide()
 	
-    $("#authmessage").html(msg||"");
+    $("#authmessage").html(auth_params.message || "");
 
     $("#terminal").hide();
     $("#session-container").hide();
@@ -362,7 +368,16 @@ function AuthPage(need_user, need_code, connect_cookie, msg) {
     $("body").unbind("paste");
 
     $("#authenticate").rebind("submit", Authenticate);
+    $("#authgoog").rebind("click", AuthGoogle);
     $("#authuser").focus();
+}
+
+function AuthGoogle(evt) {
+    console.log("AuthGoogle: ", evt);
+    var auth_code = $("#authcode").val() || "";
+    var authHMAC = auth_code ? compute_hmac(undashify(auth_code, SIGN_HEXDIGITS), gAuthenticatingCookie) : "";
+    window.location = window.location.protocol+"/"+"/"+window.location.host+"/_gauth/?"+$.param({gterm_cauth: gAuthenticatingCookie, gterm_code: authHMAC, gterm_user:$("#authuser").val()});
+    return false;
 }
 
 function Authenticate(evt) {
@@ -372,10 +387,10 @@ function Authenticate(evt) {
     return false;
 }
 
-var gEmailForm = '<form id="emailaddrform" method="get" action="/unknown"><span id="emailaddrcontainer">E-mail: <input id="emailaddr" name="email" type="text"/></span> <input id="emailsubmit" type="submit" value="Submit Email"/></form>';
+var gEmailForm = '<form id="emailaddrform" method="get" action="/unknown"><span id="emailaddrcontainer">E-mail: <input id="emailaddr" name="save_email" type="text"/></span> <input id="emailsubmit" type="submit" value="Submit Email"/></form>';
 
 function EmailSubmit(evt) {
-    window.location = '/?'+$.param({qauth: getAuth(), email:$("#emailaddr").val()});
+    window.location = '/?'+$.param({qauth: getAuth(), save_email:$("#emailaddr").val()});
     return false;
 }
 
@@ -438,11 +453,31 @@ function SignOut() {
     $("body").html('Signed out from GraphTerm.<p><a href="/">Sign in again</a>');
 }
 
+function resizeTerminal() {
+    $("#session-testscreen").show();
+    setTimeout(resizeTerminalAux, 100);
+}
+
+function resizeTerminalAux() {
+    sizeupTerminal();
+    setTimeout(resizeTerminalAux2, 100);
+}
+
+function resizeTerminalAux2() {
+    $("#session-testscreen").hide();
+    $("#session-log .curentry .input .command").focus();
+    handle_resize();
+}
+
+function sizeupTerminal() {
+    gRowHeight = $("#session-testscreen").height() / 25;
+    gColWidth = 0.55 + (1.05*$("#session-testscreen-testrow").width() / 80);
+    console.log("sizeupTerminal: ", $("#session-testscreen").height(), $("#session-testscreen-testrow").width(), gRowHeight, gColWidth);
+}
+
 function setupTerminal() {
-    gRowHeight = $("#session-screen").height() / 25;
-    gColWidth = $("#session-screen-testrow").width() / 80;
-    
-    $("#session-screen").html("");
+    sizeupTerminal();
+    $("#session-testscreen").hide();
     $("#session-term").hide();
     $("#session-altscreen").hide();
     $("#session-log .curentry .input .command").focus();
@@ -1050,7 +1085,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
             } else if (action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
 		    setCookie("GRAPHTERM_AUTH", null);
-		AuthPage(command[1], command[2], command[3], command[4]);
+		AuthPage(command[1]);
 
             } else if (action == "open") {
 		OpenNew(command[1], command[2]);
@@ -1074,6 +1109,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$("#session-container").show();
 		gParams = command[1];
 		GTMenuStateUpdate(gParams.state_values);
+		resizeTerminal();
 		GTUpdateController();
 		for (var k=0; k<gParams.watchers.length; k++)
 		    GTJoin(gParams.watchers[k], true, true);
@@ -1101,14 +1137,21 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		if (command[1])
 		    setCookie("GRAPHTERM_AUTH", command[1]);
 		var user = command[2];
-		var new_auto = command[3];
-		var hosts = command[4];
+		var new_user_code = command[3];
+		var new_user_email = command[4];
+		var hosts = command[5];
 		var host_html = '<h3>GraphTerm Hosts</h3>';
 		if (user)
 		    host_html += 'User: <b>'+user + '</b><p>\n';
-		if (new_auto) {
-		    var mail_body = "User: "+user+"\nCode: "+new_auto+"\nURL: "+window.location.protocol+"/"+"/"+window.location.host+"/\n";
-		    host_html += 'Created new user with authentication code:<br>&nbsp;<b>'+new_auto+'</b><br>Copy this information for future use or <a href="mailto:?subject=Graphterm%20code&body='+encodeURIComponent(mail_body)+'">email it to yourself</a>.<p><a href="/">Click here</a> to open a terminal.<p>Optionally, you can enter an email address below. It will be used only for password recovery.<br>'+gEmailForm;
+		if (new_user_code) {
+		    var mail_body = "User: "+user+"\nCode: "+new_user_code+"\nURL: "+window.location.protocol+"/"+"/"+window.location.host+"/\n";
+		    host_html += 'Created new user with authentication code:<br>&nbsp;<b>'+new_user_code+'</b><br>Copy this information for future use or <a href="mailto:?subject=Graphterm%20code&body='+encodeURIComponent(mail_body)+'">email it to yourself</a>.<p><a href="/">Click here</a> to open a terminal.';
+
+		    if (new_user_email) {
+			host_html += '<p>You can also authenticate yourself via your email login: '+new_user_email+'<br>';
+		    } else {
+			host_html += '<p>Optionally, you can enter an email address below. It will be used only for password recovery.<br>'+gEmailForm;
+		    }
 		} else if (!hosts.length) {
 		    host_html += 'No GraphTerm Hosts currently available<br>';
 		} else {
@@ -1120,7 +1163,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		}
 		host_html += '<p><a href="#" onclick="SignOut();">Sign out</a>';
 		$("body").html(host_html);
-		if (new_auto) {
+		if (new_user_code) {
 		    $("#emailaddrform").rebind("submit", EmailSubmit);
 		    $("#emailaddr").focus();
 		}
@@ -2279,11 +2322,11 @@ function GTMenuView(selectKey, newValue, force) {
 	    if (!comps[1] || comps[1] == "normal") {
 		gWebSocket.fontsize = "normal";
 	    } else {
-		
 		gWebSocket.fontsize = comps[1];
 		$("body").addClass("gterm-fsize-"+gWebSocket.fontsize);
 	    }
 	}
+	resizeTerminal();
 	break;
 
     case "theme":

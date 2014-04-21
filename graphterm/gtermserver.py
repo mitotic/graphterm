@@ -49,6 +49,7 @@ import packetserver
 
 from bin import gterm
 
+import tornado.auth
 import tornado.httpserver
 import tornado.ioloop
 import tornado.options
@@ -350,6 +351,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     def open(self):
         user = ""
         code = ""
+        auth_email = ""
+        new_user_email = ""
         try:
             auth_message = "Please authenticate"
             if COOKIE_NAME in self.request.cookies:
@@ -379,7 +382,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
-            new_auto_user = ""
+            new_user_code = ""
             if not self.authorized:
                 if self._auth_type == self.NULL_AUTH:
                     # No authorization code needed
@@ -387,6 +390,31 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 else:
                     user = query_data.get("user", [""])[0].lower()
                     code = query_data.get("code", [""])[0]
+                    eauth = query_data.get("eauth", [""])[0]
+                    tem_email = query_data.get("email", [""])[0].lower()
+
+                    if cauth and eauth and gterm.EMAIL_RE.match(tem_email) and self._auth_type == self.MULTI_AUTH and not Server_settings["nogoog_auth"]:
+                        # Confirm email authentication
+                        if eauth == gterm.compute_hmac(gterm.user_hmac(self._auth_code, tem_email, key_version="email"), cauth):
+                            # Check email
+                            if user and user != gterm.LOCAL_HOST:
+                                if gterm.is_user(user):
+                                    tem_host = gterm.LOCAL_HOST if self.is_super(user) else user
+                                    if tem_email == TerminalConnection.get_host_param(tem_host, "host_email", ""):
+                                        auth_email = tem_email
+                                    else:
+                                        self.write_json([["abort", "Google authentication failed for user "+user]])
+                                        self.close()
+                                else:
+                                    new_user_email = tem_email # Not validated email
+                            elif not user:
+                                for host in TerminalConnection.get_connection_ids():
+                                    if host == gterm.LOCAL_HOST:
+                                        continue
+                                    if tem_email == TerminalConnection.get_host_param(host, "host_email", ""):
+                                        user = host
+                                        auth_email = tem_email
+                                        break
 
                     if user and (user == gterm.LOCAL_HOST or not gtermhost.USER_RE.match(user)):
                         # Username "local" is not allowed to prevent localhost access
@@ -426,24 +454,31 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             key_version = "1" if self._auth_type >= self.MULTI_AUTH else None
                             group_secret = gterm.user_hmac(self._auth_code, "", key_version="grp")
 
-                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not os.path.exists(gterm.HOME_MNT+"/"+user) and (code == gterm.compute_hmac(group_secret, cauth)):
+                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not gterm.is_user(user):
                                 # New auto user; group code validation required
-                                validated = True
-                                new_auto_user = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
+                                if code != gterm.compute_hmac(group_secret, cauth):
+                                    self.write_json([["abort", "Invalid group authentication code"]])
+                                    self.close()
+                                    return
 
                                 if not os.path.exists(gterm.SETUP_USER_CMD):
                                     self.write_json([["abort", "Command %s not found" % gterm.SETUP_USER_CMD]])
                                     self.close()
                                     return
 
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"]] + Server_settings["gtermhost_args"]
+                                validated = True
+                                new_user_code = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
+
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"], new_user_email or "-"] + Server_settings["gtermhost_args"]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
                                     logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
                                     self.write_json([["abort", "Error in creating new user "+user]])
                                     self.close()
                                     return
-                                logging.info("GTSocket.open: Created new user: %s", user)
+                                logging.info("GTSocket.open: Created new user: %s %s", user, new_user_email)
+                            elif auth_email:
+                                validated = True
                             else:
                                 # Non-auto user, super user, or existing auto user; need to validate with user auth code
                                 validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
@@ -452,7 +487,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             # User auth code matched
                             self.authorized = self.add_state(user, self.MULTI_AUTH)
                         elif code:
-                            auth_message = "Authentication failed; check user/code"
+                            auth_message = "Authentication failed for user %s; check username/code" % (cgi_escape(user),)
                         else:
                             # CGI escape username
                             auth_message = "Validation code required for user "+cgi_escape(user)
@@ -469,7 +504,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if need_code:
                             need_code = code or need_code
 
-                    self.write_json([["authenticate", need_user, need_code, self.get_connect_cookie(), auth_message]])
+                    auth_params = {"need_user": need_user, "need_code": need_code,
+                                   "goog_auth": self._auth_type == self.MULTI_AUTH and not Server_settings["nogoog_auth"],
+                                   "cookie": self.get_connect_cookie(), "message": auth_message}
+                    self.write_json([["authenticate", auth_params]])
                     self.close()
                     return
 
@@ -494,13 +532,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             is_super_user = self.is_super(user) or self.is_local()
 
             if len(path_comps) < 1 or not path_comps[0]:
-                email_addr = query_data.get("email", [""])[0]
-                if email_addr:
+                tem_email = query_data.get("save_email", [""])[0].lower()
+                if gterm.EMAIL_RE.match(tem_email) and user and user != gterm.LOCAL_HOST:
                     try:
-                        with open(gterm.App_email_file, "w") as f:
-                            f.write(email_addr+"\n")
+                        TerminalConnection.send_to_connection(user, "request", "", user, [["set_email", tem_email]])
+                        TerminalConnection.set_host_param(user, "host_email", tem_email)
                     except Exception, excp:
-                        logging.warning("ERROR in writing email: %s", excp)
+                        logging.error("Unable to set email for user %s: %s: %s", user, tem_email, excp)
 
                 host_list = TerminalConnection.get_connection_ids()
                 if self._auth_type >= self.MULTI_AUTH and not is_super_user:
@@ -516,7 +554,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         else:
                             host_list = []
                 host_list.sort()
-                self.write_json([["host_list", self.authorized["state_id"], user, new_auto_user, host_list]])
+                self.write_json([["host_list", self.authorized["state_id"], user, new_user_code, new_user_email, host_list]])
                 self.close()
                 return
 
@@ -711,8 +749,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 TerminalConnection.send_to_connection(host, "request", term_name, user, [["reconnect", self.websocket_id, Host_settings]])
                 normalized_host = gtermhost.get_normalized_host(host)
                 term_prefs = TerminalConnection.term_prefs.get(normalized_host)
+                if term_prefs is None:
+                    logging.error("Error in host connection: %s", host)
+                    self.write_json([["abort", "Error in host connection: "+host]])
+                    self.close()
+                    return
                 if self.authorized["auth_type"] > self.WEBCAST_AUTH:
-                    host_secret = TerminalConnection.host_secrets.get(normalized_host)
+                    host_secret = TerminalConnection.get_host_param(host, "host_secret", "")
 
             parent_term = conn.term_dict.get(term_name, "") if conn else ""
             state_values = terminal_params.copy()
@@ -1073,8 +1116,16 @@ def wildcard2re(path):
 
 class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
     _all_connections = {}
-    host_secrets = {}
+    _host_params = {}
     term_prefs = {}
+    @classmethod
+    def get_host_param(cls, host, param_name, default_value=None):
+        return cls._host_params.get(gtermhost.get_normalized_host(host), {}).get(param_name, default_value)
+        
+    @classmethod
+    def set_host_param(cls, host, param_name, value):
+        cls._host_params.get(gtermhost.get_normalized_host(host), {})[param_name] = value
+        
     @classmethod
     def get_matching_paths(cls, matchpath, user, state_id, auth_type):
         is_super_user = GTSocket.is_super_or_local(user, auth_type)
@@ -1158,7 +1209,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     self.send_request("request", "", "", [["shutdown", errmsg]])
                     raise Exception(errmsg)
 
-                self.host_secrets[msg[1]["normalized_host"]] = msg[1]["host_secret"]
+                self._host_params[msg[1]["normalized_host"]] = msg[1]["host_params"]
                 self.term_prefs[msg[1]["normalized_host"]] = msg[1]["term_prefs"]
                 self.term_dict = dict((key, "") for key in msg[1]["term_names"])
             elif msg[0] == "file_response":
@@ -1430,21 +1481,20 @@ class ProxyFileHandler(tornado.web.RequestHandler):
             # Check if access to file is permitted
             self.file_path = "/" + self.file_path
 
-            normalized_host = gtermhost.get_normalized_host(host)
-            host_secret = TerminalConnection.host_secrets.get(normalized_host)
+            host_secret = TerminalConnection.get_host_param(host, "host_secret", "")
 
             if not host_secret:
                 raise tornado.web.HTTPError(403, "Unauthorized access to %s (ERR1)", path)
 
-            shared_secret = self.get_cookie("GRAPHTERM_HOST_"+normalized_host)
+            shared_secret = self.get_cookie("GRAPHTERM_HOST_"+gtermhost.get_normalized_host(host))
 
             if shared_secret:
                 if host_secret != shared_secret:
                     raise tornado.web.HTTPError(403, "Unauthorized access to %s (ERR2)", path)
             else:
                 shared_secret = self.get_argument("shared_secret", "")
-                check_host = gtermhost.get_normalized_host(self.get_argument("host", ""))
-                expect_secret = TerminalConnection.host_secrets.get(check_host)
+                check_host = self.get_argument("host", "")
+                expect_secret = TerminalConnection.get_host_param(check_host, "host_secret", "")
                 if not expect_secret or expect_secret != shared_secret:
                     raise tornado.web.HTTPError(403, "Unauthorized access to %s (ERR3)", path)
 
@@ -1571,6 +1621,33 @@ def run_server(options, args):
             self.set_header("Content-Type", "text/plain")
             self.write(server_nonce+":"+client_token)
 
+    class GoogleAuthHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
+        @tornado.web.asynchronous
+        def get(self):
+            if self.get_argument("openid.mode", None):
+                self.get_authenticated_user(self.async_callback(self._on_auth))
+                return
+            self.authenticate_redirect()
+
+        def _on_auth(self, user_info):
+            gterm_cauth = self.get_argument("gterm_cauth", "")
+            gterm_code = self.get_argument("gterm_code", "")
+            gterm_user = self.get_argument("gterm_user", "")
+            if not user_info:
+                logging.error("GoogleAuthHandler: No user info %s", gterm_user)
+                self.send_error(500)
+                return
+            gterm_email = user_info.get("email", "").lower()
+            if not gterm_email:
+                logging.error("GoogleAuthHandler: No email in user info %s", gterm_user)
+                self.send_error(500)
+                return
+            query = {"cauth": gterm_cauth, "code": gterm_code,  "user": gterm_user, "email": gterm_email, "name": user_info.get("name","")}
+            query["eauth"] = gterm.compute_hmac(gterm.user_hmac(GTSocket._auth_code, gterm_email, key_version="email"), gterm_cauth)
+            url = Host_settings["server_url"] + "/?"+urllib.urlencode(query)
+            logging.info("GoogleAuthHandler: u=%s, url=%s, %s", gterm_user, url, user_info)
+            self.redirect(url)
+
     gterm.create_app_directory()
 
     http_port = options.port
@@ -1603,7 +1680,8 @@ def run_server(options, args):
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
                        "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
-                       "user_groups": membership_dict, "gtermhost_args": gtermhost_args}
+                       "nogoog_auth": options.nogoog_auth, "user_groups": membership_dict,
+                       "gtermhost_args": gtermhost_args}
 
     Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "no_pyindent": options.no_pyindent, "lc_export": options.lc_export},
                      "term_type": options.term_type, "term_encoding": options.term_encoding,
@@ -1663,6 +1741,7 @@ def run_server(options, args):
                 GTSocket._auth_users[user] = gterm.user_hmac(auth_code, user, key_version="1")
 
     handlers = [(r"/_auth/.*", AuthHandler),
+                (r"/_gauth/.*", GoogleAuthHandler),
                 (r"/_websocket/.*", GTSocket),
                 (gterm.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
                 (gterm.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
@@ -1756,14 +1835,22 @@ def run_server(options, args):
     if auth_file:
         print >> sys.stderr, "\nAuthentication code in file " + auth_file + "\nDelete authentication file and restart for new code."
         if options.auth_type == "multiuser":
-            print >> sys.stderr, "Group Code: "+gterm.dashify(str(gterm.user_hmac(auth_code, "", key_version="grp")))
+            gcode = gterm.dashify(str(gterm.user_hmac(auth_code, "", key_version="grp")))
+            print >> sys.stderr, "Group Code: "+gcode
+            gcode_file = os.path.join(gterm.App_dir, gterm.APP_GROUPCODE_FILENAME)
+            try:
+                with open(gcode_file, "w") as f:
+                    f.write(gcode+"\n")
+                print >> sys.stderr, "Group Code also saved to file "+gcode_file
+            except Exception, excp:
+                pass
     else:
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
     if options.auto_users:
         action = "activate" if options.no_reset else "restart"
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host] + Server_settings["gtermhost_args"]
-        std_out, std_err = gterm.command_output(cmd_args, timeout=15)
+        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host, "-"] + Server_settings["gtermhost_args"]
+        std_out, std_err = gterm.command_output(cmd_args, timeout=120)
         if std_err:
             logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
 
@@ -1868,6 +1955,8 @@ def main():
 
     parser.add_option("nolocal", default=False, opt_type="flag",
                       help="Disable connection to localhost")
+    parser.add_option("nogoog_auth", default=False, opt_type="flag",
+                      help="Disable google authentication for multiuser type")
 
     parser.add_option("super_users", default="",
                       help="Super user list: root,admin,...")

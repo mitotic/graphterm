@@ -723,6 +723,7 @@ class RPCLink(object):
                     self.resend_buffered_packets()
                     self.rpc_expect = ""
                     self.rpc_ready = True
+                    self.connection_validated()
                 return
         except Exception, excp:
             logging.warning("RPCLink.process_packet: Error in RPC message processing: %s", excp)
@@ -760,6 +761,12 @@ class RPCLink(object):
                     self.send_json([-packet_id, retval])
                 except Exception, excp:
                     pass
+
+    def connection_validated(self):
+        """ Called after connection validation is completed
+        Override
+        """
+        pass
 
     def invoke_method(self, method, *args, **kwargs):
         retval = "Error: Invalid remote method %s" % method
