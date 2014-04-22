@@ -10,7 +10,7 @@ Troubleshooting FAQ
 Terminal
 ----------------------------------------------------------------------------------------------
 
-.. index:: control c, frozen screen, hung terminal, unresponsive terminal
+.. index:: control c, frozen screen, hung terminal, unresponsive terminal, reconnect
 
 My terminal is unresponsive?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -38,6 +38,10 @@ more of the following:
  - Use the *terminal/reload* menu option or the browser's reload
    button to reload the web page. *Copy/paste any displayed code in
    notebook cells before reloading, as you may lose it.*
+
+ - As a last resort, you can try the *terminal/reconnect* option,
+   which takes over 15 seconds to reconnect the terminal. This may
+   help when updating configuration changes etc.
 
 .. index:: permission denied
  
@@ -76,6 +80,20 @@ to restore some, but not all, of GraphTerm features. (For a more
 permanent solution, see the :ref:`ssh` section.)
 
  
+.. index:: terminal size, resize, line wrap
+ 
+The terminal does not display long lines properly; they are either wrapped too short or they overflow the window?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Try one or more of the following commands to resize the terminal:
+
+ - the menu option *view/resize*
+
+ - the Unix command ``resize``
+
+(You will need control of the terminal for the resizing commands to work properly.)
+
+
 .. index:: copy/paste, paste
  
 How do I paste text?

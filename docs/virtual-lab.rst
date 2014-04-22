@@ -12,24 +12,27 @@ Logging in
 --------------------------------------------------------------------------------------------
 
 Open the URL provided by the instructor (usually of the form
-``http://hostname.domain:8900``) in your web browser. Then type in the user
-name and the access code. If you are creating a new account, you will
-need to obtain the *group access code* from the instructor. 
+``http://hostname.domain:8900``) in your web browser. Then type in the
+user name and the access code. If you are creating a new account, you
+will need to enter the *group access code* obtained from your
+instructor. If you have a *Google GMail* account, you can choose to
+link it to your GraphTerm server account for password-less logins.
 
 *Note:* If the URL is of the ``https//...`` form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
 exception. The instructor may ask you to ignore these warnings and
 accept the certificate, if the GraphTerm server has been configured to
-use a self-signed certificate. *Also, self-signed certificates do not
-work with Safari on the Mac; use Chrome or Firefox instead.*
+use a self-signed certificate. **Also, self-signed certificates do not
+work with Safari on the Mac; use Chrome or Firefox instead.**
  
 If you just created a new user account, note down your user name and
-personal access code, as you will need it for logging in later. You
-may optionally enter your email address at this point. If you forget
-your personal access code, the instructor can retrieve it for you.  If
-you have a Mac/Linux desktop/laptop, you can download the executable
-python script ``$GTERM_DIR/bin/gterm.py`` and type the following
-command on your desktop/laptop::
+personal access code, as you will need it for logging in later (unless
+you are using *Google Authentication*). You may optionally enter your email
+address at this point. If you forget your personal access code, the
+instructor can retrieve it for you.  If you have a Mac/Linux
+desktop/laptop, you can download the executable python script
+``$GTERM_DIR/bin/gterm.py`` and type the following command on your
+desktop/laptop::
 
     gterm.py -u user http://hostname.domain:8900
 

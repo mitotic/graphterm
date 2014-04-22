@@ -32,7 +32,7 @@ Quick setup
 --------------------------------------------------------------------------------------------
 
 The following steps allow you to quickly launch a "virtual computer lab"
-with multi-user support.
+with multi-user support and the option of *Google Authentication*.
 
  1. Install ``graphterm`` on your computer using the following two commands:
 
@@ -75,9 +75,9 @@ with multi-user support.
     Then run the command again, enter a tagname (e.g., ``testlab``),
     choose ``auth_type`` as ``multiuser``, and select the ``pylab``
     and ``netcdf`` options. When you press the *submit* button, the
-    generated command line look should like:
+    generated command line should look something like this:
 
-    ``ec2launch -f --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --auth_type=multiuser --pylab --netcdf testlab``
+    ``ec2launch -f --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --gmail_addr=user@gmail.com --auth_type=multiuser --pylab --netcdf testlab``
 
  7. After the new AWS Linux server has completed configuration, which can
     take several minutes, its IP address and *server domain name* will be
@@ -103,7 +103,7 @@ with multi-user support.
 
  11. Run the following command in your graphterm window to display the group access code which should be entered by new users:
 
-    ``gauth -g -m ubuntu``
+    ``cat ~/.graphterm/gterm_gcode.txt``
 
     Distribute this code and a printed copy of :doc:`virtual-lab` to
     all lab users.
@@ -116,7 +116,13 @@ with multi-user support.
 
     ``gterm.py -u ubuntu --browser=Firefox http://server_domain_name``
 
- 13. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
+ 13. Alternatively, if you wish to use your *GMail* account to
+     authenticate, enter your *GMail* address in the file
+     ``~/.graphterm/gterm_email.txt`` on the server. (If you selected
+     the ``gmail_addr`` option during ``ec2launch``, this file would
+     already have been created.)
+
+ 14. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
 
     ``ec2list``
 
@@ -181,11 +187,12 @@ An important configuration choice is the authentication type
 (``auth_type``), which may be one of ``local``, ``none``, ``name``, or ``multiuser``.
 
    *local*: Local authentication type is meant for a single user on a
-   shared or public computer. You will need to enter the code found in
-   the file ``~/.graphterm/_gterm_auth.txt`` to access the server.
+   shared computer. You will need to enter the code found in
+   the file ``~/.graphterm/_gterm_auth.txt`` to access the server, or
+   use the ``gterm`` command to open new GraphTerm windows.
 
    *none*: This requires no authentication, and is meant to be used on a
-   private computer with a single-user.
+   private computer with a single user.
 
    *name*: This also requires no authentication, but new users choose a
    unique username. This is meant for demonstration purposes and all
@@ -195,7 +202,9 @@ An important configuration choice is the authentication type
    authentication code, along with a unique user name. This creates a
    new Unix account for the user and generates a unique access code
    that will be used the next time the user logs in. The super user
-   can view all the access codes using the ``gauth`` command.
+   can view all the access codes using the ``gauth`` command. (If the
+   users choose to use Google Authentication, they will also be able to
+   login using their GMail account.)
 
 Once you fill in the form for ``ec2launch`` and submit it, a command
 line will be automatically generated, with the specified options, to launch
@@ -203,8 +212,9 @@ the instance. You may need to wait several minutes for the instance
 setup to complete, depending upon the compute power of the
 instance. To launch another instance with slightly different
 properties, you can simply recall the command line from history and
-edit it. (If you wish to re-display the form, add the option ``--form``
-to the recalled command line.)
+edit it. (If you wish to force re-display of the ``ec2launch`` form to
+edit the command visually, include the ``--form`` option in the
+recalled command line and execute it.)
 
 Managing instances
 --------------------------------------------------------------------------------------------
@@ -233,20 +243,23 @@ If you are not using ``ec2launch``, you can start the server explicitly from the
 
 The above options configure the server for multiuser authentication,
 with https. (``ec2launch`` automatically configures port forwarding
-from port 443 to the default graphterm port 8900.)
+from port 443 to the default graphterm port 8900, enabling even
+non-privileged users to run ``gtermserver``.) 
 
-By default, running an Ubuntu linux instance on AWS
-creates an account with username ``ubuntu`` with password-less
-``sudo`` privileges. By default, GraphTerm server is run from this
-account. An account with password-less ``sudo`` privileges is required
-for new users to be created automatically (``--auto_users`` option).
-AWS automatically creates such an account, named ``ubuntu``,  as described
-`here <http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password>`_.
+An account with password-less ``sudo`` privileges is required for new
+users to be created automatically (``--auto_users`` option).  Running
+an Ubuntu linux instance on AWS automatically creates such an account,
+named ``ubuntu``, as described `here
+<http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password>`_.
+By default, GraphTerm server is run from this account. The
+``auto_users`` option creates a file named
+``~/.graphterm/AUTO_ADD_USERS`` which can be deleted to suppress
+auto-user creation while the server is running.
 
 To automatically start the server when the computer is rebooted, copy
 the ``gtermserver`` command line to the executable file ``/etc/init.d/graphterm`` on a Ubuntu
 server, or equivalent for other linux flavors (``ec2launch``
-automatically does this).
+automatically does this for AWS).
 
 
 Access codes
@@ -278,9 +291,14 @@ To display the group access code (needed to generate new accounts), type::
 
     gauth -g -m super_username
 
-on the server. The super user can also use the ``gterm_user_setup``
-script to manually configure new users.
+on the server.
 
+The super user can also use the shell script ``gterm_user_setup``
+in ``$GTERM_DIR/bin`` to manually configure new users::
+
+    sudo gterm_user_setup username activate server_domain user_email
+
+*Note:* This script may need to be modified to work on non-AWS servers.
 
 Using https
 --------------------------------------------------------------------------------------------
@@ -310,7 +328,7 @@ server, by copying the file ``~/.graphterm/localhost.pem`` to
 ``/var/graphterm/localhost.pem`` to make it accessible to all users.
 
 
-Administering the GraphTerm server
+Administering the virtual computer lab
 --------------------------------------------------------------------------------------------
 
 The ``gadmin`` command performs administrative actions to manage
@@ -318,6 +336,16 @@ users::
 
     # Display status for all terminals with path name matching python regexp
     gadmin -a sessions [regexp]
+
+Clicking on the displayed terminal list will open up the terminal for
+viewing (see :ref:`gadmin_users_shot`).
+
+You can also view multiple user terminals embedded in your own
+terminal using the ``gframe`` command (see :ref:`gadmin_terminals_shot`)::
+
+    gframe --rowheight 300 --border --columns 3 --terminal /bob/quiz1 /jane/quiz1 /jose/quiz1
+
+
 
 Configuring groups
 --------------------------------------------------------------------------------------------
