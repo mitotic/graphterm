@@ -26,31 +26,31 @@ body.bold, body.bold pre, body.bold .gterm-prewrap, body.bold td {
     font-weight: bold;
 }
 
-body:not(.gterm-fsize-smallest) #terminal.gterm-embed,
-body:not(.gterm-fsize-smallest) #terminal.gterm-embed pre,
-body:not(.gterm-fsize-smallest) #terminal.gterm-embed .gterm-prewrap {
+body:not(.gterm-fsize-xsmall) #terminal.gterm-embed,
+body:not(.gterm-fsize-xsmall) #terminal.gterm-embed pre,
+body:not(.gterm-fsize-xsmall) #terminal.gterm-embed .gterm-prewrap {
     font-size: 14px;
 }
 
 /* Body screen styles (with button label font sizes) */
-body.gterm-fsize-smallest,
-body.gterm-fsize-smallest pre,
-body.gterm-fsize-smallest .gterm-prewrap {
+body.gterm-fsize-xsmall,
+body.gterm-fsize-xsmall pre,
+body.gterm-fsize-xsmall .gterm-prewrap {
     font-size: 12px;
 }
-body.gterm-fsize-smaller,
-body.gterm-fsize-smaller pre,
-body.gterm-fsize-smaller .gterm-prewrap {
+body.gterm-fsize-small,
+body.gterm-fsize-small pre,
+body.gterm-fsize-small .gterm-prewrap {
     font-size: 14px;
 }
-body.gterm-fsize-normal,
-body.gterm-fsize-normal pre,
-body.gterm-fsize-normal .gterm-prewrap {
+body.gterm-fsize-medium,
+body.gterm-fsize-medium pre,
+body.gterm-fsize-medium .gterm-prewrap {
     font-size: 16px;
 }
-body.gterm-fsize-larger,
-body.gterm-fsize-larger pre,
-body.gterm-fsize-larger .gterm-prewrap {
+body.gterm-fsize-large,
+body.gterm-fsize-large pre,
+body.gterm-fsize-large .gterm-prewrap {
     font-size: 18px;
 }
 

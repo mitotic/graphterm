@@ -920,7 +920,7 @@ function GTWebSocket(auth_user, auth_code, connect_cookie) {
 
     this.webcast = false;
     this.theme = "default";
-    this.fontsize = "normal";
+    this.fontsize = "medium";
     this.alt_mode = false;
 
     this.repeat_command = "";
@@ -2198,7 +2198,10 @@ function GTMenuTrigger(stateKey, setValue, inputReceived) {
     // Check for exact match
     var elem = $('#gterm-menu a[gterm-state="'+stateKey+'"]');
     if (!elem.length)
+	elem = $('#gterm-menu a[gterm-state$="_'+stateKey+'"]');
+    if (!elem.length)
 	elem = $('#gterm-menu a[gterm-state$="'+stateKey+'"]');
+
     if (elem.length == 1)
 	return GTMenuEvent(elem, setValue, true);
 
@@ -2309,6 +2312,10 @@ function GTMenuView(selectKey, newValue, force) {
 	ScrollScreen();
 	break;
 
+    case "resize":
+	handle_resize();
+	break;
+
     case "icons":
 	gWebSocket.icons = !!newValue;
 	$("#terminal").toggleClass("showicons", gWebSocket.icons);
@@ -2319,8 +2326,8 @@ function GTMenuView(selectKey, newValue, force) {
 	if (gWebSocket.fontsize != comps[1]) {
 	    if (gWebSocket.fontsize)
 		$("body").removeClass("gterm-fsize-"+gWebSocket.fontsize);
-	    if (!comps[1] || comps[1] == "normal") {
-		gWebSocket.fontsize = "normal";
+	    if (!comps[1] || comps[1] == "medium") {
+		gWebSocket.fontsize = "medium";
 	    } else {
 		gWebSocket.fontsize = comps[1];
 		$("body").addClass("gterm-fsize-"+gWebSocket.fontsize);
@@ -2474,9 +2481,6 @@ function GTMenuTerminal(selectKey, newValue, force) {
 	if (gWebSocket && gWebSocket.terminal)
 	    gWebSocket.write([["clear_term"]]);
 	//text = "\x01\x0B";  // Ctrl-A Ctrl-K
-	break;
-    case "resize":
-	handle_resize();
 	break;
     case "home":
 	if (gWebSocket)
