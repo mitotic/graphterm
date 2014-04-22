@@ -12,11 +12,14 @@ Logging in
 --------------------------------------------------------------------------------------------
 
 Open the URL provided by the instructor (usually of the form
-``http://hostname.domain:8900``) in your web browser. Then type in the
-user name and the access code. If you are creating a new account, you
-will need to enter the *group access code* obtained from your
-instructor. If you have a *Google GMail* account, you can choose to
-link it to your GraphTerm server account for password-less logins.
+``http://hostname.domain``) in your web browser. Then type in the user
+name and the access code. If you are creating a new account, you will
+need to enter the *group access code* obtained from your
+instructor. Select a user name that will be meaningful to the
+instructor, like your first initial followed by your last name (all
+lower-case), e.g., ``jsmith`` for Jim Smith.  If you have a *Google
+GMail* account, you can choose to link it to your GraphTerm server
+account for password-less logins by clicking the *Google Auth* button.
 
 *Note:* If the URL is of the ``https//...`` form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
@@ -34,7 +37,7 @@ desktop/laptop, you can download the executable python script
 ``$GTERM_DIR/bin/gterm.py`` and type the following command on your
 desktop/laptop::
 
-    gterm.py -u user http://hostname.domain:8900
+    gterm.py -u user http://hostname.domain
 
 to open a terminal on the remote server without having to type in the
 access code (after the first time).
