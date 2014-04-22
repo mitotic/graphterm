@@ -216,7 +216,7 @@ multiuser GraphTerm server, with automatic new user creation,
 configure an user (named, say, <tt class="docutils literal"><span class="pre">ubuntu</span></tt>) with
 <a class="reference external" href="http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password">password-less</a>
 <tt class="docutils literal"><span class="pre">sudo</span></tt> privileges, use the following command to start the
-GraphTerm server and then <em>skip to Step 8</em>:</p>
+GraphTerm server and then <em>skip to Step 9</em>:</p>
 </li>
 </ol>
 <blockquote>
@@ -247,9 +247,15 @@ and <tt class="docutils literal"><span class="pre">netcdf</span></tt> options. W
 generated command line should look something like this:</p>
 <p><tt class="docutils literal"><span class="pre">ec2launch</span> <span class="pre">-f</span> <span class="pre">--type=m3.medium</span> <span class="pre">--key_name=ec2key</span> <span class="pre">--ami=ami-2f8f9246</span> <span class="pre">--gmail_addr=user&#64;gmail.com</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--pylab</span> <span class="pre">--netcdf</span> <span class="pre">testlab</span></tt></p>
 </li>
-<li><p class="first">After the new AWS Linux server has completed configuration, which can
-take several minutes, its IP address and <em>server domain name</em> will be
-displayed. Type the following command using the new domain name to
+<li><p class="first">After the new AWS Linux server has completed configuration, which
+can take several minutes, its IP address and <em>server domain name</em>
+will be displayed. If all went well, and you provided your GMail
+address, you should be able to login to the server using the URL
+<tt class="docutils literal"><span class="pre">http://server_domain_name</span></tt> and username <tt class="docutils literal"><span class="pre">ubuntu</span></tt>, and <em>skip
+to Step 14.</em></p>
+</li>
+<li><p class="first">If something went wrong, or you are not using Google
+Authentication, type the following command using the new domain name to
 login to the password-less super user account <tt class="docutils literal"><span class="pre">ubuntu</span></tt>:</p>
 <p><tt class="docutils literal"><span class="pre">ec2ssh</span> <span class="pre">ubuntu&#64;server_domain_name</span></tt></p>
 </li>
@@ -260,26 +266,18 @@ login to the password-less super user account <tt class="docutils literal"><span
 <div><p><tt class="docutils literal"><span class="pre">ps</span> <span class="pre">-ef</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">gtermserver</span></tt></p>
 <p>If not, check for errors in the AWS setup procedure by typing <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">tail</span> <span class="pre">/root/ec2launch.log</span></tt></p>
 </div></blockquote>
-<ol class="arabic simple" start="9">
+<ol class="arabic simple" start="10">
 <li>Run the following command on the server to display the <em>master access code</em>:</li>
 </ol>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)</p>
 </div></blockquote>
-<ol class="arabic simple" start="10">
+<ol class="arabic simple" start="11">
 <li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem window on the</li>
 </ol>
 <blockquote>
 <div>server, with the super user name (<tt class="docutils literal"><span class="pre">ubuntu</span></tt> in our case) and the <em>master access code</em></div></blockquote>
-<ol class="arabic simple" start="11">
-<li>Run the following command in your graphterm window to display the group access code which should be entered by new users:</li>
-</ol>
-<blockquote>
-<div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
-<p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
-all lab users.</p>
-</div></blockquote>
 <ol class="arabic simple" start="12">
 <li>Optionally, use the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> to
 download the executable script <tt class="docutils literal"><span class="pre">gterm.py</span></tt> to your local computer
@@ -295,6 +293,14 @@ authenticate, enter your <em>GMail</em> address in the file
 <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_email.txt</span></tt> on the server. (If you selected
 the <tt class="docutils literal"><span class="pre">gmail_addr</span></tt> option during <tt class="docutils literal"><span class="pre">ec2launch</span></tt>, this file would
 already have been created.)</li>
+<li>Run the following command in the server graphterm window to display the group access code which should be entered by new users:</li>
+</ol>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
+<p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
+all lab users.</p>
+</div></blockquote>
+<ol class="arabic simple" start="15">
 <li>If using AWS, run the following command on your local graphterm window to list and/or kill your instances:</li>
 </ol>
 <blockquote>
@@ -307,8 +313,8 @@ already have been created.)</li>
 start up a new cloud server, it is usually assigned a dynamic IP
 address. For temporary use, i.e., during the up-time of the server,
 you can simply use this IP address to create an URL for the server
-like <tt class="docutils literal"><span class="pre">https://1.2.3.4:8900</span></tt>. AWS also provides a long temporary
-domain name that can also be used to create an URL.</p>
+like <tt class="docutils literal"><span class="pre">https://1.2.3.4:8900</span></tt>. AWS also provides a long instance
+domain name that can be used to create an URL.</p>
 <p>For a prettier and more permanent URL, you need to register a domain
 name, say <tt class="docutils literal"><span class="pre">example.com</span></tt>, with a domain registrar like NameCheap.com,
 GoDaddy.com, or Gandi.net (for about $10-20 per year). A single domain
@@ -339,7 +345,7 @@ associated with the cloud instance allows access to inbound TCP port
 <div class="section" id="launching-a-server-instance">
 <h2><a class="toc-backref" href="#id6">Launching a server instance</a><a class="headerlink" href="#launching-a-server-instance" title="Permalink to this headline">¶</a></h2>
 <p>To create an AWS instance, you should first run GraphTerm on your
-local (single-user) computer as described in the Quickstart
+local (single-user) computer as described in the Quick setup
 instructions. You will be presented with a web form to enter
 configuration details of the instance to be launched. You can specify
 a simple <em>tag name</em> to identify each server. If you have set-up the
@@ -471,8 +477,8 @@ server, by copying the file <tt class="docutils literal"><span class="pre">~/.gr
 </div>
 <div class="section" id="administering-the-virtual-computer-lab">
 <h2><a class="toc-backref" href="#id12">Administering the virtual computer lab</a><a class="headerlink" href="#administering-the-virtual-computer-lab" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="docutils literal"><span class="pre">gadmin</span></tt> command performs administrative actions to manage
-users:</p>
+<p>The <tt class="docutils literal"><span class="pre">gadmin</span></tt> command (a work in progress) performs administrative
+actions to manage users:</p>
 <div class="highlight-python"><pre># Display status for all terminals with path name matching python regexp
 gadmin -a sessions [regexp]</pre>
 </div>
@@ -492,6 +498,7 @@ dictionary, e.g.:</p>
  <span class="s">&quot;group2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;user3&quot;</span><span class="p">,</span> <span class="s">&quot;user4&quot;</span><span class="p">,</span> <span class="s">&quot;user5&quot;</span><span class="p">]}</span>
 </pre></div>
 </div>
+<p>Users in the same group can see each others&#8217; terminals for collaboration.</p>
 </div>
 <div class="section" id="secondary-cloud-instances">
 <h2><a class="toc-backref" href="#id14">Secondary cloud instances</a><a class="headerlink" href="#secondary-cloud-instances" title="Permalink to this headline">¶</a></h2>
