@@ -45,7 +45,7 @@ with multi-user support and the option of *Google Authentication*.
     configure an user (named, say, ``ubuntu``) with
     `password-less <http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password>`_
     ``sudo`` privileges, use the following command to start the
-    GraphTerm server and then *skip to Step 8*:
+    GraphTerm server and then *skip to Step 9*:
 
    ``sudo gtermserver --daemon=start --widget_port=-1 --auth_type=multiuser --auto_users --super_users=ubuntu --port=80 --host=server_domain_name_or_ip``
 
@@ -79,34 +79,33 @@ with multi-user support and the option of *Google Authentication*.
 
     ``ec2launch -f --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --gmail_addr=user@gmail.com --auth_type=multiuser --pylab --netcdf testlab``
 
- 7. After the new AWS Linux server has completed configuration, which can
-    take several minutes, its IP address and *server domain name* will be
-    displayed. Type the following command using the new domain name to
+ 7. After the new AWS Linux server has completed configuration, which
+    can take several minutes, its IP address and *server domain name*
+    will be displayed. If all went well, and you provided your GMail
+    address, you should be able to login to the server using the URL
+    ``http://server_domain_name`` and username ``ubuntu``, and *skip
+    to Step 14.*
+
+ 8. If something went wrong, or you are not using Google
+    Authentication, type the following command using the new domain name to
     login to the password-less super user account ``ubuntu``:
 
     ``ec2ssh ubuntu@server_domain_name``
 
- 8.  Run the following command on the server to verify that ``gtermserver`` is running:
+ 9.  Run the following command on the server to verify that ``gtermserver`` is running:
 
     ``ps -ef | grep gtermserver``
 
     If not, check for errors in the AWS setup procedure by typing ``sudo tail /root/ec2launch.log``
 
- 9.  Run the following command on the server to display the *master access code*:
+ 10.  Run the following command on the server to display the *master access code*:
 
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
     (Ignore the port number following the hexadecimal access code.)
 
- 10. Use the URL http://server_domain_name to open a new graphtem window on the
+ 11. Use the URL http://server_domain_name to open a new graphtem window on the
     server, with the super user name (``ubuntu`` in our case) and the *master access code*
-
- 11. Run the following command in your graphterm window to display the group access code which should be entered by new users:
-
-    ``cat ~/.graphterm/gterm_gcode.txt``
-
-    Distribute this code and a printed copy of :doc:`virtual-lab` to
-    all lab users.
 
  12. Optionally, use the command ``gls --download $GTERM_DIR/bin/gterm.py`` to
      download the executable script ``gterm.py`` to your local computer
@@ -122,7 +121,14 @@ with multi-user support and the option of *Google Authentication*.
      the ``gmail_addr`` option during ``ec2launch``, this file would
      already have been created.)
 
- 14. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
+ 14. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
+
+    ``cat ~/.graphterm/gterm_gcode.txt``
+
+    Distribute this code and a printed copy of :doc:`virtual-lab` to
+    all lab users.
+
+ 15. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
 
     ``ec2list``
 
@@ -133,8 +139,8 @@ A server needs a domain name or IP address to be accessible. When you
 start up a new cloud server, it is usually assigned a dynamic IP
 address. For temporary use, i.e., during the up-time of the server,
 you can simply use this IP address to create an URL for the server
-like ``https://1.2.3.4:8900``. AWS also provides a long temporary
-domain name that can also be used to create an URL.
+like ``https://1.2.3.4:8900``. AWS also provides a long instance
+domain name that can be used to create an URL.
 
 For a prettier and more permanent URL, you need to register a domain
 name, say ``example.com``, with a domain registrar like NameCheap.com,
@@ -173,7 +179,7 @@ Launching a server instance
 --------------------------------------------------------------------------------------------
 
 To create an AWS instance, you should first run GraphTerm on your
-local (single-user) computer as described in the Quickstart
+local (single-user) computer as described in the Quick setup
 instructions. You will be presented with a web form to enter
 configuration details of the instance to be launched. You can specify
 a simple *tag name* to identify each server. If you have set-up the
@@ -331,8 +337,8 @@ server, by copying the file ``~/.graphterm/localhost.pem`` to
 Administering the virtual computer lab
 --------------------------------------------------------------------------------------------
 
-The ``gadmin`` command performs administrative actions to manage
-users::
+The ``gadmin`` command (a work in progress) performs administrative
+actions to manage users::
 
     # Display status for all terminals with path name matching python regexp
     gadmin -a sessions [regexp]
@@ -357,6 +363,7 @@ dictionary, e.g.::
     {"group1": ["user1", "user2"],
      "group2": ["user3", "user4", "user5"]}
 
+Users in the same group can see each others' terminals for collaboration.
 
 Secondary cloud instances
 --------------------------------------------------------------------------------------------
