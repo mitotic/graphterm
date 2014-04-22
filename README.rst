@@ -5,8 +5,6 @@ README
  
 .. contents::
 
-.. index:: introduction
-
 Introduction
 ----------------------------------------------------------------------------------------------
 
@@ -26,7 +24,7 @@ collaboration. The lab instructor can access all the terminal
 sessions via a dashboard and
 `monitor the progress <http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals>`_
 of each user in carrying out assigned activities, such as entering code in a
-"notebook" (see :ref:`gadmin_terminals_shot`). Lab users can collaboratively view and enter shell
+"notebook". Lab users can collaboratively view and enter shell
 commands in each other's terminals, edit files and notebooks etc.
 
 You can use the GraphTerm API to build "mashups" of web applications
@@ -101,8 +99,6 @@ and (vi) notebook mode using the standard python interpreter.
    :width: 90%
    :figwidth: 100%
 
-.. index:: installation
-
 .. _installation:
 
 Installation
@@ -138,8 +134,6 @@ in your system (or in the ``graphterm`` subdirectory).
 
 You can browse the ``GraphTerm`` source code, and download the development
 version, at `Github <https://github.com/mitotic/graphterm>`_.
-
-.. index:: quick start
 
 Quick Start
 ----------------------------------------------------------------------------------------------
@@ -193,8 +187,6 @@ tutorials for more info on using GraphTerm. You can also
 <http://code.mindmeldr.com/graphterm/virtual-setup.html>`_
 using GraphTerm.
 
-.. index:: documentation, support
-
 Documentation and Support
 ----------------------------------------------------------------------------------------------
 
@@ -216,8 +208,6 @@ GraphTerm etc. You can also follow `@graphterm <https://twitter.com/intent/user?
 
 To report bugs and other issues, use the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
 
-.. index:: caveats, limitations
-
 Caveats and Limitations
 ----------------------------------------------------------------------------------------------
 
@@ -230,8 +220,6 @@ Caveats and Limitations
           * Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.
           * At the moment, you cannot customize the shell prompt. (You
             should be able to so in the future.)
-
-.. index:: credits
 
 Credits
 ----------------------------------------------------------------------------------------------
@@ -271,8 +259,6 @@ Other packaged open source components include:
 
 
 ``GraphTerm`` was developed as part of the `Mindmeldr <http://mindmeldr.com>`_ project, which is aimed at improving classroom interaction.
-
-.. index:: license
 
 License
 ----------------------------------------------------------------------------------------------
