@@ -577,7 +577,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
             term_chat = False
-            conn = None
+            host_connect = None
             
             option = path_comps[2] if len(path_comps) > 2 else ""
             if wildhost:
@@ -592,18 +592,18 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
                 term_name = path_comps[1].lower()
             else:
-                conn = TerminalConnection.get_connection(host)
-                if not conn:
+                host_connect = TerminalConnection.get_connection(host)
+                if not host_connect:
                     self.write_json([["abort", "Invalid host"]])
                     self.close()
                     return
 
                 if len(path_comps) < 2 or not path_comps[1]:
                     term_list = []
-                    for term_name in conn.term_dict:
-                        if not is_super_user and term_name == gtermhost.OSHELL_NAME:
+                    for tem_name in host_connect.term_dict:
+                        if not is_super_user and tem_name == gtermhost.OSHELL_NAME:
                             continue
-                        path = host + "/" + term_name
+                        path = host + "/" + tem_name
                         tparams = self.get_terminal_params(path)
                         if tparams:
                             term_owner = self.is_creator(user, path)
@@ -611,9 +611,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 connectable = not self._control_set.get(path) and (term_owner or self._auth_type == self.LOCAL_AUTH)
                                 stealable = not connectable and (is_super_user or term_owner or not tparams["share_locked"])
                                 idle_min = long(time.time() - tparams["last_active"]) // 60
-                                term_list.append( [term_name, connectable, stealable, len(self._watch_dict[path]), idle_min])
+                                term_list.append( [tem_name, connectable, stealable, len(self._watch_dict[path]), idle_min])
                         else:
-                            term_list.append( [term_name, True, False, len(self._watch_dict[path]), 0])
+                            term_list.append( [tem_name, True, False, len(self._watch_dict[path]), 0])
                     term_list.sort()
                     allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
@@ -622,7 +622,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 term_name = path_comps[1].lower()
                 if term_name == "new" or not qauth:
-                    term_name = conn.remote_terminal_update(parent=option) if term_name == "new" else term_name
+                    term_name = host_connect.remote_terminal_update(parent=option) if term_name == "new" else term_name
                     redir_url = "/"+host+"/"+term_name+"/"
                     if self.request_query and qauth:
                         redir_url += "?"+self.request_query
@@ -637,7 +637,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
-                term_chat = term_name in conn.allow_chat
+                term_chat = term_name in host_connect.allow_chat
 
             path = host + "/" + term_name
 
@@ -665,7 +665,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 if is_super_user: 
                     allow_host_access = True
                 else:
-                    allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or host == user or (same_group(host, user) and term_name in TerminalConnection.get_connection(host,{})) )
+                    allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or host == user or (same_group(host, user) and host_connect and term_name in host_connect.term_dict) )
                     if not allow_host_access:
                         self.write_json([["abort", "Unable to create terminal on host %s" % host]])
                         self.close()
@@ -757,7 +757,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 if self.authorized["auth_type"] > self.WEBCAST_AUTH:
                     host_secret = TerminalConnection.get_host_param(host, "host_secret", "")
 
-            parent_term = conn.term_dict.get(term_name, "") if conn else ""
+            parent_term = host_connect.term_dict.get(term_name, "") if host_connect else ""
             state_values = terminal_params.copy()
             for k, v in term_prefs.get("view",{}).items():
                 state_values["view_"+k] = v
@@ -854,15 +854,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
         controller = self.wildcard or (self.remote_path in self._control_set and self.websocket_id in self._control_set[self.remote_path])
 
-        conn = None
+        host_connect = None
         allow_chat_only = False
         if not self.wildcard:
-            conn = TerminalConnection.get_connection(remote_host)
-            if not conn:
+            host_connect = TerminalConnection.get_connection(remote_host)
+            if not host_connect:
                 self.write_json([["errmsg", "ERROR: Remote host %s not connected" % remote_host]])
                 return
 
-            if not controller and term_name in conn.allow_chat:
+            if not controller and term_name in host_connect.allow_chat:
                 allow_chat_only = True
 
         allow_control_request = not terminal_params["share_locked"] and not terminal_params["share_private"] and not self._webcast_paths.get(self.remote_path)
@@ -895,9 +895,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     logging.warning("server_log: %s", msg[1])
 
                 elif msg[0] == "reconnect_host":
-                    if conn:
+                    if host_connect:
                         # Close host connection (should automatically reconnect)
-                        conn.on_close()
+                        host_connect.on_close()
                         return
 
                 elif msg[0] == "check_updates":
@@ -1137,8 +1137,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 return [matchpath]
             else:
                 return []
-        for host, conn in cls._all_connections.iteritems():
-            for term_name in conn.term_dict:
+        for host, host_connect in cls._all_connections.iteritems():
+            for term_name in host_connect.term_dict:
                 path = host + "/" + term_name
                 if matchpath.match(path):
                     match_params = GTSocket.get_terminal_params(path)
@@ -1265,12 +1265,12 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                 all_paths = []
                                 all_labels = []
                                 for thost in hostnames:
-                                    conn = TerminalConnection.get_connection(thost)
-                                    if not conn:
+                                    host_connect = TerminalConnection.get_connection(thost)
+                                    if not host_connect:
                                         continue
                                     term_list = []
                                     label_list = []
-                                    for tname in conn.term_dict:
+                                    for tname in host_connect.term_dict:
                                         tpath = thost + "/" + tname
                                         if tpath == term_path or tname == gtermhost.OSHELL_NAME:
                                             # Ignore self and osh

@@ -228,7 +228,7 @@ initwall_commands = fwall_commands + init_commands
 if initwall_commands:
     startup_commands += initwall_commands
     for cmd in initwall_commands: 
-       startup_commands += [ 'echo "'+cmd+'" > /etc/init.d/graphterm' ]
+       startup_commands += [ 'echo "'+cmd+'" >> /etc/init.d/graphterm' ]
     startup_commands += [ "chmod +x /etc/init.d/graphterm",
                           "update-rc.d graphterm defaults"]
 
@@ -399,8 +399,13 @@ if hosted_zone:
     ##    ec2common.cname(route53conn, hosted_zone, "*."+instance_tag, public_dns_name)
 
 print >> sys.stderr, "Created EC2 instance %s: id=%s, ip=%s, domain=%s" % (instance_tag, instance_id, public_ip_addr, public_dns_name)
+print >> sys.stderr, "Setup commands are saved in /root/ec2launch.sh and init commands in /etc/init.d/graphterm"
 print >> sys.stderr, "To check setup progress, type:"
-print >> sys.stderr, "   ec2ssh "+gterm_user+"@"+(instance_tag if instance_domain else public_ip_addr)+" sudo tail -f /root/ec2launch.log"
+print >> sys.stderr, "   ec2ssh "+gterm_user+"@"+public_dns_name+" sudo tail -f /root/ec2launch.log"
+
+if install_gterm:
+    print >> sys.stderr, "On successful instance creation, use the following URL to access server:"
+    print >> sys.stderr, "   "+("https" if options.https else "http")+"://"+(instance_tag if instance_domain else public_dns_name)
 
 ssh_cmd_args = ["ssh", "-i", os.path.expanduser("~/.ssh/ec2key.pem"),
                 "-o", "StrictHostKeyChecking=no", gterm_user+"@"+public_dns_name]
