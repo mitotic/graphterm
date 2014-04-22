@@ -3,6 +3,15 @@ Release Notes
 .. contents::
 
 
+0.51.0 (April 21, 2014)
+---------------------------------------------------------------------------------
+
+ - Added support for Google Authentication
+
+ - Added support for dark theme and saving prefs
+
+ - Improved terminal resizing
+
 0.50.1 (April 17, 2014)
 ---------------------------------------------------------------------------------
 
