@@ -44,7 +44,7 @@ with multi-user support and the option of *Google Authentication*.
     run the multiuser GraphTerm server, with automatic new user
     creation, configure an user (named, say, ``ubuntu``) with
     `password-less <http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password>`_
-    ``sudo`` privileges. Modify the script
+    ``sudo`` privileges. Modify the shell script
     ``$GTERM_DIR/bin/gterm_user_setup`` to work with your server's OS,
     type the following command to start the GraphTerm server and then
     *skip to Step 9*:
