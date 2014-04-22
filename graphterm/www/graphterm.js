@@ -919,7 +919,7 @@ function GTWebSocket(auth_user, auth_code, connect_cookie) {
     this.terminal = false;
 
     this.webcast = false;
-    this.theme = "default";
+    this.theme = "light";
     this.fontsize = "medium";
     this.alt_mode = false;
 
@@ -2341,9 +2341,9 @@ function GTMenuView(selectKey, newValue, force) {
 	var three_d = (newValue.substr(newValue.length-2) == "3d");
 	var base_theme = three_d ? newValue.substr(0, newValue.length-2) : newValue;
 
-       if (gWebSocket.theme && gWebSocket.theme != "default")
+       if (gWebSocket.theme && gWebSocket.theme != "light")
 	   $("body").removeClass(gWebSocket.theme);
-       if (base_theme && base_theme != "default")
+       if (base_theme && base_theme != "light")
 	   $("body").addClass(base_theme);
          gWebSocket.theme = base_theme;
 
