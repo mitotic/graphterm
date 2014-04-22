@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>README &mdash; GraphTerm 0.50.1 documentation</title>
+    <title>README &mdash; GraphTerm 0.51.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.50.1',
+        VERSION:     '0.51.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.50.1 documentation"
+          title="Search within GraphTerm 0.51.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.50.1 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.51.0 documentation" href="index.html" />
     <link rel="next" title="Getting started with GraphTerm" href="start.html" />
     <link rel="prev" title="Contact" href="contact.html" />
  
@@ -175,7 +175,7 @@ code.mindmeldr.com
 </ul>
 </div>
 <div class="section" id="introduction">
-<span id="index-0"></span><h2><a class="toc-backref" href="#id7">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
 interfaces. You can use it just like a regular terminal,
@@ -184,13 +184,14 @@ graphical features as needed. These features can help impove your
 terminal workflow by integrating clickable folder navigation with
 command line operations and
 letting you view image/HTML output without a separate window.</p>
-<p>The GraphTerm server can be configured to support multiple users, to
-create a browser-based <em>virtual computer lab</em> for teaching and
-collaboration. The &#8220;lab instructor&#8221; can access all the terminal
-sessions via a &#8220;dashboard&#8221; and
+<p>The GraphTerm server can be configured to support multiple users,
+using Google Authentication, to create a browser-based
+<em>virtual computer lab</em> for teaching and
+collaboration. The lab instructor can access all the terminal
+sessions via a dashboard and
 <a class="reference external" href="http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals">monitor the progress</a>
 of each user in carrying out assigned activities, such as entering code in a
-&#8220;notebook&#8221; (see <em class="xref std std-ref">gadmin_terminals_shot</em>). Lab users can collaboratively view and enter shell
+&#8220;notebook&#8221;. Lab users can collaboratively view and enter shell
 commands in each other&#8217;s terminals, edit files and notebooks etc.</p>
 <p>You can use the GraphTerm API to build &#8220;mashups&#8221; of web applications
 that work seamlessly within the terminal.  Sample mashups include:</p>
@@ -260,7 +261,7 @@ and (vi) notebook mode using the standard python interpreter.</p>
 </div>
 </div>
 <div class="section" id="installation">
-<span id="index-1"></span><span id="id2"></span><h2><a class="toc-backref" href="#id8">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2><a class="toc-backref" href="#id8">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>To install <tt class="docutils literal"><span class="pre">GraphTerm</span></tt>, you need to have Python 2.6+ and the Bash
 shell on your Mac/Linux/Unix computer. For a quick install, if the python
 <tt class="docutils literal"><span class="pre">setuptools</span></tt> module is already installed on your system,
@@ -288,7 +289,7 @@ in your system (or in the <tt class="docutils literal"><span class="pre">graphte
 version, at <a class="reference external" href="https://github.com/mitotic/graphterm">Github</a>.</p>
 </div>
 <div class="section" id="quick-start">
-<span id="index-2"></span><h2><a class="toc-backref" href="#id9">Quick Start</a><a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">Quick Start</a><a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
 <p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span>
 </pre></div>
@@ -332,7 +333,7 @@ tutorials for more info on using GraphTerm. You can also
 using GraphTerm.</p>
 </div>
 <div class="section" id="documentation-and-support">
-<span id="index-3"></span><h2><a class="toc-backref" href="#id10">Documentation and Support</a><a class="headerlink" href="#documentation-and-support" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id10">Documentation and Support</a><a class="headerlink" href="#documentation-and-support" title="Permalink to this headline">¶</a></h2>
 <p>Usage info and other documentation can be found on the project home page,
 <a class="reference external" href="http://code.mindmeldr.com/graphterm">code.mindmeldr.com/graphterm</a>.
 See the <a class="reference external" href="http://code.mindmeldr.com/graphterm/tutorials.html">Tutorials and Talks</a>
@@ -348,7 +349,7 @@ GraphTerm etc. You can also follow <a class="reference external" href="https://t
 <p>To report bugs and other issues, use the Github <a class="reference external" href="https://github.com/mitotic/graphterm/issues">Issue Tracker</a>.</p>
 </div>
 <div class="section" id="caveats-and-limitations">
-<span id="index-4"></span><h2><a class="toc-backref" href="#id11">Caveats and Limitations</a><a class="headerlink" href="#caveats-and-limitations" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id11">Caveats and Limitations</a><a class="headerlink" href="#caveats-and-limitations" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul>
 <li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
@@ -370,7 +371,7 @@ should be able to so in the future.)</li>
 </div></blockquote>
 </div>
 <div class="section" id="credits">
-<span id="index-5"></span><h2><a class="toc-backref" href="#id12">Credits</a><a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Credits</a><a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h2>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is inspired by two earlier projects that implement the
 terminal interface within the browser,
 <a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a> and
@@ -399,7 +400,7 @@ menu plugin</li>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> was developed as part of the <a class="reference external" href="http://mindmeldr.com">Mindmeldr</a> project, which is aimed at improving classroom interaction.</p>
 </div>
 <div class="section" id="license">
-<span id="index-6"></span><h2><a class="toc-backref" href="#id13">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id13">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
 <p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is distributed as open source under the <a class="reference external" href="http://www.opensource.org/licenses/bsd-license.php">BSD-license</a>.</p>
 </div>
 </div>

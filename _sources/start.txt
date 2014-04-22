@@ -652,26 +652,28 @@ Security
 --------------------------------------------------------------------------------------------
 
 
-*The GraphTerm is not yet ready to be executed with root privileges*.
-You should typically run it logged in as a regular user.
-The ``--auth_type=local`` (default) and ``--auth_type=multiuser`` options should
-be used for security, as they require an authentication code to create
-a new terminal. Using the ``gterm`` command to create a new terminal
-provides additional security, as the command validates the server
-before opening a new terminal.
-The ``--auth_type=none`` and ``--auth_type=name`` options
-should only be used for teaching or demonstration purposes (or
-on computers where only trusted users have access).
+You should normally run GraphTerm logged in as a regular user, using
+the default ``--auth_type=local`` option, which requires an access
+code for HMAC authentication. Using the ``gterm`` command to create a
+new terminal provides convenience and additional security, as the
+command validates the server and handles authentication before
+opening a new terminal. On a single user computer, such as a laptop,
+the ``--auth_type=none`` option, with no access code, can be used
+instead.
 
-Although multiple hosts can connect to the terminal
-server, initially, it would be best to use ``graphterm`` to just connect to
-``localhost``, on a computer with only trusted users. You can always
-use SSH port forwarding (see below) to securely connect to the
-GraphTerm server for remote access.
-As the code matures, security will be improved through
-the use of SSL certificates and server/client authentication.
-(SSL/https support is already built in. Feel free to experiment with
-it, although it is not yet ready for everyday use.)
+Although GraphTerm can be run as a public server, this feature should
+be used ony for teaching and demonstration purposes. In this case, the
+``--auth_type=name`` option can be used, if all users can share an
+account, with no access code. The ``--auth_type=multiuser`` option,
+which requires root access, is suitable for a multiple user lab
+setting, providing a choice of either access code HMAC authentication or
+Google Authentication. HTTPS protocol can be enabled for the public
+server, using either self-signed or authoritative certificates, to
+provide additional security.
+
+When working with sensitive information, it would be best to run the
+server on ``localhost`` (the default) and use SSH port forwarding to
+connect to it from other computers as needed (see below).
 
 .. index:: ssh, port forwarding, remote access
 

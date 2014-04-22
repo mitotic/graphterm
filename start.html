@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting started with GraphTerm &mdash; GraphTerm 0.50.1 documentation</title>
+    <title>Getting started with GraphTerm &mdash; GraphTerm 0.51.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.50.1',
+        VERSION:     '0.51.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.50.1 documentation"
+          title="Search within GraphTerm 0.51.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.50.1 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.51.0 documentation" href="index.html" />
     <link rel="next" title="Troubleshooting FAQ" href="troubleshooting.html" />
     <link rel="prev" title="README" href="README.html" />
  
@@ -701,25 +701,26 @@ be dynamically introspected and debugged using <a class="reference external" hre
 </div>
 <div class="section" id="security">
 <span id="index-22"></span><h3><a class="toc-backref" href="#id35">Security</a><a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h3>
-<p><em>The GraphTerm is not yet ready to be executed with root privileges</em>.
-You should typically run it logged in as a regular user.
-The <tt class="docutils literal"><span class="pre">--auth_type=local</span></tt> (default) and <tt class="docutils literal"><span class="pre">--auth_type=multiuser</span></tt> options should
-be used for security, as they require an authentication code to create
-a new terminal. Using the <tt class="docutils literal"><span class="pre">gterm</span></tt> command to create a new terminal
-provides additional security, as the command validates the server
-before opening a new terminal.
-The <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> and <tt class="docutils literal"><span class="pre">--auth_type=name</span></tt> options
-should only be used for teaching or demonstration purposes (or
-on computers where only trusted users have access).</p>
-<p>Although multiple hosts can connect to the terminal
-server, initially, it would be best to use <tt class="docutils literal"><span class="pre">graphterm</span></tt> to just connect to
-<tt class="docutils literal"><span class="pre">localhost</span></tt>, on a computer with only trusted users. You can always
-use SSH port forwarding (see below) to securely connect to the
-GraphTerm server for remote access.
-As the code matures, security will be improved through
-the use of SSL certificates and server/client authentication.
-(SSL/https support is already built in. Feel free to experiment with
-it, although it is not yet ready for everyday use.)</p>
+<p>You should normally run GraphTerm logged in as a regular user, using
+the default <tt class="docutils literal"><span class="pre">--auth_type=local</span></tt> option, which requires an access
+code for HMAC authentication. Using the <tt class="docutils literal"><span class="pre">gterm</span></tt> command to create a
+new terminal provides convenience and additional security, as the
+command validates the server and handles authentication before
+opening a new terminal. On a single user computer, such as a laptop,
+the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option, with no access code, can be used
+instead.</p>
+<p>Although GraphTerm can be run as a public server, this feature should
+be used ony for teaching and demonstration purposes. In this case, the
+<tt class="docutils literal"><span class="pre">--auth_type=name</span></tt> option can be used, if all users can share an
+account, with no access code. The <tt class="docutils literal"><span class="pre">--auth_type=multiuser</span></tt> option,
+which requires root access, is suitable for a multiple user lab
+setting, providing a choice of either access code HMAC authentication or
+Google Authentication. HTTPS protocol can be enabled for the public
+server, using either self-signed or authoritative certificates, to
+provide additional security.</p>
+<p>When working with sensitive information, it would be best to run the
+server on <tt class="docutils literal"><span class="pre">localhost</span></tt> (the default) and use SSH port forwarding to
+connect to it from other computers as needed (see below).</p>
 </div>
 <div class="section" id="ssh-port-forwarding-and-remote-access">
 <span id="ssh"></span><span id="index-23"></span><h3><a class="toc-backref" href="#id36">SSH, port forwarding, and remote access</a><a class="headerlink" href="#ssh-port-forwarding-and-remote-access" title="Permalink to this headline">¶</a></h3>

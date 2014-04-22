@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Troubleshooting FAQ &mdash; GraphTerm 0.50.1 documentation</title>
+    <title>Troubleshooting FAQ &mdash; GraphTerm 0.51.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.50.1',
+        VERSION:     '0.51.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.50.1 documentation"
+          title="Search within GraphTerm 0.51.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.50.1 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.51.0 documentation" href="index.html" />
     <link rel="next" title="Implementation" href="implementation.html" />
     <link rel="prev" title="Getting started with GraphTerm" href="start.html" />
  
@@ -119,6 +119,7 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a></li>
 <li><a class="reference internal" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a></li>
 <li><a class="reference internal" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a></li>
+<li><a class="reference internal" href="#the-terminal-does-not-display-long-lines-properly-they-are-either-wrapped-too-short-or-they-overflow-the-window">The terminal does not display long lines properly; they are either wrapped too short or they overflow the window?</a></li>
 <li><a class="reference internal" href="#how-do-i-paste-text">How do I paste text?</a></li>
 </ul>
 </li>
@@ -192,30 +193,31 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" id="id4">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a></li>
 <li><a class="reference internal" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" id="id5">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a></li>
 <li><a class="reference internal" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" id="id6">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a></li>
-<li><a class="reference internal" href="#how-do-i-paste-text" id="id7">How do I paste text?</a></li>
+<li><a class="reference internal" href="#the-terminal-does-not-display-long-lines-properly-they-are-either-wrapped-too-short-or-they-overflow-the-window" id="id7">The terminal does not display long lines properly; they are either wrapped too short or they overflow the window?</a></li>
+<li><a class="reference internal" href="#how-do-i-paste-text" id="id8">How do I paste text?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#inline-graphics-and-notebook-mode" id="id8">Inline graphics and notebook mode</a><ul>
-<li><a class="reference internal" href="#my-inline-graphics-plot-does-not-appear" id="id9">My inline graphics plot does not appear?</a></li>
-<li><a class="reference internal" href="#how-do-i-specify-the-format-for-saving-a-notebook" id="id10">How do I specify the format for saving a notebook?</a></li>
+<li><a class="reference internal" href="#inline-graphics-and-notebook-mode" id="id9">Inline graphics and notebook mode</a><ul>
+<li><a class="reference internal" href="#my-inline-graphics-plot-does-not-appear" id="id10">My inline graphics plot does not appear?</a></li>
+<li><a class="reference internal" href="#how-do-i-specify-the-format-for-saving-a-notebook" id="id11">How do I specify the format for saving a notebook?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#session-sharing" id="id11">Session sharing</a><ul>
-<li><a class="reference internal" href="#others-cannot-see-or-access-my-terminal-for-sharing" id="id12">Others cannot see or access my terminal for sharing?</a></li>
+<li><a class="reference internal" href="#session-sharing" id="id12">Session sharing</a><ul>
+<li><a class="reference internal" href="#others-cannot-see-or-access-my-terminal-for-sharing" id="id13">Others cannot see or access my terminal for sharing?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#server" id="id13">Server</a><ul>
-<li><a class="reference internal" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" id="id14">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a></li>
-<li><a class="reference internal" href="#can-i-run-the-graphterm-server-on-port-80-or-443" id="id15">Can I run the GraphTerm server on port 80 (or 443)?</a></li>
+<li><a class="reference internal" href="#server" id="id14">Server</a><ul>
+<li><a class="reference internal" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" id="id15">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a></li>
+<li><a class="reference internal" href="#can-i-run-the-graphterm-server-on-port-80-or-443" id="id16">Can I run the GraphTerm server on port 80 (or 443)?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-graphterm-on-windows" id="id16">Using GraphTerm on Windows</a><ul>
-<li><a class="reference internal" href="#does-graphterm-work-on-windows" id="id17">Does GraphTerm work on Windows?</a></li>
-<li><a class="reference internal" href="#graphterm-fails-to-load-properly-on-windows" id="id18">GraphTerm fails to load properly on Windows?</a></li>
+<li><a class="reference internal" href="#using-graphterm-on-windows" id="id17">Using GraphTerm on Windows</a><ul>
+<li><a class="reference internal" href="#does-graphterm-work-on-windows" id="id18">Does GraphTerm work on Windows?</a></li>
+<li><a class="reference internal" href="#graphterm-fails-to-load-properly-on-windows" id="id19">GraphTerm fails to load properly on Windows?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-graphterm-on-tablets" id="id19">Using GraphTerm on tablets</a><ul>
-<li><a class="reference internal" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" id="id20">How do I access the virtual keyboard on iPad/Android?</a></li>
+<li><a class="reference internal" href="#using-graphterm-on-tablets" id="id20">Using GraphTerm on tablets</a><ul>
+<li><a class="reference internal" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" id="id21">How do I access the virtual keyboard on iPad/Android?</a></li>
 </ul>
 </li>
 </ul>
@@ -247,6 +249,9 @@ notebook before exiting, if necessary.)</li>
 <li>Use the <em>terminal/reload</em> menu option or the browser&#8217;s reload
 button to reload the web page. <em>Copy/paste any displayed code in
 notebook cells before reloading, as you may lose it.</em></li>
+<li>As a last resort, you can try the <em>terminal/reconnect</em> option,
+which takes over 15 seconds to reconnect the terminal. This may
+help when updating configuration changes etc.</li>
 </ul>
 </div></blockquote>
 </div>
@@ -277,8 +282,19 @@ menu command to set shell environment variables on the remote computer
 to restore some, but not all, of GraphTerm features. (For a more
 permanent solution, see the <a class="reference internal" href="start.html#ssh"><em>SSH, port forwarding, and remote access</em></a> section.)</p>
 </div>
+<div class="section" id="the-terminal-does-not-display-long-lines-properly-they-are-either-wrapped-too-short-or-they-overflow-the-window">
+<span id="index-5"></span><h3><a class="toc-backref" href="#id7">The terminal does not display long lines properly; they are either wrapped too short or they overflow the window?</a><a class="headerlink" href="#the-terminal-does-not-display-long-lines-properly-they-are-either-wrapped-too-short-or-they-overflow-the-window" title="Permalink to this headline">¶</a></h3>
+<p>Try one or more of the following commands to resize the terminal:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the menu option <em>view/resize</em></li>
+<li>the Unix command <tt class="docutils literal"><span class="pre">resize</span></tt></li>
+</ul>
+</div></blockquote>
+<p>(You will need control of the terminal for the resizing commands to work properly.)</p>
+</div>
 <div class="section" id="how-do-i-paste-text">
-<span id="index-5"></span><h3><a class="toc-backref" href="#id7">How do I paste text?</a><a class="headerlink" href="#how-do-i-paste-text" title="Permalink to this headline">¶</a></h3>
+<span id="index-6"></span><h3><a class="toc-backref" href="#id8">How do I paste text?</a><a class="headerlink" href="#how-do-i-paste-text" title="Permalink to this headline">¶</a></h3>
 <p>For certain browsers (e.g., desktop Chrome/Firefox), the usual
 <em>Command-V</em> or <em>Control-V</em> key sequence should directly paste text
 from the clipboard.  Alternatively, for some browsers, you can <em>click
@@ -297,36 +313,36 @@ can also be accessed using the <em>terminal/paste special</em> menu item.)</p>
 </div>
 </div>
 <div class="section" id="inline-graphics-and-notebook-mode">
-<h2><a class="toc-backref" href="#id8">Inline graphics and notebook mode</a><a class="headerlink" href="#inline-graphics-and-notebook-mode" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">Inline graphics and notebook mode</a><a class="headerlink" href="#inline-graphics-and-notebook-mode" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="my-inline-graphics-plot-does-not-appear">
-<span id="index-6"></span><h3><a class="toc-backref" href="#id9">My inline graphics plot does not appear?</a><a class="headerlink" href="#my-inline-graphics-plot-does-not-appear" title="Permalink to this headline">¶</a></h3>
+<span id="index-7"></span><h3><a class="toc-backref" href="#id10">My inline graphics plot does not appear?</a><a class="headerlink" href="#my-inline-graphics-plot-does-not-appear" title="Permalink to this headline">¶</a></h3>
 <p>If using <tt class="docutils literal"><span class="pre">gpylab.py</span></tt>, try adding a <tt class="docutils literal"><span class="pre">show(False)</span></tt> function call to display a new
 image or <tt class="docutils literal"><span class="pre">show()</span></tt> to overwrite a previous image. You can also use
 <tt class="docutils literal"><span class="pre">display(fig)</span></tt> to display a figure.</p>
 </div>
 <div class="section" id="how-do-i-specify-the-format-for-saving-a-notebook">
-<span id="index-7"></span><h3><a class="toc-backref" href="#id10">How do I specify the format for saving a notebook?</a><a class="headerlink" href="#how-do-i-specify-the-format-for-saving-a-notebook" title="Permalink to this headline">¶</a></h3>
+<span id="index-8"></span><h3><a class="toc-backref" href="#id11">How do I specify the format for saving a notebook?</a><a class="headerlink" href="#how-do-i-specify-the-format-for-saving-a-notebook" title="Permalink to this headline">¶</a></h3>
 <p>The notebook save file format is determined by the filename extension,
 i.e., <tt class="docutils literal"><span class="pre">.ipynb</span></tt> or <tt class="docutils literal"><span class="pre">.py.gnb.md</span></tt>.</p>
 </div>
 </div>
 <div class="section" id="session-sharing">
-<h2><a class="toc-backref" href="#id11">Session sharing</a><a class="headerlink" href="#session-sharing" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Session sharing</a><a class="headerlink" href="#session-sharing" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="others-cannot-see-or-access-my-terminal-for-sharing">
-<span id="index-8"></span><h3><a class="toc-backref" href="#id12">Others cannot see or access my terminal for sharing?</a><a class="headerlink" href="#others-cannot-see-or-access-my-terminal-for-sharing" title="Permalink to this headline">¶</a></h3>
+<span id="index-9"></span><h3><a class="toc-backref" href="#id13">Others cannot see or access my terminal for sharing?</a><a class="headerlink" href="#others-cannot-see-or-access-my-terminal-for-sharing" title="Permalink to this headline">¶</a></h3>
 <p>Disable the <em>share/private</em> option to share your terminal.</p>
 </div>
 </div>
 <div class="section" id="server">
-<h2><a class="toc-backref" href="#id13">Server</a><a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id14">Server</a><a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser">
-<h3><a class="toc-backref" href="#id14">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a><a class="headerlink" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id15">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a><a class="headerlink" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" title="Permalink to this headline">¶</a></h3>
 <p>Ensure that you have included the port number in the URL, e.g., <tt class="docutils literal"><span class="pre">http//example.com:8900</span></tt>
 Also, ensure that any firewall on the server allows incoming
 connections to the default port 8900 .</p>
 </div>
 <div class="section" id="can-i-run-the-graphterm-server-on-port-80-or-443">
-<span id="index-9"></span><h3><a class="toc-backref" href="#id15">Can I run the GraphTerm server on port 80 (or 443)?</a><a class="headerlink" href="#can-i-run-the-graphterm-server-on-port-80-or-443" title="Permalink to this headline">¶</a></h3>
+<span id="index-10"></span><h3><a class="toc-backref" href="#id16">Can I run the GraphTerm server on port 80 (or 443)?</a><a class="headerlink" href="#can-i-run-the-graphterm-server-on-port-80-or-443" title="Permalink to this headline">¶</a></h3>
 <p>You would need run the server as the root user, which is not recommended
 at this stage of GraphTerm development. A better way to achieve this is
 to redirect traffic from port 80 to port 8900. On a Linux server, this
@@ -336,9 +352,9 @@ can be achieved by executing a single command (as root):</p>
 </div>
 </div>
 <div class="section" id="using-graphterm-on-windows">
-<span id="index-10"></span><h2><a class="toc-backref" href="#id16">Using GraphTerm on Windows</a><a class="headerlink" href="#using-graphterm-on-windows" title="Permalink to this headline">¶</a></h2>
+<span id="index-11"></span><h2><a class="toc-backref" href="#id17">Using GraphTerm on Windows</a><a class="headerlink" href="#using-graphterm-on-windows" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="does-graphterm-work-on-windows">
-<h3><a class="toc-backref" href="#id17">Does GraphTerm work on Windows?</a><a class="headerlink" href="#does-graphterm-work-on-windows" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id18">Does GraphTerm work on Windows?</a><a class="headerlink" href="#does-graphterm-work-on-windows" title="Permalink to this headline">¶</a></h3>
 <p>The GraphTerm client should work on a Windows browser that supports Websockets,
 like the  latest versions of Chrome/Firefox/Safari or IE10. The
 GraphTerm server is currently not supported on Windows. (Although the
@@ -346,7 +362,7 @@ server is written in pure python, it needs access to the
 pseudo-terminal device that is only supported on Unix/Linux.)</p>
 </div>
 <div class="section" id="graphterm-fails-to-load-properly-on-windows">
-<h3><a class="toc-backref" href="#id18">GraphTerm fails to load properly on Windows?</a><a class="headerlink" href="#graphterm-fails-to-load-properly-on-windows" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id19">GraphTerm fails to load properly on Windows?</a><a class="headerlink" href="#graphterm-fails-to-load-properly-on-windows" title="Permalink to this headline">¶</a></h3>
 <p>Ensure that you are using a browser that supports Websockets, like the
 latest versions of Chrome/Firefox/Safari or IE10.
 Some Anti-virus programs block Websockets on the browser. You may need to
@@ -355,9 +371,9 @@ server is running.</p>
 </div>
 </div>
 <div class="section" id="using-graphterm-on-tablets">
-<span id="index-11"></span><h2><a class="toc-backref" href="#id19">Using GraphTerm on tablets</a><a class="headerlink" href="#using-graphterm-on-tablets" title="Permalink to this headline">¶</a></h2>
+<span id="index-12"></span><h2><a class="toc-backref" href="#id20">Using GraphTerm on tablets</a><a class="headerlink" href="#using-graphterm-on-tablets" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="how-do-i-access-the-virtual-keyboard-on-ipad-android">
-<h3><a class="toc-backref" href="#id20">How do I access the virtual keyboard on iPad/Android?</a><a class="headerlink" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id21">How do I access the virtual keyboard on iPad/Android?</a><a class="headerlink" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" title="Permalink to this headline">¶</a></h3>
 <p>GraphTerm can be used on touch devices (phones/tablets), with some
 limitations. Use the <em>view/footer</em> menu to enter keyboard input, send
 special characters, access arrow keys etc. Tap the <em>Kbrd</em> in the
