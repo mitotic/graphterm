@@ -211,12 +211,14 @@ with multi-user support and the option of <em>Google Authentication</em>.</p>
 <p><tt class="docutils literal"><span class="pre">easy_install</span> <span class="pre">graphterm</span></tt></p>
 <p><tt class="docutils literal"><span class="pre">gterm_setup</span></tt></p>
 </li>
-<li><p class="first">If this computer is a pristine Linux/Mac server where you want to run the
-multiuser GraphTerm server, with automatic new user creation,
-configure an user (named, say, <tt class="docutils literal"><span class="pre">ubuntu</span></tt>) with
+<li><p class="first">If this computer is a pristine Linux/Mac server where you want to
+run the multiuser GraphTerm server, with automatic new user
+creation, configure an user (named, say, <tt class="docutils literal"><span class="pre">ubuntu</span></tt>) with
 <a class="reference external" href="http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password">password-less</a>
-<tt class="docutils literal"><span class="pre">sudo</span></tt> privileges, use the following command to start the
-GraphTerm server and then <em>skip to Step 9</em>:</p>
+<tt class="docutils literal"><span class="pre">sudo</span></tt> privileges. Modify the script
+<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm_user_setup</span></tt> to work with your server&#8217;s OS,
+type the following command to start the GraphTerm server and then
+<em>skip to Step 9</em>:</p>
 </li>
 </ol>
 <blockquote>
@@ -446,11 +448,6 @@ local <tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> di
 <div class="highlight-python"><pre>gauth -g -m super_username</pre>
 </div>
 <p>on the server.</p>
-<p>The super user can also use the shell script <tt class="docutils literal"><span class="pre">gterm_user_setup</span></tt>
-in <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> to manually configure new users:</p>
-<div class="highlight-python"><pre>sudo gterm_user_setup username activate server_domain user_email</pre>
-</div>
-<p><em>Note:</em> This script may need to be modified to work on non-AWS servers.</p>
 </div>
 <div class="section" id="using-https">
 <h2><a class="toc-backref" href="#id10">Using https</a><a class="headerlink" href="#using-https" title="Permalink to this headline">¶</a></h2>
@@ -477,8 +474,13 @@ server, by copying the file <tt class="docutils literal"><span class="pre">~/.gr
 </div>
 <div class="section" id="administering-the-virtual-computer-lab">
 <h2><a class="toc-backref" href="#id12">Administering the virtual computer lab</a><a class="headerlink" href="#administering-the-virtual-computer-lab" title="Permalink to this headline">¶</a></h2>
+<p>The super user can use the shell script <tt class="docutils literal"><span class="pre">gterm_user_setup</span></tt>
+in <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> to manually configure new users:</p>
+<div class="highlight-python"><pre>sudo gterm_user_setup username activate server_domain user_email</pre>
+</div>
+<p><em>Note:</em> This script may need to be modified to work on non-AWS servers.</p>
 <p>The <tt class="docutils literal"><span class="pre">gadmin</span></tt> command (a work in progress) performs administrative
-actions to manage users:</p>
+actions to monitor users:</p>
 <div class="highlight-python"><pre># Display status for all terminals with path name matching python regexp
 gadmin -a sessions [regexp]</pre>
 </div>

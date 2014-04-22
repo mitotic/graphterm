@@ -40,12 +40,14 @@ with multi-user support and the option of *Google Authentication*.
 
     ``gterm_setup``
 
- 2. If this computer is a pristine Linux/Mac server where you want to run the
-    multiuser GraphTerm server, with automatic new user creation,
-    configure an user (named, say, ``ubuntu``) with
+ 2. If this computer is a pristine Linux/Mac server where you want to
+    run the multiuser GraphTerm server, with automatic new user
+    creation, configure an user (named, say, ``ubuntu``) with
     `password-less <http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password>`_
-    ``sudo`` privileges, use the following command to start the
-    GraphTerm server and then *skip to Step 9*:
+    ``sudo`` privileges. Modify the script
+    ``$GTERM_DIR/bin/gterm_user_setup`` to work with your server's OS,
+    type the following command to start the GraphTerm server and then
+    *skip to Step 9*:
 
    ``sudo gtermserver --daemon=start --widget_port=-1 --auth_type=multiuser --auto_users --super_users=ubuntu --port=80 --host=server_domain_name_or_ip``
 
@@ -299,13 +301,6 @@ To display the group access code (needed to generate new accounts), type::
 
 on the server.
 
-The super user can also use the shell script ``gterm_user_setup``
-in ``$GTERM_DIR/bin`` to manually configure new users::
-
-    sudo gterm_user_setup username activate server_domain user_email
-
-*Note:* This script may need to be modified to work on non-AWS servers.
-
 Using https
 --------------------------------------------------------------------------------------------
 
@@ -337,8 +332,15 @@ server, by copying the file ``~/.graphterm/localhost.pem`` to
 Administering the virtual computer lab
 --------------------------------------------------------------------------------------------
 
+The super user can use the shell script ``gterm_user_setup``
+in ``$GTERM_DIR/bin`` to manually configure new users::
+
+    sudo gterm_user_setup username activate server_domain user_email
+
+*Note:* This script may need to be modified to work on non-AWS servers.
+
 The ``gadmin`` command (a work in progress) performs administrative
-actions to manage users::
+actions to monitor users::
 
     # Display status for all terminals with path name matching python regexp
     gadmin -a sessions [regexp]
