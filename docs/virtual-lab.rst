@@ -12,11 +12,14 @@ Logging in
 --------------------------------------------------------------------------------------------
 
 Open the URL provided by the instructor (usually of the form
-``http://hostname.domain:8900``) in your web browser. Then type in the
-user name and the access code. If you are creating a new account, you
-will need to enter the *group access code* obtained from your
-instructor. If you have a *Google GMail* account, you can choose to
-link it to your GraphTerm server account for password-less logins.
+``http://hostname.domain``) in your web browser. Then type in the user
+name and the access code. If you are creating a new account, you will
+need to enter the *group access code* obtained from your
+instructor. Select a user name that will be meaningful to the
+instructor, like your first initial followed by your last name (all
+lower-case), e.g., ``jsmith`` for Jim Smith.  If you have a *Google
+GMail* account, you can choose to link it to your GraphTerm server
+account for password-less logins by clicking the *Google Auth* button.
 
 *Note:* If the URL is of the ``https//...`` form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
@@ -34,7 +37,7 @@ desktop/laptop, you can download the executable python script
 ``$GTERM_DIR/bin/gterm.py`` and type the following command on your
 desktop/laptop::
 
-    gterm.py -u user http://hostname.domain:8900
+    gterm.py -u user http://hostname.domain
 
 to open a terminal on the remote server without having to type in the
 access code (after the first time).
@@ -85,7 +88,7 @@ more of the following:
 
  - Are you in the notebook mode? If so, the notebook name will appear
    on the top, with the prefix "NB". To exit the notebook mode, use
-   the *notebook-quit* menu option, or type *Control-C* and then type
+   the *notebook/quit* menu option, or type *Control-C* and then type
    *Control-D* to exit the python interpreter. (Remember to save the
    notebook before exiting, if necessary.)
 
@@ -138,12 +141,14 @@ GraphTerm provides a *lightweight* notebook interface that mimics the
 basic features of the IPython Notebook. You can create simple
 notebooks in GraphTerm, save them as ``.ipynb`` files and open them
 later using IPython Notebook, and *vice versa*.  Unlike the
-self-contained IPython Notebook interface, the GraphTerm notebook
-interface is a wrapper on top of the standard python command line
-interface. You can switch back and forth between the
-command line mode and the notebook mode, as needed, during a single
-session. (For beginning users, it may be simpler to stay in the notebook
-mode all the time, and avoid the the python command line altogether.)
+full-featured IPython Notebook environment, the GraphTerm notebook
+interface is merely a wrapper on top of the standard python command
+line interface. This approach has many limitations, but also has some
+advantages, such as being able to work across SSH login boundaries and
+allowing seamless switching between the python command line and
+notebook mode within the same interactive session. This also means
+that sharing the terminal with collaborators automatically enables
+"live sharing" of the GraphTerm notebook activity.
 
 
 Opening python notebooks in GraphTerm
@@ -164,7 +169,8 @@ Alternatively, you can also the ``gopen`` command::
     gopen notebook.ipynb
 
 Once you have opened a notebook, you can use *Control-Enter* or
-*Shift-Enter* key combinations to work with cells.
+*Shift-Enter* key combinations to work with cells, or use the
+*notebook* menu options.
 
 Saving and exiting python notebooks
 --------------------------------------------------------------------------------------------
