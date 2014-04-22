@@ -1,0 +1,97 @@
+/* dark.css: Dark theme */
+
+body.dark { 
+    background-color: black;
+    color: white;
+}
+
+/* Need font styling for both body and pre; otherwise pre styling will be overridden by useragent default */
+.dark, .dark pre {
+    font-family: lucida sans typweriter, lucida console, monospace;
+    color: white;
+    background-color: black;
+}
+
+.dark span.gterm-link,
+ .dark a.gterm-link,
+ .dark span.gterm-help-link,
+ .dark span.gterm-togglelink {
+    color: green;
+}
+
+.dark textarea.gterm-notecell-text {
+    color: white;
+    background-color: rgb(50,50,50);
+}
+
+.dark .row .inverse {
+    background-color: darkgray;
+}
+
+.dark .row.gterm-cell-input {
+    background-color: rgb(50,50,50);
+}
+
+.dark .row .cursorspan .cursorloc {
+    background-color: red;
+}
+
+.dark #session-headermenu,
+  .dark #session-footermenu {
+    background-color: black;
+}
+
+
+.dark span.headfoot,
+ .dark span.headfoot-icon {
+    color: green;
+}
+
+.dark .headfootselect {
+    color: green;
+    background-color: black;
+}
+
+.dark #gterm-header div#gterm-header-container {
+    background-color: black;
+}
+
+.dark #session-term.split-screen #session-screenfold {
+    background: -webkit-gradient( linear, center bottom, center top, from(rgba(128,128,128,1.0)), to(rgba(0,0,0,0.0)) );
+    background: -moz-linear-gradient( 90deg, rgba(128,128,128,1.0), rgba(0,0,0,0.0) );
+    border-bottom-color: gray;
+}
+
+.dark #session-term.split-screen #session-screenfix {
+    background-color: black;
+}
+
+.dark #terminal .sf-menu li {
+    background-color: black;
+    color: black;
+}
+
+.dark #terminal .sf-menu li:hover,
+ .dark #terminal .sf-menu li.sfHover {
+    background: gray;
+}
+
+.dark #terminal .sf-menu li a {
+    color: lightgreen;
+    border: none;
+}
+
+.dark #terminal .sf-menu li.gterm-menu-curved {
+    background-color: rgb(80,80,80);
+}
+
+.dark #terminal .sf-menu li.gterm-menu-white {
+    background-color: gray;
+    color: black;
+}
+
+.dark .gterm-popup,
+ .dark .gterm-popupshrink {
+    background-color: gray;
+    color: white;
+}
