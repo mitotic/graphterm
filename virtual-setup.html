@@ -163,69 +163,84 @@ code.mindmeldr.com
           <div class="body">
             
   <div class="section" id="setting-up-a-virtual-computer-lab-in-the-cloud">
-<span id="virtual-setup"></span><h1><a class="toc-backref" href="#id2">Setting up a Virtual Computer Lab in the cloud</a><a class="headerlink" href="#setting-up-a-virtual-computer-lab-in-the-cloud" title="Permalink to this headline">¶</a></h1>
+<span id="virtual-setup"></span><h1><a class="toc-backref" href="#id1">Setting up a Virtual Computer Lab in the cloud</a><a class="headerlink" href="#setting-up-a-virtual-computer-lab-in-the-cloud" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#setting-up-a-virtual-computer-lab-in-the-cloud" id="id2">Setting up a Virtual Computer Lab in the cloud</a><ul>
-<li><a class="reference internal" href="#quick-setup" id="id3">Quick setup</a></li>
-<li><a class="reference internal" href="#domain-name-and-ip-address" id="id4">Domain name and IP address</a></li>
-<li><a class="reference internal" href="#network-security-and-port-access" id="id5">Network security and port access</a></li>
-<li><a class="reference internal" href="#launching-a-server-instance" id="id6">Launching a server instance</a></li>
-<li><a class="reference internal" href="#managing-instances" id="id7">Managing instances</a></li>
-<li><a class="reference internal" href="#starting-and-stopping-graphterm-server" id="id8">Starting and stopping GraphTerm server</a></li>
-<li><a class="reference internal" href="#access-codes" id="id9">Access codes</a></li>
-<li><a class="reference internal" href="#using-https" id="id10">Using https</a></li>
-<li><a class="reference internal" href="#running-a-public-ipython-notebook-server" id="id11">Running a public IPython Notebook server</a></li>
-<li><a class="reference internal" href="#administering-the-virtual-computer-lab" id="id12">Administering the virtual computer lab</a></li>
-<li><a class="reference internal" href="#configuring-groups" id="id13">Configuring groups</a></li>
-<li><a class="reference internal" href="#secondary-cloud-instances" id="id14">Secondary cloud instances</a></li>
+<li><a class="reference internal" href="#setting-up-a-virtual-computer-lab-in-the-cloud" id="id1">Setting up a Virtual Computer Lab in the cloud</a><ul>
+<li><a class="reference internal" href="#quick-setup" id="id2">Quick setup</a></li>
+<li><a class="reference internal" href="#domain-name-and-ip-address" id="id3">Domain name and IP address</a></li>
+<li><a class="reference internal" href="#network-security-and-port-access" id="id4">Network security and port access</a></li>
+<li><a class="reference internal" href="#launching-a-server-instance" id="id5">Launching a server instance</a></li>
+<li><a class="reference internal" href="#managing-instances" id="id6">Managing instances</a></li>
+<li><a class="reference internal" href="#starting-and-stopping-graphterm-server" id="id7">Starting and stopping GraphTerm server</a></li>
+<li><a class="reference internal" href="#access-codes" id="id8">Access codes</a></li>
+<li><a class="reference internal" href="#using-https" id="id9">Using https</a></li>
+<li><a class="reference internal" href="#running-a-public-ipython-notebook-server" id="id10">Running a public IPython Notebook server</a></li>
+<li><a class="reference internal" href="#administering-the-virtual-computer-lab" id="id11">Administering the virtual computer lab</a></li>
+<li><a class="reference internal" href="#configuring-groups" id="id12">Configuring groups</a></li>
+<li><a class="reference internal" href="#secondary-cloud-instances" id="id13">Secondary cloud instances</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <p id="index-0">This section describes how to configure a Virtual Computer Lab using
-GraphTerm on a Linux server. If you do not already have a Linux server
-available, you can easily create one on demand using Amazon Web
-Services (AWS). Most of the AWS configuration steps described below
-are automatically carried out by the <tt class="docutils literal"><span class="pre">ec2launch</span></tt> command. (If you are
-using a different cloud computing service, you can either modify
-<tt class="docutils literal"><span class="pre">ec2launch</span></tt> or write your own script to configure the server.)</p>
+GraphTerm on a Linux server.  Some notable features are:</p>
+<ul class="simple">
+<li>Automatic user creation, with the option of Google Authentication</li>
+<li>All users share a single python installation and can access data files
+on a cloud server</li>
+<li>Students can access terminals and notebooks remotely using a
+browser, both in class and from home</li>
+<li>Students can collaborate by accessing each others terminals and
+using a rudimentary <em>chat</em> feature</li>
+<li>The instructor can monitor students&#8217; work while it is in progress and comment on it using <em>chat</em></li>
+</ul>
 <p>A companion section provides information on <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> after
 it has been set up. It can be printed and distributed to the users to
 serve as a quick start guide.</p>
-<p>The GraphTerm distribution includes the convenience scripts
-<tt class="docutils literal"><span class="pre">ec2launch,</span> <span class="pre">ec2list,</span> <span class="pre">ec2scp,</span></tt> and <tt class="docutils literal"><span class="pre">ec2ssh</span></tt> to launch and monitor
-AWS Elastic Computing Cloud (EC2) instances running a GraphTerm
-server. You will need to have an AWS account to use these scripts, and
-also need to install the <tt class="docutils literal"><span class="pre">boto</span></tt> python module. (These scripts are
-routinely used during GraphTerm development to test new versions by
-running them in the &#8220;cloud&#8221;. )</p>
+<p>If you do not already have a Linux server available to set up a
+virtual computer lab, you can easily create one on demand using Amazon
+Web Services (AWS).  The GraphTerm distribution includes the
+convenience scripts <tt class="docutils literal"><span class="pre">ec2launch,</span> <span class="pre">ec2list,</span> <span class="pre">ec2scp,</span></tt> and <tt class="docutils literal"><span class="pre">ec2ssh</span></tt> to
+launch and monitor AWS Elastic Computing Cloud (EC2) instances running
+a GraphTerm server. You will need to have an AWS account to use these
+scripts, and also need to install the <tt class="docutils literal"><span class="pre">boto</span></tt> python module. (These
+scripts are routinely used during GraphTerm development to test new
+versions in the &#8220;cloud&#8221;. )</p>
+<p>Most of the AWS configuration steps described below are automatically
+carried out by the <tt class="docutils literal"><span class="pre">ec2launch</span></tt> command. If you are using a different
+computing provider, you can either modify <tt class="docutils literal"><span class="pre">ec2launch</span></tt> or write your
+own script to configure the server. (Running <tt class="docutils literal"><span class="pre">ec2launch</span></tt> with the
+<tt class="docutils literal"><span class="pre">--dry_run</span></tt> option displays the configuration steps for the Ubuntu
+Linux instances created using AWS.) You may also need to modify the
+shell script <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm_user_setup</span></tt> to work with your
+server&#8217;s OS.</p>
 <div class="section" id="quick-setup">
-<h2><a class="toc-backref" href="#id3">Quick setup</a><a class="headerlink" href="#quick-setup" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id2">Quick setup</a><a class="headerlink" href="#quick-setup" title="Permalink to this headline">¶</a></h2>
 <p>The following steps allow you to quickly launch a &#8220;virtual computer lab&#8221;
-with multi-user support and the option of <em>Google Authentication</em>.</p>
+with multi-user support in 5-10 minutes:</p>
 <blockquote>
 <div><ol class="arabic">
 <li><p class="first">Install <tt class="docutils literal"><span class="pre">graphterm</span></tt> on your computer using the following two commands:</p>
-<p><tt class="docutils literal"><span class="pre">easy_install</span> <span class="pre">graphterm</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">gterm_setup</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">easy_install</span> <span class="pre">graphterm</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt></p>
+<p>(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command to
+be able to use the GraphTerm toolchain.)</p>
 </li>
 <li><p class="first">If this computer is a pristine Linux/Mac server where you want to
-run the multiuser GraphTerm server, with automatic new user
+run the multiuser GraphTerm server with automatic new user
 creation, configure an user (named, say, <tt class="docutils literal"><span class="pre">ubuntu</span></tt>) with
 <a class="reference external" href="http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password">password-less</a>
-<tt class="docutils literal"><span class="pre">sudo</span></tt> privileges. Modify the shell script
-<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm_user_setup</span></tt> to work with your server&#8217;s OS,
-type the following command to start the GraphTerm server and then
-<em>skip to Step 9</em>:</p>
+<tt class="docutils literal"><span class="pre">sudo</span></tt> privileges, type the following command to start the
+GraphTerm server, and then <em>skip to Step 9</em>:</p>
 </li>
 </ol>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gtermserver</span> <span class="pre">--daemon=start</span> <span class="pre">--widget_port=-1</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--auto_users</span> <span class="pre">--super_users=ubuntu</span> <span class="pre">--port=80</span> <span class="pre">--host=server_domain_name_or_ip</span></tt></div></blockquote>
 <ol class="arabic" start="3">
-<li><p class="first">If you do not already have a server, you should obtain an <a class="reference external" href="http://aws.amazon.com/">AWS</a> account by
-<a class="reference external" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html">clicking here</a>.
+<li><p class="first">If you do not already have a server, you should obtain an <a class="reference external" href="http://aws.amazon.com/">AWS</a> account as
+<a class="reference external" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html">described here</a>.
 The AWS account will be linked to your standard Amazon account.</p>
 </li>
 <li><p class="first">Create an SSH key pair to access your AWS instances by <a class="reference external" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html">clicking here</a>. You
@@ -266,7 +281,7 @@ login to the password-less super user account <tt class="docutils literal"><span
 </ol>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">ps</span> <span class="pre">-ef</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">gtermserver</span></tt></p>
-<p>If not, check for errors in the AWS setup procedure by typing <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">tail</span> <span class="pre">/root/ec2launch.log</span></tt></p>
+<p>If not, and if using AWS, check for errors in the setup procedure by typing <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">tail</span> <span class="pre">/root/ec2launch.log</span></tt></p>
 </div></blockquote>
 <ol class="arabic simple" start="10">
 <li>Run the following command on the server to display the <em>master access code</em>:</li>
@@ -276,11 +291,9 @@ login to the password-less super user account <tt class="docutils literal"><span
 <p>(Ignore the port number following the hexadecimal access code.)</p>
 </div></blockquote>
 <ol class="arabic simple" start="11">
-<li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem window on the</li>
-</ol>
-<blockquote>
-<div>server, with the super user name (<tt class="docutils literal"><span class="pre">ubuntu</span></tt> in our case) and the <em>master access code</em></div></blockquote>
-<ol class="arabic simple" start="12">
+<li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem
+window on the server, with the super user name (<tt class="docutils literal"><span class="pre">ubuntu</span></tt> in our
+case) and the <em>master access code</em></li>
 <li>Optionally, use the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> to
 download the executable script <tt class="docutils literal"><span class="pre">gterm.py</span></tt> to your local computer
 and save the master access code in the local file
@@ -310,7 +323,7 @@ all lab users.</p>
 </div></blockquote>
 </div>
 <div class="section" id="domain-name-and-ip-address">
-<h2><a class="toc-backref" href="#id4">Domain name and IP address</a><a class="headerlink" href="#domain-name-and-ip-address" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">Domain name and IP address</a><a class="headerlink" href="#domain-name-and-ip-address" title="Permalink to this headline">¶</a></h2>
 <p>A server needs a domain name or IP address to be accessible. When you
 start up a new cloud server, it is usually assigned a dynamic IP
 address. For temporary use, i.e., during the up-time of the server,
@@ -332,7 +345,7 @@ nameserver records for <tt class="docutils literal"><span class="pre">example.co
 point to the AWS nameservers for the hosted zone.</p>
 </div>
 <div class="section" id="network-security-and-port-access">
-<h2><a class="toc-backref" href="#id5">Network security and port access</a><a class="headerlink" href="#network-security-and-port-access" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Network security and port access</a><a class="headerlink" href="#network-security-and-port-access" title="Permalink to this headline">¶</a></h2>
 <p>The cloud server should be configured to allow access to certain
 network ports, particularly ports 22 (ssh), 80 (http), and 443
 (https). If you plan to enable running of the &#8220;public&#8221; IPython
@@ -345,7 +358,7 @@ associated with the cloud instance allows access to inbound TCP port
 22 (for SSH access).</p>
 </div>
 <div class="section" id="launching-a-server-instance">
-<h2><a class="toc-backref" href="#id6">Launching a server instance</a><a class="headerlink" href="#launching-a-server-instance" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Launching a server instance</a><a class="headerlink" href="#launching-a-server-instance" title="Permalink to this headline">¶</a></h2>
 <p>To create an AWS instance, you should first run GraphTerm on your
 local (single-user) computer as described in the Quick setup
 instructions. You will be presented with a web form to enter
@@ -387,12 +400,12 @@ edit the command visually, include the <tt class="docutils literal"><span class=
 recalled command line and execute it.)</p>
 </div>
 <div class="section" id="managing-instances">
-<h2><a class="toc-backref" href="#id7">Managing instances</a><a class="headerlink" href="#managing-instances" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Managing instances</a><a class="headerlink" href="#managing-instances" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">ec2list</span></tt> command can be used to list all running instances, and
 also to terminate them (using the <tt class="docutils literal"><span class="pre">kill</span></tt> link).</p>
 </div>
 <div class="section" id="starting-and-stopping-graphterm-server">
-<h2><a class="toc-backref" href="#id8">Starting and stopping GraphTerm server</a><a class="headerlink" href="#starting-and-stopping-graphterm-server" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Starting and stopping GraphTerm server</a><a class="headerlink" href="#starting-and-stopping-graphterm-server" title="Permalink to this headline">¶</a></h2>
 <p>By default, a publicly accessible <tt class="docutils literal"><span class="pre">graphterm</span></tt> server will be
 automatically started on the new instance (and after reboots). Once
 the instance is running, you can access the GraphTerm server at
@@ -425,7 +438,7 @@ server, or equivalent for other linux flavors (<tt class="docutils literal"><spa
 automatically does this for AWS).</p>
 </div>
 <div class="section" id="access-codes">
-<h2><a class="toc-backref" href="#id9">Access codes</a><a class="headerlink" href="#access-codes" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">Access codes</a><a class="headerlink" href="#access-codes" title="Permalink to this headline">¶</a></h2>
 <p>The <em>master access code</em> is stored in the file
 <tt class="docutils literal"><span class="pre">~/.graphterm/&#64;server_gterm_auth.txt</span></tt> in the home directory of the super
 user, and can be used to sign in as any user. (To generate new random
@@ -450,7 +463,7 @@ local <tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> di
 <p>on the server.</p>
 </div>
 <div class="section" id="using-https">
-<h2><a class="toc-backref" href="#id10">Using https</a><a class="headerlink" href="#using-https" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">Using https</a><a class="headerlink" href="#using-https" title="Permalink to this headline">¶</a></h2>
 <p>You can run the <tt class="docutils literal"><span class="pre">gtermserver</span></tt> with the <tt class="docutils literal"><span class="pre">--https</span></tt> option enabled
 for limited security. By default, it will create a self-signed
 certificate stored in <tt class="docutils literal"><span class="pre">~/.graphterm/localhost.pem</span></tt>. Inform users
@@ -460,7 +473,7 @@ certificate signed by an authority, which is often available through
 the domain registrar.)</p>
 </div>
 <div class="section" id="running-a-public-ipython-notebook-server">
-<h2><a class="toc-backref" href="#id11">Running a public IPython Notebook server</a><a class="headerlink" href="#running-a-public-ipython-notebook-server" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id10">Running a public IPython Notebook server</a><a class="headerlink" href="#running-a-public-ipython-notebook-server" title="Permalink to this headline">¶</a></h2>
 <p>Specifying the <tt class="docutils literal"><span class="pre">--nb_server</span></tt> when starting up the GraphTerm server
 enables a menu option allowing each user to run to run the the
 <tt class="docutils literal"><span class="pre">gnbserver</span></tt> command which starts up a public IPython Notebook server
@@ -473,7 +486,7 @@ server, by copying the file <tt class="docutils literal"><span class="pre">~/.gr
 <tt class="docutils literal"><span class="pre">/var/graphterm/localhost.pem</span></tt> to make it accessible to all users.</p>
 </div>
 <div class="section" id="administering-the-virtual-computer-lab">
-<h2><a class="toc-backref" href="#id12">Administering the virtual computer lab</a><a class="headerlink" href="#administering-the-virtual-computer-lab" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id11">Administering the virtual computer lab</a><a class="headerlink" href="#administering-the-virtual-computer-lab" title="Permalink to this headline">¶</a></h2>
 <p>The super user can use the shell script <tt class="docutils literal"><span class="pre">gterm_user_setup</span></tt>
 in <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> to manually configure new users:</p>
 <div class="highlight-python"><pre>sudo gterm_user_setup username activate server_domain user_email</pre>
@@ -492,7 +505,7 @@ terminal using the <tt class="docutils literal"><span class="pre">gframe</span><
 </div>
 </div>
 <div class="section" id="configuring-groups">
-<h2><a class="toc-backref" href="#id13">Configuring groups</a><a class="headerlink" href="#configuring-groups" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Configuring groups</a><a class="headerlink" href="#configuring-groups" title="Permalink to this headline">¶</a></h2>
 <p>In the multiuser authentication mode, user groups can be configured
 the file <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_groups.json</span></tt> containing a JSON formatted
 dictionary, e.g.:</p>
@@ -503,7 +516,7 @@ dictionary, e.g.:</p>
 <p>Users in the same group can see each others&#8217; terminals for collaboration.</p>
 </div>
 <div class="section" id="secondary-cloud-instances">
-<h2><a class="toc-backref" href="#id14">Secondary cloud instances</a><a class="headerlink" href="#secondary-cloud-instances" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id13">Secondary cloud instances</a><a class="headerlink" href="#secondary-cloud-instances" title="Permalink to this headline">¶</a></h2>
 <p>Secondary cloud instances can connect to the GraphTerm server on
 the primary instance using the command:</p>
 <div class="highlight-python"><pre>gtermhost --daemon=start --server_addr=&lt;server_domain_or_address&gt; &lt;secondary_host_name&gt;</pre>

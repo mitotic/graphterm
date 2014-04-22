@@ -137,7 +137,8 @@ How do I specify the format for saving a notebook?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The notebook save file format is determined by the filename extension,
-i.e., ``.ipynb`` or ``.py.gnb.md``.
+i.e., use ``.ipynb`` for compatibility with IPython Notebook or
+``.py.gnb.md`` for Markdown compatibility.
 
 
 Session sharing

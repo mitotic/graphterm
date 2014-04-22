@@ -256,7 +256,7 @@ frame and then type <tt class="docutils literal"><span class="pre">Control-C</sp
 running program in the parent window.</li>
 <li>Are you in the notebook mode? If so, the notebook name will appear
 on the top, with the prefix &#8220;NB&#8221;. To exit the notebook mode, use
-the <em>notebook-quit</em> menu option, or type <em>Control-C</em> and then type
+the <em>notebook/quit</em> menu option, or type <em>Control-C</em> and then type
 <em>Control-D</em> to exit the python interpreter. (Remember to save the
 notebook before exiting, if necessary.)</li>
 <li>Use the <em>terminal/reload</em> menu option or the browser&#8217;s reload
@@ -301,12 +301,14 @@ does not work, you can try the <em>terminal/paste special</em> menu option.</p>
 basic features of the IPython Notebook. You can create simple
 notebooks in GraphTerm, save them as <tt class="docutils literal"><span class="pre">.ipynb</span></tt> files and open them
 later using IPython Notebook, and <em>vice versa</em>.  Unlike the
-self-contained IPython Notebook interface, the GraphTerm notebook
-interface is a wrapper on top of the standard python command line
-interface. You can switch back and forth between the
-command line mode and the notebook mode, as needed, during a single
-session. (For beginning users, it may be simpler to stay in the notebook
-mode all the time, and avoid the the python command line altogether.)</p>
+full-featured IPython Notebook environment, the GraphTerm notebook
+interface is merely a wrapper on top of the standard python command
+line interface. This approach has many limitations, but also has some
+advantages, such as being able to work across SSH login boundaries and
+allowing seamless switching between the python command line and
+notebook mode within the same interactive session. This also means
+that sharing the terminal with collaborators automatically enables
+&#8220;live sharing&#8221; of the GraphTerm notebook activity.</p>
 </div>
 <div class="section" id="opening-python-notebooks-in-graphterm">
 <h2><a class="toc-backref" href="#id8">Opening python notebooks in GraphTerm</a><a class="headerlink" href="#opening-python-notebooks-in-graphterm" title="Permalink to this headline">¶</a></h2>
@@ -321,7 +323,8 @@ notebooks, e,g.:</p>
 <div class="highlight-python"><pre>gopen notebook.ipynb</pre>
 </div>
 <p>Once you have opened a notebook, you can use <em>Control-Enter</em> or
-<em>Shift-Enter</em> key combinations to work with cells.</p>
+<em>Shift-Enter</em> key combinations to work with cells, or use the
+<em>notebook</em> menu options.</p>
 </div>
 <div class="section" id="saving-and-exiting-python-notebooks">
 <h2><a class="toc-backref" href="#id9">Saving and exiting python notebooks</a><a class="headerlink" href="#saving-and-exiting-python-notebooks" title="Permalink to this headline">¶</a></h2>
