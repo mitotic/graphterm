@@ -56,7 +56,7 @@ with multi-user support in 5-10 minutes:
 
  1. Install ``graphterm`` on your computer using the following two commands:
 
-    ``sudo easy_install graphterm``
+    ``sudo pip install graphterm`` OR ``sudo easy_install graphterm``
 
     ``sudo gterm_setup``
 
