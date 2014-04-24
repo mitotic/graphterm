@@ -2742,7 +2742,7 @@ function gtermChatConfirmClose() {
 
 function gtermChatAction(buttonElem) {
     var action = $(buttonElem).attr("name");
-    var text = $("#gterm-chatarea-content").val();
+    var text = $("#gterm-chatarea-content").val().replace(/\xa0/g, " ").replace(/\r\n/g,"\n").replace(/\r/g,"\n").replace(/\n/g," ");
     //console.log("popupButton", action, text);
     if (action == "send")
 	gWebSocket.write([["chat", "", "", text+"\n"]]);
