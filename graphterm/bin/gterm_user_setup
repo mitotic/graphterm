@@ -4,14 +4,16 @@
 #  Note: gterm users are locked and cannot login directly
 # If user is --all, host connection is started for all existing users (excluding ADMIN)
 # To reset user terminals, use "gterm_user_setup --all restart"
+# To delete user, use "gterm_user_setup user delete"
 
 HOME_MNT=/home
 ADMIN=ubuntu
 GRAPHTERM_DIR=.graphterm
 GRAPHTERM_AUTH=_gterm_auth.txt
+GRAPHTERM_MAIL=gterm_email.txt
 
 if [ $# -lt 1 ]; then
-    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart [server_name [(email|-) [gtermhost arguments]]]]"
+    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart/delete [server_name [(email|-) [gtermhost arguments]]]]"
     exit 1
 fi
 
@@ -46,6 +48,7 @@ if [ ! -d $HOME_MNT ]; then
     exit 1
 fi
 
+umask 077
 
 if [ "$username" = "--all" ]; then
     host_list=""
@@ -71,14 +74,14 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
 	    sudo -u $username chmod 0711 $homedir
 
 	    sudo -u $username mkdir $homedir/$GRAPHTERM_DIR
-	    sudo -u $username chmod 0700 $homedir/$GRAPHTERM_DIR
+	    sudo -u $username chmod 0700 $homedir $homedir/$GRAPHTERM_DIR
     
             # Lock user password (i.e., no direct logins allowed)
 	    passwd -l $username
 
             if [ "$email" != "" ]; then
-		sudo -u $username touch $homedir/$GRAPHTERM_DIR/gterm_email.txt
-		sudo -u $username echo "$email" >> $homedir/$GRAPHTERM_DIR/gterm_email.txt
+		sudo -u $username touch $homedir/$GRAPHTERM_DIR/$GRAPHTERM_MAIL
+		sudo -u $username echo "$email" >> $homedir/$GRAPHTERM_DIR/$GRAPHTERM_MAIL
 	    fi
 	fi
     fi
@@ -88,8 +91,12 @@ else
 fi
 
 for host in $host_list; do
-    # Update authentication code for host/user
-    if [ "$host" != "$ADMIN" ] && [ -d $HOME_MNT/$host/$GRAPHTERM_DIR ]; then
+    if [ "$host" != "$ADMIN" ] && [ "$action" = "delete" ]; then
+	read -p "Press Enter to delete user $host:" confirm
+	echo deluser --remove-home $host
+	deluser --remove-home $host
+    elif [ "$host" != "$ADMIN" ] && [ -d $HOME_MNT/$host/$GRAPHTERM_DIR ]; then
+        # Update authentication code for host/user
 	/usr/local/bin/gauth -w --admin=$ADMIN --server=$server $host
         if [ "$server" = "localhost" ]; then
 	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/${host}$GRAPHTERM_AUTH
