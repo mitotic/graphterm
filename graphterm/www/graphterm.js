@@ -1272,7 +1272,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    if (gNotebook && cmd_arg[1]) {
 			gNotebook.note_params.file = cmd_arg[0];
 			gNotebook.note_params.name = cmd_arg[1];
-			$("#menubar-notelabel").text("NB: "+gNotebook.note_params.name)
+			var nb_label = "NB: "+gNotebook.note_params.name;
+			if (!gNotebook.note_params.autosave)
+			    nb_label += " (no autosave)";
+			$("#menubar-notelabel").text(nb_label)
 		    }
 		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[2] || "saved"));
 
@@ -1496,6 +1499,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		    if (!gNotebook) {
 			gNotebook = new GTNotebook(cmd_arg[0]);
 			$("#terminal").addClass("gterm-notebook");
+			if (cmd_arg[1])
+			    alert(cmd_arg[1]);
 		    }
 
 		} else if (cmd_type == "note_close") {
@@ -4083,7 +4088,10 @@ function GTNotebook(params) {
     this.splitting = false;
     this.closed = false;
     this.poll_intervalID = window.setInterval(bind_method(this, this.poll), POLL_SEC*1000);
-    $("#menubar-notelabel").text("NB: "+this.note_params.name);
+    var nb_label = "NB: "+this.note_params.name;
+    if (!this.note_params.autosave)
+	nb_label += " (no autosave)";
+    $("#menubar-notelabel").text(nb_label);
 }
 
 GTNotebook.prototype.close = function() {
@@ -4510,7 +4518,7 @@ GTNotebook.prototype.poll = function(force) {
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     if (textElem.length != 1)
 	return;
-    if (gParams.nb_autosave && !this.autosaved && (cur_time - this.lastUpdateTime) > gParams.nb_autosave) {
+    if (gParams.nb_autosave && this.note_params.autosave && !this.autosaved && (cur_time - this.lastUpdateTime) > gParams.nb_autosave) {
 	this.lastUpdateTime = cur_time;
 	this.autosaved = true;
 	this.saveNotebook("", {auto_save: true});
@@ -4519,7 +4527,7 @@ GTNotebook.prototype.poll = function(force) {
     var text = textElem.val();
     if (this.lastTextValue === text)
 	return;
-    if (gParams.nb_autosave && this.autosaved && (cur_time > this.lastUpdateTime) ) {
+    if (gParams.nb_autosave && this.note_params.autosave && this.autosaved && (cur_time > this.lastUpdateTime) ) {
 	this.autosaved = false;
 	$("#menubar-notelabel").text("NB: "+this.note_params.name);
     }

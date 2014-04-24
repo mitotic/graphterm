@@ -1077,9 +1077,21 @@ class Terminal(object):
         note_fill = prefix.endswith("-fill")
         if note_fill:
             filepath = os.path.join(os.path.basename(filepath), prefix+"ed"+note_tail)
+
+        status_msg = ""
+        fullname = os.path.expanduser(filepath)
+        fullpath = fullname if fullname.startswith("/") else note_dir+"/"+fullname
+        if os.path.exists(fullpath):
+            writable = os.access(fullpath, os.W_OK)
+        else:
+            writable = os.access(os.path.dirname(fullpath), os.W_OK | os.X_OK)
+            if not writable:
+                status_msg = "You will not be able to save the notebook in this directory - autosave is disabled"
+        
         self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
-                            "shell": note_shell, "fill": note_fill, "mod_offset": self.note_mod_offset}
-        self.screen_callback(self.term_name, "", "note_open", [self.note_params])
+                            "shell": note_shell, "fill": note_fill, "mod_offset": self.note_mod_offset,
+                            "autosave": writable}
+        self.screen_callback(self.term_name, "", "note_open", [self.note_params, status_msg])
         if content:
             if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
                 self.read_ipynb(content)
@@ -1172,7 +1184,7 @@ class Terminal(object):
             self.update_mod_offset()
 
         if (alt_save or auto_save) and self.note_save_time >= self.note_update_time:
-                return False
+            return False
 
         filepath = filepath or self.note_params["file"]
         fullname = os.path.expanduser(filepath)
@@ -1202,11 +1214,21 @@ class Terminal(object):
         elif not fext:
             fullpath += ".gnb.md"
             fext = ".md"
+        if os.path.exists(fullpath):
+            writable = os.access(fullpath, os.W_OK)
+        else:
+            writable = os.access(os.path.dirname(fullpath), os.W_OK | os.X_OK)
+
+        if auto_save and not writable:
+            return False
+
         update_filename = False
         if self.note_params["name"] != fname:
             self.note_params["name"] = fname
             self.note_params["file"] = fullpath
+            self.note_params["autosave"] = writable  # NOTE: Not updated in browser
             update_filename = True
+
         save_fill = os.path.splitext(fname)[0].endswith("-fill")
         fig_suffix = safe_filename(fname)
         curly_fence = fname.endswith(".R") or self.note_params["command"] == "R"
