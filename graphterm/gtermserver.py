@@ -615,7 +615,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         else:
                             term_list.append( [tem_name, True, False, len(self._watch_dict[path]), 0])
                     term_list.sort()
-                    allow_new = self._auth_type <= self.LOCAL_AUTH or (user and user == host) or (is_super_user and host == "local")
+                    allow_new = (self._auth_type <= self.LOCAL_AUTH) or (is_super_user and host == "local") or ((user and user == host) and (len(term_list) < Server_settings["max_terminals"]))
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
                     self.close()
                     return
@@ -1096,10 +1096,11 @@ def kill_remote(path, user):
     if path == "*":
         TerminalConnection.shutdown_all()
         return
-    for ws_id in GTSocket.get_path_set(path):
+    for ws_id in set(GTSocket.get_path_set(path)):
         ws = GTSocket.get_websocket(ws_id)
         if ws:
             ws.write_json([["body", 'CLOSED TERMINAL<p><a href="/">GraphTerm Home</a>']])
+            ws.on_close()
             ws.close()
     host, term_name = path.split("/")
     if term_name == "*": term_name = ""
@@ -1681,7 +1682,7 @@ def run_server(options, args):
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
                        "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
                        "nogoog_auth": options.nogoog_auth, "user_groups": membership_dict,
-                       "gtermhost_args": gtermhost_args}
+                       "gtermhost_args": gtermhost_args, "max_terminals": 10}
 
     Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "no_pyindent": options.no_pyindent, "lc_export": options.lc_export},
                      "term_type": options.term_type, "term_encoding": options.term_encoding,

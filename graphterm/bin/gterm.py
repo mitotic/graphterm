@@ -1178,6 +1178,7 @@ def main():
     elif read_code:
         auth_code = undashify(getpass.getpass("Access code: "))
     else:
+        tem_port = 0
         try:
             # Read user access code
             auth_code, tem_port = read_auth_code(user=options.user, server=server)

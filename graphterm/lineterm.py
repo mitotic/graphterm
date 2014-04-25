@@ -1004,8 +1004,10 @@ class Terminal(object):
         self.note_count += 1
         note_shell = bool(self.active_rows and self.main_screen.meta[self.active_rows-1]) # At shell prompt
         note_dir = self.current_dir
+        note_lang = ""
         if note_shell:
             note_command = "bash"
+            note_lang = "bash"
         elif self.command_path:
             note_command = os.path.basename(self.command_path)
         else:
@@ -1069,11 +1071,20 @@ class Terminal(object):
                 filepath += ".gnb.md"
 
         note_name, note_tail = os.path.splitext(os.path.basename(filepath))
+        if not note_lang:
+            if note_command in gterm.EXTENSIONS:
+                note_lang = gterm.LANGUAGES[note_command]
+            elif note_tail == ".ipynb" or note_name.endswith(".ipynb"):
+                note_lang = "python"
+
         if note_name.endswith(".gnb") or note_name.endswith(".ipynb"):
             note_name, ext = os.path.splitext(note_name)
             note_tail = ext + note_tail
         prefix, ext = os.path.splitext(note_name)
+        if not note_lang and ext and ext[1:] in gterm.EXTN2LANG:
+            note_lang = gterm.EXTN2LANG[ext[1:]]
         note_tail = ext + note_tail
+
         note_fill = prefix.endswith("-fill")
         if note_fill:
             filepath = os.path.join(os.path.basename(filepath), prefix+"ed"+note_tail)
@@ -1089,7 +1100,7 @@ class Terminal(object):
                 status_msg = "You will not be able to save the notebook in this directory - autosave is disabled"
         
         self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
-                            "shell": note_shell, "fill": note_fill, "mod_offset": self.note_mod_offset,
+                            "lang": note_lang, "shell": note_shell, "fill": note_fill, "mod_offset": self.note_mod_offset,
                             "autosave": writable}
         self.screen_callback(self.term_name, "", "note_open", [self.note_params, status_msg])
         if content:
@@ -1190,13 +1201,6 @@ class Terminal(object):
         fullname = os.path.expanduser(filepath)
         fullpath = fullname if fullname.startswith("/") else self.note_params["dir"]+"/"+fullname
         fname, fext = os.path.splitext(os.path.basename(fullpath))
-        if alt_save:
-            # Saving to alternate file (do not update save time)
-            pathdir, pathname = os.path.split(fullpath)
-            fullpath = os.path.join(pathdir, "_SAVE_"+pathname)
-        else:
-            # Saving to notebook file
-            self.note_save_time = mod_time or time.time()
 
         ipy_raw = False
         if fext in (".ipynb", ".json"):
@@ -1221,6 +1225,14 @@ class Terminal(object):
 
         if auto_save and not writable:
             return False
+
+        if alt_save:
+            # Saving to alternate file (do not update save time)
+            pathdir, pathname = os.path.split(fullpath)
+            fullpath = os.path.join(pathdir, "_SAVE_"+pathname)
+        else:
+            # Saving to notebook file
+            self.note_save_time = mod_time or time.time()
 
         update_filename = False
         if self.note_params["name"] != fname:
@@ -1893,7 +1905,7 @@ class Terminal(object):
 
         input_lines = cell_lines[:]   # Must be a copy as it is modified later
 
-        if self.note_params["command"] in ("ipython", "python") and not self.term_params.get("no_pyindent"):
+        if not self.term_params.get("no_pyindent") and self.note_params["lang"] == "python":
             # For python, need to insert blank lines before reverting back to no indentation
             tem_lines = []
             indent = 0
