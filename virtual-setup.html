@@ -30,7 +30,7 @@
           href="_static/opensearch.xml"/>
     <link rel="top" title="GraphTerm 0.51.1 documentation" href="index.html" />
     <link rel="next" title="Using the GraphTerm Virtual Computer Lab" href="virtual-lab.html" />
-    <link rel="prev" title="Implementation" href="implementation.html" />
+    <link rel="prev" title="Getting started with GraphTerm" href="start.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -101,7 +101,7 @@ code.mindmeldr.com
           <a href="virtual-lab.html" title="Using the GraphTerm Virtual Computer Lab"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="implementation.html" title="Implementation"
+          <a href="start.html" title="Getting started with GraphTerm"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
@@ -131,8 +131,8 @@ code.mindmeldr.com
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="implementation.html"
-                        title="previous chapter">Implementation</a></p>
+  <p class="topless"><a href="start.html"
+                        title="previous chapter">Getting started with GraphTerm</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="virtual-lab.html"
                         title="next chapter">Using the GraphTerm Virtual Computer Lab</a></p>
@@ -228,7 +228,7 @@ with multi-user support in 5-10 minutes:</p>
 <p>(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command to
 be able to use the GraphTerm toolchain.)</p>
 </li>
-<li><p class="first">If this computer is a pristine Linux/Mac server where you want to
+<li><p class="first">If this computer is a pristine Linux server where you want to
 run the multiuser GraphTerm server with automatic new user
 creation, configure an user (named, say, <tt class="docutils literal"><span class="pre">ubuntu</span></tt>) with
 <a class="reference external" href="http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password">password-less</a>
@@ -239,7 +239,7 @@ GraphTerm server, and then <em>skip to Step 9</em>:</p>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gtermserver</span> <span class="pre">--daemon=start</span> <span class="pre">--widget_port=-1</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--auto_users</span> <span class="pre">--super_users=ubuntu</span> <span class="pre">--port=80</span> <span class="pre">--host=server_domain_name_or_ip</span></tt></div></blockquote>
 <ol class="arabic" start="3">
-<li><p class="first">If you do not already have a server, you should obtain an <a class="reference external" href="http://aws.amazon.com/">AWS</a> account as
+<li><p class="first">If you do not already have a server, you can obtain an <a class="reference external" href="http://aws.amazon.com/">AWS</a> account as
 <a class="reference external" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html">described here</a>.
 The AWS account will be linked to your standard Amazon account.</p>
 </li>
@@ -267,47 +267,27 @@ generated command line should look something like this:</p>
 <li><p class="first">After the new AWS Linux server has completed configuration, which
 can take several minutes, its IP address and <em>server domain name</em>
 will be displayed. If all went well, and you provided your GMail
-address, you should be able to login to the server using the URL
-<tt class="docutils literal"><span class="pre">http://server_domain_name</span></tt> and username <tt class="docutils literal"><span class="pre">ubuntu</span></tt>, and <em>skip
-to Step 14.</em></p>
+address, <em>skip to Step 10.</em></p>
 </li>
-<li><p class="first">If something went wrong, or you are not using Google
-Authentication, type the following command using the new domain name to
-login to the password-less super user account <tt class="docutils literal"><span class="pre">ubuntu</span></tt>:</p>
+<li><p class="first">If you are not using Google Authentication, or something went
+wrong with the AWS setup, type the following command using the new
+domain name to login to the password-less super user account <tt class="docutils literal"><span class="pre">ubuntu</span></tt>:</p>
 <p><tt class="docutils literal"><span class="pre">ec2ssh</span> <span class="pre">ubuntu&#64;server_domain_name</span></tt></p>
-</li>
-<li><p class="first">Run the following command on the server to verify that <tt class="docutils literal"><span class="pre">gtermserver</span></tt> is running:</p>
-</li>
-</ol>
-<blockquote>
-<div><p><tt class="docutils literal"><span class="pre">ps</span> <span class="pre">-ef</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">gtermserver</span></tt></p>
+<p>Run the following command on the server to verify that <tt class="docutils literal"><span class="pre">gtermserver</span></tt> is running:</p>
+<p><tt class="docutils literal"><span class="pre">ps</span> <span class="pre">-ef</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">gtermserver</span></tt></p>
 <p>If not, and if using AWS, check for errors in the setup procedure by typing <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">tail</span> <span class="pre">/root/ec2launch.log</span></tt></p>
-</div></blockquote>
-<ol class="arabic simple" start="10">
-<li>Run the following command on the server to display the <em>master access code</em>:</li>
+</li>
+<li><p class="first">Run the following command on the server to display the <em>master access code</em>:</p>
+</li>
 </ol>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)</p>
 </div></blockquote>
-<ol class="arabic simple" start="11">
+<ol class="arabic simple" start="10">
 <li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem
 window on the server, with the super user name (<tt class="docutils literal"><span class="pre">ubuntu</span></tt> in our
-case) and the <em>master access code</em></li>
-<li>Optionally, use the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> to
-download the executable script <tt class="docutils literal"><span class="pre">gterm.py</span></tt> to your local computer
-and save the master access code in the local file
-<tt class="docutils literal"><span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt>. Then use the
-following local command to easily create remote graphterm windows:</li>
-</ol>
-<blockquote>
-<div><tt class="docutils literal"><span class="pre">gterm.py</span> <span class="pre">-u</span> <span class="pre">ubuntu</span> <span class="pre">--browser=Firefox</span> <span class="pre">http://server_domain_name</span></tt></div></blockquote>
-<ol class="arabic simple" start="13">
-<li>Alternatively, if you wish to use your <em>GMail</em> account to
-authenticate, enter your <em>GMail</em> address in the file
-<tt class="docutils literal"><span class="pre">~/.graphterm/gterm_email.txt</span></tt> on the server. (If you selected
-the <tt class="docutils literal"><span class="pre">gmail_addr</span></tt> option during <tt class="docutils literal"><span class="pre">ec2launch</span></tt>, this file would
-already have been created.)</li>
+case) and using either <em>Google Authentication</em> or the <em>master access code</em></li>
 <li>Run the following command in the server graphterm window to display the group access code which should be entered by new users:</li>
 </ol>
 <blockquote>
@@ -315,11 +295,31 @@ already have been created.)</li>
 <p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
 all lab users.</p>
 </div></blockquote>
-<ol class="arabic simple" start="15">
+<ol class="arabic simple" start="12">
 <li>If using AWS, run the following command on your local graphterm window to list and/or kill your instances:</li>
 </ol>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">ec2list</span></tt></div></blockquote>
+</div></blockquote>
+<p><em>Optional steps</em></p>
+<blockquote>
+<div><ul>
+<li><p class="first">You can se the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt>
+to download the executable script <tt class="docutils literal"><span class="pre">gterm.py</span></tt> to your local
+computer and save the master access code in the local file
+<tt class="docutils literal"><span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt>. Then use the
+following local command to quickly create remote graphterm windows:</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">gterm.py</span> <span class="pre">-u</span> <span class="pre">ubuntu</span> <span class="pre">--browser=Firefox</span> <span class="pre">http://server_domain_name</span></tt></p>
+</div></blockquote>
+</li>
+<li><p class="first">After having set up the server, if you later decide to use your
+<em>GMail</em> account to authenticate, enter your <em>GMail</em> address in the
+file <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_email.txt</span></tt> on the server. (If you selected
+the <tt class="docutils literal"><span class="pre">gmail_addr</span></tt> option during <tt class="docutils literal"><span class="pre">ec2launch</span></tt>, this file would
+already have been created.)</p>
+</li>
+</ul>
 </div></blockquote>
 </div>
 <div class="section" id="domain-name-and-ip-address">
@@ -542,7 +542,7 @@ connect secondary cloud instances.</p>
           <a href="virtual-lab.html" title="Using the GraphTerm Virtual Computer Lab"
              >next</a> |</li>
         <li class="right" >
-          <a href="implementation.html" title="Implementation"
+          <a href="start.html" title="Getting started with GraphTerm"
              >previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>

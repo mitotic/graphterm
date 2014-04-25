@@ -9,14 +9,14 @@ Documentation contents
    contact
    README
    start
-   troubleshooting
-   implementation
    virtual-setup
    virtual-lab
+   troubleshooting
    screenshots
    tutorials
    talks
    videos
+   implementation
    advanced
    release-notes
    PyPI Package Index (for downloading and installing) <http://pypi.python.org/pypi/graphterm>

@@ -79,6 +79,10 @@ Use the ``-h`` option to display help information for these commands,
 and read the
 `UsingGraphicalFeatures tutorial <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_ for usage examples.
 
+If you wish to use GraphTerm to set up up a virtual computer lab for
+multiple users, see the section :doc:`virtual-setup`. The rest of this
+section focuses mainly on GraphTerm usage for single users.
+
 .. index:: graphterm-aware commands, toolchain
 
 .. _toolchain:
