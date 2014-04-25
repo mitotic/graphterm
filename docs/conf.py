@@ -19,7 +19,7 @@ exclude_patterns = ['_build']
 
 project = 'GraphTerm'
 copyright = '2012-2014 R. Saravanan'
-version = "0.51.0"
+version = "0.51.1"
 release = version
 if about:
     version = about.version

@@ -134,21 +134,46 @@ the Mac and *Control-V* on other systems). If the keyboard command
 does not work, you can try the *terminal/paste special* menu option.
 
 
-GraphTerm notebook interface
+GraphTerm Notebook interface
 --------------------------------------------------------------------------------------------
 
-GraphTerm provides a *lightweight* notebook interface that mimics the
-basic features of the IPython Notebook. You can create simple
-notebooks in GraphTerm, save them as ``.ipynb`` files and open them
-later using IPython Notebook, and *vice versa*.  Unlike the
-full-featured IPython Notebook environment, the GraphTerm notebook
-interface is merely a wrapper on top of the standard python command
-line interface. This approach has many limitations, but also has some
-advantages, such as being able to work across SSH login boundaries and
-allowing seamless switching between the python command line and
-notebook mode within the same interactive session. This also means
-that sharing the terminal with collaborators automatically enables
-"live sharing" of the GraphTerm notebook activity.
+Two ways to use the notebook interface are supported in the virtual
+computer lab:
+
+ 1. Using the *lightweight* notebook interface built into the
+ remote GraphTerm terminal.
+
+ 2. Running the IPython Notebook server on the remote computer and
+ accessing it using a browser on your local computer (see next section
+ for detailed instructions).
+
+The GraphTerm notebook interface is implemented as a wrapper on top of
+the standard python command line interface. It provides basic notebook
+functionality, but is not a full-featured environment like IPython
+Notebook. It does support the same notebook format, which means that
+you can create simple notebooks in GraphTerm, save them as ``.ipynb``
+files and open them later using IPython Notebook, and *vice versa*.
+The GraphTerm notebook interface is integrated into the terminal,
+which allow seamless switching between the python command line and
+notebook mode, as well as "live sharing" of notebooks across shared
+terminals.
+
+
+Running IPython Notebook server
+--------------------------------------------------------------------------------------------
+
+To access the full features of the IPython Notebook, you can run your
+own password-proteced public IPython Notebook server on the remote
+machine using the ``gnbserver`` command (*if the instructor has
+enabled this option*). You can then access it using your local browser,
+with an URL of the form ``https://hostname.domain:port``, where
+``port`` is the port number output by the ``gnbserver`` command. The
+notebook password is the same as the access code for your user
+account.
+
+*Note:* If each user is running their own copy of the IPython Notebook
+server, it can degrade performance on a shared computer. Please
+consider shutting down the server when you are not using it.
 
 
 Opening python notebooks in GraphTerm
@@ -168,9 +193,15 @@ Alternatively, you can also the ``gopen`` command::
 
     gopen notebook.ipynb
 
-Once you have opened a notebook, you can use *Control-Enter* or
-*Shift-Enter* key combinations to work with cells, or use the
-*notebook* menu options.
+Once you have opened a notebook, you can enter code in the notebook
+cells.  Type either *Control-Enter* to execute code in-place, or
+*Shift-Enter* to execute and move to the next cell (creating a new
+cell, if necessary). You can also use the *run* button on the top
+menu, which behaves like *Shift-Enter* but does not create new
+cells. Other notebook operations can be carried out using the
+*notebook* menu or the keyboard shortcuts listed under *help/notebook
+shortcuts*.
+
 
 Saving and exiting python notebooks
 --------------------------------------------------------------------------------------------
@@ -186,21 +217,6 @@ command::
 
     >>> exit()
 
-
-Running IPython Notebook server
---------------------------------------------------------------------------------------------
-
-If your instructor has permitted it, you can run your own
-password-proteced public IPython Notebook server on the remote machine
-using the ``gnbserver`` command. You can access it using your browser,
-with an URL of the form ``https://hostname.domain:port``, where
-``port`` is the port number output by the ``gnbserver`` command. The
-notebook password is the same as the access code for your user
-account.
-
-*Note:* If each user is running their own copy of the IPython Notebook
-server, it can degrade performance on a shared computer. Please
-shut down the server when you are done using it.
 
 
 Downloading files

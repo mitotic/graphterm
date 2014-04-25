@@ -79,6 +79,9 @@ if filepath:
                 print >> sys.stderr, "Please create directory %s" % head
                 sys.exit(1)
 
+if not options.quiet and not options.stdout:
+    print >> sys.stderr, "Uploading file..."
+
 params = {"display": "block", "current_directory": Work_dir}
 html_headers = {"x_gterm_response": "upload_file",
                 "x_gterm_parameters": params
