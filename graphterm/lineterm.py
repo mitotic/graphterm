@@ -1916,12 +1916,12 @@ class Terminal(object):
                         line = line[len(prompt):]
                         break
                 unindented_line = line.lstrip()
-                if not unindented_line:
-                    # Blank line
+                if not unindented_line or unindented_line.startswith("#"):
+                    # Blank or comment line
                     if prev_blank:
                         # Force indent
-                        tem_line = "".join([" "]*indent)
-                        if self.note_params["command"] == "ipython":
+                        tem_line = "".join([" "]*indent) + unindented_line
+                        if not unindented_line and self.note_params["command"] == "ipython":
                             tem_line += "#"
                         elif not tem_line:
                             tem_line = " "
@@ -2987,12 +2987,12 @@ class Terminal(object):
                         if cmd_text.startswith("local/"):
                             cmd_text = cmd_text[len("local"):]
                         elif not cmd_text.startswith("/"):
-                            raise Exception("Command '%s' not valid" % text)
+                            raise gterm.MsgException("Command '%s' not valid" % text)
                         validated = tail and tail == ("hmac="+gterm.file_hmac(cmd_text, self.shared_secret))
                     if not pre_line and not validated and not which(cmd_text, add_path=[Exec_path]):
                         # Check for command in path only if no text in line
                         # NOTE: Can use blank space in command line to disable this check
-                        raise Exception("Command '%s' not found" % text)
+                        raise gterm.MsgException("Command '%s' not found" % text)
                     command_prefix = shell_quote(cmd_text)
                     text = ""
                 if command_prefix and command_prefix[-1] != " ":

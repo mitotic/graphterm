@@ -124,6 +124,11 @@ APP_PREFS_FILENAME = "gterm_prefs.json"
 APP_SECRET_FILENAME = "gterm_secret"
 SIGN_SEP = "|"
 
+class MsgException(Exception):
+    """ Exception for sending error messages to user
+    """
+    pass
+
 def get_app_dir(user=""):
     return os.path.join(os.path.expanduser("~"+user), APP_DIRNAME)
     

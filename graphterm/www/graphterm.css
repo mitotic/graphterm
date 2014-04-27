@@ -62,7 +62,8 @@ body.ipadscreen  {
 
 .pagelet-notebook .gterm-notecell-container .gterm-notecell-text,
  .pagelet-notebook .gterm-notecell-container .gterm-notecell-scroll,
- .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown {
+ .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown,
+ .pagelet-notebook .gterm-notecell-container .gterm-notecell-screen pre {
     font-size: 14px;
 }
 

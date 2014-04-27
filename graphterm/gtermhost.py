@@ -585,9 +585,12 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     raise Exception("Invalid action: "+action)
             self.remote_response(term_name, "", resp_list);
         except Exception, excp:
-            import traceback
-            errmsg = "%s\n%s" % (excp, traceback.format_exc())
-            logging.error("TerminalClient.remote_request: %s", errmsg)
+            if isinstance(excp, gterm.MsgException):
+                errmsg = str(excp)
+            else:
+                import traceback
+                errmsg = "%s\n%s" % (excp, traceback.format_exc())
+                logging.error("TerminalClient.remote_request: %s", errmsg)
             self.remote_response(term_name, "", [["errmsg", errmsg]])
             ##self.shutdown()
 
