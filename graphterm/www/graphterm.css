@@ -58,6 +58,46 @@ body.ipadscreen  {
     /* font-weight: bold; */
 }
 
+/* Terminal colors */
+.fgcolor1, span.fgcolor1, pre.fgcolor1 {
+    color: #bb0000;
+}
+.fgcolor2, span.fgcolor2, pre.fgcolor2 {
+    color: green;
+}
+.fgcolor3, span.fgcolor3, pre.fgcolor3 {
+    color: goldenrod;
+}
+.fgcolor4, span.fgcolor4, pre.fgcolor4 {
+    color: royalblue;
+}
+.fgcolor5, span.fgcolor5, pre.fgcolor5 {
+    color: #dd00dd;
+}
+.fgcolor6, span.fgcolor6, pre.fgcolor6 {
+    color: darkcyan;
+}
+
+.bgcolor1, span.bgcolor1, pre.bgcolor1 {
+    background-color: #bb0000;
+}
+.bgcolor2, span.bgcolor2, pre.bgcolor2 {
+    background-color: green;
+}
+.bgcolor3, span.bgcolor3, pre.bgcolor3 {
+    background-color: goldenrod;
+}
+.bgcolor4, span.bgcolor4, pre.bgcolor4 {
+    background-color: royalblue;
+}
+.bgcolor5, span.bgcolor5, pre.bgcolor5 {
+    background-color: #dd00dd;
+}
+.bgcolor6, span.bgcolor6, pre.bgcolor6 {
+    background-color: darkcyan;
+}
+
+
 /* Notebook text styles */
 
 .pagelet-notebook .gterm-notecell-container .gterm-notecell-text,

@@ -785,6 +785,21 @@ class ScreenBuf(object):
 
         return full_update, update_rows, update_scroll
 
+    def dumpmarkup(self, data, trim=False):
+        """ Returns html markup of line with styles, or None, if no markup is required (plain text line)
+        NOTE: This operation should perhaps be carried out in graphterm.js?
+        """
+        marked_up = False
+        html = ""
+        for style_list, text in self.dumprichtext(data, trim=trim):
+            escaped_text = cgi.escape(text)
+            if style_list:
+                marked_up = True
+                html += '<span class="'+" ".join(style_list)+'">'+escaped_text+'</span>'
+            else:
+                html += escaped_text
+        return html if marked_up else None
+        
     def dumprichtext(self, data, trim=False):
         """Returns [(style_list, utf8str), ...] for line data"""
         if all((x >> UNI24) == self.default_style for x in data):
@@ -811,6 +826,12 @@ class ScreenBuf(object):
                     style_list.append("bold")
                 if (span_style & 0x77) == self.inverse_style:
                     style_list.append("inverse")
+                fg_color = span_style & 0x7
+                bg_color = (span_style >> STYLE4) & 0x7
+                if fg_color > 0 and fg_color < 7:
+                    style_list.append("fgcolor%d" % fg_color)
+                if bg_color > 0 and bg_color < 7:
+                    style_list.append("bgcolor%d" % bg_color)
             span += unichr(ucode)
         cspan = uclean(span, trim=trim, encoded=True)
         if cspan:
@@ -2045,7 +2066,7 @@ class Terminal(object):
             if self.note_cells:
                 self.note_screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta, offset=offset)
             else:
-                self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta, offset=offset)
+                self.screen_buf.scroll_buf_up(dump(row, trim=True, encoded=True), meta, offset=offset, markup=self.screen_buf.dumpmarkup(row, trim=True))
             cursor_y += 1
 
         # Scroll and zero rest of screen
@@ -2211,6 +2232,9 @@ class Terminal(object):
                 self.cursor_y = self.scroll_bot
             else:
                 self.cursor_y = r
+
+            # Clear foreground/background colors
+            self.current_nul = self.current_nul & 0x88ffffff
 
             if not self.alt_mode:
                 self.active_rows = max(self.cursor_y+1, self.active_rows)

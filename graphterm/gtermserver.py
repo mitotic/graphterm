@@ -74,7 +74,7 @@ Check_state_cookie = False             # Controls checking of state cookie for f
 
 Cache_files = False                     # Controls caching of files (blobs are always cached)
 
-MAX_COOKIE_STATES = 100
+MAX_COOKIE_STATES = 300
 MAX_WEBCASTS = 500
 MAX_RECURSION = 10
 
@@ -337,7 +337,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if not state_id:
             return authorized
         if len(cls._cookie_states) >= MAX_COOKIE_STATES:
-            cls._cookie_states.pop(last=False)
+            cls._cookie_states.popitem(last=False)
         cls._cookie_states[state_id] = authorized
         return authorized
 
@@ -956,7 +956,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if self.remote_path in self._webcast_paths:
                                 del self._webcast_paths[self.remote_path]
                             if len(self._webcast_paths) > MAX_WEBCASTS:
-                                self._webcast_paths.pop(last=False)
+                                self._webcast_paths.popitem(last=False)
                             if value:
                                 # Initiate webcast
                                 if self._auth_type <= self.LOCAL_AUTH or (Server_settings["allow_share"] or
