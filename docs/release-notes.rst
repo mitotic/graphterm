@@ -3,6 +3,11 @@ Release Notes
 .. contents::
 
 
+0.52.0 (April 28, 2014)
+---------------------------------------------------------------------------------
+
+ - Fixes for user permissions; indentation handling in notebook cells; autosave; killing terminals
+
 0.51.1 (April 22, 2014)
 ---------------------------------------------------------------------------------
 
