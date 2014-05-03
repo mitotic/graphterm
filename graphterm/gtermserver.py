@@ -9,6 +9,7 @@ import collections
 import datetime
 import email.utils
 import functools
+import getpass
 import hashlib
 import hmac
 import logging
@@ -393,6 +394,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     eauth = query_data.get("eauth", [""])[0]
                     tem_email = query_data.get("email", [""])[0].lower()
 
+                    if user and (user == gterm.LOCAL_HOST or not gtermhost.USER_RE.match(user)):
+                        # Username "local" is not allowed to prevent localhost access
+                        self.write_json([["abort", "Invalid username '%s'; must start with letter and include only letters/digits/hyphen" % user]])
+                        self.close()
+                        return
+
                     if cauth and eauth and gterm.EMAIL_RE.match(tem_email) and self._auth_type == self.MULTI_AUTH and not Server_settings["nogoog_auth"]:
                         # Confirm email authentication
                         if eauth == gterm.compute_hmac(gterm.user_hmac(self._auth_code, tem_email, key_version="email"), cauth):
@@ -415,12 +422,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         user = host
                                         auth_email = tem_email
                                         break
-
-                    if user and (user == gterm.LOCAL_HOST or not gtermhost.USER_RE.match(user)):
-                        # Username "local" is not allowed to prevent localhost access
-                        self.write_json([["abort", "Invalid username '%s'; must start with letter and include only letters/digits/hyphen" % user]])
-                        self.close()
-                        return
 
                     if not user:
                         if not code and self.req_path in self._webcast_paths:
@@ -469,7 +470,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 validated = True
                                 new_user_code = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
 
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"], new_user_email or "-"] + Server_settings["gtermhost_args"]
+                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"], new_user_email or "-", Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
                                 std_out, std_err = gterm.command_output(cmd_args, timeout=15)
                                 if std_err:
                                     logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
@@ -598,11 +599,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
+                session_names = [k for k in host_connect.term_dict if k != gtermhost.OSHELL_NAME or is_super_user]
                 if len(path_comps) < 2 or not path_comps[1]:
                     term_list = []
-                    for tem_name in host_connect.term_dict:
-                        if not is_super_user and tem_name == gtermhost.OSHELL_NAME:
-                            continue
+                    for tem_name in session_names:
                         path = host + "/" + tem_name
                         tparams = self.get_terminal_params(path)
                         if tparams:
@@ -621,6 +621,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
                 term_name = path_comps[1].lower()
+                if not gtermhost.SESSION_RE.match(term_name):
+                    self.write_json([["abort", "Invalid characters in terminal name"]])
+                    self.close()
+                    return
+
+                if not is_super_user and (self._auth_type > self.LOCAL_AUTH) and (term_name == "new" or term_name not in session_names) and (len(session_names) >= Server_settings["max_terminals"]):
+                    self.write_json([["abort", "Too many terminals; close or reuse sessions"]])
+                    self.close()
+                    return
+
                 if term_name == "new" or not qauth:
                     term_name = host_connect.remote_terminal_update(parent=option) if term_name == "new" else term_name
                     redir_url = "/"+host+"/"+term_name+"/"
@@ -632,11 +642,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
                 
-                if not gtermhost.SESSION_RE.match(term_name):
-                    self.write_json([["abort", "Invalid characters in terminal name"]])
-                    self.close()
-                    return
-
                 term_chat = term_name in host_connect.allow_chat
 
             path = host + "/" + term_name
@@ -1682,7 +1687,8 @@ def run_server(options, args):
                        "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
                        "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
                        "nogoog_auth": options.nogoog_auth, "user_groups": membership_dict,
-                       "gtermhost_args": gtermhost_args, "max_terminals": 10}
+                       "users_dir": options.users_dir, "gtermhost_args": gtermhost_args,
+                       "max_terminals": options.max_terminals}
 
     Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "no_pyindent": options.no_pyindent, "lc_export": options.lc_export},
                      "term_type": options.term_type, "term_encoding": options.term_encoding,
@@ -1850,7 +1856,7 @@ def run_server(options, args):
 
     if options.auto_users:
         action = "activate" if options.no_reset else "restart"
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host, "-"] + Server_settings["gtermhost_args"]
+        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host, "-", Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
         std_out, std_err = gterm.command_output(cmd_args, timeout=120)
         if std_err:
             logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
@@ -1921,11 +1927,16 @@ def run_server(options, args):
     IO_loop.add_callback(stop_server)
 
 def main():
-    from optparse import OptionParser
-
     config_file = os.path.join(gterm.App_dir, "gtermserver.cfg")
     if not os.path.isfile(config_file):
         config_file = None
+
+    if getpass.getuser() == "root":
+        default_users_dir = "/home"
+    else:
+        default_users_dir = os.path.dirname(os.path.expanduser("~"))
+        if default_users_dir == "/":
+            default_users_dir = "/home"
 
     usage = "usage: gtermserver [-h ... options]"
     parser = optconfig.OptConfig(usage=usage, config_file=config_file)
@@ -1987,6 +1998,8 @@ def main():
                       help="Allow iframe embedding of terminal on other domains (possibly insecure)")
     parser.add_option("allow_share", default=False, opt_type="flag",
                       help="Allow sharing of terminals between multiple users")
+    parser.add_option("users_dir", default=default_users_dir,
+                      help="Users home directory (default: %s)" % default_users_dir)
     parser.add_option("auto_users", default=False, opt_type="flag",
                       help="Allow automatic user creation")
     parser.add_option("no_reset", default=False, opt_type="flag",
@@ -2003,6 +2016,8 @@ def main():
                       help="Terminal character encoding (utf-8/latin-1/...)")
     parser.add_option("term_settings", default="{}",
                       help="Terminal settings (JSON)")
+    parser.add_option("max_terminals", default=10,
+                      help="maximum no. of terminals per user (default: 10)", opt_type="int")
     parser.add_option("lterm_logfile", default="",
                       help="Lineterm logfile")
     parser.add_option("logging", default=False, opt_type="flag",
@@ -2028,7 +2043,6 @@ def main():
     if not options.daemon:
         run_server(options, args)
     else:
-        import getpass
         from daemon import ServerDaemon
         pidfile = "/tmp/gtermserver.%s.pid" % getpass.getuser()
         daemon = ServerDaemon(pidfile, functools.partial(run_server, options, args))

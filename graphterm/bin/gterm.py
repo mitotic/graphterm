@@ -113,8 +113,6 @@ FILE_URI_PREFIX = "file://"
 
 SETUP_USER_CMD = os.path.join(Bin_dir, "gterm_user_setup")
 
-DEFAULT_HOME_VOLUME = "/home"
-
 APP_DIRNAME = ".graphterm"
 APP_AUTH_FILENAME = "_gterm_auth.txt"
 APP_EMAIL_FILENAME = "gterm_email.txt"
@@ -161,8 +159,8 @@ def create_app_directory(appdir=App_dir):
         # Protect App directory
         os.chmod(appdir, 0700)
 
-def is_user(username, home_volume=""):
-    return os.path.exists((home_volume or DEFAULT_HOME_VOLUME)+"/"+username)
+def is_user(username):
+    return os.path.exists(os.path.expanduser("~"+username))
 
 def read_email(appdir=App_dir):
     email_file = os.path.join(appdir, APP_EMAIL_FILENAME)

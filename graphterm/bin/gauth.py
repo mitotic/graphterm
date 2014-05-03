@@ -5,6 +5,7 @@
 gauth: Display graphterm authentication code for user
 """
 
+import getpass
 import os
 import pwd
 import sys
@@ -13,10 +14,11 @@ import urllib
 import gterm
 
 def main():
+    username = getpass.getuser()
     usage = "usage: %prog [-h ... ] username"
     parser = gterm.FormParser(usage=usage, title="Display graphterm authentication code for user: ", command="gauth")
     parser.add_argument(label="", help="Username")
-    parser.add_option("admin", "ubuntu", short="a", help="Admin username (default: ubuntu)")
+    parser.add_option("admin", username, short="a", help="Admin username (default: %s)" % username)
     parser.add_option("head", "", help="Head portion of message")
     parser.add_option("mail", False, short="m", help="Display info for mailing etc.")
     parser.add_option("notebook", False, short="n", help="Display notebook URL")

@@ -19,7 +19,6 @@ import ec2common
 import gterm
 
 ssh_dir = os.path.expanduser("~/.ssh")
-home_mnt = "/home"
 gterm_user = "ubuntu"
 gterm_dir = "~"+gterm_user+"/.graphterm"
 
@@ -225,7 +224,7 @@ else:
     ##    command_line += " --blob_host=wildcard"
     init_commands = [ ("" if install_gterm else "#")+command_line ]
 
-startup_commands += ["chmod go-rwx "+home_mnt+"/"+gterm_user,
+startup_commands += ["chmod go-rwx ~"+gterm_user,
                      'echo umask 077 >> /etc/profile',
                      'echo set -o ignoreeof >> /etc/profile' ]
 

@@ -2,18 +2,16 @@
 
 # Creates gterm user, if not present, and starts host connection
 #  Note: gterm users are locked and cannot login directly
-# If user is --all, host connection is started for all existing users (excluding ADMIN)
+# If user is --all, host connection is started for all existing users (excluding admin user)
 # To reset user terminals, use "gterm_user_setup --all restart"
 # To delete user, use "gterm_user_setup user delete"
 
-HOME_MNT=/home
-ADMIN=ubuntu
 GRAPHTERM_DIR=.graphterm
 GRAPHTERM_AUTH=_gterm_auth.txt
 GRAPHTERM_MAIL=gterm_email.txt
 
 if [ $# -lt 1 ]; then
-    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart/delete [server_name [(email|-) [gtermhost arguments]]]]"
+    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart/delete [server_name [(email|-) [users_dir [admin [gtermhost_arguments]]]]]]"
     exit 1
 fi
 
@@ -21,6 +19,8 @@ username=$1
 action=activate
 server=localhost
 email=""
+users_dir=/home
+admin=$USER
 rem_args=""
 
 if [ $# -gt 1 ]; then
@@ -39,12 +39,20 @@ if [ $# -gt 3 ]; then
 fi
 
 if [ $# -gt 4 ]; then
-    shift 4
+    users_dir=$5
+fi
+
+if [ $# -gt 5 ]; then
+    admin=$6
+fi
+
+if [ $# -gt 6 ]; then
+    shift 6
     rem_args="$@"
 fi
 
-if [ ! -d $HOME_MNT ]; then
-    echo "Home directory $HOME_MNT does not exist"
+if [ ! -d $users_dir ]; then
+    echo "Home directory $users_dir does not exist"
     exit 1
 fi
 
@@ -52,9 +60,9 @@ umask 077
 
 if [ "$username" = "--all" ]; then
     host_list=""
-    cd  $HOME_MNT
+    cd  $users_dir
     for host in *; do
-        if [ "$host" != "$ADMIN" ]; then
+        if [ "$host" != "$admin" ]; then
 	    host_list="$host_list $host"
 	fi
     done
@@ -64,7 +72,7 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
     if getent passwd $username > /dev/null 2>&1; then
 	echo "User $username already present"
     else
-	homedir=$HOME_MNT/$username
+	homedir=$users_dir/$username
 	if [ -e $homedir ]; then
 	    echo "Home directory already exists"
 	else
@@ -91,17 +99,17 @@ else
 fi
 
 for host in $host_list; do
-    if [ "$host" != "$ADMIN" ] && [ "$action" = "delete" ]; then
+    if [ "$host" != "$admin" ] && [ "$action" = "delete" ]; then
 	read -p "Press Enter to delete user $host:" confirm
 	echo deluser --remove-home $host
 	deluser --remove-home $host
-    elif [ "$host" != "$ADMIN" ] && [ -d $HOME_MNT/$host/$GRAPHTERM_DIR ]; then
+    elif [ "$host" != "$admin" ] && [ -d $users_dir/$host/$GRAPHTERM_DIR ]; then
         # Update authentication code for host/user
-	/usr/local/bin/gauth -w --admin=$ADMIN --server=$server $host
+	gauth -w --admin=$admin --server=$server $host
         if [ "$server" = "localhost" ]; then
-	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/${host}$GRAPHTERM_AUTH
+	    auth_file=$users_dir/$host/$GRAPHTERM_DIR/${host}$GRAPHTERM_AUTH
 	else
-	    auth_file=$HOME_MNT/$host/$GRAPHTERM_DIR/${host}@$server$GRAPHTERM_AUTH
+	    auth_file=$users_dir/$host/$GRAPHTERM_DIR/${host}@$server$GRAPHTERM_AUTH
         fi
 	chown ${host}:$host $auth_file
 
