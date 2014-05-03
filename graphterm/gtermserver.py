@@ -473,7 +473,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 # Existing user
                                 if not os.path.exists(gterm.get_app_dir(user=user)):
                                     # Create .graphterm directory
-                                    if not self.setup_user(user, email=new_user_email):
+                                    if self.setup_user(user, email=new_user_email):
+                                        new_user_code = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
+                                    else:
                                         self.write_json([["abort", "Error in setting up user "+user]])
                                         self.close()
                                         return
@@ -1744,7 +1746,10 @@ def run_server(options, args):
 
     GTSocket.set_auth_code(options.auth_type, code=auth_code)
 
+    super_users = options.super_users.split(",") if options.super_users else []
     if options.auth_type == "multiuser":
+        if not super_users:
+            super_users = [ getpass.getuser() ]
         if options.auto_users:
             if not os.path.exists(Auto_add_file):
                 with open(Auto_add_file, "w") as f:
@@ -1752,7 +1757,6 @@ def run_server(options, args):
         elif os.path.exists(Auto_add_file):
             os.remove(Auto_add_file)
 
-    super_users = options.super_users.split(",") if options.super_users else []
     GTSocket.set_super_users(super_users)
 
     if options.auth_users:
@@ -1943,16 +1947,21 @@ def run_server(options, args):
     IO_loop.add_callback(stop_server)
 
 def main():
+    homedir = os.path.expanduser("~")
+    username = getpass.getuser()
+    if homedir != os.path.expanduser("~"+username):
+        sys.exit("ERROR: Home directory %s inconsistent with user %s; use sudo -i gtermserver ..." % (homedir, username))
+
+    if username == "root":
+        default_users_dir = "/home"
+    else:
+        default_users_dir = os.path.dirname(homedir)
+        if default_users_dir == "/":
+            default_users_dir = "/home"
+
     config_file = os.path.join(gterm.App_dir, "gtermserver.cfg")
     if not os.path.isfile(config_file):
         config_file = None
-
-    if getpass.getuser() == "root":
-        default_users_dir = "/home"
-    else:
-        default_users_dir = os.path.dirname(os.path.expanduser("~"))
-        if default_users_dir == "/":
-            default_users_dir = "/home"
 
     usage = "usage: gtermserver [-h ... options]"
     parser = optconfig.OptConfig(usage=usage, config_file=config_file)

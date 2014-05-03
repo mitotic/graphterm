@@ -119,6 +119,6 @@ for host in $host_list; do
 
         # Start client for host
         uid=`id -u $host`
-	sudo -u $host -H gtermhost --daemon=$action --auth_file=$auth_file $rem_args $host
+	sudo -u $host -i gtermhost --daemon=$action --auth_file=$auth_file $rem_args $host
     fi
 done

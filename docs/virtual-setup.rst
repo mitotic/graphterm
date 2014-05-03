@@ -56,7 +56,7 @@ Case 1: Mac or Linux server with user accounts already created
     run the following command to start the GraphTerm server with root
     privileges:
 
-   ``sudo gtermserver --daemon=start --auth_type=multiuser --super_users=root --users_dir=/Users --port=80 --host=server_domain_name_or_ip``
+   ``sudo gtermserver --daemon=start --auth_type=multiuser --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
 
    To stop the server, use ``sudo gtermserver --daemon=stop``.
    You can also omit the ``--daemon`` option, to run the server in the
@@ -65,23 +65,25 @@ Case 1: Mac or Linux server with user accounts already created
    script ``$GTERM_DIR/bin/gterm_user_setup``, which currently works
    with Ubuntu Linux.
 
- 3. Run the following command as root to display the group access code
-    which should be entered by users the first time they access the server:
-
-    ``cat ~/.graphterm/gterm_gcode.txt``
-
-    Distribute this code and a printed copy of :doc:`virtual-lab` to
-    all lab users.
-
- 4.  Run the following command as root user to display the *master access code*:
+ 3.  Run the following command as root user to display the *master access code*:
 
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
     (Ignore the port number following the hexadecimal access code.)
+    For automatic new user creation, the group code is in ``~/.graphterm/gterm_gcode.txt``
 
- 5. Use the URL http://server_domain_name to open a new graphtem
+ 4. Use the URL http://server_domain_name to open a new graphterm
     window on the server, with the super user name (``root`` in our
     case) and the *master access code*
+
+ 5. Run the following command in the graphterm window to obtain the
+    inidvidual user access code:
+
+    ``gauth -m username``
+
+    Distribute this code and a printed copy of :doc:`virtual-lab` to
+    each user.
+
 
 Case 2: On-demand server using Amazon AWS
 ================================================================
@@ -311,7 +313,7 @@ To stop a running server, type::
 
 If you are not using ``ec2launch``, you can start the server explicitly from the command line, e.g.::
 
-    gtermserver --daemon=start --auth_type=multiuser --auto_users --super_users=ubuntu --nb_server --https --external_port=443 --host=domain_or_ip
+    gtermserver --daemon=start --auth_type=multiuser --auto_users --logging --nb_server --https --external_port=443 --host=domain_or_ip
 
 The above options configure the server for multiuser authentication,
 with https. (``ec2launch`` automatically configures port forwarding
