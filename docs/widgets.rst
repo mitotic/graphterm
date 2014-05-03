@@ -6,9 +6,9 @@ Widgets, sockets, and interactivity
 
 A widget appears as an overlay on the terminal (like
 *picture-in-picture* for TVs, or dashboard widgets on the Mac). This
-is an experimental feature, enabled using the ``--widget-port=-1``
-option, that allows programs running in the background to display
-information overlaid on the terminal. The widget is accessed by
+is an experimental feature which allows programs running in the background
+to display information overlaid on the terminal. (It may be disabled using the
+``--widget-port=0`` option.) The widget is accessed by
 redirecting ``stdout`` to a Bash ``tcp`` socket device whose address
 is stored in the environment variable ``GTERM_SOCKET``.  For example,
 the following command will run a background job to open a new terminal

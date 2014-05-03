@@ -657,7 +657,7 @@ Security
 
 
 You should normally run GraphTerm logged in as a regular user, using
-the default ``--auth_type=local`` option, which requires an access
+the default ``--auth_type=singleuser`` option, which requires an access
 code for HMAC authentication. Using the ``gterm`` command to create a
 new terminal provides convenience and additional security, as the
 command validates the server and handles authentication before
