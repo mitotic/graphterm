@@ -561,9 +561,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 host_list = TerminalConnection.get_connection_ids()
                 if self._auth_type >= self.MULTI_AUTH and not is_super_user:
                     if Server_settings["allow_share"]:
-                        ##if gterm.LOCAL_HOST in host_list:
-                        ##    host_list.remove(gterm.LOCAL_HOST)
-                        pass
+                        host_list = [h for h in host_list if h != gterm.LOCAL_HOST]
                     elif Server_settings["user_groups"]:
                         host_list = [h for h in host_list if h == user or same_group(h, user) ]
                     else:
@@ -585,10 +583,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 return
 
             if self._auth_type >= self.MULTI_AUTH and not is_super_user:
-                ##if host == gterm.LOCAL_HOST:
-                ##    self.write_json([["abort", "Local host access not allowed for user %s" % user]])
-                ##    self.close()
-                ##    return
+                if host == gterm.LOCAL_HOST:
+                    self.write_json([["abort", "Local host access not allowed for user %s" % user]])
+                    self.close()
+                    return
                 if host != user and not same_group(host, user) and not Server_settings["allow_share"]:
                     self.write_json([["abort", "Inaccesible host %s" % host]])
                     self.close()

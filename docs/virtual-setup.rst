@@ -112,7 +112,7 @@ versions in the "cloud". )
 
     ``sudo gterm_setup``
 
-    ``gtermserver --auth_type=none``
+    ``gtermserver --terminal --auth_type=none``
 
     The above command should automatically open up a GraphTerm window in
     your browser. You can also open one using the URL http://localhost:8900
