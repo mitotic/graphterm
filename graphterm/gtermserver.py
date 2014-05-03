@@ -210,10 +210,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _webcast_paths = OrderedDict()
     _cookie_states = OrderedDict()
     _auth_users = OrderedDict()
-    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, LOCAL_AUTH, MULTI_AUTH = range(5)
+    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, SINGLE_AUTH, MULTI_AUTH = range(5)
     # Note: WEBCAST_AUTH is used only for sockets, not for the server
     _auth_code = uuid.uuid4().hex[:gterm.SIGN_HEXDIGITS]
-    _auth_type = LOCAL_AUTH
+    _auth_type = SINGLE_AUTH
     _wildcards = {}
     _super_users = set()
     _connect_cookies = OrderedDict()
@@ -227,16 +227,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return (user and user in cls._super_users) or (not user and cls.get_auth_type() == cls.NULL_AUTH)
 
     @classmethod
-    def is_super_or_local(cls, user, auth_type):
-        return cls.is_super(user) or (auth_type == cls.LOCAL_AUTH and cls.get_auth_type() == cls.LOCAL_AUTH)
+    def is_super_or_single(cls, user, auth_type):
+        return cls.is_super(user) or (auth_type == cls.SINGLE_AUTH and cls.get_auth_type() == cls.SINGLE_AUTH)
 
     @classmethod
     def set_auth_code(cls, auth_type, code=""):
         if auth_type in ("none", "name"):
             cls._auth_type = cls.NULL_AUTH if auth_type == "none" else cls.NAME_AUTH
             cls._auth_code = ""
-        elif auth_type in ("local", "multiuser"):
-            cls._auth_type = cls.LOCAL_AUTH if auth_type == "local" else cls.MULTI_AUTH
+        elif auth_type in ("singleuser", "multiuser"):
+            cls._auth_type = cls.SINGLE_AUTH if auth_type == "singleuser" else cls.MULTI_AUTH
             code = code.strip()
             assert code, "Must provide non-blank auth_code"
             cls._auth_code = code
@@ -321,7 +321,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if state_id not in cls._cookie_states:
             return None
         state_value = cls._cookie_states[state_id]
-        ##if cls._auth_type >= cls.LOCAL_AUTH and (time.time() - state_value["time"]) > COOKIE_TIMEOUT:
+        ##if cls._auth_type >= cls.SINGLE_AUTH and (time.time() - state_value["time"]) > COOKIE_TIMEOUT:
         ##    del cls._cookie_states[state_id]
         ##    return None
         return state_value
@@ -342,12 +342,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         cls._cookie_states[state_id] = authorized
         return authorized
 
-    def is_local(self):
-        return (self.authorized["auth_type"] == self.LOCAL_AUTH and self._auth_type == self.LOCAL_AUTH)
+    def is_single(self):
+        return (self.authorized["auth_type"] == self.SINGLE_AUTH and self._auth_type == self.SINGLE_AUTH)
 
     def is_creator(self, user, path):
         terminal_params = self._terminal_params[path]
-        return self.is_local() or (terminal_params and (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"]))
+        return self.is_single() or (terminal_params and (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"]))
 
     def setup_user(self, user, email=""):
         """Sets up user and returns True on success"""
@@ -440,7 +440,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     if not user:
                         if not code and self.req_path in self._webcast_paths:
                             pass
-                        elif self._auth_type == self.LOCAL_AUTH:
+                        elif self._auth_type == self.SINGLE_AUTH:
                             if code == gterm.compute_hmac(self._auth_code, cauth):
                                 self.authorized = self.add_state(user, self._auth_type)
                             else:
@@ -513,7 +513,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.authorized = self.add_state(user, self.WEBCAST_AUTH)
                 else:
                     need_user = "_" if (self._auth_type == self.NAME_AUTH or self._auth_type >= self.MULTI_AUTH) else ""
-                    need_code = "_" if (self._auth_type >= self.LOCAL_AUTH) else ""
+                    need_code = "_" if (self._auth_type >= self.SINGLE_AUTH) else ""
                     if Server_settings["https"]:
                         if need_user:
                             need_user = user or need_user
@@ -545,7 +545,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             else:
                 path_comps = self.req_path.split("/")
 
-            is_super_user = self.is_super(user) or self.is_local()
+            is_super_user = self.is_super(user) or self.is_single()
 
             if len(path_comps) < 1 or not path_comps[0]:
                 tem_email = query_data.get("save_email", [""])[0].lower()
@@ -597,7 +597,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             
             option = path_comps[2] if len(path_comps) > 2 else ""
             if wildhost:
-                allow_wild_host = (not self._super_users and self._auth_type <= self.LOCAL_AUTH) or is_super_user
+                allow_wild_host = (not self._super_users and self._auth_type <= self.SINGLE_AUTH) or is_super_user
                 if not allow_wild_host:
                     self.write_json([["abort", "User not authorized for wildcard host"]])
                     self.close()
@@ -623,14 +623,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if tparams:
                             term_owner = self.is_creator(user, path)
                             if not tparams["share_private"] or term_owner:
-                                connectable = not self._control_set.get(path) and (term_owner or self._auth_type == self.LOCAL_AUTH)
+                                connectable = not self._control_set.get(path) and (term_owner or self._auth_type == self.SINGLE_AUTH)
                                 stealable = not connectable and (is_super_user or term_owner or not tparams["share_locked"])
                                 idle_min = long(time.time() - tparams["last_active"]) // 60
                                 term_list.append( [tem_name, connectable, stealable, len(self._watch_dict[path]), idle_min])
                         else:
                             term_list.append( [tem_name, True, False, len(self._watch_dict[path]), 0])
                     term_list.sort()
-                    allow_new = (self._auth_type <= self.LOCAL_AUTH) or (is_super_user and host == "local") or ((user and user == host) and (len(term_list) < Server_settings["max_terminals"]))
+                    allow_new = (self._auth_type <= self.SINGLE_AUTH) or (is_super_user and host == gterm.LOCAL_HOST) or ((user and user == host) and (len(term_list) < Server_settings["max_terminals"]))
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
                     self.close()
                     return
@@ -641,7 +641,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     self.close()
                     return
 
-                if not is_super_user and (self._auth_type > self.LOCAL_AUTH) and (term_name == "new" or term_name not in session_names) and (len(session_names) >= Server_settings["max_terminals"]):
+                if not is_super_user and (self._auth_type > self.SINGLE_AUTH) and (term_name == "new" or term_name not in session_names) and (len(session_names) >= Server_settings["max_terminals"]):
                     self.write_json([["abort", "Too many terminals; close or reuse sessions"]])
                     self.close()
                     return
@@ -685,14 +685,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 if is_super_user: 
                     allow_host_access = True
                 else:
-                    allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.LOCAL_AUTH or host == user or (same_group(host, user) and host_connect and term_name in host_connect.term_dict) )
+                    allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.SINGLE_AUTH or host == user or (same_group(host, user) and host_connect and term_name in host_connect.term_dict) )
                     if not allow_host_access:
                         self.write_json([["abort", "Unable to create terminal on host %s" % host]])
                         self.close()
                         return
                 # Note: Multiuser without allow_share implies super user has default read access
                 start_private =  Server_settings["allow_share"]
-                terminal_params = {"share_locked": self._auth_type > self.LOCAL_AUTH,
+                terminal_params = {"share_locked": self._auth_type > self.SINGLE_AUTH,
                                    "share_private": start_private, "share_tandem": False,
                                    "alert_status": False, "widget_token": "", "last_active": time.time(),
                                    "nb_name": "", "nb_mod_offset": 0,
@@ -723,7 +723,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             self.websocket_id = str(self._counter[0])
 
             if is_wildcard(path):
-                allow_wild_card = (not self._super_users and self.authorized["auth_type"] > self.NULL_AUTH and self._auth_type <= self.LOCAL_AUTH) or is_super_user or (host != gterm.LOCAL_HOST and host == user)
+                allow_wild_card = (not self._super_users and self.authorized["auth_type"] > self.NULL_AUTH and self._auth_type <= self.SINGLE_AUTH) or is_super_user or (host != gterm.LOCAL_HOST and host == user)
                 if not allow_wild_card:
                     self.write_json([["abort", "User not authorized for wildcard path"]])
                     self.close()
@@ -750,7 +750,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 else:
                     self.broadcast(path, ["update_menu", "share_control", False], controller=True)
                     self._control_set[path] = set([self.websocket_id])
-            elif not self._control_set.get(path) and option != "watch" and (is_owner or self._auth_type == self.LOCAL_AUTH):
+            elif not self._control_set.get(path) and option != "watch" and (is_owner or self._auth_type == self.SINGLE_AUTH):
                 controller = True
                 self._control_set[path] = set([self.websocket_id])
 
@@ -783,7 +783,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 state_values["view_"+k] = v
             state_values.pop("state_id", None)
             state_values["share_webcast"] = bool(path in self._webcast_paths)
-            state_values["allow_webcast"] = bool(self._auth_type <= self.LOCAL_AUTH or is_super_user or Server_settings["allow_share"])
+            state_values["allow_webcast"] = bool(self._auth_type <= self.SINGLE_AUTH or is_super_user or Server_settings["allow_share"])
             users = [get_user(self.get_websocket(ws_id)) for ws_id in self._watch_dict[self.remote_path]]
             self.write_json([["setup", {"user": user, "host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
@@ -868,7 +868,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
         from_user = self.authorized["user"] if self.authorized else ""
 
-        is_super_user = self.is_super(from_user) or self.is_local()
+        is_super_user = self.is_super(from_user) or self.is_single()
 
         is_owner = self.is_creator(from_user, self.remote_path)
 
@@ -950,7 +950,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             # Give up control
                             self._control_set[self.remote_path].discard(self.websocket_id)
                         elif is_super_user or is_owner or (not terminal_params["share_locked"] and
-                                                           (self._auth_type <= self.LOCAL_AUTH or
+                                                           (self._auth_type <= self.SINGLE_AUTH or
                                                             same_group(from_user, terminal_params["owner"])  or
                                                             (Server_settings["allow_share"] and
                                                              not self.is_super(terminal_params["owner"])))):
@@ -979,7 +979,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 self._webcast_paths.popitem(last=False)
                             if value:
                                 # Initiate webcast
-                                if self._auth_type <= self.LOCAL_AUTH or (Server_settings["allow_share"] or
+                                if self._auth_type <= self.SINGLE_AUTH or (Server_settings["allow_share"] or
                                                                           is_super_user):
                                     self._webcast_paths[self.remote_path] = time.time()
                             else:
@@ -1149,7 +1149,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         
     @classmethod
     def get_matching_paths(cls, matchpath, user, state_id, auth_type):
-        is_super_user = GTSocket.is_super_or_local(user, auth_type)
+        is_super_user = GTSocket.is_super_or_single(user, auth_type)
         matched = []
         if isinstance(matchpath, basestring):
             terminal_params = GTSocket.get_terminal_params(matchpath)
@@ -1272,7 +1272,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     action_js = action_params.get("js", "")
                     action_exec = action_params.get("exec", "")
                     action_regexp = re.compile(action_args[0]) if action_args else None
-                    is_super_user = GTSocket.is_super_or_local(terminal_params["owner"], GTSocket._auth_type)
+                    is_super_user = GTSocket.is_super_or_single(terminal_params["owner"], GTSocket._auth_type)
                     content_type = "text/plain" if text_only else "text/html"
                     errmsg = ""
                     content = ""
@@ -1628,7 +1628,7 @@ def run_server(options, args):
             auth_type = GTSocket.get_auth_type()
             if auth_type >= GTSocket.MULTI_AUTH and user:
                 hmac_key = gterm.user_hmac(GTSocket.get_auth_code(), user, key_version=key_version)
-            elif auth_type >= GTSocket.LOCAL_AUTH:
+            elif auth_type >= GTSocket.SINGLE_AUTH:
                 hmac_key = GTSocket.get_auth_code()
             else:
                 hmac_key = "none"
@@ -1721,7 +1721,7 @@ def run_server(options, args):
     if options.auth_type in ("none", "name"):
         # No auth code
         auth_code = ""
-    elif options.auth_type in ("local", "multiuser"):
+    elif options.auth_type in ("singleuser", "multiuser"):
         auth_file = gterm.get_auth_filename(server=external_host)
         if os.path.exists(auth_file):
             # Read auth code
@@ -1739,7 +1739,7 @@ def run_server(options, args):
                 print >> sys.stderr, "Error in writing authentication file: %s" % excp
                 sys.exit(1)
     else:
-        print >> sys.stderr, "Invalid authentication type '%s'; must be one of local/none/name/multiuser" % options.auth_type
+        print >> sys.stderr, "Invalid authentication type '%s'; must be one of none/name/singleuser/multiuser" % options.auth_type
         sys.exit(1)
 
     GTSocket.set_auth_code(options.auth_type, code=auth_code)
@@ -1888,7 +1888,7 @@ def run_server(options, args):
     if options.terminal:
         server_nonce = GTSocket.get_connect_cookie()
         query = "?cauth="+server_nonce
-        if options.auth_type == "local":
+        if options.auth_type == "singleuser":
             query += "&code="+gterm.compute_hmac(auth_code, server_nonce)
         elif options.auth_type == "multiuser" and super_users:
             query += "&user="+super_users[0]+"&code="+gterm.compute_hmac(gterm.user_hmac(auth_code, super_users[0], key_version=key_version), server_nonce)
@@ -1937,7 +1937,7 @@ def run_server(options, args):
         print >> sys.stderr, "Interrupted"
 
     finally:
-        ##if options.auth_type == "local":
+        ##if options.auth_type == "singleuser":
         ##    gterm.clear_auth_code(server=internal_host)
         pass
     IO_loop.add_callback(stop_server)
@@ -1957,8 +1957,8 @@ def main():
     usage = "usage: gtermserver [-h ... options]"
     parser = optconfig.OptConfig(usage=usage, config_file=config_file)
 
-    parser.add_option("auth_type", default="local",
-                      help="Authentication type (local/none/name/multiuser)")
+    parser.add_option("auth_type", default="singleuser",
+                      help="Authentication type: none/name/singleuser/multiuser (default: singleuser)")
 
     parser.add_option("auth_users", default="",
                       help="Comma-separated list of authenticated user names")

@@ -30,7 +30,7 @@ form_parser.add_option("type", ("m3.medium", "m3.large", "c3.large", "r3.large",
 form_parser.add_option("key_name", "ec2key", help="Instance management SSH key name")
 form_parser.add_option("ami", "ami-2f8f9246", help="Instance OS (default: Ubuntu 12.04LTS amd64, us-east-1, rel. 20140408)")
 form_parser.add_option("gmail_addr", "", help="Full gmail address, user@gmail.com, for use in Google authentication")
-form_parser.add_option("auth_type", ("local", "none", "name", "multiuser"), help="Authentication type (local/none/name/multiuser)")
+form_parser.add_option("auth_type", ("singleuser", "none", "name", "multiuser"), help="Authentication type (singleuser/none/name/multiuser)")
 form_parser.add_option("https", False, help="Use https for security")
 form_parser.add_option("pylab", False, help="Install PyLab")
 form_parser.add_option("netcdf", False, help="Install NetCDF")
@@ -105,7 +105,7 @@ if options.copy_files:
     copy_files += options.copy_files.split()
 
 auth_type = options.auth_type.strip()
-allow_host_connect = auth_type in ("local", "multiuser")
+allow_host_connect = auth_type in ("singleuser", "multiuser")
 
 GroupRule = collections.namedtuple("GroupRule",
                                    ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
@@ -334,6 +334,8 @@ if copy_files and options.install:
     wait_cmd += "; if [ ! -f "+setup_errfile+" ]; then "+unarch_cmd+" "+install_basename+"; cd "+install_baseroot+"; sudo python setup.py install > install.log"
     if install_cmd:
         wait_cmd += "; "+install_cmd
+    elif not install_gterm:
+        wait_cmd += "; "+command_line
     wait_cmd += "; fi"
 
 if options.dry_run:

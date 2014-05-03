@@ -565,7 +565,7 @@ def get_file_url(filepath, relative=False, exists=False, plain=False):
     if relative:
         return FILE_PREFIX + Host + filepath + filehmac
     else:
-        return "file://" + ("" if Host == "local" else Host) + filepath + filehmac
+        return "file://" + ("" if Host == LOCAL_HOST else Host) + filepath + filehmac
 
 def make_blob_url(blob_id="", host=""):
     blob_id = blob_id or str(uuid.uuid4())
@@ -1148,7 +1148,7 @@ def main():
     if args:
         if args[0] and ":" not in args[0]:
             if args[0][0].isalpha():
-                path = (Host or "local") + "/" + args[0]
+                path = (Host or LOCAL_HOST) + "/" + args[0]
             elif args[0].startswith("/"):
                 path = args[0][1:]
         else:
