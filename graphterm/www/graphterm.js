@@ -4052,7 +4052,7 @@ function GTNotebook(params) {
     this.note_params = params;
     this.fullpage = !params.shell;
     this.slide_mode = false;
-    this.autosaved = false;
+    this.autosaved = true;
 
     if (gNotebookId[0] != gPromptIndex)
 	gNotebookId = [gPromptIndex, 0]
