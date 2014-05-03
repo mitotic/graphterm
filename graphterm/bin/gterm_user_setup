@@ -81,15 +81,16 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
 	    useradd --user-group --create-home --home $homedir --shell /bin/bash $username
 	    sudo -u $username chmod 0711 $homedir
 
-	    sudo -u $username mkdir $homedir/$GRAPHTERM_DIR
-	    sudo -u $username chmod 0700 $homedir $homedir/$GRAPHTERM_DIR
+	    gt_dir=$homedir/$GRAPHTERM_DIR
+	    sudo -u $username mkdir $gt_dir
+	    sudo -u $username chmod 0700 $homedir $gt_dir
     
             # Lock user password (i.e., no direct logins allowed)
 	    passwd -l $username
 
             if [ "$email" != "" ]; then
-		sudo -u $username touch $homedir/$GRAPHTERM_DIR/$GRAPHTERM_MAIL
-		sudo -u $username echo "$email" >> $homedir/$GRAPHTERM_DIR/$GRAPHTERM_MAIL
+		sudo -u $username touch $gt_dir/$GRAPHTERM_MAIL
+		sudo -u $username echo "$email" >> $gt_dir/$GRAPHTERM_MAIL
 	    fi
 	fi
     fi
@@ -99,19 +100,20 @@ else
 fi
 
 for host in $host_list; do
+    gt_dir=$users_dir/$host/$GRAPHTERM_DIR
     if [ "$host" != "$admin" ] && [ "$action" = "delete" ]; then
 	read -p "Press Enter to delete user $host:" confirm
 	echo deluser --remove-home $host
 	deluser --remove-home $host
-    elif [ "$host" != "$admin" ] && [ -d $users_dir/$host/$GRAPHTERM_DIR ]; then
-        # Update authentication code for host/user
-	gauth -w --admin=$admin --server=$server $host
+    elif [ "$host" != "$admin" ] && [ -d $gt_dir ]; then
+        # Update authentication code for host/user (if gt_dir exists)
         if [ "$server" = "localhost" ]; then
-	    auth_file=$users_dir/$host/$GRAPHTERM_DIR/${host}$GRAPHTERM_AUTH
+	    auth_file=$gt_dir/${host}$GRAPHTERM_AUTH
 	else
-	    auth_file=$users_dir/$host/$GRAPHTERM_DIR/${host}@$server$GRAPHTERM_AUTH
+	    auth_file=$gt_dir/${host}@$server$GRAPHTERM_AUTH
         fi
-	chown ${host}:$host $auth_file
+	sudo -u $host touch $auth_file
+	gauth -w --admin=$admin --server=$server $host
 
         # Start client for host
         uid=`id -u $host`

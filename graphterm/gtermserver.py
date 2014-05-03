@@ -1854,9 +1854,10 @@ def run_server(options, args):
     else:
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
-    if options.auto_users:
+    if options.auth_type == "multiuser":
         action = "activate" if options.no_reset else "restart"
         cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host, "-", Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
+        print >> sys.stderr, "Initializing users: "+" ".join(cmd_args)
         std_out, std_err = gterm.command_output(cmd_args, timeout=120)
         if std_err:
             logging.error("ERROR in %s: %s\n%s", " ".join(cmd_args), std_out, std_err)
