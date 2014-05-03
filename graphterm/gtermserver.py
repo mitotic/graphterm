@@ -349,6 +349,20 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         terminal_params = self._terminal_params[path]
         return self.is_local() or (terminal_params and (user and user == terminal_params["owner"]) or (not user and self.authorized["state_id"] == terminal_params["state_id"]))
 
+    def setup_user(self, user, email=""):
+        """Sets up user and returns True on success"""
+        if not os.path.exists(gterm.SETUP_USER_CMD):
+            logging.error("Command not found: %s", gterm.SETUP_USER_CMD)
+            return False
+
+        cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"], email or "-",
+                    Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
+        std_out, std_err = gterm.command_output(cmd_args, timeout=15)
+        if not std_err:
+            return True
+        logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
+        return False
+
     def open(self):
         user = ""
         code = ""
@@ -443,7 +457,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         else:
                             # CGI escape username
                             auth_message = "User name %s already in use" % cgi_escape(user)
-                    else:
+                    elif self._auth_type >= self.MULTI_AUTH:
                         validated = False
                         if code == gterm.compute_hmac(self._auth_code, cauth):
                             # Validation using master secret
@@ -452,37 +466,38 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if user in self._auth_users:
                                 validated = (code == gterm.compute_hmac(self._auth_users[user], cauth))
                         else:
-                            key_version = "1" if self._auth_type >= self.MULTI_AUTH else None
                             group_secret = gterm.user_hmac(self._auth_code, "", key_version="grp")
+                            key_version = "1"
 
-                            if not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file) and not gterm.is_user(user):
+                            if gterm.is_user(user):
+                                # Existing user
+                                if not os.path.exists(gterm.get_app_dir(user=user)):
+                                    # Create .graphterm directory
+                                    if not self.setup_user(user, email=new_user_email):
+                                        self.write_json([["abort", "Error in setting up user "+user]])
+                                        self.close()
+                                        return
+
+                                if auth_email:
+                                    validated = True
+                                else:
+                                    # Non-auto user, super user, or existing auto user; need to validate with user auth code
+                                    validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
+                            elif not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file):
                                 # New auto user; group code validation required
                                 if code != gterm.compute_hmac(group_secret, cauth):
                                     self.write_json([["abort", "Invalid group authentication code"]])
                                     self.close()
                                     return
 
-                                if not os.path.exists(gterm.SETUP_USER_CMD):
-                                    self.write_json([["abort", "Command %s not found" % gterm.SETUP_USER_CMD]])
-                                    self.close()
-                                    return
-
                                 validated = True
                                 new_user_code = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
 
-                                cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"], new_user_email or "-", Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
-                                std_out, std_err = gterm.command_output(cmd_args, timeout=15)
-                                if std_err:
-                                    logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
+                                if not self.setup_user(user, email=new_user_email):
                                     self.write_json([["abort", "Error in creating new user "+user]])
                                     self.close()
                                     return
                                 logging.info("GTSocket.open: Created new user: %s %s", user, new_user_email)
-                            elif auth_email:
-                                validated = True
-                            else:
-                                # Non-auto user, super user, or existing auto user; need to validate with user auth code
-                                validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
 
                         if validated:
                             # User auth code matched
@@ -2023,8 +2038,8 @@ def main():
                       help="Lineterm logfile")
     parser.add_option("logging", default=False, opt_type="flag",
                       help="Log to ~/.graphterm/gtermserver.log")
-    parser.add_option("widget_port", default=0, opt_type="int",
-                      help="Port for widgets port (default: 0) (-1 for %d)" % (gterm.DEFAULT_HOST_PORT-2))
+    parser.add_option("widget_port", default=-1, opt_type="int",
+                      help="Port number for widget socket (default: -1 for auto)")
 
     parser.add_option("daemon", default="",
                       help="daemon=start/stop/restart/status")

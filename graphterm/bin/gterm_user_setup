@@ -69,29 +69,31 @@ if [ "$username" = "--all" ]; then
 
 elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
     host_list=$username
-    if getent passwd $username > /dev/null 2>&1; then
-	echo "User $username already present"
-    else
-	homedir=$users_dir/$username
-	if [ -e $homedir ]; then
-	    echo "Home directory already exists"
-	else
-            # Create new user
-	    echo "Creating new user and group $username"
-	    useradd --user-group --create-home --home $homedir --shell /bin/bash $username
-	    sudo -u $username chmod 0711 $homedir
+    homedir=$users_dir/$username
+    if [ ! -d $homedir ]; then
+	if getent passwd $username > /dev/null 2>&1; then
+	    echo "User $username already created, but home directory not found"
+	    exit 1
+	fi
 
-	    gt_dir=$homedir/$GRAPHTERM_DIR
-	    sudo -u $username mkdir $gt_dir
-	    sudo -u $username chmod 0700 $homedir $gt_dir
+        # Create new user
+	echo "Creating new user and group $username"
+	useradd --user-group --create-home --home $homedir --shell /bin/bash $username
+
+        # Lock user password (i.e., no direct logins allowed)
+	passwd -l $username
+
+	sudo -u $username chmod 0700 $homedir
+    fi
+
+    gt_dir=$homedir/$GRAPHTERM_DIR
+    if [ ! -d $gt_dir ]; then
+	sudo -u $username mkdir $gt_dir
+	sudo -u $username chmod 0700 $gt_dir
     
-            # Lock user password (i.e., no direct logins allowed)
-	    passwd -l $username
-
-            if [ "$email" != "" ]; then
-		sudo -u $username touch $gt_dir/$GRAPHTERM_MAIL
-		sudo -u $username echo "$email" >> $gt_dir/$GRAPHTERM_MAIL
-	    fi
+        if [ "$email" != "" ]; then
+	    sudo -u $username touch $gt_dir/$GRAPHTERM_MAIL
+	    sudo -u $username echo "$email" >> $gt_dir/$GRAPHTERM_MAIL
 	fi
     fi
 else

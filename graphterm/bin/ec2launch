@@ -179,8 +179,6 @@ if options.screen:
 else:
     command_line += " " + command_name + " --daemon=start"
 
-command_line += " --widget_port=-1"
-
 if options.https:
     command_line += " --https"
 if options.allow_embed:
