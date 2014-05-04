@@ -37,6 +37,9 @@ parser.add_option("-w", "--write",
 parser.add_option("-o", "--stdout",
                   action="store_true", dest="stdout", default=False,
                   help="Use STDOUT for pagelet output")
+parser.add_option("-l", "--loop",
+                  action="store_true", dest="loop", default=False,
+                  help="Loop (multiple) uploads")
 parser.add_option("-q", "--quiet",
                   action="store_true", dest="quiet", default=False,
                   help="Quiet")
@@ -79,102 +82,112 @@ if filepath:
                 print >> sys.stderr, "Please create directory %s" % head
                 sys.exit(1)
 
-if not options.quiet and not options.stdout:
-    print >> sys.stderr, "Uploading file..."
+if options.loop and not to_dir:
+    sys.exit("Error: loop option inconsistent with non-directory destination")
 
-params = {"display": "block", "current_directory": Work_dir}
-html_headers = {"x_gterm_response": "upload_file",
-                "x_gterm_parameters": params
-                }
-gterm.wrap_write("", headers=html_headers, stderr=not options.stdout)
+while True:
+    if not options.quiet and not options.stdout:
+        print >> sys.stderr, "Uploading file..."
 
-Stdin_fd = sys.stdin.fileno()
-Saved_settings = termios.tcgetattr(Stdin_fd)
-Stdout_data = None
+    params = {"display": "block", "current_directory": Work_dir}
+    html_headers = {"x_gterm_response": "upload_file",
+                    "x_gterm_parameters": params
+                    }
+    gterm.wrap_write("", headers=html_headers, stderr=not options.stdout)
 
-try:
-    # Raw tty input without echo
-    tty.setraw(Stdin_fd)
-    line = ""
-    header_line = ""
-    while True:
-        ch = sys.stdin.read(1)
-        if ch == "\x03" or ch == "\x04": # ^C/^D
+    Stdin_fd = sys.stdin.fileno()
+    Saved_settings = termios.tcgetattr(Stdin_fd)
+    Stdout_data = None
+
+    try:
+        # Raw tty input without echo
+        tty.setraw(Stdin_fd)
+        line = ""
+        header_line = ""
+        while True:
+            ch = sys.stdin.read(1)
+            if ch == "\x03" or ch == "\x04": # ^C/^D
+                gterm.write_blank(stderr=not options.stdout)
+                sys.exit(1)
+            if ch != "\n":
+                line += ch
+                continue
+            if line:
+                header_line = line
+                line = ""
+            else:
+                # Terminal null line
+                break
+
+        if options.verbose:
+            print >> sys.stderr, "header=%s\n" % (header_line,)
+
+        # Process headers
+        if not header_line:
             gterm.write_blank(stderr=not options.stdout)
             sys.exit(1)
-        if ch != "\n":
-            line += ch
-            continue
-        if line:
-            header_line = line
-            line = ""
-        else:
-            # Terminal null line
-            break
 
-    if options.verbose:
-        print >> sys.stderr, "header=%s\n" % (header_line,)
+        headers = json.loads(header_line)
 
-    # Process headers
-    if not header_line:
-        gterm.write_blank(stderr=not options.stdout)
-        sys.exit(1)
+        if "x_gterm_filepath" not in headers:
+            gterm.write_blank(stderr=not options.stdout)
+            sys.exit(1)
 
-    headers = json.loads(header_line)
+        content_type = headers["content_type"]
+        if content_type.startswith("none/"):
+            gterm.write_blank(stderr=not options.stdout)
+            sys.exit(1)
 
-    if "x_gterm_filepath" not in headers:
-        gterm.write_blank(stderr=not options.stdout)
-        sys.exit(1)
+        filename = headers["x_gterm_filepath"]
+        expect_length = headers["x_gterm_length"]
+        if options.verbose:
+            print >> sys.stderr, "file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length)
 
-    content_type = headers["content_type"]
-    if content_type.startswith("none/"):
-        gterm.write_blank(stderr=not options.stdout)
-        sys.exit(1)
-
-    filename = headers["x_gterm_filepath"]
-    expect_length = headers["x_gterm_length"]
-    if options.verbose:
-        print >> sys.stderr, "file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length)
-
-    if expect_length:
-        count = expect_length
-        assert not (count % 4)
-        prefix = ""
-        content_list = []
-        while count > 0:
-            chunk = sys.stdin.read(min(count, CHUNK_BYTES))
-            assert chunk
-            count = count - len(chunk)
-            line = prefix + chunk
+        if expect_length:
+            count = expect_length
+            assert not (count % 4)
             prefix = ""
-            offset = len(line) % 4
-            if offset:
-                prefix = line[-offset:]
-                line = line[:-offset]
-            if options.verbose:
-                print >> sys.stderr, "line(%d,%s)=%s" % (len(chunk), count, line,)
-            content_list.append(base64.b64decode(line))
-        assert not prefix
-        content = "".join(content_list)
+            content_list = []
+            while count > 0:
+                chunk = sys.stdin.read(min(count, CHUNK_BYTES))
+                assert chunk
+                count = count - len(chunk)
+                line = prefix + chunk
+                prefix = ""
+                offset = len(line) % 4
+                if offset:
+                    prefix = line[-offset:]
+                    line = line[:-offset]
+                if options.verbose:
+                    print >> sys.stderr, "line(%d,%s)=%s" % (len(chunk), count, line,)
+                content_list.append(base64.b64decode(line))
+            assert not prefix
+            content = "".join(content_list)
+        else:
+            b64_content = ""
+            content = ""
+    except KeyboardInterrupt:
+        sys.exit(1)
+    finally:
+        termios.tcsetattr(Stdin_fd, termios.TCSADRAIN, Saved_settings)
+
+    gterm.write_blank(stderr=not options.stdout)
+
+    if filepath:
+        if to_dir:
+            tempath = os.path.join(filepath, filename)
+        else:
+            tempath = filepath
+        with open(tempath, "w") as f:
+            f.write(content)
+        if not options.quiet:
+            print >> sys.stderr, "Uploaded file "+tempath
+
+        if not options.loop:
+            break
     else:
-        b64_content = ""
-        content = ""
-except KeyboardInterrupt:
-    sys.exit(1)
-finally:
-    termios.tcsetattr(Stdin_fd, termios.TCSADRAIN, Saved_settings)
-
-gterm.write_blank(stderr=not options.stdout)
-
-if filepath:
-    if to_dir:
-        filepath = os.path.join(filepath, filename)
-    with open(filepath, "w") as f:
-        f.write(content)
-    if not options.quiet:
-        print >> sys.stderr, "Uploaded file "+filepath
-else:
-    Stdout_data = content
+        Stdout_data = content
+        break
 
 if Stdout_data is not None:
     if options.stdout:

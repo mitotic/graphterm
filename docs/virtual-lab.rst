@@ -230,7 +230,8 @@ If more than one file (or a directory) is specified for downloading,
 the command automatically creates a zip archive.
 Right-click (or control-click) on the displayed link to download. On
 some browsers, like Chrome, directly clicking on the link would also
-work well.
+work. This command works well for file sizes of a few MB, but can be
+*extremely slow* for larger files.
 
 *Note:* Browsers other than Chrome typically append ``.html`` or ``.htm``
 to the downloaded filename. For example, file ``abc.ipynb`` may be downloaded
@@ -250,6 +251,8 @@ file and type::
 
 Then select (or drag-and-drop) the file from your local computer.
 If you do not provide a filename, the original filename will be used.
+This command works well for file sizes of a few MB, but can be
+*extremely slow* for larger files.
 
 *On Windows:* Drag-and-drop for files currently does not work with IE10.
 
