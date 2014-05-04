@@ -621,10 +621,16 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=
     return blob_url
     
 class BlobStringIO(StringIO.StringIO):
-    def __init__(self, content_type="text/html"):
+    def __init__(self, content_type="text/html", max_bytes=25000000):
         self.content_type = content_type
+        self.max_bytes = max_bytes
         self.blob_id, self.blob_url = make_blob_url()
         StringIO.StringIO.__init__(self)
+
+    def write(self, s):
+        if self.tell()+len(s) > self.max_bytes:
+            raise RuntimeError("Blob size exceeds limit of %s bytes" % self.max_bytes)
+        StringIO.StringIO.write(self, s)
 
     def close(self):
         blob_url = create_blob(self.getvalue(), content_type=self.content_type, blob_id=self.blob_id)

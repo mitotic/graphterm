@@ -116,14 +116,14 @@ def show(*args, **kwargs):
     pyplot_dict["new_plot"] = False
     return retval
 
-def display(fig, overwrite=False, format="png", title=""):
+def display(fig, overwrite=False, format="png", title="", max_bytes=25000000):
     """Save figure as a blob and display as block image
     """
     if not pyplot_dict:
         raise Exception("gmatplot.setup not invoked")
 
     content_type = "application/pdf" if format=="pdf" else "image/"+format
-    outbuf = gterm.BlobStringIO(content_type)
+    outbuf = gterm.BlobStringIO(content_type, max_bytes=max_bytes)
     pyplot_dict["drawing"] = True
     try:
         fig.savefig(outbuf, format=format)

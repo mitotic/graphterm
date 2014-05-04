@@ -54,7 +54,7 @@ MAX_SCROLL_LINES = 1000
 
 CHUNK_BYTES = 4096            # Chunk size for receiving data in stdin
 
-MAX_PAGELET_BYTES = 2500000  # Max size for pagelet buffer
+MAX_PAGELET_BYTES = 5000000   # Max size for pagelet buffer
 
 IDLE_TIMEOUT = 300      # Idle timeout in seconds
 UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
@@ -2664,9 +2664,13 @@ class Terminal(object):
         if self.gterm_buf_size > MAX_PAGELET_BYTES:
             # Buffer overflow
             content = "ERROR pagelet size (%d bytes) exceeds limit (%d bytes)" % (self.gterm_buf_size,  MAX_PAGELET_BYTES)
+            headers = {}
             headers["x_gterm_response"] = "error_message"
             headers["x_gterm_parameters"] = {}
             headers["content_type"] = "text/plain"
+            headers["content_length"] = len(content)
+            params = {"validated": self.gterm_validated, "headers": headers}
+            self.graphterm_output(params, content)
 
         elif self.gterm_code == GRAPHTERM_SCREEN_CODES[0]:
             # Handle prompt command output
