@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+#
+
+"""
+gdownload: Download files or piped content; if multiple files, download zip archive
+"""
+
+import datetime
+import mimetypes
+import os
+import random
+import socket
+import sys
+import time
+import zipfile
+
+from optparse import OptionParser
+
+import gterm
+
+def get_mime_type(filename):
+    try:
+        mime_type, encoding = mimetypes.guess_type(filename)
+    except Exception:
+        mime_type = "application/octet-stream"
+    return mime_type
+
+def populate_zipfile(zipbuf, source_files):
+    common_path = ""
+    for filepath in source_files:
+        if not filepath.startswith("/"):
+            filepath = os.path.normcase(os.path.abspath(os.path.expanduser(filepath)))
+        if not common_path:
+            common_path = filepath
+        else:
+            clen = min(len(common_path), len(filepath))
+            while clen and common_path[:clen] != filepath[:clen]:
+                clen = clen - 1
+            common_path = common_path[:clen]
+
+    if common_path.endswith("/"):
+        common_path = common_path[:-1]
+    else:
+        common_path, tail = os.path.split(common_path)
+
+    for source_file in source_files:
+        if os.path.isfile(source_file):
+            # Regular file
+            arcname = os.path.relpath(source_file, common_path)
+            zipbuf.write(source_file, arcname)
+        elif os.path.isdir(source_file):
+            for root, dirs, files in os.walk(source_file):
+                # add directory (needed for empty dirs)
+                relpath = os.path.relpath(root, common_path)
+                zipbuf.write(root, relpath)
+                for file in files:
+                    filename = os.path.join(root, file)
+                    if os.path.isfile(filename): # regular files only
+                        arcname = os.path.join(relpath, file)
+                        zipbuf.write(filename, arcname)
+        else:
+            print >> sys.stderr, "Skipping inaccessible file", source_file
+
+usage = "usage: %prog [file] [file2|dir2] ..."
+parser = OptionParser(usage=usage)
+
+parser.add_option("-n", "--name", dest="name", default="",
+                  help="File name for downloading")
+parser.add_option("", "--max_bytes", dest="max_bytes", default=25000000,
+                  help="Max download file size in bytes (default: 25000000)", type="int")
+
+(options, args) = parser.parse_args()
+
+download_name = ""
+
+if not args:
+    if not options.name:
+        sys.exit("Error: must specify --name filename for downloading piped input")
+    download_name = options.name
+    content = None
+    try:
+        content = sys.stdin.read()
+    except (EOFError, KeyboardInterrupt):
+        content = None
+
+    if not content:
+        sys.exit("Error in reading from stdin")
+    if len(content) > options.max_bytes:
+        raise RuntimeError("Download file size exceeds limit of %s bytes" % options.max_bytes)
+    download_url = gterm.create_blob(content, content_type=get_mime_type(download_name))
+
+elif len(args) == 1 and os.path.isfile(args[0]):
+    download_name = options.name or os.path.basename(args[0])
+
+    if gterm.Export_host:
+        download_url = gterm.create_blob(from_file=args[0], content_type=get_mime_type(download_name))
+    else:
+        download_url = gterm.get_file_url(args[0], relative=True)
+
+elif os.path.isdir(args[0]) or len(args) > 1:
+    if options.name:
+        if not options.name.endswith(".zip"):
+            sys.exit("Error: name must end with .zip for zip archive")
+        download_name = options.name
+    else:
+        hostname, sep, tail = socket.gethostname().partition(".")
+        if not hostname or hostname.isdigit():
+            hostname = "download"
+        download_name = hostname + "-" + str(datetime.date.today()) + ".zip"
+
+    print >> sys.stderr, "Creating zip archive..."
+    outbuf = gterm.BlobStringIO("application/zip", max_bytes=options.max_bytes)
+    zipbuf = zipfile.ZipFile(outbuf, "w", zipfile.ZIP_DEFLATED)
+    populate_zipfile(zipbuf, args)
+    zipbuf.close()
+    download_url = outbuf.close()
+
+html = '<br><em>Downloadable link</em>: <a class="gterm-link gterm-download" href="%s" download="%s">%s</a><p>\n' % (download_url, download_name, download_name)
+gterm.write_html(html)

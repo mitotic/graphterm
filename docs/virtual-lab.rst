@@ -222,14 +222,15 @@ command::
 Downloading files
 ---------------------------------------------------------------------------------------------
 
-To download files use the ``gls --download`` command::
+To download files, use the ``gdownload`` command::
 
-    gls --download filename
+    gdownload filename(s)
 
-Then right-click (or control-click) on the filename to download it. On
+If more than one file (or a directory) is specified for downloading,
+the command automatically creates a zip archive.
+Right-click (or control-click) on the displayed link to download. On
 some browsers, like Chrome, directly clicking on the link would also
-work well. (You may download notebook files using the above method for
-submission.)
+work well.
 
 *Note:* Browsers other than Chrome typically append ``.html`` or ``.htm``
 to the downloaded filename. For example, file ``abc.ipynb`` may be downloaded

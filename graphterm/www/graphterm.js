@@ -2551,7 +2551,7 @@ function GTMenuCommand(selectKey, newValue, force) {
 	cmd = advanced ? "gupload" : "gupload #optional_filename";
 	break;
     case "download":
-	cmd = advanced ? "gls -d" : "gls --download #optional_filename";
+	cmd = advanced ? "gdownload" : "gdownload #filename(s)";
 	break;
     case "yweather":
 	cmd = advanced ? "yweather " : "yweather #location";

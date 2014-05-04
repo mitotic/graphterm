@@ -98,19 +98,21 @@ and may be written any language,
 e.g., Bash shell script, Python etc.
 The commands reside in the directory ``$GTERM_DIR/bin`` and include the following:
 
-   ``d3cloud [file]`` To display file (or stdin) content as a word
+   ``d3cloud [file]`` Display file (or stdin) content as a word
    cloud (see  :ref:`d3cloud_shot`)
 
-   ``gbrowse [filename|URL]``    To view files/URLs in a separate browser window
+   ``gbrowse [filename|URL]``    View files/URLs in a separate browser window
 
    ``gcp source dest`` Copy command supporting drag-and-drop for source/destination
 
+   ``gdownload filename(s)`` Download piped data and files from terminal to desktop
+
    ``gfeed`` Display *stdin* input lines as a "feed"
 
-   ``gframe [-f] [filename|URL]``    To view files/URLs (or HTML from stdin) within
+   ``gframe [-f] [filename|URL]``    View files/URLs (or HTML from stdin) within
    an inline *iframe*  (see  :ref:`d3cloud_shot`)
 
-   ``gimage [-f] [filenames]``     To view images inline, or as a
+   ``gimage [-f] [filenames]``     View images inline, or as a
    fullpage slideshow (with ``-f`` option)
 
    ``gjs javascript command``   Execute Javascript in the client browser
@@ -145,7 +147,7 @@ The commands reside in the directory ``$GTERM_DIR/bin`` and include the followin
    ``gtweet [-s keywords] | tweet``  To send, search, or receive
    tweets  (see  :ref:`tweet_shot`)
 
-   ``gupload [filename|directory]`` To upload files from desktop into
+   ``gupload [filename|directory]`` Upload files from desktop into
    the terminal
 
    ``gvi filename``   Open file using a browser-based visual editor
