@@ -2064,8 +2064,11 @@ function GTAltPasteHandlerAux() {
 }
 
 function GTExportEnvironment(profile) {
-    if (gWebSocket && gWebSocket.terminal)
-	gWebSocket.write([["export_environment", profile]]);
+    if (window.confirm("WARNING: Do not export environment unless the remote computer is trusted. Malicious remote programs could execute commands on your local computer. CANCEL if not sure.")) {
+	if (gWebSocket && gWebSocket.terminal)
+	    gWebSocket.write([["export_environment", profile]]);
+    }
+
 }
 
 var gSharedCount = 0;

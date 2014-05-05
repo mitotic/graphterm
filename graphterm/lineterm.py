@@ -2186,16 +2186,19 @@ class Terminal(object):
             self.poke(y1, 0, self.peek(y1+1, 0, y2, self.width))
             self.screen.meta[y1:y2] = self.screen.meta[y1+1:y2+1]
         self.zero_lines(y2, y2)
+        self.current_nul = self.current_nul & 0x88ffffff
 
     def scroll_down(self, y1, y2):
         if y2 > y1:
             self.poke(y1+1, 0, self.peek(y1, 0, y2-1, self.width))
             self.screen.meta[y1+1:y2+1] = self.screen.meta[y1:y2]
         self.zero_lines(y1, y1)
+        self.current_nul = self.current_nul & 0x88ffffff
 
     def scroll_right(self, y, x):
         self.poke(y, x+1, self.peek(y, x, y, self.width-1))
         self.zero(y, x, y, x)
+        self.current_nul = self.current_nul & 0x88ffffff
 
     def parse_command(self, suffix=""):
         if not self.alt_mode and self.current_meta and not self.current_meta[1]:
@@ -3315,26 +3318,21 @@ class Multiplex(object):
         env.append( (GT_PREFIX+"DIR", File_dir) )
 
         lc_export = self.term_params.get("lc_export")
-        if lc_export:
+        if lc_export and not export:
             # Export some environment variables as LC_* (hack to enable SSH forwarding)
             env_dict = dict(env)
-            export_host = platform.node() or "unknown"
-            env.append( ("LC_"+GT_PREFIX+"EXPORT", export_host) )
+            lc_vars = [ "%s=%s" % (GT_PREFIX+"EXPORT", platform.node() or "unknown") ]
+            for name in LC_EXPORT_ENV:
+                if name in env_dict:
+                    lc_vars.append( "%s=%s" % (name, env_dict[name]) )
+            # Export packed environment
+            export_var = "LC_TELEPHONE" if lc_export.lower() == "telephone" else "LC_GRAPHTERM"
+            env.append( (export_var, "|".join(lc_vars)) )
             if export_prompt_fmt:
+                # Handled separately due to spaces and other special characters
                 env.append( ("LC_"+GT_PREFIX+"PROMPT", export_prompt_fmt) )
                 env.append( ("LC_PROMPT_COMMAND", env_dict["PROMPT_COMMAND"]) )
 
-            if lc_export.lower() == "pack":
-                # Use LC_TELEPHONE variable to pack
-                lc_vars = [ "%s=%s" % (GT_PREFIX+"EXPORT", export_host) ]
-                for name in LC_EXPORT_ENV:
-                    if name in env_dict:
-                        lc_vars.append( "%s=%s" % (name, env_dict[name]) )
-                env.append( ("LC_TELEPHONE", "|".join(lc_vars)) )
-            else:
-                for name in LC_EXPORT_ENV:
-                    if name in env_dict:
-                        env.append( ("LC_"+name, env_dict[name]) )
         return env
 
     def export_environment(self, term_name, profile=False):
@@ -3348,18 +3346,19 @@ class Multiplex(object):
                 except Exception:
                     term.pty_write('## Failed to read file %s\n' % (Exec_path+"/gprofile"))
                 return
-            term.pty_write('[ "$GTERM_COOKIE" ] || export GTERM_EXPORT="%s"\n' % (platform.node() or "unknown",))
+            term.pty_write('[[ -n "$GTERM_COOKIE" ]] || export GTERM_EXPORT="%s"\n' % (platform.node() or "unknown",))
+            term.pty_write('[[ -n "$GTERM_DIR" || ! -d "$HOME/graphterm" ]] || export GTERM_DIR="$HOME/graphterm"\n')
+            term.pty_write('[[ -n "$GTERM_DIR" ]] || export GTERM_DIR=$(python -c "import graphterm, os; print os.path.dirname(graphterm.__file__)" 2>/dev/null)\n')
+            term.pty_write('[[ "$PATH" != */graphterm/* ]] && [[ -d "$GTERM_DIR" ]] && export PATH="$GTERM_DIR/%s:$PATH"\n' % BINDIR)
             for name, value in self.term_env(term_name, term.cookie, term.height, term.width,
                                              term.winheight, term.winwidth, export=True):
                 try:
-                    if name in (GT_PREFIX+"DIR",):
-                        term.pty_write( ('[ "$%s" ] || ' % name) + ("export %s='%s'\n" % (name, value)) )
-                    else:
+                    if name not in ("GTERM_DIR", "GTERM_EXPORT"):
                         term.pty_write( "export %s='%s'\n" % (name, value) )  # Keep inner single quotes to handle PROMPT_COMMAND
                 except Exception:
                     print >> sys.stderr, "lineterm: Error exporting environment to %s" % term_name
                     break
-            term.pty_write('[[ "$PATH" != */graphterm/* ]] && [ -d "$GTERM_DIR" ] && export PATH="$GTERM_DIR/%s:$PATH"\n' % BINDIR)
+
 
     def set_size(self, term_name, height, width, winheight=0, winwidth=0):
         # python bug http://python.org/sf/1112949 on amd64

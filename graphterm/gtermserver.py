@@ -2008,7 +2008,7 @@ def main():
     parser.add_option("prompts", default="",
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
     parser.add_option("lc_export", default="",
-                      help="Export environment as locale (values: '' or 'all' or 'pack')")
+                      help="Export environment as locale (values: '' or 'graphterm' or 'telephone') NOTE: Use with caution; insecure on untrusted computers")
     parser.add_option("nb_ext", default="",
                       help="File extension for python notebooks ('ipynb' (default) or 'py.gnb.md')")
     parser.add_option("nb_autosave", default=300,

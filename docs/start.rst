@@ -53,9 +53,9 @@ Type  ``gtermserver -h`` to view all options for starting the server.
 You can use the
 ``--daemon=start`` option to run the server in the background. The
 ``--host=hostname`` option is useful for listening on a public IP address instead
-of the default ``localhost``. The ``--lc_export=pack`` option can be used to
-export the GraphTerm environment across SSH via the locale variables
-(which sometimes works).
+of the default ``localhost``. The ``--lc_export=graphterm`` option can be used to
+export the GraphTerm environment across SSH to *trusted* computers
+via the locale variables (which sometimes works).
 The ``--auth_type=none`` no authentication option is useful for
 teaching or demonstration purposes, or on a single-user lapttop/desktop,
 where security is not important.
@@ -699,17 +699,21 @@ computer, use the command::
 This will allow you to connect to ``http://localhost:8901`` on the browser
 on your home computer to access GraphTerm running on your work computer.
 
-A completely different approach is to install GraphTerm on the remote
-computer and run the ``gtermhost`` program remotely to allow it to
-connect to the ``gtermserver`` running on your local computer using
-SSH reverse port forwarding, e.g.::
+A completely different approach is to use reverse forwarding.
+*Warning: If the remote computer is insecure, reverse forwarding
+should be used caution, and preferably with multiuser authentication.*
+Install GraphTerm on the remote computer and run the ``gtermhost``
+program remotely to allow it to connect to the ``gtermserver``
+running on your local computer using SSH reverse port forwarding, e.g.::
 
    ssh -R 8899:localhost:8899 user@remote1 gtermhost remote1
 
 In this case, the remote computer will appear as another host on your
-local GraphTerm server. *Warning: If the remote computer is insecure,
-reverse forwarding should not be used.*
+local GraphTerm server. 
 
+*Note: Do not do the following unless you trust the remote machine.
+A malicious remote program could execute commands on your
+local computer if it has access to the GraphTerm window.*
 If you do not wish to have a GraphTerm process running on
 the remote machine, you can still use many features though GraphTerm
 running on your local machine, because all communication takes place
@@ -717,12 +721,10 @@ via the standard output of the remote process. One quick solution is
 use the *terminal/export environment* menu option to set the Bash
 shell environment variables on the remote computer. This will allow
 some, but not all, of GraphTerm's features to work on the remote
-session.
+session. A more permanent solution involves the following three steps:
 
-A more permanent solution involves the following three steps:
-
- - Start the local GraphTerm server using the ``--lc_export=pack`` or
-   ``--lc_export=all`` options, which export the GraphTerm environment
+ - Start the local GraphTerm server using the ``--lc_export=graphterm`` or
+   ``--lc_export=telephone`` options, which export the GraphTerm environment
    via the ``LC_*`` environment variables which are typically transmitted
    across SSH tunnels.
 
