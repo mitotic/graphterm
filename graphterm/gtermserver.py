@@ -1705,7 +1705,8 @@ def run_server(options, args):
                        "users_dir": options.users_dir, "gtermhost_args": gtermhost_args,
                        "max_terminals": options.max_terminals}
 
-    Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "no_pyindent": options.no_pyindent, "lc_export": options.lc_export},
+    Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "no_colors": options.no_colors,
+                                      "no_pyindent": options.no_pyindent, "lc_export": options.lc_export},
                      "term_type": options.term_type, "term_encoding": options.term_encoding,
                      "blob_host": options.blob_host, "command": options.shell_command,
                      "prompt_list": options.prompts.split(",") if options.prompts else gterm.DEFAULT_PROMPTS,
@@ -2015,6 +2016,8 @@ def main():
                       help="Notebook autosave interval (default: 300)", opt_type="int")
     parser.add_option("nb_server", default=False, opt_type="flag",
                       help="Enable PUBLIC ipython notebook server")
+    parser.add_option("no_colors", default=False, opt_type="flag",
+                      help="Disable terminal colors")
     parser.add_option("no_pyindent", default=False, opt_type="flag",
                       help="Disable auto indentation mods for notebook cells in python interpreter")
     parser.add_option("allow_embed", default=False, opt_type="flag",

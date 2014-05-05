@@ -2912,6 +2912,10 @@ function gtermBottomSelectHandler(event) {
 	    text = String.fromCharCode(32);
 	else if (selectedOption == "escape")
 	    text = String.fromCharCode(27);
+	else if (selectedOption == "noenter")
+	    text = "no\n";
+	else if (selectedOption == "yesenter")
+	    text = "yes\n";
 	else if (selectedOption == "controla")
 	    text = String.fromCharCode(1);
 	else if (selectedOption == "controlc")

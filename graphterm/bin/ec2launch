@@ -147,7 +147,7 @@ startup_commands = ["#!/bin/bash",
 "#!/bin/bash",
 "set -e -x",
 "apt-get update && apt-get upgrade -qy",
-"apt-get install -qy python-setuptools python-pip",
+"apt-get install -qy python-setuptools python-pip zip",
 "pip install tornado",
 ]
 

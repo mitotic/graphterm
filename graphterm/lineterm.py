@@ -574,7 +574,7 @@ def command_markup(entry_index, current_dir, pre_offset, offset, line):
 
 
 class ScreenBuf(object):
-    def __init__(self, pdelim, fg_color=0, bg_color=7):
+    def __init__(self, pdelim, fg_color=0, bg_color=7, colors=False):
         self.pdelim = pdelim
         self.pre_offset = len(pdelim[0]) if pdelim else 0
         self.width = None
@@ -592,6 +592,7 @@ class ScreenBuf(object):
 
         self.fg_color = fg_color
         self.bg_color = bg_color
+        self.colors = colors
         self.default_style = (bg_color << STYLE4) | fg_color
         self.inverse_style = (fg_color << STYLE4) | bg_color
         self.bold_style = 0x08
@@ -826,12 +827,13 @@ class ScreenBuf(object):
                     style_list.append("bold")
                 if (span_style & 0x77) == self.inverse_style:
                     style_list.append("inverse")
-                fg_color = span_style & 0x7
-                bg_color = (span_style >> STYLE4) & 0x7
-                if fg_color > 0 and fg_color < 7:
-                    style_list.append("fgcolor%d" % fg_color)
-                if bg_color > 0 and bg_color < 7:
-                    style_list.append("bgcolor%d" % bg_color)
+                if self.colors:
+                    fg_color = span_style & 0x7
+                    bg_color = (span_style >> STYLE4) & 0x7
+                    if fg_color > 0 and fg_color < 7:
+                        style_list.append("fgcolor%d" % fg_color)
+                    if bg_color > 0 and bg_color < 7:
+                        style_list.append("bgcolor%d" % bg_color)
             span += unichr(ucode)
         cspan = uclean(span, trim=trim, encoded=True)
         if cspan:
@@ -874,10 +876,10 @@ class Terminal(object):
         self.pdelim = pdelim
         self.term_params = term_params
         self.logfile = logfile
-        self.screen_buf = ScreenBuf(pdelim)
+        self.screen_buf = ScreenBuf(pdelim, colors=not term_params.get("no_colors"))
 
         self.note_count = 0
-        self.note_screen_buf = ScreenBuf("")
+        self.note_screen_buf = ScreenBuf("", colors=not term_params.get("no_colors"))
         self.reset_note()
 
         self.init()

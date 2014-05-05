@@ -48,7 +48,7 @@ headers["x_gterm_parameters"] = params
 
 Props_format = "Instance: id=%(id)s, domain=%(public_dns)s, key=%(key)s, tags=%(taglist)s, state=%(state)s"
 
-Row_format = '<tr><td>%(id)s<td>%(public_dns)s<td>%(key)s<td>%(taglist)s<td>%(state)s<td><a class="gterm-link" href="" data-gtermmime="" data-gtermcmd="ec2list --kill %(id)s" data-gtermconfirm="Terminate instance %(id)s?">%(killstr)s</a>'
+Row_format = '<tr><td>%(id)s<td>%(public_dns)s<td>%(key)s<td>%(taglist)s<td>%(state)s<td><a class="gterm-link" href="" data-gtermmime="" data-gtermcmd="ec2list --kill %(id)s" data-gtermconfirm="Terminate instance %(id)s (%(taglist)s)?">%(killstr)s</a>'
 
 Column_headers = ["Id", "Public DNS", "Key", "Tags", "State", "Action"]
 
