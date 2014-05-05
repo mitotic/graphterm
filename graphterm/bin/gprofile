@@ -4,25 +4,46 @@
 #   source $GTERM_DIR/bin/gprofile
 # or append to .bash_profile
 
-if [[ -z "$GTERM_COOKIE" ]] && [[ -n "$LC_GTERM_COOKIE" ]]; then
+if [[ -z "$GTERM_COOKIE" ]] && [[ "$LC_TELEPHONE" =~ "GTERM_EXPORT=" ]]; then
+   vardefs=(${LC_TELEPHONE//|/ })
+   for vardef in "${vardefs[@]}"; do
+       comps=(${vardef//=/ })
+       export ${comps[0]}="${comps[1]}"
+   done
+
+   export GTERM_PROMPT='\h:\W$ '
+   export PROMPT_COMMAND='export PS1=$GTERM_PROMPT; echo -n `printf "\033"`"[?1150;${GTERM_COOKIE}h$PWD"`printf "\033"`"[?1150;l"'
+
+elif [[ -z "$GTERM_COOKIE" ]] && [[ -n "$LC_GTERM_COOKIE" ]]; then
    export GTERM_COOKIE="$LC_GTERM_COOKIE"
-fi
-
-if [[ -z "$GTERM_EXPORT" ]] && [[ -n "$LC_GTERM_EXPORT" ]]; then
-   export GTERM_EXPORT="$LC_GTERM_EXPORT"
-fi
-
-if [[ -z "$PROMPT_COMMAND" ]] && [[ -n "$LC_PROMPT_COMMAND" ]] && [[ -n "$LC_GTERM_PROMPT" ]]; then
-   # Set prompt command
-   export GTERM_PROMPT="$LC_GTERM_PROMPT"
-   export PROMPT_COMMAND="$LC_PROMPT_COMMAND"
+   if [[ -n "$LC_GTERM_EXPORT" ]]; then
+      export GTERM_EXPORT="$LC_GTERM_EXPORT"
+   fi
+   if [[ -z "$PROMPT_COMMAND" ]] && [[ -n "$LC_PROMPT_COMMAND" ]] && [[ -n "$LC_GTERM_PROMPT" ]]; then
+      # Set prompt command
+      export GTERM_PROMPT="$LC_GTERM_PROMPT"
+      export PROMPT_COMMAND="$LC_PROMPT_COMMAND"
+   fi
 fi
 
 ## To access the graphterm toolchain across SSH, install graphterm on the remote machine and then
-## uncomment the following lines and set GTERM_DIR to the graphterm installation directory
-# export GTERM_DIR=unknown
-# [[ "$PATH" != */graphterm/* ]] && PATH="$GTERM_DIR/bin:$PATH"
-# alias gpython="python -i $GTERM_DIR/bin/gpylab.py"
-# alias gipython="ipython -i $GTERM_DIR/bin/gpylab.py"
+## uncomment the following line and set GTERM_DIR to the graphterm installation directory (if need be)
 
+# export GTERM_DIR=graphterm_directory
+
+if [[ -z "$GTERM_DIR" ]]; then
+   if [ -d $HOME/graphterm ]; then
+      export GTERM_DIR=$HOME/graphterm
+   else
+      export GTERM_DIR=$(python -c 'import graphterm, os; print os.path.dirname(graphterm.__file__)' 2>/dev/null)
+   fi
+fi
+
+if [[ -n "$GTERM_DIR" ]]; then
+   [[ "$PATH" != */graphterm/* ]] && PATH="$GTERM_DIR/bin:$PATH"
+   alias gpython="python -i $GTERM_DIR/bin/gpylab.py"
+   alias gipython="ipython -i $GTERM_DIR/bin/gpylab.py"
+fi
+
+alias gm=gmenu
 ############# end of gprofile #####################

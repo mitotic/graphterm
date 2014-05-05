@@ -60,15 +60,25 @@ Bin_dir = os.path.dirname(__file__)
 #    unique prompt prefix (maybe null), unique prompt suffix (non-null), prompt body, remote prompt body
 DEFAULT_PROMPTS = ["", "$", "\W", "\h:\W"]
 
+Pack_env = {}
+lc_pack = os.getenv("LC_TELEPHONE", "")
+if lc_pack.startswith("GTERM_EXPORT="):
+    comps = lc_pack.split("|")
+    for lc_var in comps:
+        name, sep, value = lc_var.partition("=")
+        if name and sep:
+            Pack_env[name] = value
+
 def env(name, default="", lc=False):
+    gt_name = GT_PREFIX+name
     if not lc:
-        return os.getenv(GT_PREFIX+name, default)
-    return os.getenv(GT_PREFIX+name, "") or os.getenv("LC_"+GT_PREFIX+name, default)
+        return os.getenv(gt_name, default)
+    return os.getenv(gt_name, "") or os.getenv("LC_"+gt_name, "") or Pack_env.get(gt_name, default)
 
 Version_str, sep, Min_version_str = env("API").partition("/")
 
+Export_host = env("EXPORT") or ( not env("COOKIE") and (os.getenv("LC_"+GT_PREFIX+"EXPORT", "") or Pack_env.get(GT_PREFIX+"EXPORT", "")) )
 Lterm_cookie = env("COOKIE", lc=True)
-Export_host = env("EXPORT") or (not env("COOKIE") and os.getenv("LC_"+GT_PREFIX+"EXPORT", ""))
 Path = env("PATH", lc=True)
 Dimensions = env("DIMENSIONS", lc=True) # colsxrows[;widthxheight]
 Shared_secret = env("SHARED_SECRET", lc=True)

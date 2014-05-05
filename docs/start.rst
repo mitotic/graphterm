@@ -53,7 +53,7 @@ Type  ``gtermserver -h`` to view all options for starting the server.
 You can use the
 ``--daemon=start`` option to run the server in the background. The
 ``--host=hostname`` option is useful for listening on a public IP address instead
-of the default ``localhost``. The ``--lc_export`` option can be used to
+of the default ``localhost``. The ``--lc_export=pack`` option can be used to
 export the GraphTerm environment across SSH via the locale variables
 (which sometimes works).
 The ``--auth_type=none`` no authentication option is useful for
@@ -721,20 +721,28 @@ session.
 
 A more permanent solution involves the following three steps:
 
- - Start the local GraphTerm server using the ``--lc_export``
-   option. which exports the GraphTerm environment via the ``LC-*``
-   environment variables which are often transmitted across SSH
-   tunnels.
+ - Start the local GraphTerm server using the ``--lc_export=pack`` or
+   ``--lc_export=all`` options, which export the GraphTerm environment
+   via the ``LC_*`` environment variables which are typically transmitted
+   across SSH tunnels.
 
- - Copy the ``$GTERM_DIR/bin`` directory to your account on the remote
-   machine to allow the GraphTerm toolchain to be
-   accessed. Alternatively, you could simply install GraphTerm on the
+ - Copy the ``$GTERM_DIR/bin`` directory to ``~/graphterm`` on the
+   remote machine to allow the GraphTerm toolchain to be accessed:
+
+   ``ssh user@remote_server mkdir graphterm``
+
+   ``scp -pr $GTERM_DIR/bin user@remote_server:graphterm``
+
+   Alternatively, you could simply install GraphTerm on the
    remote machine, even if you are never planning to start the server.
 
  - Append the file
    `$GTERM_DIR/bin/gprofile <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gprofile>`_
-   to your ``.bash_profile`` on the remote machine, and uncomment/modify the
-   last few lines so that ``$GTERM_DIR`` points to the parent of the
-   directory where the toolchain files are installed. This ensures
-   that the GraphTerm toolchain is included in your ``PATH`` on the remote
-   machine, allowing commands like ``gls`` to work.
+   to your ``.bash_profile`` on the remote machine:
+
+   ``cat gprofile >> ~/.bash_profile``
+
+   Although this script can usually detect your GraphTerm installation
+   directory, sometimes you may need to modify the last few lines to
+   ensure that the GraphTerm toolchain is included in your ``PATH`` on
+   the remote machine. This would allow commands like ``gls`` to work.

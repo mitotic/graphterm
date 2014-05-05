@@ -3314,16 +3314,27 @@ class Multiplex(object):
 
         env.append( (GT_PREFIX+"DIR", File_dir) )
 
-        if self.term_params.get("lc_export"):
+        lc_export = self.term_params.get("lc_export")
+        if lc_export:
             # Export some environment variables as LC_* (hack to enable SSH forwarding)
             env_dict = dict(env)
-            env.append( ("LC_"+GT_PREFIX+"EXPORT", platform.node() or "unknown") )
+            export_host = platform.node() or "unknown"
+            env.append( ("LC_"+GT_PREFIX+"EXPORT", export_host) )
             if export_prompt_fmt:
                 env.append( ("LC_"+GT_PREFIX+"PROMPT", export_prompt_fmt) )
                 env.append( ("LC_PROMPT_COMMAND", env_dict["PROMPT_COMMAND"]) )
-            for name in LC_EXPORT_ENV:
-                if name in env_dict:
-                    env.append( ("LC_"+name, env_dict[name]) )
+
+            if lc_export.lower() == "pack":
+                # Use LC_TELEPHONE variable to pack
+                lc_vars = [ "%s=%s" % (GT_PREFIX+"EXPORT", export_host) ]
+                for name in LC_EXPORT_ENV:
+                    if name in env_dict:
+                        lc_vars.append( "%s=%s" % (name, env_dict[name]) )
+                env.append( ("LC_TELEPHONE", "|".join(lc_vars)) )
+            else:
+                for name in LC_EXPORT_ENV:
+                    if name in env_dict:
+                        env.append( ("LC_"+name, env_dict[name]) )
         return env
 
     def export_environment(self, term_name, profile=False):

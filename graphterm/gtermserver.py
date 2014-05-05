@@ -2007,14 +2007,14 @@ def main():
                       help="Use https for internal connections")
     parser.add_option("prompts", default="",
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
+    parser.add_option("lc_export", default="",
+                      help="Export environment as locale (values: '' or 'all' or 'pack')")
     parser.add_option("nb_ext", default="",
                       help="File extension for python notebooks ('ipynb' (default) or 'py.gnb.md')")
     parser.add_option("nb_autosave", default=300,
                       help="Notebook autosave interval (default: 300)", opt_type="int")
     parser.add_option("nb_server", default=False, opt_type="flag",
                       help="Enable PUBLIC ipython notebook server")
-    parser.add_option("lc_export", default=False, opt_type="flag",
-                      help="Export environment as locale (ssh hack)")
     parser.add_option("no_pyindent", default=False, opt_type="flag",
                       help="Disable auto indentation mods for notebook cells in python interpreter")
     parser.add_option("allow_embed", default=False, opt_type="flag",
