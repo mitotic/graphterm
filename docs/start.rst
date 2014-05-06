@@ -697,16 +697,24 @@ computer, use the command::
    ssh -L 8901:localhost:8900 user@work-computer
 
 This will allow you to connect to ``http://localhost:8901`` on the browser
-on your home computer to access GraphTerm running on your work computer.
+on your home computer to access GraphTerm running on your work
+computer. If using *singleuser* authentication, copy the file
+``~/.graphterm/_gterm_auth.txt`` from work to home as
+``~/.graphterm/@server_name_gterm_auth.txt``, and use
+the ``gterm`` command::
+
+    gterm  --server server_name --port 8900 http://localhost:8901
 
 A completely different approach is to use reverse forwarding.
 *Warning: If the remote computer is insecure, reverse forwarding
-should be used caution, and preferably with multiuser authentication.*
-Install GraphTerm on the remote computer and run the ``gtermhost``
-program remotely to allow it to connect to the ``gtermserver``
-running on your local computer using SSH reverse port forwarding, e.g.::
+should be used caution, and preferably with multiuser authentication
+(without the user_setup option).* Install GraphTerm on the remote
+computer and run the ``gtermhost`` program remotely to allow it to
+connect to the ``gtermserver`` running on your local computer using
+SSH reverse port forwarding, e.g.::
 
-   ssh -R 8899:localhost:8899 user@remote1 gtermhost remote1
+    gauth remote1 | ssh user@remote1 'cat > ~/.graphterm/remote1_gterm_auth.txt' 
+    ssh -R 8799:localhost:8899 user@remote1 gtermhost --server_port 8799 --remote_port=8899 remote1
 
 In this case, the remote computer will appear as another host on your
 local GraphTerm server. 

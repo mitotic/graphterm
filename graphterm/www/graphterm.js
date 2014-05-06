@@ -1144,8 +1144,13 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		if (user)
 		    host_html += 'User: <b>'+user + '</b><p>\n';
 		if (new_user_code) {
-		    var mail_body = "User: "+user+"\nCode: "+new_user_code+"\nURL: "+window.location.protocol+"/"+"/"+window.location.host+"/\n";
-		    host_html += 'Created new user with authentication code:<br>&nbsp;<b>'+new_user_code+'</b><br>Copy this information for future use or <a href="mailto:?subject=Graphterm%20code&body='+encodeURIComponent(mail_body)+'">email it to yourself</a>.<p><a href="/">Click here</a> to open a terminal.';
+		    if (new_user_code == "activated") {
+			host_html += 'Activated user. ';
+		    } else {
+			var mail_body = "User: "+user+"\nCode: "+new_user_code+"\nURL: "+window.location.protocol+"/"+"/"+window.location.host+"/\n";
+			host_html += 'Created new user with authentication code:<br>&nbsp;<b>'+new_user_code+'</b><br>Copy this information for future use or <a href="mailto:?subject=Graphterm%20code&body='+encodeURIComponent(mail_body)+'">email it to yourself</a>.<p>';
+		    }
+		    host_html +='<a href="/">Click here</a> to open a terminal.';
 
 		    if (new_user_email) {
 			host_html += '<p>You can also authenticate yourself via your email login: '+new_user_email+'<br>';

@@ -859,13 +859,14 @@ def run_host(options, args):
 
     key_version = "1" if auth_code else None
     server_port = options.server_port or gterm.DEFAULT_HOST_PORT
+    remote_port = options.remote_port or server_port
     internal_client_ssl = {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": options.internal_certfile} if options.internal_certfile else None
     Gterm_host, Host_secret, Trace_shell = gterm_connect(host_name, options.server_addr,
                                                          server_port=server_port,
                                                          connect_kw={"ssl_options": internal_client_ssl,
                                                                      "key_secret": auth_code or None,
                                                                      "key_version": key_version,
-                                                                     "key_id": str(server_port),
+                                                                     "key_id": str(remote_port),
                                                                      "lterm_logfile": options.lterm_logfile},
                                                          oshell_globals=oshell_globals,
                                                          oshell_unsafe=True,
@@ -911,6 +912,8 @@ def main():
                       help="Server port (default: %d)" % gterm.DEFAULT_HOST_PORT, type="int")
     parser.add_option("", "--external_host", dest="external_host", default="",
                       help="external host name (or IP address), if different from server_addr")
+    parser.add_option("", "--remote_port", dest="remote_port", default=0,
+                      help="actual remote port, if different from server_port", type="int")
     parser.add_option("", "--auth_file", dest="auth_file", default="",
                       help="Server auth file")
 

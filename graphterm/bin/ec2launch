@@ -216,7 +216,7 @@ else:
                       "iptables -t nat -A OUTPUT --dst %s -p tcp --dport %d -j DNAT --to-destination %s:%d" % (local_ip, external_port, local_ip, gterm.DEFAULT_HTTP_PORT)]
     command_line += " --auth_type="+options.auth_type
     if auth_type == "multiuser":
-        command_line += " --auto_users --super_users="+gterm_user
+        command_line += " --user_setup=auto --super_users="+gterm_user
     command_line += " --host=%s --external_port=%d" % (public_host, external_port)
     ##if options.wildcard:
     ##    command_line += " --blob_host=wildcard"

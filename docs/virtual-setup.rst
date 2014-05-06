@@ -56,12 +56,12 @@ Case 1: Mac or Linux server with user accounts already created
     run the following command to start the GraphTerm server with root
     privileges:
 
-   ``sudo gtermserver --daemon=start --auth_type=multiuser --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
+   ``sudo gtermserver --daemon=start --auth_type=multiuser --user_setup=manual --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
 
    To stop the server, use ``sudo gtermserver --daemon=stop``.
    You can also omit the ``--daemon`` option, to run the server in the
-   foreground for testing. If you want automatic new user creation, you can add the
-   ``--auto_users`` option, but you may need to modify the shell
+   foreground for testing. If you want automatic new user creation, you can use the
+   ``--user_setup=auto`` option, but you may need to modify the shell
    script ``$GTERM_DIR/bin/gterm_user_setup``, which currently works
    with Ubuntu Linux.
 
@@ -272,13 +272,16 @@ An important configuration choice is the authentication type
    unique username. This is meant for demonstration purposes and all
    users share the same Unix account.
 
-   *multiuser*: This option allows new users enter enter a group
-   authentication code, along with a unique user name. This creates a
-   new Unix account for the user and generates a unique access code
-   that will be used the next time the user logs in. The super user
-   can view all the access codes using the ``gauth`` command. (If the
-   users choose to use Google Authentication, they will also be able to
-   login using their GMail account.)
+   *multiuser*: For the multiuser case, you typically specify either the
+   ``--user_setup=auto`` or the ``--user_setup=manual`` option. The
+   ``auto`` option allows new users enter enter a group authentication
+   code, along with a unique user name. This creates a new Unix
+   account for the user and generates a unique access code that will
+   be used the next time the user logs in. The super user can view all
+   the access codes using the ``gauth`` command. (If the users choose
+   to use Google Authentication, they will also be able to login using
+   their GMail account.) The ``--users_dir=/home`` option can be used
+   to specify the root for all user home directories.
 
 Once you fill in the form for ``ec2launch`` and submit it, a command
 line will be automatically generated, with the specified options, to launch
@@ -313,7 +316,7 @@ To stop a running server, type::
 
 If you are not using ``ec2launch``, you can start the server explicitly from the command line, e.g.::
 
-    gtermserver --daemon=start --auth_type=multiuser --auto_users --logging --nb_server --https --external_port=443 --host=domain_or_ip
+    gtermserver --daemon=start --auth_type=multiuser --user_setup=auto --logging --nb_server --https --external_port=443 --host=domain_or_ip
 
 The above options configure the server for multiuser authentication,
 with https. (``ec2launch`` automatically configures port forwarding
@@ -321,12 +324,12 @@ from port 443 to the default graphterm port 8900, enabling even
 non-privileged users to run ``gtermserver``.) 
 
 An account with password-less ``sudo`` privileges is required for new
-users to be created automatically (``--auto_users`` option).  Running
+users to be created automatically (``--user_setup=auto`` option).  Running
 an Ubuntu linux instance on AWS automatically creates such an account,
 named ``ubuntu``, as described `here
 <http://askubuntu.com/questions/192050/how-to-run-sudo-command-with-no-password>`_.
 By default, GraphTerm server is run from this account. The
-``auto_users`` option creates a file named
+``--user_setup=auto`` option creates a file named
 ``~/.graphterm/AUTO_ADD_USERS`` which can be deleted to suppress
 auto-user creation while the server is running.
 

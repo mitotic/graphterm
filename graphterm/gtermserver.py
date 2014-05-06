@@ -447,7 +447,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                 auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command." % gterm.get_auth_filename(server=Server_settings["external_host"])
                         else:
                             auth_message = "<h3>GraphTerm Login</h3><p>Please specify username (letters/digits/hyphens, starting with letter)."
-                            if Server_settings["auto_users"] and os.path.exists(Auto_add_file):
+                            if Server_settings["user_setup"] == "auto" and os.path.exists(Auto_add_file):
                                 auth_message += "<br><em>If new user, enter your group code to create account.</em>"
                     elif self._auth_type == self.NAME_AUTH:
                         # Name-only authentication
@@ -471,21 +471,22 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                             if gterm.is_user(user):
                                 # Existing user
-                                if not os.path.exists(gterm.get_app_dir(user=user)):
-                                    # Create .graphterm directory
-                                    if self.setup_user(user, email=new_user_email):
-                                        new_user_code = gterm.dashify(gterm.user_hmac(self._auth_code, user, key_version=key_version))
-                                    else:
-                                        self.write_json([["abort", "Error in setting up user "+user]])
-                                        self.close()
-                                        return
-
                                 if auth_email:
                                     validated = True
                                 else:
                                     # Non-auto user, super user, or existing auto user; need to validate with user auth code
                                     validated = (code == gterm.compute_hmac(gterm.user_hmac(self._auth_code, user, key_version=key_version), cauth))
-                            elif not self.is_super(user) and Server_settings["auto_users"] and os.path.exists(Auto_add_file):
+
+                                if validated and not self.is_super(user) and Server_settings["user_setup"] == "manual" and not TerminalConnection.get_connection(user):
+                                    # Set up user and create .graphterm directory
+                                    if self.setup_user(user, email=new_user_email):
+                                        new_user_code = "activated"
+                                    else:
+                                        self.write_json([["abort", "Error in setting up user "+user]])
+                                        self.close()
+                                        return
+
+                            elif not self.is_super(user) and Server_settings["user_setup"] == "auto" and os.path.exists(Auto_add_file):
                                 # New auto user; group code validation required
                                 if code != gterm.compute_hmac(group_secret, cauth):
                                     self.write_json([["abort", "Invalid group authentication code"]])
@@ -630,7 +631,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         else:
                             term_list.append( [tem_name, True, False, len(self._watch_dict[path]), 0])
                     term_list.sort()
-                    allow_new = (self._auth_type <= self.SINGLE_AUTH) or (is_super_user and host == gterm.LOCAL_HOST) or ((user and user == host) and (len(term_list) < Server_settings["max_terminals"]))
+                    allow_new = (self._auth_type <= self.SINGLE_AUTH) or is_super_user or ((user and user == host) and (len(term_list) < Server_settings["max_terminals"]))
                     self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
                     self.close()
                     return
@@ -750,9 +751,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 else:
                     self.broadcast(path, ["update_menu", "share_control", False], controller=True)
                     self._control_set[path] = set([self.websocket_id])
-            elif not self._control_set.get(path) and option != "watch" and (is_owner or self._auth_type == self.SINGLE_AUTH):
+            elif not self._control_set.get(path) and option != "watch" and (is_owner or self._auth_type == self.SINGLE_AUTH or (is_super_user and self.authorized["state_id"] == terminal_params["state_id"])):
                 controller = True
                 self._control_set[path] = set([self.websocket_id])
+                
 
             self.remote_path = path
             self._all_websockets[self.websocket_id] = self
@@ -1699,7 +1701,7 @@ def run_server(options, args):
                        "external_host": external_host, "external_port": external_port,
                        "internal_host": internal_host, "internal_port": internal_port,
                        "allow_embed": options.allow_embed, "allow_share": options.allow_share,
-                       "auto_users": options.auto_users, "no_formcheck": options.no_formcheck,
+                       "user_setup": options.user_setup, "no_formcheck": options.no_formcheck,
                        "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
                        "nogoog_auth": options.nogoog_auth, "user_groups": membership_dict,
                        "users_dir": options.users_dir, "gtermhost_args": gtermhost_args,
@@ -1749,7 +1751,7 @@ def run_server(options, args):
     if options.auth_type == "multiuser":
         if not super_users:
             super_users = [ getpass.getuser() ]
-        if options.auto_users:
+        if options.user_setup == "auto":
             if not os.path.exists(Auto_add_file):
                 with open(Auto_add_file, "w") as f:
                     pass
@@ -1872,7 +1874,7 @@ def run_server(options, args):
     else:
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
-    if options.auth_type == "multiuser":
+    if options.auth_type == "multiuser" and options.user_setup:
         action = "activate" if options.no_reset else "restart"
         cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host, "-", Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
         print >> sys.stderr, "Initializing users: "+" ".join(cmd_args)
@@ -2006,6 +2008,8 @@ def main():
                       help="Use SSL (TLS) connections for security")
     parser.add_option("internal_https", default=False, opt_type="flag",
                       help="Use https for internal connections")
+    parser.add_option("user_setup", default="",
+                      help="User setup: '' or 'auto' or 'manual'")
     parser.add_option("prompts", default="",
                       help="Inner prompt formats delim1,delim2,fmt,remote_fmt (default:',$,\\W,\\h:\\W')")
     parser.add_option("lc_export", default="",
@@ -2026,8 +2030,6 @@ def main():
                       help="Allow sharing of terminals between multiple users")
     parser.add_option("users_dir", default=default_users_dir,
                       help="Users home directory (default: %s)" % default_users_dir)
-    parser.add_option("auto_users", default=False, opt_type="flag",
-                      help="Allow automatic user creation")
     parser.add_option("no_reset", default=False, opt_type="flag",
                       help="Do not reset existing host connections")
     parser.add_option("no_formcheck", default=False, opt_type="flag",

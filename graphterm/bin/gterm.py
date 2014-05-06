@@ -1147,10 +1147,12 @@ def main():
                       help="Read access code from terminal")
     parser.add_option("-b", "--browser", dest="browser", default="",
                       help="Browser application name (OS X only)")
-    parser.add_option("-u", "--user", dest="user", default="",
-                      help="User name")
     parser.add_option("-p", "--port", dest="port", default=0,
                       help="Remote server port", type="int")
+    parser.add_option("-s", "--server", dest="server", default="",
+                      help="Remote server name")
+    parser.add_option("-u", "--user", dest="user", default="",
+                      help="User name")
     parser.add_option("", "--client_cert", dest="client_cert", default="",
                       help="Path to client CA cert (or '.')")
     #parser.add_option("", "--term_type", dest="term_type", default="",
@@ -1158,9 +1160,11 @@ def main():
 
     (options, args) = parser.parse_args()
     protocol = "https" if options.https else "http"
-    server = ""
+    url_server = ""
+    url_port = 0
+    server_name = options.server
+    server_port = options.port
     path = ""
-    port = None
     if args:
         if args[0] and ":" not in args[0]:
             if args[0][0].isalpha():
@@ -1170,17 +1174,17 @@ def main():
         else:
             try:
                 comps = urlparse.urlparse(args[0])
-                server, sep, port = comps[1].partition(":")
-                if port:
-                    port = int(port)
+                url_server, sep, url_port = comps[1].partition(":")
+                if url_port:
+                    url_port = int(url_port)
             except Exception, excp:
                 sys.exit("Invalid URL argument: "+str(excp))
             protocol = comps[0]
-            if not port:
-                port = 443 if protocol == "https" else 80
             path = comps[2][1:]
+            if not url_port:
+                url_port = 443 if protocol == "https" else 80
 
-    if not server and Lterm_cookie:
+    if not server_name and not url_server and Lterm_cookie:
         # Open new terminal window from within graphterm window
         path = path or (Host + "/" + "new")
         url = URL + "/" + path
@@ -1188,7 +1192,10 @@ def main():
         open_url(url, target=target)
         return
 
-    auth_file = get_auth_filename(user=options.user, server=server)
+    if not server_name and url_server and url_server != "localhost":
+        server_name = url_server
+
+    auth_file = get_auth_filename(user=options.user, server=server_name)
     auth_user = options.user
     read_code = options.read_code
     if options.noauth:
@@ -1200,21 +1207,21 @@ def main():
         tem_port = 0
         try:
             # Read user access code
-            auth_code, tem_port = read_auth_code(user=options.user, server=server)
+            auth_code, tem_port = read_auth_code(user=options.user, server=server_name)
         except Exception, excp:
             try:
                 # Read master access code
-                auth_code, tem_port = read_auth_code(server=server)
+                auth_code, tem_port = read_auth_code(server=server_name)
                 auth_user = ""
             except Exception, excp:
                 print >> sys.stderr, "Unable to read auth file", auth_file 
                 auth_code = undashify(getpass.getpass("Access code: "))
                 read_code = True
 
-        port = port or tem_port
+        server_port = server_port or tem_port
 
-    Http_addr = server or "localhost"
-    Http_port = options.port or port or DEFAULT_HTTP_PORT
+    Http_addr = url_server or server_name or "localhost"
+    Http_port = url_port or server_port or DEFAULT_HTTP_PORT
 
     client_nonce = "1%018d" % random.randrange(0, 10**18)   # 1 prefix to keep leading zeros when stringified
 
@@ -1225,7 +1232,7 @@ def main():
         sys.exit(1)
 
     server_nonce, received_token = resp.split(":")
-    client_token, server_token = auth_token(auth_code, "graphterm", Http_addr, Http_port, client_nonce, server_nonce)
+    client_token, server_token = auth_token(auth_code, "graphterm", server_name, server_port, client_nonce, server_nonce)
     if received_token != client_token:
         print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself (Check port number and auth code in %s)" % (Http_addr, Http_port, auth_file)
         sys.exit(1)
@@ -1235,7 +1242,7 @@ def main():
     if read_code:
         confirm = raw_input("Save validated access code? (y/[n]): ").strip()
         if confirm.lower().startswith("y"):
-            write_auth_code(auth_code, user=options.user, server=Http_addr, port=Http_port)
+            write_auth_code(auth_code, user=options.user, server=server_name, port=server_port)
             print >> sys.stderr, "Access code saved to file", auth_file
     # Open graphterm window using browser
     url = "%s://%s" % (protocol, Http_addr)
