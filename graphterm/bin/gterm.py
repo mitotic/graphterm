@@ -35,8 +35,8 @@ import uuid
 
 from optparse import OptionParser
 
-API_VERSION = "0.52.0"
-API_MIN_VERSION = "0.52"
+API_VERSION = "0.53.0"
+API_MIN_VERSION = "0.53"
 
 HEX_DIGITS = 16          # Digits to be retained for HMAC, auth_code etc
 SIGN_HEXDIGITS = 16      # User-entered keys (should match packetserver setup)
@@ -1232,18 +1232,19 @@ def main():
         sys.exit(1)
 
     server_nonce, received_token = resp.split(":")
-    client_token, server_token = auth_token(auth_code, "graphterm", server_name, server_port, client_nonce, server_nonce)
-    if received_token != client_token:
-        print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself (Check port number and auth code in %s)" % (Http_addr, Http_port, auth_file)
-        sys.exit(1)
+    if not options.noauth:
+        client_token, server_token = auth_token(auth_code, "graphterm", server_name or Http_addr, server_port, client_nonce, server_nonce)
+        if received_token != client_token:
+            print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself (Use --noauth option for no authentication, or check port number and auth code in %s)" % (Http_addr, Http_port, auth_file)
+            sys.exit(1)
+        ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
 
-    ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
+        if read_code:
+            confirm = raw_input("Save validated access code? (y/[n]): ").strip()
+            if confirm.lower().startswith("y"):
+                write_auth_code(auth_code, user=options.user, server=server_name, port=server_port)
+                print >> sys.stderr, "Access code saved to file", auth_file
 
-    if read_code:
-        confirm = raw_input("Save validated access code? (y/[n]): ").strip()
-        if confirm.lower().startswith("y"):
-            write_auth_code(auth_code, user=options.user, server=server_name, port=server_port)
-            print >> sys.stderr, "Access code saved to file", auth_file
     # Open graphterm window using browser
     url = "%s://%s" % (protocol, Http_addr)
     if (protocol == "http" and Http_port == 80) or (protocol == "https" and Http_port == 443):

@@ -234,6 +234,13 @@ for archive sizes of 1-2 MB, but for larger archives, you should create the
 archive yourself using the ``zip`` command and then download the
 single archive file.
 
+You can also download multiple files, one-at-a-time, using the
+following command::
+
+    gls --download filenames
+
+Click on the displayed filenames to download.
+
 *Note:* Browsers other than Chrome typically append ``.html`` or ``.htm``
 to the downloaded filename. For example, file ``abc.ipynb`` may be downloaded
 as ``abc.ipynb.html``. If needed, you can rename the downloaded file by
@@ -256,6 +263,17 @@ This command works well for file sizes of a few MB, but can be
 quite slow for larger files.
 
 *On Windows:* Drag-and-drop for files currently does not work with IE10.
+
+
+SSH key access
+---------------------------------------------------------------------------------------------
+
+If you have an SSH client on your local computer, upload the public key
+file (usually ``id_rsa.pub``) using the ``gupload`` command as
+``~/.ssh/authorized_keys`` to enable SSH access to your account::
+
+    ssh username@server_domain
+
 
 Keyboard shortcuts
 ---------------------------------------------------------------------------------------------
