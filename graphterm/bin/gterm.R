@@ -1,15 +1,24 @@
 # gterm.R: Convenience functions to display inline graphics within GraphTerm
 
 # Plotting example:
+#   gterm = paste(Sys.getenv("GTERM_DIR"),"/bin/gterm.R", sep="") # As needed
+#   source(gterm)          # Load GraphTerm API helper functions
 #   g <- gcairo()          # Initialize Cairo device for GraphTerm output
 #   x <- rnorm(100,0,1)
 #   hist(x, col="blue")
 #   g$frame()              # Display plot as inline image
 #   hist(x, col="red")
 #   g$frame(TRUE)          # Overwrite previous plot
+#   hist(x, col="green")
+#   g$frame()              # New plot
 #
 # Initialize notebook mode, using R-markdown file:
 #   gnotebook("R-example1.R.md")
+#
+# To display inline graphics, the following R packages need to be installed:
+#    RCurl, Cairo, png
+# On Linux, the following additional libraries, or their equivalents, may need to be installed:
+#    libcurl4-openssl-dev libcairo2-dev libxt-dev
 #
 
 gcairo <- function(width=400, height=300, test=FALSE) {
@@ -36,6 +45,20 @@ gcairo <- function(width=400, height=300, test=FALSE) {
   })
 }
 
+gexample <- function() {
+  # Plotting example:
+  g <- gcairo()          # Initialize Cairo device for GraphTerm output
+  x <- rnorm(100,0,1)
+  hist(x, col="blue")
+  g$frame()              # Display plot as inline image
+  Sys.sleep(2)
+  hist(x, col="red")
+  g$frame(TRUE)          # Overwrite previous plot
+  Sys.sleep(2)
+  hist(x, col="green")
+  g$frame()              # New plot
+}
+
 gnotebook <- function(filepath="") {
   gwrite(paste('{"x_gterm_response": "open_notebook",',
                '"x_gterm_parameters": {"filepath": "', filepath, '",',
@@ -44,7 +67,7 @@ gnotebook <- function(filepath="") {
 
 gwrite <- function(data) {
   # Displays text data wrapped with GraphTerm prefix and suffix
-  prefix <- paste("\x1b[?1155;", Sys.getenv("GTERM_COOKIE"), "h", sep="")
+  prefix <- paste("\x1b[?1155;", Sys.getenv("GTERM_COOKIE", unset="0"), "h", sep="")
   suffix <- "\x1b[?1155;l"
   cat(prefix, data, suffix, sep="")
 }
@@ -63,10 +86,7 @@ grequired <- function() {
 }
 
 gsave <- function(pngdata, overwrite=FALSE, test=False) {
-  # Displays PNG image data within a GtaphTerm pagelet
-  prefix <- paste("\x1b[?1155;", Sys.getenv("GTERM_COOKIE"), "h", sep="")
-  suffix <- "\x1b[?1155;l"
-
+  # Displays PNG image data within a GraphTerm pagelet
   image64 <- base64(pngdata)
 
   # Create image blob
@@ -81,7 +101,7 @@ gsave <- function(pngdata, overwrite=FALSE, test=False) {
   }
 
   # Display blob
-  pagelet <- paste('<!--gterm pagelet display=block blob=', blobid, overs, '--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/_blob/local/', blobid, '"></div>', sep='')
+  pagelet <- paste('<!--gterm display_blob blob=', blobid, overs, '-->', sep='')
   if (test) {
     cat(pagelet, " page=", page, sep="")
   } else {

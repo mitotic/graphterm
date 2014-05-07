@@ -27,7 +27,7 @@ if [[ -z "$GTERM_COOKIE" ]]; then
             export PROMPT_COMMAND="$LC_PROMPT_COMMAND"
          else
             export GTERM_PROMPT='\h:\W$ '
-            export PROMPT_COMMAND='export PS1=$GTERM_PROMPT; echo -n `printf "\033"`"[?1150;${GTERM_COOKIE}h$PWD"`printf "\033"`"[?1150;l"'
+            export PROMPT_COMMAND='export PS1=$GTERM_PROMPT; echo -n `printf "\033"`"[?1150;0h$PWD"`printf "\033"`"[?1150;l"'
          fi
       fi
    fi

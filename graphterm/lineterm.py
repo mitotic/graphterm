@@ -61,7 +61,8 @@ UPDATE_INTERVAL = 0.05  # Fullscreen update time interval
 TERM_TYPE = "xterm"     # "screen" may be a better default terminal, but arrow keys do not always work
 
 NO_COPY_ENV = set([GT_PREFIX+"EXPORT", "TERM_PROGRAM","TERM_PROGRAM_VERSION", "TERM_SESSION_ID"])
-LC_EXPORT_ENV = [GT_PREFIX+"API", GT_PREFIX+"COOKIE", GT_PREFIX+"DIMENSIONS", GT_PREFIX+"PATH", GT_PREFIX+"SHARED_SECRET"]
+LC_EXPORT_PUB = [GT_PREFIX+"API", GT_PREFIX+"DIMENSIONS"]
+LC_EXPORT_PVT = [GT_PREFIX+"COOKIE", GT_PREFIX+"PATH", GT_PREFIX+"SHARED_SECRET"]
 
 ALTERNATE_SCREEN_CODES = (47, 1047, 1049) # http://rtfm.etla.org/xterm/ctlseq.html
 GRAPHTERM_SCREEN_CODES = (1150, 1155)     # (prompt_escape, pagelet_escape)
@@ -875,16 +876,19 @@ class Terminal(object):
         self.host = host
         self.pdelim = pdelim
         self.term_params = term_params
+        tem_str = term_params.get("term_opts","").strip()
+        self.term_opts = set(tem_str.split(",") if tem_str else [])
         self.logfile = logfile
-        self.screen_buf = ScreenBuf(pdelim, colors=not term_params.get("no_colors"))
+        self.screen_buf = ScreenBuf(pdelim, colors="no_colors" not in self.term_opts)
 
         self.note_count = 0
-        self.note_screen_buf = ScreenBuf("", colors=not term_params.get("no_colors"))
+        self.note_screen_buf = ScreenBuf("", colors="no_colors" not in self.term_opts)
         self.reset_note()
 
         self.init()
         self.reset()
         self.current_dir = ""
+        self.remote_dir = ""
         self.current_meta = None
         self.output_time = time.time()
         self.buf = ""
@@ -1115,7 +1119,10 @@ class Terminal(object):
         status_msg = ""
         fullname = os.path.expanduser(filepath)
         fullpath = fullname if fullname.startswith("/") else note_dir+"/"+fullname
-        if os.path.exists(fullpath):
+        if self.remote_dir:
+            writable = False
+            status_msg = "Autosave disabled for remote directory %s - save local copy, if necessary" % self.remote_dir
+        elif os.path.exists(fullpath):
             writable = os.access(fullpath, os.W_OK)
         else:
             writable = os.access(os.path.dirname(fullpath), os.W_OK | os.X_OK)
@@ -1928,7 +1935,7 @@ class Terminal(object):
 
         input_lines = cell_lines[:]   # Must be a copy as it is modified later
 
-        if not self.term_params.get("no_pyindent") and self.note_params["lang"] == "python":
+        if "no_pyindent" not in self.term_opts and self.note_params["lang"] == "python":
             # For python, need to insert blank lines before reverting back to no indentation
             tem_lines = []
             indent = 0
@@ -2255,10 +2262,12 @@ class Terminal(object):
             self.cursor_x = r
 
     def expect_prompt(self, current_directory):
+        """Set current_directory to null string if remote prompt"""
         self.command_path = ""
-        self.current_dir = current_directory
+        if current_directory:
+            self.current_dir = current_directory
         if not self.active_rows or self.cursor_y+1 == self.active_rows:
-            self.current_meta = (current_directory, 0)
+            self.current_meta = (self.current_dir, 0)
             self.screen.meta[self.cursor_y] = self.current_meta
 
     def echo(self, char):
@@ -2681,7 +2690,12 @@ class Terminal(object):
             # Handle prompt command output
             current_dir = "".join(self.gterm_buf)
             if current_dir:
-                self.expect_prompt(current_dir)
+                if self.gterm_validated:
+                    self.remote_dir = ""
+                    self.expect_prompt(current_dir)
+                else:
+                    self.remote_dir = current_dir
+                    self.expect_prompt("")
         elif self.gterm_buf:
             # graphterm output ("pagelet")
             self.update()
@@ -2691,6 +2705,11 @@ class Terminal(object):
             response_params = headers["x_gterm_parameters"]
             screen_buf = self.note_screen_buf if self.note_cells else self.screen_buf
             ##logging.warning("lineterm.Terminal.gterm_append: %s %s", response_type, response_params)
+
+            if "no_images" not in self.term_opts and (response_type == "display_blob" or
+                                                      (response_type == "create_blob" and headers["content_type"].startswith("image/")) ):
+                # Allow creation and display of image blobs without validation
+                self.gterm_validated = True
 
             if not self.gterm_validated:
                 # Unvalidated markup; plain-text or escaped HTML content for security
@@ -2783,9 +2802,23 @@ class Terminal(object):
                     # Raw html display; append to scroll buffer
                     row_params = ["pagelet", headers["x_gterm_parameters"] or {}]
                     screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
-                    offset, directive, opt_dict = gterm.parse_gterm_directive(content)
+                    ##offset, directive, opt_dict = gterm.parse_gterm_directive(content) # Does nothing?
+                elif response_type == "display_blob":
+                    # Display blob as pagelet image
+                    # Stricty control parameters, as unvalidated images may be displayed
+                    blob_id = response_params.get("blob")
+                    if not blob_id:
+                        logging.warning("No blob_id for blob display")
+                    else:
+                        blob_url = gterm.get_blob_url(blob_id, host=self.host)
+                        content = gterm.blockimg_html(blob_url, toggle=response_params.get("toggle"), alt="blob")
+                        params = {"overwrite": response_params.get("overwrite", ""),
+                                  "blob": urllib.quote(blob_id)}
+                        row_params = ["pagelet", params]
+                        screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                 elif response_type == "create_blob":
                     # Note: blob content should be Base64 encoded
+                    # Stricty control parameters, as unvalidated images can be present
                     del headers["x_gterm_response"]
                     del headers["x_gterm_parameters"]
                     blob_id = response_params.get("blob")
@@ -3319,21 +3352,27 @@ class Multiplex(object):
 
         env.append( (GT_PREFIX+"DIR", File_dir) )
 
+        # Export some environment variables as LC_* (hack to enable SSH forwarding)
+        env_dict = dict(env)
+        lc_vars = [ "%s=%s" % (GT_PREFIX+"EXPORT", platform.node() or "unknown") ]
+        for name in LC_EXPORT_PUB:
+            if name in env_dict:
+                lc_vars.append( "%s=%s" % (name, env_dict[name]) )
+
         lc_export = self.term_params.get("lc_export")
         if lc_export and not export:
-            # Export some environment variables as LC_* (hack to enable SSH forwarding)
-            env_dict = dict(env)
-            lc_vars = [ "%s=%s" % (GT_PREFIX+"EXPORT", platform.node() or "unknown") ]
-            for name in LC_EXPORT_ENV:
+            # Export "secrets"
+            for name in LC_EXPORT_PVT:
                 if name in env_dict:
                     lc_vars.append( "%s=%s" % (name, env_dict[name]) )
-            # Export packed environment
-            export_var = "LC_TELEPHONE" if lc_export.lower() == "telephone" else "LC_GRAPHTERM"
-            env.append( (export_var, "|".join(lc_vars)) )
-            if export_prompt_fmt:
-                # Handled separately due to spaces and other special characters
-                env.append( ("LC_"+GT_PREFIX+"PROMPT", export_prompt_fmt) )
-                env.append( ("LC_PROMPT_COMMAND", env_dict["PROMPT_COMMAND"]) )
+
+        # Export packed environment
+        export_var = "LC_TELEPHONE" if lc_export.lower() == "telephone" else "LC_GRAPHTERM"
+        env.append( (export_var, "|".join(lc_vars)) )
+        if lc_export and not export and export_prompt_fmt:
+            # Handled separately due to spaces and other special characters
+            env.append( ("LC_"+GT_PREFIX+"PROMPT", export_prompt_fmt) )
+            env.append( ("LC_PROMPT_COMMAND", env_dict["PROMPT_COMMAND"]) )
 
         return env
 

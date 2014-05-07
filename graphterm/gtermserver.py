@@ -1707,8 +1707,8 @@ def run_server(options, args):
                        "users_dir": options.users_dir, "gtermhost_args": gtermhost_args,
                        "max_terminals": options.max_terminals}
 
-    Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "no_colors": options.no_colors,
-                                      "no_pyindent": options.no_pyindent, "lc_export": options.lc_export},
+    Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "term_opts": options.term_opts,
+                                      "lc_export": options.lc_export},
                      "term_type": options.term_type, "term_encoding": options.term_encoding,
                      "blob_host": options.blob_host, "command": options.shell_command,
                      "prompt_list": options.prompts.split(",") if options.prompts else gterm.DEFAULT_PROMPTS,
@@ -2020,10 +2020,6 @@ def main():
                       help="Notebook autosave interval (default: 300)", opt_type="int")
     parser.add_option("nb_server", default=False, opt_type="flag",
                       help="Enable PUBLIC ipython notebook server")
-    parser.add_option("no_colors", default=False, opt_type="flag",
-                      help="Disable terminal colors")
-    parser.add_option("no_pyindent", default=False, opt_type="flag",
-                      help="Disable auto indentation mods for notebook cells in python interpreter")
     parser.add_option("allow_embed", default=False, opt_type="flag",
                       help="Allow iframe embedding of terminal on other domains (possibly insecure)")
     parser.add_option("allow_share", default=False, opt_type="flag",
@@ -2042,6 +2038,8 @@ def main():
                       help="Terminal type (linux/screen/xterm)")
     parser.add_option("term_encoding", default="utf-8",
                       help="Terminal character encoding (utf-8/latin-1/...)")
+    parser.add_option("term_opts", default="",
+                      help="Terminal options: no_colors,no_images,no_pyindent,...")
     parser.add_option("term_settings", default="{}",
                       help="Terminal settings (JSON)")
     parser.add_option("max_terminals", default=10,

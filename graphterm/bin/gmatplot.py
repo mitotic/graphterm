@@ -123,7 +123,7 @@ def display(fig, overwrite=False, format="png", title="", max_bytes=25000000):
         raise Exception("gmatplot.setup not invoked")
 
     content_type = "application/pdf" if format=="pdf" else "image/"+format
-    outbuf = gterm.BlobStringIO(content_type, max_bytes=max_bytes)
+    outbuf = gterm.BlobStringIO(content_type, host=(gterm.Host or "*"), max_bytes=max_bytes)
     pyplot_dict["drawing"] = True
     try:
         fig.savefig(outbuf, format=format)
@@ -135,7 +135,8 @@ def display(fig, overwrite=False, format="png", title="", max_bytes=25000000):
         pyplot_dict["new_cell"] = False
         pyplot_dict["new_plot"] = True
     else:
-        gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
+        #gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
+        gterm.display_blob(gterm.get_blob_id(blob_url), overwrite=overwrite, toggle=True)
 
 def resize_fig(dimensions=""):
     """Resize matplotlib default window for terminal

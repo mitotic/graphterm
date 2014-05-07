@@ -77,10 +77,20 @@ def env(name, default="", lc=False):
 
 Version_str, sep, Min_version_str = env("API").partition("/")
 
-Export_host = env("EXPORT") or ( not env("COOKIE") and (os.getenv("LC_"+GT_PREFIX+"EXPORT", "") or Pack_env.get(GT_PREFIX+"EXPORT", "")) )
+# The Dimensions parameter will be defined on both local and remote systems in a GraphTerm window (if LC_* is passed)
+#
+# On the local system, by default, Lterm_cookie will be defined, and Export_host will be undefined
+# On a remote machine, by default, Lterm_cookie will be undefined, and Export_host will be defined (if LC_* is passed)
+#
+# If creating blobs or displaying inline images, must use Lterm_cookie value of zero in Escape sequence
+# instead of the null string
+#
+Dimensions = env("DIMENSIONS", lc=True) # colsxrows[;widthxheight]
+Export_host = env("EXPORT") or (not env("COOKIE") and Pack_env.get(GT_PREFIX+"EXPORT", ""))
+
+# These variables are typically not passed to remote systems
 Lterm_cookie = env("COOKIE", lc=True)
 Path = env("PATH", lc=True)
-Dimensions = env("DIMENSIONS", lc=True) # colsxrows[;widthxheight]
 Shared_secret = env("SHARED_SECRET", lc=True)
 URL = env("URL", "http://localhost:%d" % DEFAULT_HTTP_PORT)
 Blob_server = env("BLOB_SERVER", "")
@@ -92,7 +102,7 @@ else:
     Server_port = 443 if URL.startswith("https:") else 80
 
 _, Host, Session = Path.split("/") if Path else ("", "", "") 
-Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
+Html_escapes = ["\x1b[?1155;%sh" % (Lterm_cookie or 0),
                 "\x1b[?1155l"]
 
 INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
@@ -413,6 +423,29 @@ def display_blockimg_old(url, overwrite=False, alt="", stderr=False):
         add_headers["block"] = "overwrite"
     write_pagelet_old(IMGFORMAT % url, add_headers=add_headers, stderr=stderr)
 
+def blockimg_html(url, toggle=False, alt=""):
+    """Returns block image html fragment"""
+    toggleblock_class = 'gterm-toggleblock' if toggle else ''
+    togglelink_class = 'gterm-togglelink' if toggle else ''
+    togglespan = '<span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span>' if toggle else ''
+    alt_attr = ' alt="'+alt+'"' if alt else ''
+    BLOCKIMGFORMAT = '<div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
+    return BLOCKIMGFORMAT % url
+
+def display_blob(blob_id, overwrite=False, toggle=False, stderr=False):
+    """Display blob image, overwriting previous image, if desired.
+    toggle allows images to be hidden by clicking.
+    """
+    params = "blob=" + urllib.quote(blob_id)
+    if overwrite:
+        params += " overwrite=yes"
+    if toggle:
+        params += " toggle=yes"
+
+    html = '<!--gterm display_blob %s-->' % params
+        
+    raw_wrap_write(html, stderr=stderr)
+
 def display_blockimg(url, overwrite=False, toggle=False, alt="", stderr=False):
     """Display image from url, overwriting previous image, if desired.
     toggle allows images to be hidden by clicking.
@@ -424,12 +457,7 @@ def display_blockimg(url, overwrite=False, toggle=False, alt="", stderr=False):
     if blob_id:
         params += " blob=" + urllib.quote(blob_id)
 
-    toggleblock_class = 'gterm-toggleblock' if toggle else ''
-    togglelink_class = 'gterm-togglelink' if toggle else ''
-    togglespan = '<span class="'+togglelink_class+'"><em>&lt;'+(alt or 'image')+'&gt;</em></span>' if toggle else ''
-    alt_attr = ' alt="'+alt+'"' if alt else ''
-    BLOCKIMGFORMAT = '<!--gterm pagelet %s--><div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
-    html = BLOCKIMGFORMAT % (params, url)
+    html = ('<!--gterm pagelet %s-->' % params) + blockimg_html(url, toggle=toggle, alt=alt)
         
     raw_wrap_write(html, stderr=stderr)
 
@@ -604,7 +632,7 @@ def get_blob_url(blob_id, host=""):
     else:
         return Blob_server+BLOB_PREFIX+host+"/"+blob_id
 
-def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=False):
+def create_blob(content=None, from_file="", content_type="", blob_id="", host="", stderr=False):
     """Create blob and returns URL to blob"""
     filepath = ""
     if from_file:
@@ -621,7 +649,7 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=
     if not content_type and filepath:
         content_type, encoding = mimetypes.guess_type(filepath)
 
-    blob_id, blob_url = make_blob_url(blob_id)
+    blob_id, blob_url = make_blob_url(blob_id, host=host)
     params = dict(blob=blob_id, filepath=filepath)
     headers = {"x_gterm_response": "create_blob",
                "x_gterm_parameters": params,
@@ -631,19 +659,20 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", stderr=
     return blob_url
     
 class BlobStringIO(StringIO.StringIO):
-    def __init__(self, content_type="text/html", max_bytes=25000000):
-        self.content_type = content_type
-        self.max_bytes = max_bytes
-        self.blob_id, self.blob_url = make_blob_url()
+    def __init__(self, content_type="text/html", host="", max_bytes=25000000):
+        self.blob_content_type = content_type
+        self.blob_host = host
+        self.blob_max_bytes = max_bytes
+        self.blob_id, self.blob_url = make_blob_url(host=host)
         StringIO.StringIO.__init__(self)
 
     def write(self, s):
-        if self.tell()+len(s) > self.max_bytes:
-            raise RuntimeError("Blob size exceeds limit of %s bytes" % self.max_bytes)
+        if self.tell()+len(s) > self.blob_max_bytes:
+            raise RuntimeError("Blob size exceeds limit of %s bytes" % self.blob_max_bytes)
         StringIO.StringIO.write(self, s)
 
     def close(self):
-        blob_url = create_blob(self.getvalue(), content_type=self.content_type, blob_id=self.blob_id)
+        blob_url = create_blob(self.getvalue(), content_type=self.blob_content_type, blob_id=self.blob_id, host=self.blob_host)
         StringIO.StringIO.close(self)
         assert blob_url == self.blob_url
         return blob_url
@@ -1102,8 +1131,9 @@ def nbmode(enable=True):
         # Control automatic printing of expressions
         Saved_displayhook = sys.displayhook
         sys.displayhook = auto_display
-        print >> sys.stderr, "NOTE: Enabled notebook mode (affects auto printing of expressions)"
-        print >> sys.stderr, "      To disable, use gterm.nbmode(False)"
+        if sys.flags.interactive:
+            print >> sys.stderr, "NOTE: Enabled notebook mode (affects auto printing of expressions)"
+            print >> sys.stderr, "      To disable, use gterm.nbmode(False)"
     else:
         print >> sys.stderr, "NOTE: Disabled notebook mode"
         sys.displayhook = Saved_displayhook
