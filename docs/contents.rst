@@ -11,6 +11,7 @@ Documentation contents
    start
    virtual-setup
    virtual-lab
+   remote
    troubleshooting
    screenshots
    tutorials

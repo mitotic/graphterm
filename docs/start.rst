@@ -53,9 +53,7 @@ Type  ``gtermserver -h`` to view all options for starting the server.
 You can use the
 ``--daemon=start`` option to run the server in the background. The
 ``--host=hostname`` option is useful for listening on a public IP address instead
-of the default ``localhost``. The ``--lc_export=graphterm`` option can be used to
-export the GraphTerm environment across SSH to *trusted* computers
-via the locale variables (which sometimes works).
+of the default ``localhost``.
 The ``--auth_type=none`` no authentication option is useful for
 teaching or demonstration purposes, or on a single-user lapttop/desktop,
 where security is not important.
@@ -80,8 +78,10 @@ and read the
 `UsingGraphicalFeatures tutorial <http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_ for usage examples.
 
 If you wish to use GraphTerm to set up up a virtual computer lab for
-multiple users, see the section :doc:`virtual-setup`. The rest of this
-section focuses mainly on GraphTerm usage for single users.
+multiple users, see the section :doc:`virtual-setup`. To use
+GraphTerm features on remote systems and via SSH, see
+:doc:`remote`. The rest of this section focuses mainly on GraphTerm
+usage for single users on a local computer.
 
 .. index:: graphterm-aware commands, toolchain
 
@@ -504,7 +504,7 @@ up a graphterm window where you can either run ``gtutor`` interactively or
 use ``gframe -f`` to display an HTML file created previously using ``gtutor``.
 
  
-Sharing, embedding, remote access, and security
+Sharing, embedding, and security
 ================================================================
 
 
@@ -542,8 +542,8 @@ control of the session using the menubar button
 
 For example, if you forgot to detach your session at work, you can
 ``ssh`` to your desktop from home, use SSH port forwarding
-(see :ref:`ssh`) to securely access your work desktop, and then *steal* the
-session using your home browser.
+to securely access your work desktop, and then *steal* the
+session using your home browser (see :doc:`remote`).
 
 Normally, only a single user has control of a terminal session at a
 time. There is a *share/tandem* option that can be enabled to allow
@@ -679,80 +679,5 @@ provide additional security.
 
 When working with sensitive information, it would be best to run the
 server on ``localhost`` (the default) and use SSH port forwarding to
-connect to it from other computers as needed (see below).
+connect to it from other computers as needed (see :doc:`remote`).
 
-.. index:: ssh, port forwarding, remote access
-
-.. _ssh:
-
-SSH, port forwarding, and remote access
---------------------------------------------------------------------------------------------
-
-Currently, the most secure way to access the GraphTerm server running
-on a remote computer is to use SSH port forwarding. For example, if
-you are connecting to your work computer from home, and wish to
-connect to the GraphTerm server running as ``localhost`` on your work
-computer, use the command::
-
-   ssh -L 8901:localhost:8900 user@work-computer
-
-This will allow you to connect to ``http://localhost:8901`` on the browser
-on your home computer to access GraphTerm running on your work
-computer. If using *singleuser* authentication, copy the file
-``~/.graphterm/_gterm_auth.txt`` from work to home as
-``~/.graphterm/@server_name_gterm_auth.txt``, and use
-the ``gterm`` command::
-
-    gterm  --server server_name --port 8900 http://localhost:8901
-
-A completely different approach is to use reverse forwarding.
-*Warning: If the remote computer is insecure, reverse forwarding
-should be used caution, and preferably with multiuser authentication
-(without the user_setup option).* Install GraphTerm on the remote
-computer and run the ``gtermhost`` program remotely to allow it to
-connect to the ``gtermserver`` running on your local computer using
-SSH reverse port forwarding, e.g.::
-
-    gauth remote1 | ssh user@remote1 'cat > ~/.graphterm/remote1_gterm_auth.txt' 
-    ssh -R 8799:localhost:8899 user@remote1 gtermhost --server_port 8799 --remote_port=8899 remote1
-
-In this case, the remote computer will appear as another host on your
-local GraphTerm server. 
-
-*Note: Do not do the following unless you trust the remote machine.
-A malicious remote program could execute commands on your
-local computer if it has access to the GraphTerm window.*
-If you do not wish to have a GraphTerm process running on
-the remote machine, you can still use many features though GraphTerm
-running on your local machine, because all communication takes place
-via the standard output of the remote process. One quick solution is
-use the *terminal/export environment* menu option to set the Bash
-shell environment variables on the remote computer. This will allow
-some, but not all, of GraphTerm's features to work on the remote
-session. A more permanent solution involves the following three steps:
-
- - Start the local GraphTerm server using the ``--lc_export=graphterm`` or
-   ``--lc_export=telephone`` options, which export the GraphTerm environment
-   via the ``LC_*`` environment variables which are typically transmitted
-   across SSH tunnels.
-
- - Copy the ``$GTERM_DIR/bin`` directory to ``~/graphterm`` on the
-   remote machine to allow the GraphTerm toolchain to be accessed:
-
-   ``ssh user@remote_server mkdir graphterm``
-
-   ``scp -pr $GTERM_DIR/bin user@remote_server:graphterm``
-
-   Alternatively, you could simply install GraphTerm on the
-   remote machine, even if you are never planning to start the server.
-
- - Append the file
-   `$GTERM_DIR/bin/gprofile <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gprofile>`_
-   to your ``.bash_profile`` on the remote machine:
-
-   ``cat gprofile >> ~/.bash_profile``
-
-   Although this script can usually detect your GraphTerm installation
-   directory, sometimes you may need to modify the last few lines to
-   ensure that the GraphTerm toolchain is included in your ``PATH`` on
-   the remote machine. This would allow commands like ``gls`` to work.
