@@ -222,14 +222,24 @@ command::
 Downloading files
 ---------------------------------------------------------------------------------------------
 
-To download files use the ``gls --download`` command::
+To download files, use the ``gdownload`` command::
 
-    gls --download filename
+    gdownload filename(s)
 
-Then right-click (or control-click) on the filename to download it. On
+Right-click (or control-click) on the displayed link to download. On
 some browsers, like Chrome, directly clicking on the link would also
-work well. (You may download notebook files using the above method for
-submission.)
+work.  If more than one file (or a directory) is specified for downloading,
+the command automatically creates a zip archive. This works well
+for archive sizes of 1-2 MB, but for larger archives, you should create the
+archive yourself using the ``zip`` command and then download the
+single archive file.
+
+You can also download multiple files, one-at-a-time, using the
+following command::
+
+    gls --download filenames
+
+Click on the displayed filenames to download.
 
 *Note:* Browsers other than Chrome typically append ``.html`` or ``.htm``
 to the downloaded filename. For example, file ``abc.ipynb`` may be downloaded
@@ -249,8 +259,21 @@ file and type::
 
 Then select (or drag-and-drop) the file from your local computer.
 If you do not provide a filename, the original filename will be used.
+This command works well for file sizes of a few MB, but can be
+quite slow for larger files.
 
 *On Windows:* Drag-and-drop for files currently does not work with IE10.
+
+
+SSH key access
+---------------------------------------------------------------------------------------------
+
+If you have an SSH client on your local computer, upload the public key
+file (usually ``id_rsa.pub``) using the ``gupload`` command as
+``~/.ssh/authorized_keys`` to enable SSH access to your account::
+
+    ssh username@server_domain
+
 
 Keyboard shortcuts
 ---------------------------------------------------------------------------------------------

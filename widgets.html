@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Widgets, sockets, and interactivity &mdash; GraphTerm 0.52.0 documentation</title>
+    <title>Widgets, sockets, and interactivity &mdash; GraphTerm 0.53.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.52.0',
+        VERSION:     '0.53.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.52.0 documentation"
+          title="Search within GraphTerm 0.53.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.52.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.53.0 documentation" href="index.html" />
     <link rel="up" title="Advanced topics" href="advanced.html" />
     <link rel="next" title="Release Notes" href="release-notes.html" />
     <link rel="prev" title="Using GraphTerm with OTrace" href="tracing.html" />
@@ -149,9 +149,9 @@ code.mindmeldr.com
 <h1>Widgets, sockets, and interactivity<a class="headerlink" href="#widgets-sockets-and-interactivity" title="Permalink to this headline">¶</a></h1>
 <p id="index-0">A widget appears as an overlay on the terminal (like
 <em>picture-in-picture</em> for TVs, or dashboard widgets on the Mac). This
-is an experimental feature, enabled using the <tt class="docutils literal"><span class="pre">--widget-port=-1</span></tt>
-option, that allows programs running in the background to display
-information overlaid on the terminal. The widget is accessed by
+is an experimental feature which allows programs running in the background
+to display information overlaid on the terminal. (It may be disabled using the
+<tt class="docutils literal"><span class="pre">--widget-port=0</span></tt> option.) The widget is accessed by
 redirecting <tt class="docutils literal"><span class="pre">stdout</span></tt> to a Bash <tt class="docutils literal"><span class="pre">tcp</span></tt> socket device whose address
 is stored in the environment variable <tt class="docutils literal"><span class="pre">GTERM_SOCKET</span></tt>.  For example,
 the following command will run a background job to open a new terminal

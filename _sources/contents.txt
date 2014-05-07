@@ -9,8 +9,10 @@ Documentation contents
    contact
    README
    start
+   remote
    virtual-setup
    virtual-lab
+   features
    troubleshooting
    screenshots
    tutorials

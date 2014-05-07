@@ -3,6 +3,22 @@ Release Notes
 .. contents::
 
 
+0.53.0 (May 5, 2014)
+---------------------------------------------------------------------------------
+
+ - Improved remote machine access
+
+ - Implemented gdownload
+
+ - Added colors to terminal
+
+ - Enabled multiuser mode with existing users (user_setup=manual)
+
+ - Renames --auto_users to --user_setup=auto
+
+ - Renamed auth_type=local to auth_type=singleuser
+
+
 0.52.0 (April 28, 2014)
 ---------------------------------------------------------------------------------
 

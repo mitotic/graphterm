@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Overview &mdash; GraphTerm 0.52.0 documentation</title>
+    <title>Overview &mdash; GraphTerm 0.53.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.52.0',
+        VERSION:     '0.53.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,9 +25,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.52.0 documentation"
+          title="Search within GraphTerm 0.53.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.52.0 documentation" href="#" />
+    <link rel="top" title="GraphTerm 0.53.0 documentation" href="#" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -102,7 +102,7 @@ code.mindmeldr.com
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-<p>Current version: <b>0.52.0</b></p>
+<p>Current version: <b>0.53.0</b></p>
 
 
   <iframe allowtransparency="true" frameborder="0" scrolling="no"
@@ -158,8 +158,8 @@ code.mindmeldr.com
    <a href="https://groups.google.com/group/graphterm">mailing list</a>
    or follow <a href="https://twitter.com/intent/user?screen_name=graphterm">@graphterm</a>
    on Twitter for updates.</li>
-   <li>The latest version is <a href="http://pypi.python.org/pypi/graphterm">0.52.0</a>
-   released April 28, 2014. See the
+   <li>The latest version is <a href="http://pypi.python.org/pypi/graphterm">0.53.0</a>
+   released May 5, 2014. See the
    <a href="release-notes.html">Release Notes</a>
    </li>
 </ol>
@@ -169,21 +169,52 @@ code.mindmeldr.com
 aims to seamlessly blend the command line and graphical user
 interfaces. You can use it just like a regular terminal,
 backwards-compatible with <tt>xterm</tt>, and access the additional
-graphical features as needed.
-These features can help impove your terminal workflow by
-integrating clickable folder navigation with command line operations and
-letting you view image/HTML output without a separate window.
+graphical features as needed. These features can help impove your
+terminal workflow by integrating graphical operations with the
+command line and letting you view images and HTML output inline.
+</p>
+
+<p> 
+GraphTerm has several funky features, but two of the most useful
+applications are:
+<ul>
+<li>a <b>lightweight notebook interface</b> with inline graphics display
+   that can work seamlessly on remote machines across SSH login
+   boundaries for plotting with Python or R. For remote
+   access, it also serves as a <em>terminal multiplexer</em>, sort of like
+   GNU <tt>screen</tt> or <tt>tmux</tt>.
+</li>
+
+<li>a <b>virtual computer lab</b> for teaching and demonstrations. The
+   GraphTerm server can be set up in the cloud and accessed by
+   multiple users using their laptop/mobile browsers, with Google
+   Authentication. The lab instructor can
+   <a href="http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals">monitor all the users' terminals</a>
+   via a "dashboard", and users can collaborate with each other by
+   sharing terminals and notebooks.
+</li>
+</ul>
+</p>
 
 <p>
-The GraphTerm server can be configured to support multiple users,
-using Google Authentication, to create a browser-based
-<em>virtual computer lab</em> for teaching and
-collaboration. The lab instructor can access all the terminal
-sessions via a dashboard and
-<a href="http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals">monitor the progress</a> of each user in
-carrying out assigned activities, such as entering code in a
-"notebook". Lab users can collaboratively view and enter shell
-commands in each other's terminals, edit files and notebooks etc.
+You can find more information in the
+<a href="start.html">Getting started with GraphTerm</a> section
+(or in the <a href="README.html#installation">README</a> file).
+Images of GraphTerm in action can be found in
+<a href="screenshots.html">screenshots </a>
+and in the
+<a href="videos.html">demo videos</a>.
+
+GraphTerm builds
+upon two earlier projects, 
+<a href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm </a>
+which implemented a terminal using the Mozilla framework and
+<a href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm </a>
+which is an AJAX/Python terminal implementation. (Other recent
+projects along these lines include
+<a href="http://acko.net/blog/on-termkit/">TermKit</a> and
+<a href="http://www.enlightenment.org/p.php?p=about/terminology">Terminology</a>.)
+</p>
 
 <p>
 You can use the GraphTerm API to build "mashups" of web applications
@@ -196,59 +227,6 @@ the terminal. Sample mashups include:
  <li> <tt>gtutor</tt>: Inline version of <a href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
  <li> <tt>yweather</tt>: Using Yahoo weather API to display weather</li>
 </ul>
-
-<p>
-GraphTerm builds
-upon two earlier projects, 
-<a href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm </a>
-which implemented a terminal using the Mozilla framework and
-<a href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm </a>
-which is an AJAX/Python terminal implementation. (Other recent
-projects along these lines include
-<a href="http://acko.net/blog/on-termkit/">TermKit</a> and
-<a href="http://www.enlightenment.org/p.php?p=about/terminology">Terminology</a>.)
-</p>
-
-Possible applications of GraphTerm include:
-<ul>
-  <li>an <b>enhanced terminal</b> that combines the command line with basic
-   GUI operations like navigating folders, file drag-and-drop,
-   displaying images etc.
-   With tappable links, the interface is designed to be touch-friendly
-   for use with tablets.
-  </li>
-
-  <li>an <b>inline data visualization tool</b> to view output from plotting
-   libraries like <tt>matplotlib</tt>.
-  </li>
-
-  <li>a <b>notebook interface</b> for data analysis and documentation (like
-   the <tt>Mathematica</tt> or <tt>IPython</tt> notebook interface, but at the shell
-   level).
-  </li>
-
-  <li>a <b>virtual computer lab</b> for teaching and demonstrations.
-  The GraphTerm server can be set up <a href="virtual-setup.html">in the cloud</a>
-  and accessed by multiple users using their laptop/mobile browsers.
-  You can then share shell commands and presentations, 
-  <a href="screenshots.html#code-tracing-using-online-version-of-python-tutor">trace code execution</a>,
-  interact with other users, etc.
-  </li>
-
-  <li>a <b>collaborative terminal</b> that can be remotely accessed
-   by multiple users simultaneously, to run programs, edit files etc.
-   It can also be used as a <em>detachable terminal multiplexer</em>, sort of like GNU <tt>screen</tt> or
-   <tt>tmux</tt>
-  </li>
-</ul>
-
-You can find more information in the
-<a href="start.html">Getting started with GraphTerm</a> section
-(or in the <a href="README.html#installation">README</a> file).
-Images of GraphTerm in action can be found in
-<a href="screenshots.html">screenshots </a>
-and in the
-<a href="videos.html">demo videos</a>.
 
 <p>
 Here is a sample screenshot showing the output of the

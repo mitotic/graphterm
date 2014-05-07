@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Remote access and SSH &mdash; GraphTerm 0.53.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.53.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within GraphTerm 0.53.0 documentation"
+          href="_static/opensearch.xml"/>
+    <link rel="top" title="GraphTerm 0.53.0 documentation" href="index.html" />
+    <link rel="next" title="Setting up a Virtual Computer Lab" href="virtual-setup.html" />
+    <link rel="prev" title="Getting started" href="start.html" />
+ 
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
+<script type="text/javascript">
+// Google Analytics setup
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35342722-1']);
+  _gaq.push(['_trackPageview']);
+
+function goApp() {
+   if (window.navigator.standalone) {
+      // Go home
+      location.href = "/";
+   } else {
+      // Go to top level domain
+      var url = location.protocol + "//" + location.hostname.split(".").slice(-2).join(".");
+      if (location.port)
+        url += ":" + location.port;
+      location.href = url;
+   }
+}
+
+// Prevent internal links in iOS standalone web apps from opening in browser
+(function(document,navigator,standalone) {
+            // prevents links from apps from oppening in mobile safari
+            // this javascript must be the first script in your <head>
+            if ((standalone in navigator) && navigator[standalone]) {
+                var curnode, location=document.location, stop=/^(a|html)$/i;
+                document.addEventListener('click', function(e) {
+                    curnode=e.target;
+                    while (!(stop).test(curnode.nodeName)) {
+                        curnode=curnode.parentNode;
+                    }
+                    // Conditions to do this only on links to your own app
+                    if ('href' in curnode) {
+                        e.preventDefault();
+                        location.href = curnode.href;
+                    }
+                },false);
+            }
+        })(document,window.navigator,'standalone');
+
+</script>
+
+  </head>
+  <body>
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<h1>
+<a href="/"> 
+code.mindmeldr.com
+<!--
+<img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
+-->
+</a>/<a href="/graphterm">graphterm</a>
+</h1>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="virtual-setup.html" title="Setting up a Virtual Computer Lab"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="start.html" title="Getting started"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Remote access and SSH</a><ul>
+<li><a class="reference internal" href="#remote-logins">Remote logins</a></li>
+<li><a class="reference internal" href="#remote-installation">Remote installation</a></li>
+<li><a class="reference internal" href="#port-forwarding">Port forwarding</a></li>
+<li><a class="reference internal" href="#reverse-port-forwarding">Reverse port forwarding</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="start.html"
+                        title="previous chapter">Getting started</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="virtual-setup.html"
+                        title="next chapter">Setting up a Virtual Computer Lab</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/remote.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="remote-access-and-ssh">
+<h1><a class="toc-backref" href="#id1">Remote access and SSH</a><a class="headerlink" href="#remote-access-and-ssh" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#remote-access-and-ssh" id="id1">Remote access and SSH</a><ul>
+<li><a class="reference internal" href="#remote-logins" id="id2">Remote logins</a></li>
+<li><a class="reference internal" href="#remote-installation" id="id3">Remote installation</a></li>
+<li><a class="reference internal" href="#port-forwarding" id="id4">Port forwarding</a></li>
+<li><a class="reference internal" href="#reverse-port-forwarding" id="id5">Reverse port forwarding</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="remote-logins">
+<span id="index-0"></span><h2><a class="toc-backref" href="#id2">Remote logins</a><a class="headerlink" href="#remote-logins" title="Permalink to this headline">¶</a></h2>
+<p>One of the most powerful features of GraphTerm is that basic inline
+image display and the notebook mode of GraphTerm work transparently
+across multiple SSH login boundaries. For example, in your GraphTerm
+window you can SSH to a remote computer and display a plot using
+python as follows:</p>
+<div class="highlight-python"><pre>ssh user@remote_server
+
+python -i $GTERM_DIR/bin/gpylab.py
+
+&gt;&gt;&gt; plot([1,2])</pre>
+</div>
+<p>assuming the requisite files (see below) are present in the remote
+<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory. You don&#8217;t need to start a server on the
+remote computer because all communication occurs via the standard
+input/output of the remote python interpreter. In addition to
+displaying inline graphics, you can switch to notebook mode simply by
+typing <em>Shift-Enter</em>, just like you would on your local computer!
+(Note that saving/reading notebook files will take place on your
+current local directory, not on the remote system.)</p>
+</div>
+<div class="section" id="remote-installation">
+<span id="index-1"></span><h2><a class="toc-backref" href="#id3">Remote installation</a><a class="headerlink" href="#remote-installation" title="Permalink to this headline">¶</a></h2>
+<p>A minimalist remote installation of the GraphTerm environment requires
+copying the following four files from the local <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt>
+directory to a remote directory:</p>
+<div class="highlight-python"><pre>gterm.py gmatplot.py gpylab.py gprofile</pre>
+</div>
+<p>You can append <tt class="docutils literal"><span class="pre">gprofile</span></tt> to <tt class="docutils literal"><span class="pre">~/.profile</span></tt> to set up the shell
+environment each time you login.</p>
+<p>For a more complete setup, you can install GraphTerm in your home
+directory on the remote system, even if you never plan to run the
+server. Download the <tt class="docutils literal"><span class="pre">graphterm-version.tar.gz</span></tt> source tarball from
+<a class="reference external" href="http://pypi.org">http://pypi.org</a>, untar it and copy the subdirectory <tt class="docutils literal"><span class="pre">graphterm</span></tt> to
+<tt class="docutils literal"><span class="pre">~/graphterm</span></tt>. The <tt class="docutils literal"><span class="pre">gprofile</span></tt> script will automatically detect
+such an installation and set up the environment.  (If you have root
+access, you can install <tt class="docutils literal"><span class="pre">graphterm</span></tt> for all users on the remote
+computer using <tt class="docutils literal"><span class="pre">easy_install</span></tt> and append <tt class="docutils literal"><span class="pre">gprofile</span></tt> to
+<tt class="docutils literal"><span class="pre">/etc/profile</span></tt>.)</p>
+</div>
+<div class="section" id="port-forwarding">
+<span id="index-2"></span><h2><a class="toc-backref" href="#id4">Port forwarding</a><a class="headerlink" href="#port-forwarding" title="Permalink to this headline">¶</a></h2>
+<p>The more advanced features of GraphTerm are explicitly disabled from
+working across SSH login boundaries for security reasons.  If you need
+the full suite of features, the most secure way to access the
+GraphTerm server running on a remote computer is to use SSH port
+forwarding. For example, if you are connecting to your work computer
+from home, and wish to connect to the GraphTerm server running as
+<tt class="docutils literal"><span class="pre">localhost</span></tt> on your work computer, use the command:</p>
+<div class="highlight-python"><pre>ssh -L 8901:localhost:8900 user@work-computer</pre>
+</div>
+<p>This will allow you to connect to <tt class="docutils literal"><span class="pre">http://localhost:8901</span></tt> on the browser
+on your home computer to access GraphTerm running on your work
+computer. If using <em>singleuser</em> authentication, copy the file
+<tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> from work to home as
+<tt class="docutils literal"><span class="pre">~/.graphterm/&#64;server_name_gterm_auth.txt</span></tt>, and use
+the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
+<div class="highlight-python"><pre>gterm  --server server_name --port 8900 http://localhost:8901</pre>
+</div>
+</div>
+<div class="section" id="reverse-port-forwarding">
+<span id="index-3"></span><h2><a class="toc-backref" href="#id5">Reverse port forwarding</a><a class="headerlink" href="#reverse-port-forwarding" title="Permalink to this headline">¶</a></h2>
+<p>A completely different approach is to use reverse forwarding.
+<em>Warning: If the remote computer is insecure, reverse forwarding
+should be used caution, and preferably with multiuser authentication
+(without the user_setup option).</em> Install GraphTerm on the remote
+computer and run the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> program remotely to allow it to
+connect to the <tt class="docutils literal"><span class="pre">gtermserver</span></tt> running on your local computer using
+SSH reverse port forwarding, e.g.:</p>
+<div class="highlight-python"><pre>gauth remote1 | ssh user@remote1 'cat &gt; ~/.graphterm/remote1_gterm_auth.txt'
+ssh -R 8799:localhost:8899 user@remote1 gtermhost --server_port 8799 --remote_port=8899 remote1</pre>
+</div>
+<p>In this case, the remote computer will appear as another host on your
+local GraphTerm server.</p>
+<p><em>Note: Do not do the following unless you trust the remote machine.
+A malicious remote program could execute commands on your
+local computer if it has access to the GraphTerm window.</em>
+If you do not wish to have a GraphTerm process running on
+the remote machine, you can still use many features though GraphTerm
+running on your local machine, because all communication takes place
+via the standard output of the remote process. One quick solution is
+use the <em>terminal/export environment</em> menu option to set the Bash
+shell environment variables on the remote computer. This will allow
+some, but not all, of GraphTerm&#8217;s features to work on the remote
+session. A more permanent solution involves the following three steps:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">Start the local GraphTerm server using the <tt class="docutils literal"><span class="pre">--lc_export=graphterm</span></tt> or
+<tt class="docutils literal"><span class="pre">--lc_export=telephone</span></tt> options, which export the GraphTerm environment
+via the <tt class="docutils literal"><span class="pre">LC_*</span></tt> environment variables which are typically transmitted
+across SSH tunnels.</p>
+</li>
+<li><p class="first">Copy the <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory to <tt class="docutils literal"><span class="pre">~/graphterm</span></tt> on the
+remote machine to allow the GraphTerm toolchain to be accessed:</p>
+<p><tt class="docutils literal"><span class="pre">ssh</span> <span class="pre">user&#64;remote_server</span> <span class="pre">mkdir</span> <span class="pre">graphterm</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">scp</span> <span class="pre">-pr</span> <span class="pre">$GTERM_DIR/bin</span> <span class="pre">user&#64;remote_server:graphterm</span></tt></p>
+<p>Alternatively, you could simply install GraphTerm on the
+remote machine, even if you are never planning to start the server.</p>
+</li>
+<li><p class="first">Append the file
+<a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gprofile">$GTERM_DIR/bin/gprofile</a>
+to your <tt class="docutils literal"><span class="pre">.bash_profile</span></tt> on the remote machine:</p>
+<p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">gprofile</span> <span class="pre">&gt;&gt;</span> <span class="pre">~/.bash_profile</span></tt></p>
+<p>Although this script can usually detect your GraphTerm installation
+directory, sometimes you may need to modify the last few lines to
+ensure that the GraphTerm toolchain is included in your <tt class="docutils literal"><span class="pre">PATH</span></tt> on
+the remote machine. This would allow commands like <tt class="docutils literal"><span class="pre">gls</span></tt> to work.</p>
+</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="virtual-setup.html" title="Setting up a Virtual Computer Lab"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="start.html" title="Getting started"
+             >previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+ 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2012-2014 R. Saravanan.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+<div class="footer">
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ?
+              'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+  })();
+</script>
+</div>
+
+  </body>
+</html>

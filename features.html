@@ -1,0 +1,551 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>GraphTerm toolchain and features &mdash; GraphTerm 0.53.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.53.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within GraphTerm 0.53.0 documentation"
+          href="_static/opensearch.xml"/>
+    <link rel="top" title="GraphTerm 0.53.0 documentation" href="index.html" />
+    <link rel="next" title="Troubleshooting FAQ" href="troubleshooting.html" />
+    <link rel="prev" title="Using the GraphTerm Virtual Computer Lab" href="virtual-lab.html" />
+ 
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
+<script type="text/javascript">
+// Google Analytics setup
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35342722-1']);
+  _gaq.push(['_trackPageview']);
+
+function goApp() {
+   if (window.navigator.standalone) {
+      // Go home
+      location.href = "/";
+   } else {
+      // Go to top level domain
+      var url = location.protocol + "//" + location.hostname.split(".").slice(-2).join(".");
+      if (location.port)
+        url += ":" + location.port;
+      location.href = url;
+   }
+}
+
+// Prevent internal links in iOS standalone web apps from opening in browser
+(function(document,navigator,standalone) {
+            // prevents links from apps from oppening in mobile safari
+            // this javascript must be the first script in your <head>
+            if ((standalone in navigator) && navigator[standalone]) {
+                var curnode, location=document.location, stop=/^(a|html)$/i;
+                document.addEventListener('click', function(e) {
+                    curnode=e.target;
+                    while (!(stop).test(curnode.nodeName)) {
+                        curnode=curnode.parentNode;
+                    }
+                    // Conditions to do this only on links to your own app
+                    if ('href' in curnode) {
+                        e.preventDefault();
+                        location.href = curnode.href;
+                    }
+                },false);
+            }
+        })(document,window.navigator,'standalone');
+
+</script>
+
+  </head>
+  <body>
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<h1>
+<a href="/"> 
+code.mindmeldr.com
+<!--
+<img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
+-->
+</a>/<a href="/graphterm">graphterm</a>
+</h1>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="troubleshooting.html" title="Troubleshooting FAQ"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="virtual-lab.html" title="Using the GraphTerm Virtual Computer Lab"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">GraphTerm toolchain and features</a><ul>
+<li><a class="reference internal" href="#command-toolchain">Command Toolchain</a></li>
+<li><a class="reference internal" href="#using-the-terminal">Using the terminal</a><ul>
+<li><a class="reference internal" href="#visual-cues">Visual cues</a></li>
+<li><a class="reference internal" href="#navigating-folders-opening-files">Navigating folders/opening files</a></li>
+<li><a class="reference internal" href="#image-and-icon-display">Image and Icon display</a></li>
+<li><a class="reference internal" href="#menu-shortcuts">Menu shortcuts</a></li>
+<li><a class="reference internal" href="#command-recall">Command recall</a></li>
+<li><a class="reference internal" href="#copy-paste">Copy/paste</a></li>
+<li><a class="reference internal" href="#drag-and-drop">Drag and drop</a></li>
+<li><a class="reference internal" href="#themes">Themes</a></li>
+<li><a class="reference internal" href="#preferences">Preferences</a></li>
+<li><a class="reference internal" href="#choosing-the-terminal-type">Choosing the terminal type</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#slideshows-tracing-etc">Slideshows, tracing etc.</a><ul>
+<li><a class="reference internal" href="#slideshows">Slideshows</a></li>
+<li><a class="reference internal" href="#code-tracing-using-python-tutor">Code tracing using Python Tutor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#webcasting-embedding-wildcards-etc">Webcasting, embedding, wildcards etc.</a><ul>
+<li><a class="reference internal" href="#webcasting">Webcasting</a></li>
+<li><a class="reference internal" href="#embedding-and-remote-terminal-commands">Embedding and remote terminal commands</a></li>
+<li><a class="reference internal" href="#wildcard-sessions-and-multiplexing">Wildcard sessions and multiplexing</a></li>
+<li><a class="reference internal" href="#multiple-hosts">Multiple hosts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="virtual-lab.html"
+                        title="previous chapter">Using the GraphTerm Virtual Computer Lab</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="troubleshooting.html"
+                        title="next chapter">Troubleshooting FAQ</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/features.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="graphterm-toolchain-and-features">
+<h1><a class="toc-backref" href="#id7">GraphTerm toolchain and features</a><a class="headerlink" href="#graphterm-toolchain-and-features" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#graphterm-toolchain-and-features" id="id7">GraphTerm toolchain and features</a><ul>
+<li><a class="reference internal" href="#command-toolchain" id="id8">Command Toolchain</a></li>
+<li><a class="reference internal" href="#using-the-terminal" id="id9">Using the terminal</a><ul>
+<li><a class="reference internal" href="#visual-cues" id="id10">Visual cues</a></li>
+<li><a class="reference internal" href="#navigating-folders-opening-files" id="id11">Navigating folders/opening files</a></li>
+<li><a class="reference internal" href="#image-and-icon-display" id="id12">Image and Icon display</a></li>
+<li><a class="reference internal" href="#menu-shortcuts" id="id13">Menu shortcuts</a></li>
+<li><a class="reference internal" href="#command-recall" id="id14">Command recall</a></li>
+<li><a class="reference internal" href="#copy-paste" id="id15">Copy/paste</a></li>
+<li><a class="reference internal" href="#drag-and-drop" id="id16">Drag and drop</a></li>
+<li><a class="reference internal" href="#themes" id="id17">Themes</a></li>
+<li><a class="reference internal" href="#preferences" id="id18">Preferences</a></li>
+<li><a class="reference internal" href="#choosing-the-terminal-type" id="id19">Choosing the terminal type</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#slideshows-tracing-etc" id="id20">Slideshows, tracing etc.</a><ul>
+<li><a class="reference internal" href="#slideshows" id="id21">Slideshows</a></li>
+<li><a class="reference internal" href="#code-tracing-using-python-tutor" id="id22">Code tracing using Python Tutor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#webcasting-embedding-wildcards-etc" id="id23">Webcasting, embedding, wildcards etc.</a><ul>
+<li><a class="reference internal" href="#webcasting" id="id24">Webcasting</a></li>
+<li><a class="reference internal" href="#embedding-and-remote-terminal-commands" id="id25">Embedding and remote terminal commands</a></li>
+<li><a class="reference internal" href="#wildcard-sessions-and-multiplexing" id="id26">Wildcard sessions and multiplexing</a></li>
+<li><a class="reference internal" href="#multiple-hosts" id="id27">Multiple hosts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="command-toolchain">
+<span id="toolchain"></span><span id="index-0"></span><h2><a class="toc-backref" href="#id8">Command Toolchain</a><a class="headerlink" href="#command-toolchain" title="Permalink to this headline">¶</a></h2>
+<p>GraphTerm is bundled with a command toolchain that allow access to
+many graphical features from the command line.</p>
+<p>The toolchain commands can communicate with each other using pipes
+and may be written any language,
+e.g., Bash shell script, Python etc.
+The commands reside in the directory <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> and include the following:</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">d3cloud</span> <span class="pre">[file]</span></tt> Display file (or stdin) content as a word
+cloud (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gbrowse</span> <span class="pre">[filename|URL]</span></tt>    View files/URLs in a separate browser window</p>
+<p><tt class="docutils literal"><span class="pre">gcp</span> <span class="pre">source</span> <span class="pre">dest</span></tt> Copy command supporting drag-and-drop for source/destination</p>
+<p><tt class="docutils literal"><span class="pre">gdownload</span> <span class="pre">filename(s)</span></tt> Download piped data and files from terminal to desktop</p>
+<p><tt class="docutils literal"><span class="pre">gfeed</span></tt> Display <em>stdin</em> input lines as a &#8220;feed&#8221;</p>
+<p><tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">[-f]</span> <span class="pre">[filename|URL]</span></tt>    View files/URLs (or HTML from stdin) within
+an inline <em>iframe</em>  (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gimage</span> <span class="pre">[-f]</span> <span class="pre">[filenames]</span></tt>     View images inline, or as a
+fullpage slideshow (with <tt class="docutils literal"><span class="pre">-f</span></tt> option)</p>
+<p><tt class="docutils literal"><span class="pre">gjs</span> <span class="pre">javascript</span> <span class="pre">command</span></tt>   Execute Javascript in the client browser</p>
+<p><tt class="docutils literal"><span class="pre">glandslide</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>   A GraphTerm-aware version of
+Landslide, a web-based slideshow program  (see  <a class="reference internal" href="screenshots.html#landslide-shot"><em>Web slideshows using Landslide</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gload</span> <span class="pre">terminal_name</span></tt> Load a new terminal in the current window</p>
+<p><tt class="docutils literal"><span class="pre">gls</span> <span class="pre">[-i]</span> <span class="pre">[filenames]</span></tt>   Generate clickable directory listing</p>
+<p><tt class="docutils literal"><span class="pre">gmatplot.py</span></tt>   An inline <tt class="docutils literal"><span class="pre">matplotlib</span></tt> plotting package (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Inline data visualization plotting using matplotlib</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">item</span> <span class="pre">subitem</span></tt>   To access the menubar from the command line</p>
+<p><tt class="docutils literal"><span class="pre">gopen</span> <span class="pre">filename</span></tt>    To open a file using the OS-specific <tt class="docutils literal"><span class="pre">open</span></tt> command</p>
+<p><tt class="docutils literal"><span class="pre">gqrcode</span> <span class="pre">URL|text</span></tt>    Display inline QR code</p>
+<p><tt class="docutils literal"><span class="pre">greveal</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>    A GraphTerm-aware interface to <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>, a web-based slideshow program</p>
+<p><tt class="docutils literal"><span class="pre">gsh</span> <span class="pre">terminal_name</span> <span class="pre">command</span> <span class="pre">args</span></tt> Execute command in the specified terminal (all output appears in terminal_name</p>
+<p><tt class="docutils literal"><span class="pre">gsnowflake.py</span></tt>  An inline plotting demo for the SVG module <tt class="docutils literal"><span class="pre">svgwrite</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">gterm</span></tt> Launch new GraphTerm windows (from outside browser)</p>
+<p><tt class="docutils literal"><span class="pre">gtutor</span> <span class="pre">[...]</span> <span class="pre">example.py</span></tt>  A command-line version of the Online
+Python Tutorial  at <a class="reference external" href="http://pythontutor.com">pythontutor.com</a>
+(see <a class="reference internal" href="screenshots.html#pytutor-shot"><em>Code tracing using online version of Python Tutor</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gtweet</span> <span class="pre">[-s</span> <span class="pre">keywords]</span> <span class="pre">|</span> <span class="pre">tweet</span></tt>  To send, search, or receive
+tweets  (see  <a class="reference internal" href="screenshots.html#tweet-shot"><em>Live tweet stream using gtweet</em></a>)</p>
+<p><tt class="docutils literal"><span class="pre">gupload</span> <span class="pre">[filename|directory]</span></tt> Upload files from desktop into
+the terminal</p>
+<p><tt class="docutils literal"><span class="pre">gvi</span> <span class="pre">filename</span></tt>   Open file using a browser-based visual editor</p>
+<p><tt class="docutils literal"><span class="pre">hello_gterm.sh</span></tt> Hello World program that displays inline HTML text and image</p>
+<p><tt class="docutils literal"><span class="pre">ystock</span> <span class="pre">stock_symbol</span></tt> To view a graph of stock price history</p>
+<p><tt class="docutils literal"><span class="pre">yweather</span> <span class="pre">[location]</span></tt> To view weather forecasts (see  <a class="reference internal" href="screenshots.html#weather-shot"><em>Graphical weather forecast using Yahoo Weather API</em></a>)</p>
+</div></blockquote>
+</div>
+<div class="section" id="using-the-terminal">
+<h2><a class="toc-backref" href="#id9">Using the terminal</a><a class="headerlink" href="#using-the-terminal" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="visual-cues">
+<span id="index-1"></span><h3><a class="toc-backref" href="#id10">Visual cues</a><a class="headerlink" href="#visual-cues" title="Permalink to this headline">¶</a></h3>
+<p>In the default theme, <em>blue</em> color denotes text that can be <em>clicked</em>
+or <em>tapped</em> (see  <a class="reference internal" href="screenshots.html#ls-shot"><em>ls vs. gls</em></a>). The action triggered by clicking depends upon two
+factors, whether there is text in the current command line,
+and whether the Control modifier in the <em>Footer menu</em> is active.
+Click on the last displayed prompt to toggle display of the <em>Footer menu</em>.
+Clicking on other prompts toggles display of the command
+output (unless the Control modifier is used, in which case the
+entire command line is copied and pasted.)</p>
+</div>
+<div class="section" id="navigating-folders-opening-files">
+<span id="index-2"></span><h3><a class="toc-backref" href="#id11">Navigating folders/opening files</a><a class="headerlink" href="#navigating-folders-opening-files" title="Permalink to this headline">¶</a></h3>
+<p>You can navigate folders in GraphTerm just like you would do in a GUI,
+while retaining the ability to drop back to the CLI at any time.
+<em>If the current command line is empty,</em>
+clicking on a folder or filename displayed by the <tt class="docutils literal"><span class="pre">gls</span></tt> command will
+change the current directory to the folder, or cause the file to be
+opened.
+<em>If you have typed anything at all in the current command line,
+even if it is just a space</em>, the clicking action will cause text to be
+pasted into the command line, without any
+command being executed. You can edit the pasted text, then press the
+Enter key to execute it.</p>
+</div>
+<div class="section" id="image-and-icon-display">
+<span id="index-3"></span><h3><a class="toc-backref" href="#id12">Image and Icon display</a><a class="headerlink" href="#image-and-icon-display" title="Permalink to this headline">¶</a></h3>
+<p>To display images inline, use the <tt class="docutils literal"><span class="pre">gimage</span></tt> command.
+To activate icon display for commands like <tt class="docutils literal"><span class="pre">gls</span></tt>, select
+<tt class="docutils literal"><span class="pre">view/icons</span></tt> in the menubar. By default, <tt class="docutils literal"><span class="pre">gls</span></tt> does not
+display thumbnail icons of image files. (You can use <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span></tt> to
+force thumbnail icon display, but it can be a bit slow if there are a
+large number of images.)</p>
+</div>
+<div class="section" id="menu-shortcuts">
+<span id="index-4"></span><h3><a class="toc-backref" href="#id13">Menu shortcuts</a><a class="headerlink" href="#menu-shortcuts" title="Permalink to this headline">¶</a></h3>
+<p>All the items in the top menubar can be accessed by typing <em>Control-J</em>
+followed by a single letter for each level of menu selection. The
+letter to be typed will be highlighted when you type <em>Control-J</em> and
+is usually, but not always, the first letter of the item name. For example,
+the sequence <em>Control-J t c</em> will select the menu item <em>terminal/clear</em></p>
+<p>The menubar can also be accessed from the
+command line, using the <tt class="docutils literal"><span class="pre">gmenu</span></tt> command, e.g.:</p>
+<div class="highlight-python"><pre>gmenu terminal clear</pre>
+</div>
+<p>A single-word menu name is typed to select each menu level, and
+preceding level names may be omitted, as long as there is no ambiguity, e.g.:</p>
+<div class="highlight-python"><pre>gmenu clear</pre>
+</div>
+</div>
+<div class="section" id="command-recall">
+<span id="index-5"></span><h3><a class="toc-backref" href="#id14">Command recall</a><a class="headerlink" href="#command-recall" title="Permalink to this headline">¶</a></h3>
+<p>If the command line is empty, <em>up/down arrows</em> will use the underlying
+shell for command recall (like Control-P and Control-N). If the
+command line contains any text, including whitespace,
+<em>up/down arrows</em> will cause GraphTerm to search for matching
+previous commands that begin with the text already typed (ignoring
+any leading whitespace). You can use the <em>right arrow</em> to
+complete the recalled command (for editing) or use the <em>Enter</em> key
+to execute it. Typing any other key, including the <em>left arrow</em>,
+will cancel the command recall process.</p>
+</div>
+<div class="section" id="copy-paste">
+<span id="index-6"></span><h3><a class="toc-backref" href="#id15">Copy/paste</a><a class="headerlink" href="#copy-paste" title="Permalink to this headline">¶</a></h3>
+<p>For certain browsers (e.g., desktop Chrome/Firefox),
+the usual <em>Command-V</em> or <em>Control-V</em> key sequence should directly
+paste text from the clipboard.
+Alternatively, for some browsers, you can <em>click on the cursor</em>
+before beginning the paste operation and then paste the text directly.
+This second technique may not always work well for text copied from non-plain
+text sources, such as a web page. A
+workaround for this case is to paste the text into a temporary
+location as plain text (such as in a plain text editor), and then
+copy/paste it from there to GraphTerm.</p>
+<p>If the above do not work, you can use the keyboard shortcut
+<em>Control-O</em> to open a popup window, paste the text into the popup
+window using the browser&#8217;s paste menu command or a keyboard shortcut,
+such as <em>Command/Control-V</em>, and then type <em>Control-O</em> again to insert
+the text at the GraphTerm cursor location.  (The popup paste window
+can also be accessed using the <em>terminal/paste special</em> menu item.)</p>
+</div>
+<div class="section" id="drag-and-drop">
+<span id="index-7"></span><h3><a class="toc-backref" href="#id16">Drag and drop</a><a class="headerlink" href="#drag-and-drop" title="Permalink to this headline">¶</a></h3>
+<p>Sort of works! You can drag a filename (<em>grabbing the icon does not
+work</em>) and drop it on a folder, an executable, or the command line.
+For drag-and-drop between two GraphTerm windows running on the same
+host, the file will be moved to the destination folder. For windows
+on two different hosts, the file will be copied.
+(Graphical feedback for this operation is not properly implemented at
+this time. Look at the command line for the feedback.)</p>
+</div>
+<div class="section" id="themes">
+<span id="index-8"></span><span id="id1"></span><h3><a class="toc-backref" href="#id17">Themes</a><a class="headerlink" href="#themes" title="Permalink to this headline">¶</a></h3>
+<p>Themes, selected using the menubar, are a work in progress. There is a
+simple <em>dark</em> theme available, which can be modified by editing the
+file <tt class="docutils literal"><span class="pre">graphterm/www/themes.dark.css</span></tt>. The 3-D perspective theme is a
+very primitive implementation which only works on Chrome/Safari (see
+<a class="reference internal" href="screenshots.html#stars3d-shot"><em>stars3d theme, with icons enabled</em></a>).</p>
+</div>
+<div class="section" id="preferences">
+<span id="index-9"></span><span id="id2"></span><h3><a class="toc-backref" href="#id18">Preferences</a><a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h3>
+<p>Default terminal preferences, such as font size and themes, are stored
+in the file <tt class="docutils literal"><span class="pre">gterm_prefs.json</span></tt> in your home directory.  The <em>view/save</em>
+menu option can be used to save the current terminal configuration as
+the default preference.</p>
+</div>
+<div class="section" id="choosing-the-terminal-type">
+<span id="index-10"></span><h3><a class="toc-backref" href="#id19">Choosing the terminal type</a><a class="headerlink" href="#choosing-the-terminal-type" title="Permalink to this headline">¶</a></h3>
+<p>The default terminal type is set to <tt class="docutils literal"><span class="pre">xterm</span></tt>, but it may not always
+work properly. You can also try out the terminal types <tt class="docutils literal"><span class="pre">screen</span></tt> or
+<tt class="docutils literal"><span class="pre">linux</span></tt>,  which may work better for some purposes.
+You can use the <tt class="docutils literal"><span class="pre">--term_type</span></tt> option when running the server to set
+the default terminal type, or use the <tt class="docutils literal"><span class="pre">export</span> <span class="pre">TERM=screen</span></tt> command.
+(Fully supporting these terminal types is a work in progress.)</p>
+</div>
+</div>
+<div class="section" id="slideshows-tracing-etc">
+<h2><a class="toc-backref" href="#id20">Slideshows, tracing etc.</a><a class="headerlink" href="#slideshows-tracing-etc" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="slideshows">
+<span id="index-11"></span><span id="id3"></span><h3><a class="toc-backref" href="#id21">Slideshows</a><a class="headerlink" href="#slideshows" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">glandslide</span></tt> command, which is a slightly modified version of the
+web-based slideshow program <a class="reference external" href="https://github.com/adamzap/landslide">Landslide</a>,
+can be used to create a slideshow from Markdown (.md) or reStructured
+Text (.rst) files (see  <a class="reference internal" href="screenshots.html#landslide-shot"><em>Web slideshows using Landslide</em></a>). A few sample <tt class="docutils literal"><span class="pre">.md</span></tt> files are provided in the
+<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/landslide</span></tt> directory of the distribution. To view a slideshow about
+GraphTerm, type:</p>
+<div class="highlight-python"><pre>glandslide -o $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f</pre>
+</div>
+<p>Type <tt class="docutils literal"><span class="pre">h</span></tt> for help and <tt class="docutils literal"><span class="pre">q</span></tt> to quit the slideshow. (The unmodified
+Landslide program can also be used, but remote sharing will not work.)</p>
+<p>The <tt class="docutils literal"><span class="pre">greveal</span></tt> command can be used to display Markdown files as
+slideshows using <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>:</p>
+<div class="highlight-python"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f</pre>
+</div>
+<p>Type <tt class="docutils literal"><span class="pre">b</span></tt> three times in quick succession to exit the slideshow.</p>
+<p>The <tt class="docutils literal"><span class="pre">gimage</span></tt> command, which displays images inline, can also be used for
+slideshows and simple presentations. Just <tt class="docutils literal"><span class="pre">cd</span></tt> to a directory
+that has the images for a slideshow, and type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gimage</span> <span class="o">-</span><span class="n">f</span>
+</pre></div>
+</div>
+<p>To select a subset of images in the directory, you can use a wildcard
+pattern. For publicly webcasting a slideshow, use the <tt class="docutils literal"><span class="pre">-b</span></tt> option.</p>
+</div>
+<div class="section" id="code-tracing-using-python-tutor">
+<span id="python-tutor"></span><span id="index-12"></span><h3><a class="toc-backref" href="#id22">Code tracing using Python Tutor</a><a class="headerlink" href="#code-tracing-using-python-tutor" title="Permalink to this headline">¶</a></h3>
+<p>The command <tt class="docutils literal"><span class="pre">gtutor</span></tt> implements a command-line version of the
+Online Python Tutorial from <a class="reference external" href="http://pythontutor.com">pythontutor.com</a>.
+It produces HTML output that can be piped to <tt class="docutils literal"><span class="pre">gframe</span></tt> for inline
+display (see  <a class="reference internal" href="screenshots.html#pytutor-shot"><em>Code tracing using online version of Python Tutor</em></a>).
+To trace the execution of a sample program <tt class="docutils literal"><span class="pre">example.py</span></tt>, use it as follows:</p>
+<div class="highlight-python"><pre>gtutor example.py | gframe -f</pre>
+</div>
+<p>More sample programs may be found in the directory <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/pytutor/example-code</span></tt>.
+Of course, you can use <tt class="docutils literal"><span class="pre">gtutor</span></tt> to trace any other (small) python program as well.
+Type <tt class="docutils literal"><span class="pre">gtutor</span> <span class="pre">-h</span></tt> to display the command line options.
+<em>Note:</em> By default, <tt class="docutils literal"><span class="pre">gtutor</span></tt> accesses the browser CSS/JS files from
+<a class="reference external" href="http://pythontutor.com">pythontutor.com</a>.
+To use <tt class="docutils literal"><span class="pre">gtutor</span></tt> in an offline-mode, you will need to specify the
+<tt class="docutils literal"><span class="pre">--offline</span></tt> option and also download the Online Python Tutorial
+code from GitHub and copy/rename the main source directory
+(currently <tt class="docutils literal"><span class="pre">v3</span></tt>) as <tt class="docutils literal"><span class="pre">$GTERM_DIR/www/pytutor</span></tt> so that GraphTerm
+can serve the CSS/JS files locally.</p>
+<p><em>Advanced usage:</em> You can embed tutorials within a Landslide/Markdown
+presentation by including an <tt class="docutils literal"><span class="pre">iframe</span></tt> HTML element in the
+presentation file, with the <tt class="docutils literal"><span class="pre">src</span></tt> attribute set to a graphterm
+URL, such as <tt class="docutils literal"><span class="pre">http://localhost:8900/local/tutorial</span></tt>. This will open
+up a graphterm window where you can either run <tt class="docutils literal"><span class="pre">gtutor</span></tt> interactively or
+use <tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">-f</span></tt> to display an HTML file created previously using <tt class="docutils literal"><span class="pre">gtutor</span></tt>.</p>
+</div>
+</div>
+<div class="section" id="webcasting-embedding-wildcards-etc">
+<h2><a class="toc-backref" href="#id23">Webcasting, embedding, wildcards etc.</a><a class="headerlink" href="#webcasting-embedding-wildcards-etc" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="webcasting">
+<span id="index-13"></span><h3><a class="toc-backref" href="#id24">Webcasting</a><a class="headerlink" href="#webcasting" title="Permalink to this headline">¶</a></h3>
+<p>If you enable the <em>share/webcast</em> in the menubar, anyone can use the
+session URL to view the session, without the need for
+authentication, but will not be able to steal it.
+<em>This feature is somewhat experimental; use it with caution to avoid exposing sensitive data.</em></p>
+</div>
+<div class="section" id="embedding-and-remote-terminal-commands">
+<span id="embedding"></span><span id="index-14"></span><h3><a class="toc-backref" href="#id25">Embedding and remote terminal commands</a><a class="headerlink" href="#embedding-and-remote-terminal-commands" title="Permalink to this headline">¶</a></h3>
+<p>Additional GraphTerm terminals can be embedded within any GraphTerm
+terminal. For example, the following command:</p>
+<div class="highlight-python"><pre>gframe -b -t terma termb</pre>
+</div>
+<p>creates two terminals, <tt class="docutils literal"><span class="pre">terma</span></tt> and <tt class="docutils literal"><span class="pre">termb</span></tt> and embeds them within
+the current terminal. The demo script
+<a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh">metro.sh</a>
+illustrates the embedding of multiple terminals, each running a
+different command (see screenshot <a class="reference internal" href="screenshots.html#metro-shot"><em>metro.sh</em></a>). The script also demonstrates the use of the <tt class="docutils literal"><span class="pre">gsh</span></tt>
+command to execute commands remotely on a terminal, e.g.:</p>
+<div class="highlight-python"><pre>gsh terma yweather -f austin</pre>
+</div>
+<p>The terminal name argument for <tt class="docutils literal"><span class="pre">gsh</span></tt> can be a wildcard
+expression, e.g. <tt class="docutils literal"><span class="pre">'term*'</span></tt>. Unlike <tt class="docutils literal"><span class="pre">ssh</span></tt>, the <tt class="docutils literal"><span class="pre">gsh</span></tt> command does
+not display the output of the remote command. You will need to view it
+in the remote terminal. To load a remote terminal in the current
+browser window, you can use:</p>
+<div class="highlight-python"><pre>gload terma</pre>
+</div>
+</div>
+<div class="section" id="wildcard-sessions-and-multiplexing">
+<span id="wildcard"></span><span id="index-15"></span><h3><a class="toc-backref" href="#id26">Wildcard sessions and multiplexing</a><a class="headerlink" href="#wildcard-sessions-and-multiplexing" title="Permalink to this headline">¶</a></h3>
+<p>A terminal session path is of the form <tt class="docutils literal"><span class="pre">session_host/session_name</span></tt>. You can
+use the shell wildcard patterns <tt class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></tt> in the session path. For
+example, you can open a wildcard session for multiple hosts using the URL:</p>
+<div class="highlight-python"><pre>http://localhost:8900/*/tty1/?qauth=code</pre>
+</div>
+<p>For normal shell terminals, a wildcard session will open a &#8220;blank&#8221; window,
+but any input you type in it will be broadcast to all sessions
+matching the pattern. (To receive visual feedback,
+you will need to view one or more of the matching sessions at the
+same time.)</p>
+<p>For <tt class="docutils literal"><span class="pre">otrace</span></tt> debugging sessions of the form <tt class="docutils literal"><span class="pre">*/osh</span></tt>, GraphTerm
+will multiplex the input and output in wildcard terminals. Your input
+will be echoed and broadcast, and output from each of the matching
+sessions will be displayed, preceded by an identifying header
+(with the special string <tt class="docutils literal"><span class="pre">ditto</span></tt> used to indicate repeated output).
+See the <em>otrace</em> integration section for more information.</p>
+<p>NOTE: Multiplexed input/output display cannot be easily implemented for
+regular shell terminals.</p>
+</div>
+<div class="section" id="multiple-hosts">
+<span id="index-16"></span><h3><a class="toc-backref" href="#id27">Multiple hosts</a><a class="headerlink" href="#multiple-hosts" title="Permalink to this headline">¶</a></h3>
+<p>More than one host can connect to the GraphTerm server. The <tt class="docutils literal"><span class="pre">localhost</span></tt>
+is connected by default (but this can be disabled using the
+<tt class="docutils literal"><span class="pre">--nolocal</span></tt> option). To connect an additional host, run the
+following command on the computer you wish to connect:</p>
+<div class="highlight-python"><pre>gtermhost --server_addr=&lt;serveraddr&gt; &lt;hostname&gt;</pre>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">serveraddr</span></tt> is the address or name of the computer where the
+GraphTerm server is running. You can use the
+<tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command
+in the background. By default, the Graphterm
+server listens for host connections on port 8899. <em>The multiple host
+feature should only be used within a secure network, not on the public internet.</em></p>
+<p>NOTE: Unlike the <tt class="docutils literal"><span class="pre">sshd</span></tt> server, the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command is designed to
+be run by a normal user, not a privileged user. So different users can
+connect to the GraphTerm server on <tt class="docutils literal"><span class="pre">localhost</span></tt> pretending to be different &#8220;hosts&#8221;
+on the same computer. (If you are running a Python server, it can
+connect directly to the GraphTerm server as a &#8220;host&#8221;, allowing it to
+be dynamically introspected and debugged using <a class="reference external" href="http://code.mindmeldr.com/otrace">otrace</a>.)</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="troubleshooting.html" title="Troubleshooting FAQ"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="virtual-lab.html" title="Using the GraphTerm Virtual Computer Lab"
+             >previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+ 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2012-2014 R. Saravanan.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+<div class="footer">
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ?
+              'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+  })();
+</script>
+</div>
+
+  </body>
+</html>

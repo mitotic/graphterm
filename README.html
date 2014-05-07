@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>README &mdash; GraphTerm 0.52.0 documentation</title>
+    <title>README &mdash; GraphTerm 0.53.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.52.0',
+        VERSION:     '0.53.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,10 +26,10 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.52.0 documentation"
+          title="Search within GraphTerm 0.53.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.52.0 documentation" href="index.html" />
-    <link rel="next" title="Getting started with GraphTerm" href="start.html" />
+    <link rel="top" title="GraphTerm 0.53.0 documentation" href="index.html" />
+    <link rel="next" title="Getting started" href="start.html" />
     <link rel="prev" title="Contact" href="contact.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -98,7 +98,7 @@ code.mindmeldr.com
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="start.html" title="Getting started with GraphTerm"
+          <a href="start.html" title="Getting started"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="contact.html" title="Contact"
@@ -130,7 +130,7 @@ code.mindmeldr.com
                         title="previous chapter">Contact</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="start.html"
-                        title="next chapter">Getting started with GraphTerm</a></p>
+                        title="next chapter">Getting started</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/README.txt"
@@ -181,25 +181,24 @@ aims to seamlessly blend the command line and graphical user
 interfaces. You can use it just like a regular terminal,
 backwards-compatible with <tt class="docutils literal"><span class="pre">xterm</span></tt>, and access the additional
 graphical features as needed. These features can help impove your
-terminal workflow by integrating clickable folder navigation with
-command line operations and
-letting you view image/HTML output without a separate window.</p>
-<p>The GraphTerm server can be configured to support multiple users,
-using Google Authentication, to create a browser-based
-<em>virtual computer lab</em> for teaching and
-collaboration. The lab instructor can access all the terminal
-sessions via a dashboard and
-<a class="reference external" href="http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals">monitor the progress</a>
-of each user in carrying out assigned activities, such as entering code in a
-&#8220;notebook&#8221;. Lab users can collaboratively view and enter shell
-commands in each other&#8217;s terminals, edit files and notebooks etc.</p>
-<p>You can use the GraphTerm API to build &#8220;mashups&#8221; of web applications
-that work seamlessly within the terminal.  Sample mashups include:</p>
+terminal workflow by integrating graphical operations with the
+command line and letting you view images and HTML output inline.</p>
+<p>GraphTerm has several funky features, but two of the most useful
+applications are:</p>
 <blockquote>
 <div><ul class="simple">
-<li><tt class="docutils literal"><span class="pre">greveal</span></tt>: Inline version of <tt class="docutils literal"><span class="pre">reveal.js</span></tt> to display Markdown files as slideshows</li>
-<li><tt class="docutils literal"><span class="pre">gtutor</span></tt>: Inline version of <a class="reference external" href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
-<li><tt class="docutils literal"><span class="pre">yweather</span></tt>: Using Yahoo weather API to display weather</li>
+<li>a <strong>lightweight notebook interface</strong> with inline graphics display
+that can work seamlessly on remote machines across SSH login
+boundaries for plotting with Python or R. For remote
+access, it also serves as a <em>terminal multiplexer</em>, sort of like
+GNU <tt class="docutils literal"><span class="pre">screen</span></tt> or <tt class="docutils literal"><span class="pre">tmux</span></tt>.</li>
+<li>a <strong>virtual computer lab</strong> for teaching and demonstrations. The
+GraphTerm server can be set up in the cloud and accessed by
+multiple users using their laptop/mobile browsers, with Google
+Authentication. The lab instructor can
+<a class="reference external" href="http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals">monitor all the users&#8217;  terminals</a>
+via a &#8220;dashboard&#8221;, and users can collaborate with each other by
+sharing terminals and notebooks.</li>
 </ul>
 </div></blockquote>
 <p>GraphTerm builds upon two earlier projects,
@@ -218,34 +217,20 @@ The GraphTerm server acts as a <em>router</em>, sending input from browser
 windows for different users to the appropriate terminal (pseudo-tty)
 sessions running on different hosts, and transmitting the
 terminal output back to the browser windows.</p>
-<p>This flexible, networked implementation allows for several possible
-applications for GraphTerm, such as:</p>
-<blockquote>
-<div><ul class="simple">
-<li>an <strong>enhanced terminal</strong> that combines the command line with basic
-GUI operations like navigating folders, file drag-and-drop,
-displaying images etc.</li>
-<li>an <strong>inline data visualization tool</strong> to view output from plotting
-libraries like <tt class="docutils literal"><span class="pre">matplotlib</span></tt>.</li>
-<li>a <strong>notebook interface</strong> for data analysis and documentation (like
-the <tt class="docutils literal"><span class="pre">Mathematica</span></tt> or <tt class="docutils literal"><span class="pre">IPython</span></tt> notebook interface, but at the shell
-level).</li>
-<li>a <strong>virtual computer lab</strong> for teaching and demonstrations.
-The GraphTerm server can be set up in the cloud
-and accessed by multiple users using their laptop/mobile browsers.
-You can then share shell commands and presentations, trace code execution,
-interact with other users, etc.</li>
-<li>a <strong>collaborative terminal</strong> that can be remotely accessed
-by multiple users simultaneously, to run programs, edit files etc.
-It can also be used as a <em>detachable terminal multiplexer</em>, sort of like GNU <tt class="docutils literal"><span class="pre">screen</span></tt> or
-<tt class="docutils literal"><span class="pre">tmux</span></tt>.</li>
-</ul>
-</div></blockquote>
 <p>The interface is designed to be touch-friendly for use with
 tablets, with tappable links and command re-use to minimize the need for
 a keyboard. It preserves history for all commands,
 whether entered by typing, clicking, or tapping.
 It is also themable using CSS.</p>
+<p>You can use the GraphTerm API to build &#8220;mashups&#8221; of web applications
+that work seamlessly within the terminal.  Sample mashups include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">greveal</span></tt>: Inline version of <tt class="docutils literal"><span class="pre">reveal.js</span></tt> to display Markdown files as slideshows</li>
+<li><tt class="docutils literal"><span class="pre">gtutor</span></tt>: Inline version of <a class="reference external" href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
+<li><tt class="docutils literal"><span class="pre">yweather</span></tt>: Using Yahoo weather API to display weather</li>
+</ul>
+</div></blockquote>
 <p>Images of GraphTerm in action can be found in <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/docs/screenshots.rst">screenshots</a>
 and in this <a class="reference external" href="http://youtu.be/TvO1SnEpwfE">YouTube Video</a>.
 Here is a sample screenshot showing the output of the
@@ -312,7 +297,7 @@ Within a GraphTerm window, you can use <em>terminal/new</em> menu option, or
 type the command <tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">new</span></tt>, to create a new GraphTerm session</p>
 <p>You can also open additional GraphTerm terminal windows using
 the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gterm</span> <span class="p">[</span><span class="n">session_name</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">gterm</span> <span class="o">--</span><span class="n">noauth</span> <span class="p">[</span><span class="n">session_name</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>where the terminal session name argument is optional.</p>
@@ -326,9 +311,7 @@ basic features of the standard <tt class="docutils literal"><span class="pre">ls
 to be able to use the GraphTerm toolchain. Otherwise, you will
 encounter a <tt class="docutils literal"><span class="pre">Permission</span> <span class="pre">denied</span></tt> error.)
 See <a class="reference external" href="http://code.mindmeldr.com/graphterm/start.html">Getting Started with GraphTerm</a>
-and the
-<a class="reference external" href="http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html">Using Graphical Features</a>
-tutorials for more info on using GraphTerm. You can also
+for more info on using GraphTerm. You can also
 <a class="reference external" href="http://code.mindmeldr.com/graphterm/virtual-setup.html">set up a virtual computer lab</a>
 using GraphTerm.</p>
 </div>
@@ -418,7 +401,7 @@ menu plugin</li>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="start.html" title="Getting started with GraphTerm"
+          <a href="start.html" title="Getting started"
              >next</a> |</li>
         <li class="right" >
           <a href="contact.html" title="Contact"
