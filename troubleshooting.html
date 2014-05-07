@@ -274,13 +274,14 @@ situation.)</p>
 </div>
 <div class="section" id="when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work">
 <span id="index-4"></span><h3><a class="toc-backref" href="#id6">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a><a class="headerlink" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" title="Permalink to this headline">¶</a></h3>
-<p>This is normal behavior. Many GraphTerm features only work on the
-computer that the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> program is running on. By default, SSH is treated
-like any other program that accesses the terminal for
-input/output. However, you can use the <em>terminal/export environment</em>
-menu command to set shell environment variables on a <em>trusted</em> remote computer
-to restore some, but not all, of GraphTerm features. (For more details
-and a discussion of the security implications, see the <a class="reference internal" href="remote.html"><em>Remote access and SSH</em></a> section.)</p>
+<p>This is normal behavior. Other than inline images and the notebook
+mode, most graphical features only work on the computer that the
+<tt class="docutils literal"><span class="pre">gtermserver</span></tt> (or <tt class="docutils literal"><span class="pre">gtermhost</span></tt>) program is running on.  However,
+you can use the <em>terminal/export environment</em> menu command to set
+shell environment variables on a <em>trusted</em> remote computer to restore
+some, but not all, of GraphTerm features. (For more details and a
+discussion of the security implications, see the <a class="reference internal" href="remote.html"><em>Remote access and SSH</em></a>
+section.)</p>
 </div>
 <div class="section" id="the-terminal-does-not-display-long-lines-properly-they-are-either-wrapped-too-short-or-they-overflow-the-window">
 <span id="index-5"></span><h3><a class="toc-backref" href="#id7">The terminal does not display long lines properly; they are either wrapped too short or they overflow the window?</a><a class="headerlink" href="#the-terminal-does-not-display-long-lines-properly-they-are-either-wrapped-too-short-or-they-overflow-the-window" title="Permalink to this headline">¶</a></h3>
