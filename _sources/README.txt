@@ -17,13 +17,13 @@ terminal workflow by integrating graphical operations with the
 command line and letting you view images and HTML output inline.
 
 GraphTerm has several funky features, but two of the most useful
-applications are:
+practical applications are:
 
- - a **lightweight notebook interface** with inline graphics display
-   that can work seamlessly on remote machines across SSH login
-   boundaries for plotting with Python or R. For remote
-   access, it also serves as a *terminal multiplexer*, sort of like
-   GNU ``screen`` or ``tmux``.
+ - an **inline data visualization tool** for plotting with Python or R
+   that can work seamlessly across SSH login
+   boundaries, with an optional notebook interface. (For remote
+   access, it also serves as a detachable terminal, like
+   ``tmux`` or ``screen``.)
 
  - a **virtual computer lab** for teaching and demonstrations. The
    GraphTerm server can be set up in the cloud and accessed by
