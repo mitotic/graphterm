@@ -159,29 +159,34 @@ Notebook mode
 
 GraphTerm supports a notebook mode, where code can be entered in
 multiple cells and executed separately in each cell to display the
-output. Cells can also contain comment text in `Markdown
-<http://daringfireball.net/projects/markdown>`_ format.
-Currently, the notebook mode can be used with the shell (``bash``),
-or while running python (``python/ipython``) and ``R`` interpreters
-(see :doc:`R`). Clicking on files with extensions
-``*.ipynb``, ``*.py.md`` or ``*.R.md`` displayed in ``gls`` output
-will automatically open a notebook using the appropriate program.
-You can also try using the notebook mode 
-with any other shell-like program (such as ``IDL`` or ``ncl``) which has a unique
-prompt by typing *Shift-Enter* after starting the program. 
+output (see :ref:`notebook_shot`). Cells can also contain comment text
+in `Markdown <http://daringfireball.net/projects/markdown>`_ format.
+Currently, the notebook mode can be used with the shell (``bash``), or
+while running python (``python/ipython``) and ``R`` interpreters (see
+:doc:`R`).
 
 You can create new Python or R notebooks using the *notebook/new* menu
-option and then selecting the language. For other languages, run the
-appropriate interpreter and when the interpreter prompt appears,
-select the *notebook/new/default* menu option, or type *Shift-Enter*
-(or *Control-Enter*, if you wish to read a notebook file and/or
-specify the interpreter prompts).  You can also start up the python
-interpreter to load a notebook file, in ``*.ipynb`` or ``*.md``
-format, from the command line::
+option and then selecting the language.  You can alo try using the
+notebook mode with any other shell-like program (such as ``IDL`` or
+``ncl``) which has a unique prompt by typing *Shift-Enter* after
+starting the program. Type *Control-Enter* instead, if you wish to
+read a notebook file and/or customize the interpreter prompts.
+Alternatively, you can select *notebook/new/default* menu option after
+starting the program (this works even with ``bash``!).
 
-    python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb
+To open an existing notebook, use the ``gls`` command to list your
+notebooks, e,g.::
 
-(see  :ref:`notebook_shot`). 
+    gls *.ipynb
+
+Then click on the notebook that you wish to open.
+Alternatively, you can also the ``gopen`` command::
+
+    gopen notebook.ipynb
+
+This works for Python and R notebooks. For other languages, you will
+need to start the interpreter and then use the *notebook/open* menu
+option.
 
 Within notebook mode,
 use *Shift-Enter* to execute a cell and move to the next, or

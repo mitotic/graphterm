@@ -12,6 +12,7 @@ Documentation contents
    remote
    virtual-setup
    virtual-lab
+   R
    features
    troubleshooting
    screenshots
