@@ -48,7 +48,7 @@ environment each time you login.
 For a more complete setup, you can install GraphTerm in your home
 directory on the remote system, even if you never plan to run the
 server. Download the ``graphterm-version.tar.gz`` source tarball from
-http://pypi.org, untar it and copy the subdirectory ``graphterm`` to
+https://pypi.python.org/pypi/graphterm, untar it and copy the subdirectory ``graphterm`` to
 ``~/graphterm``. The ``gprofile`` script will automatically detect
 such an installation and set up the environment.  (If you have root
 access, you can install ``graphterm`` for all users on the remote
