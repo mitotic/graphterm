@@ -251,7 +251,7 @@ and (vi) notebook mode using the standard python interpreter.</p>
 shell on your Mac/Linux/Unix computer. For a quick install, if the python
 <tt class="docutils literal"><span class="pre">setuptools</span></tt> module is already installed on your system,
 use the following two commands:</p>
-<div class="highlight-python"><pre>sudo easy_install graphterm
+<div class="highlight-python"><pre>sudo easy_install graphterm    OR    sudo pip install graphterm
 sudo gterm_setup            # Sets up the command toolchain</pre>
 </div>
 <p>(If <tt class="docutils literal"><span class="pre">setuptools</span></tt> is not installed, consider installing it using
@@ -264,12 +264,15 @@ and execute the following command in the <tt class="docutils literal"><span clas
 </div>
 <p>For the manual install, you will also need to install the <tt class="docutils literal"><span class="pre">tornado</span></tt>
 web server, which can be downloaded from
-<a class="reference external" href="https://github.com/downloads/facebook/tornado/tornado-2.3.tar.gz">https://github.com/downloads/facebook/tornado/tornado-2.3.tar.gz</a></p>
-<p>You can also try out <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> without installing it, after
-untarring the source tarball (or checking out the source from <tt class="docutils literal"><span class="pre">github</span></tt>). You can
-run the server as <tt class="docutils literal"><span class="pre">./gtermserver.py</span></tt> in the <tt class="docutils literal"><span class="pre">graphterm</span></tt>
-subdirectory of the distribution, after you have installed the <tt class="docutils literal"><span class="pre">tornado</span></tt> package
-in your system (or in the <tt class="docutils literal"><span class="pre">graphterm</span></tt> subdirectory).</p>
+<a class="reference external" href="http://www.tornadoweb.org">http://www.tornadoweb.org</a></p>
+<p>You can also try out GraphTerm without installing it, by untarring the
+source tarball (or checking out the source from <tt class="docutils literal"><span class="pre">github</span></tt>). You can
+run the server as <tt class="docutils literal"><span class="pre">./gtermserver.py</span></tt> within the <tt class="docutils literal"><span class="pre">graphterm</span></tt>
+subdirectory of the distribution, after you have installed the
+<tt class="docutils literal"><span class="pre">tornado</span></tt> package on your system (or within the <tt class="docutils literal"><span class="pre">graphterm</span></tt>
+subdirectory of the source distribution). In this case, certain
+commands in the <tt class="docutils literal"><span class="pre">graphterm/bin</span></tt> subdirectory, such as <tt class="docutils literal"><span class="pre">gterm</span></tt> and
+<tt class="docutils literal"><span class="pre">gauth</span></tt>, would need to be accessed as <tt class="docutils literal"><span class="pre">gterm.py</span></tt> and <tt class="docutils literal"><span class="pre">gauth.py</span></tt> respectively.</p>
 <p>You can browse the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> source code, and download the development
 version, at <a class="reference external" href="https://github.com/mitotic/graphterm">Github</a>.</p>
 </div>

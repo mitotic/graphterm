@@ -200,7 +200,7 @@ Inline HTML document display
 
 .. _matplotlib_shot:
 
-Inline data visualization plotting using matplotlib
+Inline data visualization using matplotlib
 =========================================================
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gmatplot1.png

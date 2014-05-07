@@ -147,21 +147,33 @@ code.mindmeldr.com
             
   <div class="section" id="using-graphterm-with-r">
 <h1>Using GraphTerm with R<a class="headerlink" href="#using-graphterm-with-r" title="Permalink to this headline">¶</a></h1>
-<p id="index-0">To display inline graphics, the following <tt class="docutils literal"><span class="pre">R</span></tt> packages need to be
-installed: <tt class="docutils literal"><span class="pre">RCurl</span></tt>, <tt class="docutils literal"><span class="pre">Cairo</span></tt>, and <tt class="docutils literal"><span class="pre">png</span></tt>.
-On Linux, the following additional libraries, or their equivalents,
-may need to be installed: <tt class="docutils literal"><span class="pre">libcurl4-openssl-dev</span> <span class="pre">libcairo2-dev</span>
-<span class="pre">libxt-dev</span></tt>
-The file <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gterm.R">$GTERM_DIR/bin/gterm.R</a>
+<p id="index-0">GraphTerm supports basic inline graphics display and the notebook
+interface using R. The file <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gterm.R">$GTERM_DIR/bin/gterm.R</a>
 includes helper functions for using the GraphTerm API to display
-inline graphics.</p>
-<p>The notebook mode of GraphTerm will work with <tt class="docutils literal"><span class="pre">R</span></tt>, without any
-additional software. GraphTerm can open Markdown files (in a format very similar
-to <em>R-markdown</em>) as a notebook, and also saves notebooks using the same format.
-The file
-<a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/R-histogram.R.md">$GTERM_DIR/notebooks/R-histogram.R.md</a> contains
-a sample notebook displaying inline graphics.
-To open the notebook, click on it in the <tt class="docutils literal"><span class="pre">gls</span></tt> output, or use the
+inline graphics.  The following <tt class="docutils literal"><span class="pre">R</span></tt> packages need to be installed:
+<tt class="docutils literal"><span class="pre">RCurl</span></tt>, <tt class="docutils literal"><span class="pre">Cairo</span></tt>, and <tt class="docutils literal"><span class="pre">png</span></tt>.  On Linux, the following additional
+libraries, or their equivalents, may need to be installed:
+<tt class="docutils literal"><span class="pre">libcurl4-openssl-dev</span> <span class="pre">libcairo2-dev</span> <span class="pre">libxt-dev</span></tt>. Here&#8217;s a plotting
+example:</p>
+<div class="highlight-python"><pre>$ R -q
+&gt;  gterm &lt;- paste(Sys.getenv("GTERM_DIR"),"/bin/gterm.R", sep="")
+&gt;  source(gterm)          # Load GraphTerm API helper functions
+&gt;  g &lt;- gcairo()          # Initialize Cairo device for GraphTerm output
+&gt;  x &lt;- rnorm(100,0,1)
+&gt;  hist(x, col="blue")
+&gt;  g$frame()              # Display plot as inline image
+&gt;  hist(x, col="red")
+&gt;  g$frame(TRUE)          # Overwrite previous plot
+&gt;  hist(x, col="green")
+&gt;  g$frame()              # New plot</pre>
+</div>
+<p>The notebook mode of GraphTerm will also work with <tt class="docutils literal"><span class="pre">R</span></tt>, without any
+additional software. GraphTerm can open Markdown files (in a format
+very similar to <em>R-markdown</em>) as a notebook, and also saves notebooks
+using the same format.  The file
+<a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/R-histogram.R.md">$GTERM_DIR/notebooks/R-histogram.R.md</a>
+contains a sample notebook displaying inline graphics.  To open the
+notebook, click on it in the <tt class="docutils literal"><span class="pre">gls</span></tt> output, or use the
 <em>notebook/open</em> menu option after starting <tt class="docutils literal"><span class="pre">R</span></tt>.</p>
 </div>
 

@@ -175,9 +175,9 @@ image display and the notebook mode of GraphTerm work transparently
 across multiple SSH login boundaries. For example, in your GraphTerm
 window you can SSH to a remote computer and display a plot using
 python as follows:</p>
-<div class="highlight-python"><pre>ssh user@remote_server
+<div class="highlight-python"><pre>local$ ssh user@remote_server
 
-python -i $GTERM_DIR/bin/gpylab.py
+remote$ python -i $GTERM_DIR/bin/gpylab.py
 
 &gt;&gt;&gt; plot([1,2])</pre>
 </div>
@@ -186,27 +186,32 @@ python -i $GTERM_DIR/bin/gpylab.py
 remote computer because all communication occurs via the standard
 input/output of the remote python interpreter. In addition to
 displaying inline graphics, you can switch to notebook mode simply by
-typing <em>Shift-Enter</em>, just like you would on your local computer!
+typing <em>Shift-Enter</em>, just like you would on your local computer.
 (Note that saving/reading notebook files will take place on your
 current local directory, not on the remote system.)</p>
 </div>
 <div class="section" id="remote-installation">
 <span id="index-1"></span><h2><a class="toc-backref" href="#id3">Remote installation</a><a class="headerlink" href="#remote-installation" title="Permalink to this headline">¶</a></h2>
 <p>A minimalist remote installation of the GraphTerm environment requires
-copying the following four files from the local <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt>
-directory to a remote directory:</p>
-<div class="highlight-python"><pre>gterm.py gmatplot.py gpylab.py gprofile</pre>
+copying four files from the local <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory to the
+directory <tt class="docutils literal"><span class="pre">~/graphterm/bin</span></tt> on the remote computer:</p>
+<div class="highlight-python"><pre>cd $GTERM_DIR/bin
+ssh user@remote_server mkdir -p graphterm/bin
+scp gterm.py gmatplot.py gpylab.py gprofile user@remote_server:graphterm/bin</pre>
 </div>
-<p>You can append <tt class="docutils literal"><span class="pre">gprofile</span></tt> to <tt class="docutils literal"><span class="pre">~/.profile</span></tt> to set up the shell
-environment each time you login.</p>
-<p>For a more complete setup, you can install GraphTerm in your home
-directory on the remote system, even if you never plan to run the
+<p>If you will be using R, also copy the file <tt class="docutils literal"><span class="pre">gterm.R</span></tt>. Then, append the
+following line to your remote <tt class="docutils literal"><span class="pre">~/.profile</span></tt> file:</p>
+<div class="highlight-python"><pre>source ~/graphterm/bin/gprofile</pre>
+</div>
+<p>This runs the <tt class="docutils literal"><span class="pre">gprofile</span></tt> script to initialize the shell environment
+each time you login to the remote computer.</p>
+<p>For a more complete configuration, you can install GraphTerm in your
+home directory on the remote system, even if you never plan to run the
 server. Download the <tt class="docutils literal"><span class="pre">graphterm-version.tar.gz</span></tt> source tarball from
-<a class="reference external" href="https://pypi.python.org/pypi/graphterm">https://pypi.python.org/pypi/graphterm</a>, untar it and copy the subdirectory <tt class="docutils literal"><span class="pre">graphterm</span></tt> to
-<tt class="docutils literal"><span class="pre">~/graphterm</span></tt>. The <tt class="docutils literal"><span class="pre">gprofile</span></tt> script will automatically detect
-such an installation and set up the environment.  (If you have root
-access, you can install <tt class="docutils literal"><span class="pre">graphterm</span></tt> for all users on the remote
-computer using <tt class="docutils literal"><span class="pre">easy_install</span></tt> and append <tt class="docutils literal"><span class="pre">gprofile</span></tt> to
+<a class="reference external" href="https://pypi.python.org/pypi/graphterm">https://pypi.python.org/pypi/graphterm</a>, untar it and copy the
+subdirectory <tt class="docutils literal"><span class="pre">graphterm</span></tt> to <tt class="docutils literal"><span class="pre">~/graphterm</span></tt>. (If you have root
+access, you can choose to install <tt class="docutils literal"><span class="pre">graphterm</span></tt> for all users on the
+remote computer using <tt class="docutils literal"><span class="pre">easy_install</span></tt> and append <tt class="docutils literal"><span class="pre">gprofile</span></tt> to
 <tt class="docutils literal"><span class="pre">/etc/profile</span></tt>.)</p>
 </div>
 <div class="section" id="port-forwarding">
@@ -270,8 +275,8 @@ remote machine, even if you are never planning to start the server.</p>
 </li>
 <li><p class="first">Append the file
 <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gprofile">$GTERM_DIR/bin/gprofile</a>
-to your <tt class="docutils literal"><span class="pre">.bash_profile</span></tt> on the remote machine:</p>
-<p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">gprofile</span> <span class="pre">&gt;&gt;</span> <span class="pre">~/.bash_profile</span></tt></p>
+to your <tt class="docutils literal"><span class="pre">.profile</span></tt> on the remote machine:</p>
+<p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">gprofile</span> <span class="pre">&gt;&gt;</span> <span class="pre">~/.profile</span></tt></p>
 <p>Although this script can usually detect your GraphTerm installation
 directory, sometimes you may need to modify the last few lines to
 ensure that the GraphTerm toolchain is included in your <tt class="docutils literal"><span class="pre">PATH</span></tt> on

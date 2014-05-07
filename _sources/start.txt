@@ -12,11 +12,11 @@ shell on your Mac/Linux/Unix computer. For a quick install, if the python
 ``setuptools`` module is already installed on your system,
 use the following two commands::
 
-   sudo easy_install graphterm
+   sudo easy_install graphterm    OR    sudo pip install graphterm
    sudo gterm_setup            # Sets up the command toolchain
 
 (See the :ref:`installation` section of the :doc:`README` file for
-more installation options.)
+additional installation options, including source installs.)
 
 To start the ``GraphTerm`` server, use the command::
 
@@ -26,8 +26,7 @@ This will run the  server and open a GraphTerm terminal window
 using the default browser. For multi-user computers,
 omit the ``--auth_type=none`` option
 when starting the server, and enter the authentication code stored in
-the file ``~/.graphterm/_gterm_auth.txt`` as needed. (The ``gterm``
-command can automatically enter this code for you.)
+the file ``~/.graphterm/_gterm_auth.txt`` as needed.
 
 You can access the GraphTerm server
 using a browser that supports websockets, such as Google Chrome,
@@ -35,11 +34,11 @@ Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
 
     http://localhost:8900
 
-In the ``graphterm`` browser page, select the GraphTerm host you
+In the ``graphterm`` browser page, select the GraphTerm *host* you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
-host is different from the network hostname for the server.)
-Within a GraphTerm window, you can use *terminal/new* menu option, or
-type the command ``gmenu new``, to create a new GraphTerm session 
+*host* is different from the network hostname for the server.)
+Within a GraphTerm window, you can use *terminal/new* menu option
+to create a new GraphTerm session.
 
 You can also open additional GraphTerm terminal windows using
 the ``gterm`` command::
@@ -47,17 +46,19 @@ the ``gterm`` command::
     gterm --noauth [session_name]
     gterm -u ubuntu --browser="Google Chrome" https://example.com:8900
 
-where the terminal session name argument is optional.
+where the terminal session name argument is optional.  (This
+command can automatically process authentication codes from your
+``~/.graphterm`` directory.)
 
 Type ``gtermserver -h`` to view all options for starting the server.
 You can use the ``--daemon=start`` option to run the server in the
 background. The ``--host=hostname`` option is useful for listening on
 a public IP address instead of the default ``localhost``.  The
-``--auth_type=none`` no authentication option is useful for teaching
+``--auth_type=none`` no authentication mode is useful for teaching
 or demonstration purposes, or on a single-user lapttop/desktop, where
-security is not important.  Another useful no authentication option is
+security is not important.  Another useful no authentication mode is
 ``--auth_type=name`` which enables simple name-based sharing. (For
-more on running publicly accessible GraphTerm servers on the cloud,
+more on running publicly accessible GraphTerm servers,
 see :ref:`virtual-setup`.)
 
 Within the terminal, try out the following commands::
@@ -79,8 +80,7 @@ for usage examples.
 If you wish to use GraphTerm to set up up a virtual computer lab for
 multiple users, see the section :doc:`virtual-setup`. To use
 GraphTerm features on remote systems and via SSH, see
-:doc:`remote`. The rest of this section focuses mainly on GraphTerm
-usage for single users on a local computer.
+:doc:`remote`.
 
 
 .. index:: ipad, android, tablet
@@ -96,12 +96,16 @@ footer to display the keyboard.
 displayed prompt.)
 
 *Note:* You should turn off the *Autocapitalize* and *Autocorrect*
-features in the language/keyboard settings if you want to do a lot of
+features in the language/keyboard settings if you plan to do a lot of
 typing on touch devices.
 
 
 Inline graphics and notebook mode
 ===============================================================
+
+GraphTerm supports inline graphics display with ``matplotlib`` and
+``pandas`` Python packages (see below) and also with R (see
+:doc:`R`). It also supports a lightweight notebook interface.
 
 .. index:: inline graphics, matplotlib
 
@@ -110,7 +114,7 @@ Inline graphics and notebook mode
 Inline plots using matplotlib
 --------------------------------------------------------------------------------------------
 
-If you have ``matplotlib`` installed, the ``gpylab`` module in the
+Assuming you have ``matplotlib`` installed, the ``gpylab`` module in the
 ``$GTERM_DIR/bin`` directory can be used to start up the python
 interpreter in ``pylab`` mode for inline graphics within the
 GraphTerm terminal::
@@ -159,21 +163,21 @@ output. Cells can also contain comment text in `Markdown
 <http://daringfireball.net/projects/markdown>`_ format.
 Currently, the notebook mode can be used with the shell (``bash``),
 or while running python (``python/ipython``) and ``R`` interpreters
-(see `Using GraphTerm with R <http://code.mindmeldr.com/graphterm/R.html>`_).
-Clicking on files with extensions
+(see :doc:`R`). Clicking on files with extensions
 ``*.ipynb``, ``*.py.md`` or ``*.R.md`` displayed in ``gls`` output
 will automatically open a notebook using the appropriate program.
 You can also try using the notebook mode 
 with any other shell-like program (such as ``IDL`` or ``ncl``) which has a unique
 prompt by typing *Shift-Enter* after starting the program. 
 
-To enter the notebook mode, run the appropriate program and when the
-program prompt appears,
-select *notebook/new* on the top menu bar, or
-type *Shift-Enter* (or *Control-Enter*, if you wish to read a notebook
-file and/or specify the interpreter prompts).
-You can also start up the python interpreter to load a notebook file, in
-``*.ipynb`` or ``*.md`` format, from the command line::
+You can create new Python or R notebooks using the *notebook/new* menu
+option and then selecting the language. For other languages, run the
+appropriate interpreter and when the interpreter prompt appears,
+select the *notebook/new/default* menu option, or type *Shift-Enter*
+(or *Control-Enter*, if you wish to read a notebook file and/or
+specify the interpreter prompts).  You can also start up the python
+interpreter to load a notebook file, in ``*.ipynb`` or ``*.md``
+format, from the command line::
 
     python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb
 
@@ -202,23 +206,18 @@ Sharing and security
 
 .. _screensharing:
 
-Sessions and "screensharing"
+Terminal sessions and "screensharing"
 --------------------------------------------------------------------------------------------
 
 For each host, terminal sessions are assigned default names like
 ``tty1``, ``tty2`` etc. You can also create unique terminal session names simply by using it in an
 URL, e.g.::
 
-      http://localhost:8900/local/mysession/?qauth=code
-
-The ``qauth`` value is a security code. It is optional and if you omit it
-the browser will re-generate it for you by
-requiring you to click on a link. (This requirement prevents
-unauthorized access to the terminal URL from other web sites.)
+      http://localhost:8900/local/mysession
 
 The first user to create a session "owns" it, and can make the session
 publicly available by disabling the *share/private* menubar option.
-The public session URL (without the ``qauth`` code) can then be shared
+The public session URL can then be shared
 with other users connected to the same GraphTerm server,
 to provide read-only access to the terminal.
 (This is like "screensharing", but more efficient,

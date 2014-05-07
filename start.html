@@ -125,7 +125,7 @@ code.mindmeldr.com
 </ul>
 </li>
 <li><a class="reference internal" href="#sharing-and-security">Sharing and security</a><ul>
-<li><a class="reference internal" href="#sessions-and-screensharing">Sessions and &#8220;screensharing&#8221;</a></li>
+<li><a class="reference internal" href="#terminal-sessions-and-screensharing">Terminal sessions and &#8220;screensharing&#8221;</a></li>
 <li><a class="reference internal" href="#security">Security</a></li>
 </ul>
 </li>
@@ -182,7 +182,7 @@ code.mindmeldr.com
 </ul>
 </li>
 <li><a class="reference internal" href="#sharing-and-security" id="id9">Sharing and security</a><ul>
-<li><a class="reference internal" href="#sessions-and-screensharing" id="id10">Sessions and &#8220;screensharing&#8221;</a></li>
+<li><a class="reference internal" href="#terminal-sessions-and-screensharing" id="id10">Terminal sessions and &#8220;screensharing&#8221;</a></li>
 <li><a class="reference internal" href="#security" id="id11">Security</a></li>
 </ul>
 </li>
@@ -196,11 +196,11 @@ code.mindmeldr.com
 shell on your Mac/Linux/Unix computer. For a quick install, if the python
 <tt class="docutils literal"><span class="pre">setuptools</span></tt> module is already installed on your system,
 use the following two commands:</p>
-<div class="highlight-python"><pre>sudo easy_install graphterm
+<div class="highlight-python"><pre>sudo easy_install graphterm    OR    sudo pip install graphterm
 sudo gterm_setup            # Sets up the command toolchain</pre>
 </div>
 <p>(See the <a class="reference internal" href="README.html#installation"><em>Installation</em></a> section of the <a class="reference internal" href="README.html"><em>README</em></a> file for
-more installation options.)</p>
+additional installation options, including source installs.)</p>
 <p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span>
 </pre></div>
@@ -209,33 +209,34 @@ more installation options.)</p>
 using the default browser. For multi-user computers,
 omit the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option
 when starting the server, and enter the authentication code stored in
-the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> as needed. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
-command can automatically enter this code for you.)</p>
+the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> as needed.</p>
 <p>You can access the GraphTerm server
 using a browser that supports websockets, such as Google Chrome,
 Firefox, Safari, or IE10 (Chrome works best), by entering the following URL:</p>
 <div class="highlight-python"><pre>http://localhost:8900</pre>
 </div>
-<p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm host you
+<p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm <em>host</em> you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
-host is different from the network hostname for the server.)
-Within a GraphTerm window, you can use <em>terminal/new</em> menu option, or
-type the command <tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">new</span></tt>, to create a new GraphTerm session</p>
+<em>host</em> is different from the network hostname for the server.)
+Within a GraphTerm window, you can use <em>terminal/new</em> menu option
+to create a new GraphTerm session.</p>
 <p>You can also open additional GraphTerm terminal windows using
 the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
 <div class="highlight-python"><pre>gterm --noauth [session_name]
 gterm -u ubuntu --browser="Google Chrome" https://example.com:8900</pre>
 </div>
-<p>where the terminal session name argument is optional.</p>
+<p>where the terminal session name argument is optional.  (This
+command can automatically process authentication codes from your
+<tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> directory.)</p>
 <p>Type <tt class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">-h</span></tt> to view all options for starting the server.
 You can use the <tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the server in the
 background. The <tt class="docutils literal"><span class="pre">--host=hostname</span></tt> option is useful for listening on
 a public IP address instead of the default <tt class="docutils literal"><span class="pre">localhost</span></tt>.  The
-<tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> no authentication option is useful for teaching
+<tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> no authentication mode is useful for teaching
 or demonstration purposes, or on a single-user lapttop/desktop, where
-security is not important.  Another useful no authentication option is
+security is not important.  Another useful no authentication mode is
 <tt class="docutils literal"><span class="pre">--auth_type=name</span></tt> which enables simple name-based sharing. (For
-more on running publicly accessible GraphTerm servers on the cloud,
+more on running publicly accessible GraphTerm servers,
 see <a class="reference internal" href="virtual-setup.html#virtual-setup"><em>Setting up a Virtual Computer Lab</em></a>.)</p>
 <p>Within the terminal, try out the following commands:</p>
 <div class="highlight-python"><pre>hello_gterm.sh
@@ -254,8 +255,7 @@ for usage examples.</p>
 <p>If you wish to use GraphTerm to set up up a virtual computer lab for
 multiple users, see the section <a class="reference internal" href="virtual-setup.html"><em>Setting up a Virtual Computer Lab</em></a>. To use
 GraphTerm features on remote systems and via SSH, see
-<a class="reference internal" href="remote.html"><em>Remote access and SSH</em></a>. The rest of this section focuses mainly on GraphTerm
-usage for single users on a local computer.</p>
+<a class="reference internal" href="remote.html"><em>Remote access and SSH</em></a>.</p>
 <div class="section" id="ipad-android-tablet-usage">
 <span id="index-0"></span><h3><a class="toc-backref" href="#id4">iPad/Android tablet usage</a><a class="headerlink" href="#ipad-android-tablet-usage" title="Permalink to this headline">¶</a></h3>
 <p>GraphTerm can be used on touch devices (phones/tablets), with some
@@ -265,22 +265,25 @@ footer to display the keyboard.
 (The <em>Footer menu</em> display can also be toggled by clicking on the last
 displayed prompt.)</p>
 <p><em>Note:</em> You should turn off the <em>Autocapitalize</em> and <em>Autocorrect</em>
-features in the language/keyboard settings if you want to do a lot of
+features in the language/keyboard settings if you plan to do a lot of
 typing on touch devices.</p>
 </div>
 </div>
 <div class="section" id="inline-graphics-and-notebook-mode">
 <h2><a class="toc-backref" href="#id5">Inline graphics and notebook mode</a><a class="headerlink" href="#inline-graphics-and-notebook-mode" title="Permalink to this headline">¶</a></h2>
+<p>GraphTerm supports inline graphics display with <tt class="docutils literal"><span class="pre">matplotlib</span></tt> and
+<tt class="docutils literal"><span class="pre">pandas</span></tt> Python packages (see below) and also with R (see
+<a class="reference internal" href="R.html"><em>Using GraphTerm with R</em></a>). It also supports a lightweight notebook interface.</p>
 <div class="section" id="inline-plots-using-matplotlib">
 <span id="inline-graphics"></span><span id="index-1"></span><h3><a class="toc-backref" href="#id6">Inline plots using matplotlib</a><a class="headerlink" href="#inline-plots-using-matplotlib" title="Permalink to this headline">¶</a></h3>
-<p>If you have <tt class="docutils literal"><span class="pre">matplotlib</span></tt> installed, the <tt class="docutils literal"><span class="pre">gpylab</span></tt> module in the
+<p>Assuming you have <tt class="docutils literal"><span class="pre">matplotlib</span></tt> installed, the <tt class="docutils literal"><span class="pre">gpylab</span></tt> module in the
 <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory can be used to start up the python
 interpreter in <tt class="docutils literal"><span class="pre">pylab</span></tt> mode for inline graphics within the
 GraphTerm terminal:</p>
 <div class="highlight-python"><pre>python -i $GTERM_DIR/bin/gpylab.py
 &gt;&gt;&gt; plot([1,2,4])</pre>
 </div>
-<p>Run <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gmatplot.py</span></tt> for a demo of inline graphics (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Inline data visualization plotting using matplotlib</em></a>).
+<p>Run <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gmatplot.py</span></tt> for a demo of inline graphics (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Inline data visualization using matplotlib</em></a>).
 See the function <tt class="docutils literal"><span class="pre">main</span></tt> in this file for sample plotting code.</p>
 <blockquote>
 <div><ul class="simple">
@@ -310,20 +313,20 @@ multiple cells and executed separately in each cell to display the
 output. Cells can also contain comment text in <a class="reference external" href="http://daringfireball.net/projects/markdown">Markdown</a> format.
 Currently, the notebook mode can be used with the shell (<tt class="docutils literal"><span class="pre">bash</span></tt>),
 or while running python (<tt class="docutils literal"><span class="pre">python/ipython</span></tt>) and <tt class="docutils literal"><span class="pre">R</span></tt> interpreters
-(see <a class="reference external" href="http://code.mindmeldr.com/graphterm/R.html">Using GraphTerm with R</a>).
-Clicking on files with extensions
+(see <a class="reference internal" href="R.html"><em>Using GraphTerm with R</em></a>). Clicking on files with extensions
 <tt class="docutils literal"><span class="pre">*.ipynb</span></tt>, <tt class="docutils literal"><span class="pre">*.py.md</span></tt> or <tt class="docutils literal"><span class="pre">*.R.md</span></tt> displayed in <tt class="docutils literal"><span class="pre">gls</span></tt> output
 will automatically open a notebook using the appropriate program.
 You can also try using the notebook mode
 with any other shell-like program (such as <tt class="docutils literal"><span class="pre">IDL</span></tt> or <tt class="docutils literal"><span class="pre">ncl</span></tt>) which has a unique
 prompt by typing <em>Shift-Enter</em> after starting the program.</p>
-<p>To enter the notebook mode, run the appropriate program and when the
-program prompt appears,
-select <em>notebook/new</em> on the top menu bar, or
-type <em>Shift-Enter</em> (or <em>Control-Enter</em>, if you wish to read a notebook
-file and/or specify the interpreter prompts).
-You can also start up the python interpreter to load a notebook file, in
-<tt class="docutils literal"><span class="pre">*.ipynb</span></tt> or <tt class="docutils literal"><span class="pre">*.md</span></tt> format, from the command line:</p>
+<p>You can create new Python or R notebooks using the <em>notebook/new</em> menu
+option and then selecting the language. For other languages, run the
+appropriate interpreter and when the interpreter prompt appears,
+select the <em>notebook/new/default</em> menu option, or type <em>Shift-Enter</em>
+(or <em>Control-Enter</em>, if you wish to read a notebook file and/or
+specify the interpreter prompts).  You can also start up the python
+interpreter to load a notebook file, in <tt class="docutils literal"><span class="pre">*.ipynb</span></tt> or <tt class="docutils literal"><span class="pre">*.md</span></tt>
+format, from the command line:</p>
 <div class="highlight-python"><pre>python -i $GTERM_DIR/bin/gpylab.py $GTERM_DIR/notebooks/SineWave.ipynb</pre>
 </div>
 <p>(see  <a class="reference internal" href="screenshots.html#notebook-shot"><em>GraphTerm Notebook mode running Python</em></a>).</p>
@@ -343,20 +346,16 @@ to return to the terminal mode.</p>
 </div>
 <div class="section" id="sharing-and-security">
 <h2><a class="toc-backref" href="#id9">Sharing and security</a><a class="headerlink" href="#sharing-and-security" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="sessions-and-screensharing">
-<span id="screensharing"></span><span id="index-4"></span><h3><a class="toc-backref" href="#id10">Sessions and &#8220;screensharing&#8221;</a><a class="headerlink" href="#sessions-and-screensharing" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="terminal-sessions-and-screensharing">
+<span id="screensharing"></span><span id="index-4"></span><h3><a class="toc-backref" href="#id10">Terminal sessions and &#8220;screensharing&#8221;</a><a class="headerlink" href="#terminal-sessions-and-screensharing" title="Permalink to this headline">¶</a></h3>
 <p>For each host, terminal sessions are assigned default names like
 <tt class="docutils literal"><span class="pre">tty1</span></tt>, <tt class="docutils literal"><span class="pre">tty2</span></tt> etc. You can also create unique terminal session names simply by using it in an
 URL, e.g.:</p>
-<div class="highlight-python"><pre>http://localhost:8900/local/mysession/?qauth=code</pre>
+<div class="highlight-python"><pre>http://localhost:8900/local/mysession</pre>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">qauth</span></tt> value is a security code. It is optional and if you omit it
-the browser will re-generate it for you by
-requiring you to click on a link. (This requirement prevents
-unauthorized access to the terminal URL from other web sites.)</p>
 <p>The first user to create a session &#8220;owns&#8221; it, and can make the session
 publicly available by disabling the <em>share/private</em> menubar option.
-The public session URL (without the <tt class="docutils literal"><span class="pre">qauth</span></tt> code) can then be shared
+The public session URL can then be shared
 with other users connected to the same GraphTerm server,
 to provide read-only access to the terminal.
 (This is like &#8220;screensharing&#8221;, but more efficient,

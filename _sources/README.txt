@@ -90,7 +90,7 @@ shell on your Mac/Linux/Unix computer. For a quick install, if the python
 ``setuptools`` module is already installed on your system,
 use the following two commands::
 
-   sudo easy_install graphterm
+   sudo easy_install graphterm    OR    sudo pip install graphterm
    sudo gterm_setup            # Sets up the command toolchain
 
 (If ``setuptools`` is not installed, consider installing it using
@@ -105,13 +105,16 @@ and execute the following command in the ``graphterm-<version>`` directory::
 
 For the manual install, you will also need to install the ``tornado``
 web server, which can be downloaded from
-`https://github.com/downloads/facebook/tornado/tornado-2.3.tar.gz <https://github.com/downloads/facebook/tornado/tornado-2.3.tar.gz>`_
+`http://www.tornadoweb.org <http://www.tornadoweb.org>`_
 
-You can also try out ``GraphTerm`` without installing it, after
-untarring the source tarball (or checking out the source from ``github``). You can
-run the server as ``./gtermserver.py`` in the ``graphterm``
-subdirectory of the distribution, after you have installed the ``tornado`` package
-in your system (or in the ``graphterm`` subdirectory).
+You can also try out GraphTerm without installing it, by untarring the
+source tarball (or checking out the source from ``github``). You can
+run the server as ``./gtermserver.py`` within the ``graphterm``
+subdirectory of the distribution, after you have installed the
+``tornado`` package on your system (or within the ``graphterm``
+subdirectory of the source distribution). In this case, certain
+commands in the ``graphterm/bin`` subdirectory, such as ``gterm`` and
+``gauth``, would need to be accessed as ``gterm.py`` and ``gauth.py`` respectively.
 
 You can browse the ``GraphTerm`` source code, and download the development
 version, at `Github <https://github.com/mitotic/graphterm>`_.
