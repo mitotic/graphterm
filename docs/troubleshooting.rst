@@ -71,13 +71,14 @@ situation.)
 When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is normal behavior. Many GraphTerm features only work on the
-computer that the ``gtermhost`` program is running on. By default, SSH is treated
-like any other program that accesses the terminal for
-input/output. However, you can use the *terminal/export environment*
-menu command to set shell environment variables on the remote computer
-to restore some, but not all, of GraphTerm features. (For a more
-permanent solution, see the :ref:`ssh` section.)
+This is normal behavior. Other than inline images and the notebook
+mode, most graphical features only work on the computer that the
+``gtermserver`` (or ``gtermhost``) program is running on.  However,
+you can use the *terminal/export environment* menu command to set
+shell environment variables on a *trusted* remote computer to restore
+some, but not all, of GraphTerm features. (For more details and a
+discussion of the security implications, see the :doc:`remote`
+section.)
 
  
 .. index:: terminal size, resize, line wrap

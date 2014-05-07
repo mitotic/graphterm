@@ -13,26 +13,25 @@ aims to seamlessly blend the command line and graphical user
 interfaces. You can use it just like a regular terminal,
 backwards-compatible with ``xterm``, and access the additional
 graphical features as needed. These features can help impove your
-terminal workflow by integrating clickable folder navigation with
-command line operations and
-letting you view image/HTML output without a separate window.
+terminal workflow by integrating graphical operations with the
+command line and letting you view images and HTML output inline.
 
-The GraphTerm server can be configured to support multiple users,
-using Google Authentication, to create a browser-based
-*virtual computer lab* for teaching and
-collaboration. The lab instructor can access all the terminal
-sessions via a dashboard and
-`monitor the progress <http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals>`_
-of each user in carrying out assigned activities, such as entering code in a
-"notebook". Lab users can collaboratively view and enter shell
-commands in each other's terminals, edit files and notebooks etc.
+GraphTerm has several funky features, but two of the most useful
+practical applications are:
 
-You can use the GraphTerm API to build "mashups" of web applications
-that work seamlessly within the terminal.  Sample mashups include:
+ - an **inline data visualization tool** for plotting with Python or R
+   that can work seamlessly across SSH login
+   boundaries, with an optional notebook interface. (For remote
+   access, it also serves as a detachable terminal, like
+   ``tmux`` or ``screen``.)
 
- - ``greveal``: Inline version of ``reveal.js`` to display Markdown files as slideshows
- - ``gtutor``: Inline version of `pythontutor.com <http://pythontutor.com>`_ for visual tracing of python programs
- - ``yweather``: Using Yahoo weather API to display weather
+ - a **virtual computer lab** for teaching and demonstrations. The
+   GraphTerm server can be set up in the cloud and accessed by
+   multiple users using their laptop/mobile browsers, with Google
+   Authentication. The lab instructor can
+   `monitor all the users'  terminals <http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals>`_
+   via a "dashboard", and users can collaborate with each other by
+   sharing terminals and notebooks.
 
 GraphTerm builds upon two earlier projects, 
 `XMLTerm <http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html>`_
@@ -52,36 +51,18 @@ windows for different users to the appropriate terminal (pseudo-tty)
 sessions running on different hosts, and transmitting the
 terminal output back to the browser windows.
 
-This flexible, networked implementation allows for several possible
-applications for GraphTerm, such as:
-
- - an **enhanced terminal** that combines the command line with basic
-   GUI operations like navigating folders, file drag-and-drop,
-   displaying images etc.
-
- - an **inline data visualization tool** to view output from plotting
-   libraries like ``matplotlib``.
-
- - a **notebook interface** for data analysis and documentation (like
-   the ``Mathematica`` or ``IPython`` notebook interface, but at the shell
-   level).
-
- - a **virtual computer lab** for teaching and demonstrations.
-   The GraphTerm server can be set up in the cloud
-   and accessed by multiple users using their laptop/mobile browsers.
-   You can then share shell commands and presentations, trace code execution,
-   interact with other users, etc.
-
- - a **collaborative terminal** that can be remotely accessed
-   by multiple users simultaneously, to run programs, edit files etc.
-   It can also be used as a *detachable terminal multiplexer*, sort of like GNU ``screen`` or
-   ``tmux``.
-
 The interface is designed to be touch-friendly for use with
 tablets, with tappable links and command re-use to minimize the need for
 a keyboard. It preserves history for all commands,
 whether entered by typing, clicking, or tapping.
 It is also themable using CSS.
+
+You can use the GraphTerm API to build "mashups" of web applications
+that work seamlessly within the terminal.  Sample mashups include:
+
+ - ``greveal``: Inline version of ``reveal.js`` to display Markdown files as slideshows
+ - ``gtutor``: Inline version of `pythontutor.com <http://pythontutor.com>`_ for visual tracing of python programs
+ - ``yweather``: Using Yahoo weather API to display weather
 
 Images of GraphTerm in action can be found in `screenshots <https://github.com/mitotic/graphterm/blob/master/docs/screenshots.rst>`_ 
 and in this `YouTube Video <http://youtu.be/TvO1SnEpwfE>`_.
@@ -164,7 +145,7 @@ type the command ``gmenu new``, to create a new GraphTerm session
 You can also open additional GraphTerm terminal windows using
 the ``gterm`` command::
 
-    gterm [session_name]
+    gterm --noauth [session_name]
 
 where the terminal session name argument is optional.
 
@@ -179,10 +160,7 @@ basic features of the standard ``ls`` and ``vi`` commands.
 to be able to use the GraphTerm toolchain. Otherwise, you will
 encounter a ``Permission denied`` error.)
 See `Getting Started with GraphTerm <http://code.mindmeldr.com/graphterm/start.html>`_
-and the
-`Using Graphical Features
-<http://code.mindmeldr.com/graphterm/UsingGraphicalFeatures.html>`_
-tutorials for more info on using GraphTerm. You can also
+for more info on using GraphTerm. You can also
 `set up a virtual computer lab
 <http://code.mindmeldr.com/graphterm/virtual-setup.html>`_
 using GraphTerm.

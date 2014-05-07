@@ -4,15 +4,16 @@ Remote access and SSH
 .. contents::
 
 
-.. index:: remote access, ssh, port forwarding
+.. index:: remote access, ssh
 
 Remote logins
 --------------------------------------------------------------------------------------------
 
-The basic inline image display feature and the notebook mode of
-GraphTerm work transparently across multiple SSH login boundaries. For
-example, in your GraphTerm window you can SSH to a remote machine and
-display a plot using python as follows::
+One of the most powerful features of GraphTerm is that basic inline
+image display and the notebook mode of GraphTerm work transparently
+across multiple SSH login boundaries. For example, in your GraphTerm
+window you can SSH to a remote computer and display a plot using
+python as follows::
 
     ssh user@remote_server
 
@@ -21,12 +22,16 @@ display a plot using python as follows::
     >>> plot([1,2])
 
 assuming the requisite files (see below) are present in the remote
-``$GTERM_DIR/bin`` directory. In addition to displaying inline
-graphics, you can switch to notebook mode simply by typing
-*Shift-Enter*, just like you would on your local computer!  (Note that
-saving/reading notebook files will take place on your current local
-directory, not on the remote system.)
+``$GTERM_DIR/bin`` directory. You don't need to start a server on the
+remote computer because all communication occurs via the standard
+input/output of the remote python interpreter. In addition to
+displaying inline graphics, you can switch to notebook mode simply by
+typing *Shift-Enter*, just like you would on your local computer!
+(Note that saving/reading notebook files will take place on your
+current local directory, not on the remote system.)
 
+
+.. index:: remote installation
 
 Remote installation
 --------------------------------------------------------------------------------------------
@@ -37,17 +42,21 @@ directory to a remote directory::
 
     gterm.py gmatplot.py gpylab.py gprofile
 
-Append ``gprofile`` to ``~/.profile`` to set up the environment.
+You can append ``gprofile`` to ``~/.profile`` to set up the shell
+environment each time you login.
 
 For a more complete setup, you can install GraphTerm in your home
 directory on the remote system, even if you never plan to run the
 server. Download the ``graphterm-version.tar.gz`` source tarball from
 http://pypi.org, untar it and copy the subdirectory ``graphterm`` to
-``~/graphterm``. ``gprofile`` will automatically detect such an
-installation and set up the environment.  (If you have root access,
-you can install ``graphterm`` for all users using ``easy_install`` and
-append ``gprofile`` to ``/etc/profile``.)
+``~/graphterm``. The ``gprofile`` script will automatically detect
+such an installation and set up the environment.  (If you have root
+access, you can install ``graphterm`` for all users on the remote
+computer using ``easy_install`` and append ``gprofile`` to
+``/etc/profile``.)
 
+
+.. index:: port forwarding
 
 Port forwarding
 --------------------------------------------------------------------------------------------
@@ -71,6 +80,8 @@ the ``gterm`` command::
 
     gterm  --server server_name --port 8900 http://localhost:8901
 
+
+.. index:: reverse port forwarding
 
 Reverse port forwarding
 --------------------------------------------------------------------------------------------
