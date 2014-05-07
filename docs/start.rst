@@ -125,11 +125,14 @@ GraphTerm terminal::
 Run ``$GTERM_DIR/bin/gmatplot.py`` for a demo of inline graphics (see  :ref:`matplotlib_shot`).
 See the function ``main`` in this file for sample plotting code.
 
- - Use ``ioff()`` to disable interactive mode
+ - Use ``figure(...)`` to clear current image
+ - Use ``newfig(...)`` to create blank image
+ - Use ``resize_newfig(...)`` to create resize blank image
  - Use ``show()`` to update image
- - Use ``show(False)`` to display new image
+ - Use ``show(False)`` to display as new image
  - Use ``display(fig)`` to display figure
- - Use ``resize_fig()`` to resize figure
+ - Use ``ioff()`` to disable interactive mode
+ - Use ``gterm.nbmode(False)`` to re-enable default expression printing behaviour
 
 
 .. index:: pandas, DataFrame

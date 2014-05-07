@@ -15,9 +15,10 @@ Example:
     figure()
     plot([1,3])
     plot([2,4])
+    newfig()
     plot([2,3])
-    show(False)
-    resize_fig()
+    resize_newfig()
+    plot([4, 5])
 
 Example 2:
     import numpy as np
@@ -29,10 +30,14 @@ Example 2:
     ax.plot(x, y)
     display(fig)
 
-Notes: Use ioff() to disable interactive mode
+Notes: Use figure(...) to clear current figure
+       Use newfig(...) to setup new figure (with same arguments as figure())
+       Use resize_newfig(...) to setup new resized figure
        Use show() to update image
        Use show(False) to display new image (same as show(overwrite=False))
        Use display(fig) to display figure
+       Use resize_win() to resize next figure
+       Use ioff() to disable interactive mode
        Use gterm.nbmode(False) to re-enable default expression printing behaviour
 """
 import sys
@@ -42,7 +47,7 @@ try:
     gm.setup()    # Sets up gmatplot and patches pylab
     from pylab import *
     import gterm
-    from gmatplot import display, resize_fig, _gterm_cell_start_hook, _gterm_cell_end_hook
+    from gmatplot import display, newfig, resize_newfig, resize_win, _gterm_cell_start_hook, _gterm_cell_end_hook
     import matplotlib
     matplotlib.rcParams.update({'font.size': 8})
 

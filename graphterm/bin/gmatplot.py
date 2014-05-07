@@ -14,13 +14,17 @@ $ python
 ...
 pylab.plot(...)
 
-pylab.ion()        # For interactive plotting
+pylab.ion()           # For interactive plotting
 
-pylab.show()       # To update previously displayed image
-pylab.show(False)  # To display new image
+pylab.figure(...)     # Clear figure for plotting
+pylab.newfig(...)     # Display new figure for plotting (same args as figure())
+pylab.resize_newfig() # To resize default figure to fit window
 
-gm.display(fig)    # To display figure
-gm.resize_fig()    # To resize default figure to fit window
+pylab.show()          # To update previously displayed image
+pylab.show(False)     # To display as new image
+
+gm.display(fig)       # To display figure
+gm.resize_win()       # To resize default image to fit window
 
 Note: If setting up using gm.setup(nopatch=True),
  use gm.show(), gm.figure(), gm.draw() instead of pylab functions
@@ -138,9 +142,8 @@ def display(fig, overwrite=False, format="png", title="", max_bytes=25000000):
         #gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
         gterm.display_blob(gterm.get_blob_id(blob_url), overwrite=overwrite, toggle=True)
 
-def resize_fig(dimensions=""):
-    """Resize matplotlib default window for terminal
-    """
+def resize_win(dimensions=""):
+    """Resize matplotlib default window for terminal"""
     if not pyplot_dict:
         raise Exception("gmatplot.setup not invoked")
     if not dimensions:
@@ -160,6 +163,20 @@ def resize_fig(dimensions=""):
     except Exception, excp:
         raise Exception("Error in resizing: "+str(excp))
 
+def newfig(*args, **kwargs):
+    """New figure
+    """
+    retval = figure(*args, **kwargs)
+    print ""  # Hack: This is needed to make it work. Otherwise previous figure is repeated
+    show()
+    return retval
+
+def resize_newfig(*args, **kwargs):
+    """Resize matplotlib default window for terminal (for new figure)
+    """
+    resize_win()
+    return newfig(*args, **kwargs)
+    
 def main():
     """gterm-aware matplotlib demo"""
     setup()
