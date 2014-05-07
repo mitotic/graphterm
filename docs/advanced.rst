@@ -5,7 +5,6 @@ Advanced topics
    :maxdepth: 1
 
    API
-   R
    tracing
    widgets
 

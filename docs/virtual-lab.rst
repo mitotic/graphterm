@@ -188,7 +188,6 @@ notebooks, e,g.::
     gls *.ipynb
 
 Then click on the notebook that you wish to open.
-
 Alternatively, you can also the ``gopen`` command::
 
     gopen notebook.ipynb

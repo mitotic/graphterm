@@ -1,7 +1,7 @@
 # gterm.R: Convenience functions to display inline graphics within GraphTerm
 
 # Plotting example:
-#   gterm = paste(Sys.getenv("GTERM_DIR"),"/bin/gterm.R", sep="") # As needed
+#   gterm <- paste(Sys.getenv("GTERM_DIR"),"/bin/gterm.R", sep="") # As needed
 #   source(gterm)          # Load GraphTerm API helper functions
 #   g <- gcairo()          # Initialize Cairo device for GraphTerm output
 #   x <- rnorm(100,0,1)

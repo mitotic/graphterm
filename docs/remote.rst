@@ -15,9 +15,9 @@ across multiple SSH login boundaries. For example, in your GraphTerm
 window you can SSH to a remote computer and display a plot using
 python as follows::
 
-    ssh user@remote_server
+    local$ ssh user@remote_server
 
-    python -i $GTERM_DIR/bin/gpylab.py
+    remote$ python -i $GTERM_DIR/bin/gpylab.py
 
     >>> plot([1,2])
 
@@ -26,7 +26,7 @@ assuming the requisite files (see below) are present in the remote
 remote computer because all communication occurs via the standard
 input/output of the remote python interpreter. In addition to
 displaying inline graphics, you can switch to notebook mode simply by
-typing *Shift-Enter*, just like you would on your local computer!
+typing *Shift-Enter*, just like you would on your local computer.
 (Note that saving/reading notebook files will take place on your
 current local directory, not on the remote system.)
 
@@ -37,22 +37,28 @@ Remote installation
 --------------------------------------------------------------------------------------------
 
 A minimalist remote installation of the GraphTerm environment requires
-copying the following four files from the local ``$GTERM_DIR/bin``
-directory to a remote directory::
+copying four files from the local ``$GTERM_DIR/bin`` directory to the
+directory ``~/graphterm/bin`` on the remote computer::
 
-    gterm.py gmatplot.py gpylab.py gprofile
+    cd $GTERM_DIR/bin
+    ssh user@remote_server mkdir -p graphterm/bin
+    scp gterm.py gmatplot.py gpylab.py gprofile user@remote_server:graphterm/bin
 
-You can append ``gprofile`` to ``~/.profile`` to set up the shell
-environment each time you login.
+If you will be using R, also copy the file ``gterm.R``. Then, append the
+following line to your remote ``~/.profile`` file::
 
-For a more complete setup, you can install GraphTerm in your home
-directory on the remote system, even if you never plan to run the
+    source ~/graphterm/bin/gprofile
+
+This runs the ``gprofile`` script to initialize the shell environment
+each time you login to the remote computer.
+
+For a more complete configuration, you can install GraphTerm in your
+home directory on the remote system, even if you never plan to run the
 server. Download the ``graphterm-version.tar.gz`` source tarball from
-http://pypi.org, untar it and copy the subdirectory ``graphterm`` to
-``~/graphterm``. The ``gprofile`` script will automatically detect
-such an installation and set up the environment.  (If you have root
-access, you can install ``graphterm`` for all users on the remote
-computer using ``easy_install`` and append ``gprofile`` to
+https://pypi.python.org/pypi/graphterm, untar it and copy the
+subdirectory ``graphterm`` to ``~/graphterm``. (If you have root
+access, you can choose to install ``graphterm`` for all users on the
+remote computer using ``easy_install`` and append ``gprofile`` to
 ``/etc/profile``.)
 
 
@@ -129,9 +135,9 @@ session. A more permanent solution involves the following three steps:
 
  - Append the file
    `$GTERM_DIR/bin/gprofile <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gprofile>`_
-   to your ``.bash_profile`` on the remote machine:
+   to your ``.profile`` on the remote machine:
 
-   ``cat gprofile >> ~/.bash_profile``
+   ``cat gprofile >> ~/.profile``
 
    Although this script can usually detect your GraphTerm installation
    directory, sometimes you may need to modify the last few lines to
