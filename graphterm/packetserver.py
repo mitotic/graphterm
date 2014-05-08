@@ -570,7 +570,10 @@ class PacketConnection(PacketConnector):
     def stop_tcp_server(cls, sock, io_loop=None):
         if io_loop:
             io_loop.remove_handler(sock.fileno())
-        sock.shutdown(socket.SHUT_RDWR)
+        try:
+            sock.shutdown(socket.SHUT_RDWR)
+        except Exception:
+            pass
         sock.close()
 
 class RPCLink(object):

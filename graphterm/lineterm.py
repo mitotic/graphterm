@@ -2806,16 +2806,19 @@ class Terminal(object):
                 elif response_type == "display_blob":
                     # Display blob as pagelet image
                     # Stricty control parameters, as unvalidated images may be displayed
+                    params = {"display": response_params.get("display", ""),
+                              "overwrite": response_params.get("overwrite", ""),
+                              "exit_page": response_params.get("exit_page", "")}
                     blob_id = response_params.get("blob")
-                    if not blob_id:
-                        logging.warning("No blob_id for blob display")
-                    else:
+                    if blob_id:
                         blob_url = gterm.get_blob_url(blob_id, host=self.host)
                         content = gterm.blockimg_html(blob_url, toggle=response_params.get("toggle"), alt="blob")
-                        params = {"overwrite": response_params.get("overwrite", ""),
-                                  "blob": urllib.quote(blob_id)}
-                        row_params = ["pagelet", params]
-                        screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
+                        params["blob"] = urllib.quote(blob_id)
+                    else:
+                        # Display blank pagelet
+                        content = ""
+                    row_params = ["pagelet", params]
+                    screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                 elif response_type == "create_blob":
                     # Note: blob content should be Base64 encoded
                     # Stricty control parameters, as unvalidated images can be present

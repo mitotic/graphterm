@@ -432,15 +432,19 @@ def blockimg_html(url, toggle=False, alt=""):
     BLOCKIMGFORMAT = '<div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
     return BLOCKIMGFORMAT % url
 
-def display_blob(blob_id, overwrite=False, toggle=False, stderr=False):
+def display_blob(blob_id="", overwrite=False, toggle=False, display="block", exit_page=False, stderr=False):
     """Display blob image, overwriting previous image, if desired.
     toggle allows images to be hidden by clicking.
     """
-    params = "blob=" + urllib.quote(blob_id)
+    params = "display=" + display
+    if blob_id:
+        params += " blob=" + urllib.quote(blob_id)
     if overwrite:
         params += " overwrite=yes"
     if toggle:
         params += " toggle=yes"
+    if exit_page:
+        params += " exit_page=yes"
 
     html = '<!--gterm display_blob %s-->' % params
         

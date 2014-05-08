@@ -22,21 +22,22 @@ parser = OptionParser(usage=usage)
 parser.add_option("-b", "--blobs",
                   action="store_true", dest="blobs", default=False,
                   help="Use blobs for images (required for webcasting)")
-
+parser.add_option("", "--max_bytes", dest="max_bytes", default=10000000,
+                  help="Max image file size in bytes (default: 10000000)", type="int")
 parser.add_option("-f", "--fullscreen",
                   action="store_true", dest="fullscreen", default=False,
-                  help="Fullscreen display")
+                  help="Fullscreen display (slideshow mode)")
 
 (options, args) = parser.parse_args()
 
-IMGFORMAT = '<div><img class="gterm-fullimg" src="%s"></img></div>' if options.fullscreen else '<img class="gterm-blockimg" src="%s"></img><br>' 
+IMGFORMAT = '<img class="gterm-blockimg" src="%s"></img><br>' 
 
 if not args:
     args = os.listdir(Work_dir)
     args = [x for x in args if not x.startswith(".")]
     args.sort()
 
-if gterm.Export_host:
+if gterm.Export_host or not gterm.Lterm_cookie:
     options.blobs = True
 
 if options.blobs:
@@ -56,20 +57,37 @@ for filename in args:
     
     mimetype, encoding = mimetypes.guess_type(filepath)
     if mimetype and mimetype.startswith("image/"):
-        if options.blobs:
+        file_url = ""
+        if not gterm.Lterm_cookie:
+            try:
+                with open(filepath) as f:
+                    content = f.read()
+                    if len(content) > options.max_bytes:
+                        print >> sys.stderr, "Image larger %s than %d bytes; specify --max_bytes=..." % (filepath, options.max_bytes)
+                    else:
+                        file_url = gterm.create_blob(content, content_type=mimetype, host="*")
+            except Exception, excp:
+                print >> sys.stderr, "Error in reading file", filepath, excp
+        elif options.blobs:
             file_url = gterm.create_blob(from_file=filepath, content_type=mimetype)
         else:
             file_url = gterm.get_file_url(filepath, relative=True)
-        file_list.append((file_url, filepath, filename))
+        if file_url:
+            file_list.append((file_url, filepath, filename))
 
-if file_list:
+if file_list and gterm.Lterm_cookie:
     gterm.preload_images([x[0] for x in file_list])
 
 if not file_list:
     sys.exit(1)
-    
+
+display_opt = "fullscreen" if options.fullscreen else "block"
+
 def display_file(file_url, filepath):
-    gterm.write_pagelet(IMGFORMAT % file_url, display=("fullscreen" if options.fullscreen else "block"), dir=Work_dir)
+    if options.blobs:
+        gterm.display_blob(gterm.get_blob_id(file_url), display=display_opt)
+    else:
+        gterm.write_pagelet(IMGFORMAT % file_url, display=display_opt, dir=Work_dir)
 
 if not options.fullscreen:
     for file_url, filepath, filename in file_list:
@@ -89,7 +107,7 @@ try:
     while True:
         ch = sys.stdin.read(1)
         if ch == "\x03" or ch == "\x04" or ch == "\x1b" or ch == "q": # ^C/^D/ESC/q
-            gterm.write_blank(exit_page=True)
+            gterm.display_blob("", display="fullpage", exit_page=True)
             sys.exit(0)
 
         if ch == "f" or ch == " ":
@@ -99,7 +117,7 @@ try:
         elif ch == "r":
             jnew = j
         elif ch == "p":
-            gterm.write_blank()
+            gterm.display_blob("", display="fullpage")
             continue
         else:
             continue

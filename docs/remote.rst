@@ -37,12 +37,12 @@ Remote installation
 --------------------------------------------------------------------------------------------
 
 A minimalist remote installation of the GraphTerm environment requires
-copying four files from the local ``$GTERM_DIR/bin`` directory to the
+copying five files from the local ``$GTERM_DIR/bin`` directory to the
 directory ``~/graphterm/bin`` on the remote computer::
 
     cd $GTERM_DIR/bin
     ssh user@remote_server mkdir -p graphterm/bin
-    scp gterm.py gmatplot.py gpylab.py gprofile user@remote_server:graphterm/bin
+    scp gterm.py gmatplot.py gpylab.py gimage gprofile user@remote_server:graphterm/bin
 
 If you will be using R, also copy the file ``gterm.R``. Then, append the
 following line to your remote ``~/.profile`` file::
@@ -50,7 +50,8 @@ following line to your remote ``~/.profile`` file::
     source ~/graphterm/bin/gprofile
 
 This runs the ``gprofile`` script to initialize the shell environment
-each time you login to the remote computer.
+each time you login to the remote computer and adds ``~/graphterm/bin``
+to your PATH variable.
 
 For a more complete configuration, you can install GraphTerm in your
 home directory on the remote system, even if you never plan to run the
