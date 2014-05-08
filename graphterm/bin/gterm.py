@@ -1228,10 +1228,7 @@ def main():
     auth_file = get_auth_filename(user=options.user, server=server_name)
     auth_user = options.user
     read_code = options.read_code
-    if options.noauth:
-        auth_code = "none"
-        auth_user = ""
-    elif read_code:
+    if read_code:
         auth_code = undashify(getpass.getpass("Access code: "))
     else:
         tem_port = 0
@@ -1244,9 +1241,13 @@ def main():
                 auth_code, tem_port = read_auth_code(server=server_name)
                 auth_user = ""
             except Exception, excp:
-                print >> sys.stderr, "Unable to read auth file", auth_file 
-                auth_code = undashify(getpass.getpass("Access code: "))
-                read_code = True
+                if options.noauth:
+                    auth_code = "none"
+                    auth_user = ""
+                else:
+                    print >> sys.stderr, "Unable to read auth file", auth_file 
+                    auth_code = undashify(getpass.getpass("Access code: "))
+                    read_code = True
 
         server_port = server_port or tem_port
 
@@ -1263,9 +1264,9 @@ def main():
 
     server_nonce, received_token = resp.split(":")
     if not options.noauth:
-        client_token, server_token = auth_token(auth_code, "graphterm", server_name or Http_addr, server_port, client_nonce, server_nonce)
+        client_token, server_token = auth_token(auth_code, "graphterm", Http_addr, server_port, client_nonce, server_nonce)
         if received_token != client_token:
-            print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself (Use --noauth option for no authentication, or check port number and auth code in %s)" % (Http_addr, Http_port, auth_file)
+            print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself\n  Use --noauth option for no authentication, or check port number and auth code in %s" % (Http_addr, Http_port, auth_file)
             sys.exit(1)
         ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
 

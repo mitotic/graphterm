@@ -58,11 +58,14 @@ Case 1: Mac or Linux server with user accounts already created
 
    ``sudo gtermserver --daemon=start --auth_type=multiuser --user_setup=manual --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
 
-   To stop the server, use ``sudo gtermserver --daemon=stop``.
-   You can also omit the ``--daemon`` option, to run the server in the
-   foreground for testing. If you want automatic new user creation, you can use the
-   ``--user_setup=auto`` option, but you may need to modify the shell
-   script ``$GTERM_DIR/bin/gterm_user_setup``, which currently works
+   To stop the server, use ``sudo gtermserver --daemon=stop``.  You
+   can also omit the ``--daemon`` option, to run the server in the
+   foreground for testing. To install GraphTerm as a service, you can
+   copy the script ``$GTERM_DIR/bin/graphtermd`` to ``/etc/init.d``
+   and edit it to modify the command line options. If you want automatic
+   new user creation, you can use the ``--user_setup=auto`` option,
+   but you may need to modify the shell script
+   ``$GTERM_DIR/bin/gterm_user_setup``, which has only been tested
    with Ubuntu Linux.
 
  3.  Run the following command as root user to display the *master access code*:

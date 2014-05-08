@@ -355,8 +355,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             logging.error("Command not found: %s", gterm.SETUP_USER_CMD)
             return False
 
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"], email or "-",
-                    Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
+        cmd_args = ["sudo"] if os.geteuid() else []
+        cmd_args += [gterm.SETUP_USER_CMD, user, "restart", Server_settings["external_host"], email or "-",
+                     Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
         std_out, std_err = gterm.command_output(cmd_args, timeout=15)
         if not std_err:
             return True
@@ -1615,7 +1616,7 @@ def same_group(user1, user2):
     return Server_settings["user_groups"] and Server_settings["user_groups"].get(user1) and Server_settings["user_groups"].get(user1) == Server_settings["user_groups"].get(user2)
 
 def run_server(options, args):
-    global IO_loop, Http_server, Local_client, Host_secret, Host_settings, Server_settings, Term_settings, Trace_shell
+    global IO_loop, Http_server, TCP_server, Local_client, Host_secret, Host_settings, Server_settings, Term_settings, Trace_shell
     import signal
 
     class AuthHandler(tornado.web.RequestHandler):
@@ -1667,7 +1668,7 @@ def run_server(options, args):
                 return
             query = {"cauth": gterm_cauth, "code": gterm_code,  "user": gterm_user, "email": gterm_email, "name": user_info.get("name","")}
             query["eauth"] = gterm.compute_hmac(gterm.user_hmac(GTSocket._auth_code, gterm_email, key_version="email"), gterm_cauth)
-            url = Host_settings["server_url"] + "/?"+urllib.urlencode(query)
+            url = "/?"+urllib.urlencode(query)
             logging.info("GoogleAuthHandler: u=%s, url=%s, %s", gterm_user, url, user_info)
             self.redirect(url)
 
@@ -1829,9 +1830,9 @@ def run_server(options, args):
         key_version = "1"
         key_secret = auth_code
         local_key_secret = gterm.user_hmac(key_secret, gterm.LOCAL_HOST, key_version=key_version)
-    TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
-                                        key_secret=key_secret, key_version=key_version,
-                                        key_id=str(internal_port), ssl_options=internal_server_ssl)
+    TCP_server = TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
+                                                     key_secret=key_secret, key_version=key_version,
+                                                     key_id=str(internal_port), ssl_options=internal_server_ssl)
 
     if options.internal_https or options.nolocal:
         # Internal https causes tornado to loop  (client fails to connect to server)
@@ -1875,8 +1876,9 @@ def run_server(options, args):
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
     if options.auth_type == "multiuser" and options.user_setup:
-        action = "activate" if options.no_reset else "restart"
-        cmd_args = ["sudo", gterm.SETUP_USER_CMD, "--all", action, external_host, "-", Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
+        action = "activate" if options.no_reset or options.daemon == "activate" else "restart"
+        cmd_args = ["sudo"] if os.geteuid() else []
+        cmd_args += [gterm.SETUP_USER_CMD, "--all", action, external_host, "-", Server_settings["users_dir"], getpass.getuser()] + Server_settings["gtermhost_args"]
         print >> sys.stderr, "Initializing users: "+" ".join(cmd_args)
         std_out, std_err = gterm.command_output(cmd_args, timeout=120)
         if std_err:
@@ -1909,9 +1911,12 @@ def run_server(options, args):
         raise Exception("TEST EXCEPTION")
 
     def stop_server():
-        global Http_server
+        global Http_server, TCP_server
         print >> sys.stderr, "\nStopping server"
         gtermhost.gterm_shutdown(Trace_shell)
+        if TCP_server:
+            TerminalConnection.stop_tcp_server(TCP_server, IO_loop)
+            TCP_server = None
         if Http_server:
             Http_server.stop()
             Http_server = None

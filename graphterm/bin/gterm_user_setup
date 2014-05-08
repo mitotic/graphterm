@@ -83,17 +83,17 @@ elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
         # Lock user password (i.e., no direct logins allowed)
 	passwd -l $username
 
-	sudo -u $username chmod 0700 $homedir
+	su -l $username -c "chmod 0700 $homedir"
     fi
 
     gt_dir=$homedir/$GRAPHTERM_DIR
     if [ ! -d $gt_dir ]; then
-	sudo -u $username mkdir $gt_dir
-	sudo -u $username chmod 0700 $gt_dir
+	su -l $username -c "mkdir $gt_dir"
+	su -l $username -c "chmod 0700 $gt_dir"
     
         if [ "$email" != "" ]; then
-	    sudo -u $username touch $gt_dir/$GRAPHTERM_MAIL
-	    sudo -u $username echo "$email" >> $gt_dir/$GRAPHTERM_MAIL
+	    su -l $username -c "touch $gt_dir/$GRAPHTERM_MAIL"
+	    su -l $username -c "echo $email >> $gt_dir/$GRAPHTERM_MAIL"
 	fi
     fi
 else
@@ -114,11 +114,11 @@ for host in $host_list; do
 	else
 	    auth_file=$gt_dir/${host}@$server$GRAPHTERM_AUTH
         fi
-	sudo -u $host touch $auth_file
+	su -l $host -c "touch $auth_file"
 	gauth -w --admin=$admin --server=$server $host
 
         # Start client for host
         uid=`id -u $host`
-	sudo -u $host -i gtermhost --daemon=$action --auth_file=$auth_file $rem_args $host
+	su -l $host -c "gtermhost --daemon=$action --auth_file=$auth_file $rem_args $host"
     fi
 done

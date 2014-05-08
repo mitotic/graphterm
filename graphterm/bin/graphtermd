@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# graphterm daemon service script
+#
+# /etc/init.d/graphtermd
+
+GTERMD=gtermserver
+GTARGS="--auth_type=multiuser --user_setup=manual --users_dir=/home --nb_server --logging --port=8900 --host=localhost"
+
+case "$1" in
+    start)
+        echo -n "Starting GraphTerm server: "
+        $GTERMD --daemon=start $GTARGS
+        ;;
+    restart)
+        echo -n "Restarting GraphTerm server: "
+        $GTERMD --daemon=restart $GTARGS
+        ;;
+    activate)
+        # Activate => start if not already running
+        echo -n "Activating GraphTerm server: "
+        $GTERMD --daemon=activate $GTARGS
+        ;;
+    stop)
+        echo -n "Shutting down GraphTerm server: "
+        $GTERMD --daemon=stop
+        ;;
+    status)
+        echo -n "Status of GraphTerm server: "
+        $GTERMD --daemon=status
+        ;;
+    *)
+        echo "Usage: $0 {start|restart|activate|stop|status}"
+        exit 1
+        ;;
+esac
+
+exit 0

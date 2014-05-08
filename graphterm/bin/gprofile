@@ -20,15 +20,13 @@ if [[ -z "$GTERM_COOKIE" ]]; then
          export ${comps[0]}="${comps[1]}"
       done
 
-      if [[ -z "$PROMPT_COMMAND" ]]; then
-         if [[ -n "$LC_PROMPT_COMMAND" ]] && [[ -n "$LC_GTERM_PROMPT" ]]; then
-            # Set prompt command
-            export GTERM_PROMPT="$LC_GTERM_PROMPT"
-            export PROMPT_COMMAND="$LC_PROMPT_COMMAND"
-         else
-            export GTERM_PROMPT='\h:\W$ '
-            export PROMPT_COMMAND='export PS1=$GTERM_PROMPT; echo -n `printf "\033"`"[?1150;0h$PWD"`printf "\033"`"[?1150;l"'
-         fi
+      if [[ -n "$LC_PROMPT_COMMAND" ]] && [[ -n "$LC_GTERM_PROMPT" ]]; then
+         # Set prompt command
+         export GTERM_PROMPT="$LC_GTERM_PROMPT"
+         export PROMPT_COMMAND="$LC_PROMPT_COMMAND"
+      else
+         export GTERM_PROMPT='\h:\W$ '
+         export PROMPT_COMMAND='export PS1=$GTERM_PROMPT; echo -n `printf "\033"`"[?1150;0h$PWD"`printf "\033"`"[?1150;l"'
       fi
    fi
 fi
