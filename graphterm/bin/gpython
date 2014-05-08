@@ -1,0 +1,2 @@
+#
+python -i $GTERM_DIR/bin/gpylab.py $*

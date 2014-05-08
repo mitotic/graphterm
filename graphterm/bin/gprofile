@@ -46,11 +46,6 @@ fi
 
 if [[ -n "$GTERM_DIR" ]]; then
    [[ "$PATH" != */graphterm/* ]] && PATH="$GTERM_DIR/bin:$PATH"
-   alias gpython="python -i $GTERM_DIR/bin/gpylab.py"
-   alias gipython="ipython -i $GTERM_DIR/bin/gpylab.py"
 fi
-
-alias gm=gmenu
-set -o ignoreeof
 
 ############# end of gprofile #####################

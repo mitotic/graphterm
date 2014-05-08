@@ -11,12 +11,16 @@ class install(_install):
         _install.run(self)
         dirname = os.getcwd()
         try:
+             # Forget current module path
              try:
                   sys.path.remove(dirname)
              except Exception:
                   dirname = None
-             import graphterm.gterm_setup
-             graphterm.gterm_setup.main()
+             import graphterm
+             # Load installed version of graphterm
+             reload(graphterm)
+             from graphterm import gterm_setup
+             gterm_setup.main()
         except Exception, excp:
              print >> sys.stderr, "Failed to configure executables", excp
         finally:

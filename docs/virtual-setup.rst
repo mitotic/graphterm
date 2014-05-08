@@ -5,7 +5,7 @@
 *********************************************************************************
 .. contents::
 
-.. index:: virtual computer lab, cloud computing, cloud instance, Amazon EC2
+.. index:: virtual computer lab, cloud computing, Amazon EC2
 
 
 This section describes how to configure a Virtual Computer Lab using
@@ -49,7 +49,9 @@ Case 1: Mac or Linux server with user accounts already created
 
     ``sudo gterm_setup``
 
-    (*Note:* You need to execute the ``sudo gterm_setup`` command to
+    Omit the ``sudo`` if you are installing as a non-root user within
+    an Anaconda or Enthought Python environment, for example.
+    (*Note:* You need to execute the ``gterm_setup`` command to
     be able to use the GraphTerm toolchain.)
 
  2. Say all the user home directories begin with ``/Users...``, then
@@ -73,6 +75,7 @@ Case 1: Mac or Linux server with user accounts already created
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
     (Ignore the port number following the hexadecimal access code.)
+    If the domain name is ``localhost``, the filename would simply be ``_gterm_auth.txt``.
     For automatic new user creation, the group code is in ``~/.graphterm/gterm_gcode.txt``
 
  4. Use the URL http://server_domain_name to open a new graphterm
@@ -80,12 +83,15 @@ Case 1: Mac or Linux server with user accounts already created
     case) and the *master access code*
 
  5. Run the following command in the graphterm window to obtain the
-    inidvidual user access code:
+    individual access code for each user:
 
     ``gauth -m username``
 
     Distribute this code and a printed copy of :doc:`virtual-lab` to
-    each user.
+    each user. The first time an user enters their access code, the
+    ``~/.graphterm`` directory will be created, and there will be an
+    option to enter the GMail address for authentication.
+
 
 
 Case 2: On-demand server using Amazon AWS

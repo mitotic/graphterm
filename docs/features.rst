@@ -218,7 +218,7 @@ very primitive implementation which only works on Chrome/Safari (see
 :ref:`stars3d_shot`).
 
 
-.. index:: preferences, prefs, defaults
+.. index:: preferences, defaults
 
 .. _preferences:
 
@@ -246,7 +246,7 @@ the default terminal type, or use the ``export TERM=screen`` command.
 Slideshows, tracing etc.
 ===============================================================
 
-.. index:: slides, slideshows
+.. index:: slideshows
 
 .. _slideshows:
 

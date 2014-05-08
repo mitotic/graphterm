@@ -1997,7 +1997,7 @@ def main():
                       help="blob server host name (or IP address) (default: same as server)")
 
     parser.add_option("nolocal", default=False, opt_type="flag",
-                      help="Disable connection to localhost")
+                      help="Disable connection to 'local' host")
     parser.add_option("nogoog_auth", default=False, opt_type="flag",
                       help="Disable google authentication for multiuser type")
 

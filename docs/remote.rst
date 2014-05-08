@@ -31,27 +31,29 @@ typing *Shift-Enter*, just like you would on your local computer.
 current local directory, not on the remote system.)
 
 
-.. index:: remote installation
-
 Remote installation
 --------------------------------------------------------------------------------------------
 
 A minimalist remote installation of the GraphTerm environment requires
-copying five files from the local ``$GTERM_DIR/bin`` directory to the
+copying six files from the local ``$GTERM_DIR/bin`` directory to the
 directory ``~/graphterm/bin`` on the remote computer::
 
     cd $GTERM_DIR/bin
     ssh user@remote_server mkdir -p graphterm/bin
-    scp gterm.py gmatplot.py gpylab.py gimage gprofile user@remote_server:graphterm/bin
+    scp gterm.py gmatplot.py gpylab.py gimage galiases gprofile user@remote_server:graphterm/bin
 
 If you will be using R, also copy the file ``gterm.R``. Then, append the
-following line to your remote ``~/.profile`` file::
+following line to your remote ``~/.profile`` or ``~/.bash_profile`` setup::
 
     source ~/graphterm/bin/gprofile
 
-This runs the ``gprofile`` script to initialize the shell environment
-each time you login to the remote computer and adds ``~/graphterm/bin``
-to your PATH variable.
+and the following line to ``~/.bashrc``::
+
+    source ~/graphterm/bin/galiases
+
+These scripts define convenient aliases like ``gpython`` and add
+``~/graphterm/bin`` to your PATH variable, so that you can use the
+``gimage`` command to display inline images.
 
 For a more complete configuration, you can install GraphTerm in your
 home directory on the remote system, even if you never plan to run the
@@ -59,8 +61,7 @@ server. Download the ``graphterm-version.tar.gz`` source tarball from
 https://pypi.python.org/pypi/graphterm, untar it and copy the
 subdirectory ``graphterm`` to ``~/graphterm``. (If you have root
 access, you can choose to install ``graphterm`` for all users on the
-remote computer using ``easy_install`` and append ``gprofile`` to
-``/etc/profile``.)
+remote computer using ``easy_install graphterm`` followed by ``gterm_setup``.)
 
 
 .. index:: port forwarding

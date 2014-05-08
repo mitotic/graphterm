@@ -1,0 +1,14 @@
+############ start of galiases #######################
+# galiases: graphterm aliases setup file
+# Execute as
+#   source $GTERM_DIR/bin/galiases
+# or append to .bashrc
+
+[ $GTERM_DIR ] && alias gpython="python -i $GTERM_DIR/bin/gpylab.py"
+[ $GTERM_DIR ] && alias gipython="ipython -i $GTERM_DIR/bin/gpylab.py"
+
+alias gm=gmenu
+
+set -o ignoreeof
+
+############# end of galiases #####################

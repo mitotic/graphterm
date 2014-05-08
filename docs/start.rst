@@ -15,6 +15,8 @@ use the following two commands::
    sudo easy_install graphterm    OR    sudo pip install graphterm
    sudo gterm_setup            # Sets up the command toolchain
 
+Omit the ``sudo`` if you are installing as a non-root user within
+an Anaconda or Enthought Python environment, for example.
 (See the :ref:`installation` section of the :doc:`README` file for
 additional installation options, including source installs.)
 
@@ -69,8 +71,8 @@ Within the terminal, try out the following commands::
 
 The ``gls`` and ``gvi`` commands in the GraphTerm toolchain imitate
 basic features of the standard ``ls`` and ``vi`` commands (see
-:doc:`features`).  (*Note:* You need to execute the ``sudo
-gterm_setup`` command to be able to use the GraphTerm
+:doc:`features`).  (*Note:* You need to execute the ``gterm_setup``
+command to be able to use the GraphTerm
 toolchain. Otherwise, you will encounter a ``Permission denied``
 error.)  To display images as thumbnails, use the ``gls -i ...``
 command.  Use the ``-h`` option to display help information for these
@@ -121,6 +123,18 @@ GraphTerm terminal::
 
     python -i $GTERM_DIR/bin/gpylab.py
     >>> plot([1,2,4])
+    >>> plot([1,3,9])     # Overplot
+    >>> figure()          # Clear figure
+    >>> plot([1,3,9])
+    >>> newfig()          # New figure
+    >>> plot([1,4,12])
+
+Inline graphics also works with the ``ipython`` command in a similar
+manner. Instead of typing the long python command line above, you can use the
+pre-defined aliases ``gpython`` or ``gipython``, e.g.::
+
+    gpython
+    >>> plot([1,2], [3,6])
 
 Run ``$GTERM_DIR/bin/gmatplot.py`` for a demo of inline graphics (see  :ref:`matplotlib_shot`).
 See the function ``main`` in this file for sample plotting code.
@@ -146,7 +160,7 @@ Inline tables using pandas
 GraphTerm can display ``pandas`` DataFrame objects as a table using
 HTML::
 
-    python -i $GTERM_DIR/bin/gpylab.py
+    gpython
     >>> import pandas as pd
     >>> d = {'one' : [1., 2., 3., 4.],
     >>> 'two' : [4., 3., 2., 1.]}
@@ -183,11 +197,11 @@ notebooks, e,g.::
     gls *.ipynb
 
 Then click on the notebook that you wish to open.
-Alternatively, you can also the ``gopen`` command::
+Alternatively, you can use the ``gopen`` command or the ``gpython`` alias::
 
     gopen notebook.ipynb
 
-This works for Python and R notebooks. For other languages, you will
+``gopen`` works for Python and R notebooks. For other languages, you will
 need to start the interpreter and then use the *notebook/open* menu
 option.
 
@@ -267,11 +281,13 @@ Although GraphTerm can be run as a public server, this feature should
 be used ony for teaching and demonstration purposes. In this case, the
 ``--auth_type=name`` option can be used, if all users can share an
 account, with no access code. The ``--auth_type=multiuser`` option,
-which requires root access, is suitable for a multiple user lab
-setting, providing a choice of either access code HMAC authentication or
-Google Authentication. HTTPS protocol can be enabled for the public
-server, using either self-signed or authoritative certificates, to
-provide additional security.
+which requires the server to run with root privileges, is suitable for
+a multiple user lab setting, providing a choice of either access code
+HMAC authentication or Google Authentication. The ``--nolocal`` option
+can be used to disable root access via the browser, in this case. The
+HTTPS protocol can be enabled for the public server, using either
+self-signed or authoritative certificates, to provide additional
+security.
 
 When working with sensitive information, it would be best to run the
 server on ``localhost`` (the default) and use SSH port forwarding to
