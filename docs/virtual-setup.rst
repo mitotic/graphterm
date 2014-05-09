@@ -82,6 +82,12 @@ Case 1: Mac or Linux server with user accounts already created
     window on the server, with the super user name (``root`` in our
     case) and the *master access code*
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+.. 
+
  5. Run the following command in the graphterm window to obtain the
     individual access code for each user:
 
@@ -128,6 +134,12 @@ versions in the "cloud". )
     (*Note:* This is insecure on a shared, multi-user, computer; omit
     the ``--auth_type=none`` server option in that case.)
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png
+   :align: center
+   :width: 95%
+   :figwidth: 90%
+.. 
+
  4. Run the following command within the graphterm window to create a Linux server:
 
     ``ec2launch``
@@ -140,6 +152,12 @@ versions in the "cloud". )
     generated command line should look something like this:
 
     ``ec2launch -f --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --gmail_addr=user@gmail.com --auth_type=multiuser --pylab --netcdf testlab``
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png
+   :align: center
+   :width: 95%
+   :figwidth: 90%
+..
 
  5. After the new AWS Linux server has completed configuration, which
     can take several minutes, its IP address and *server domain name*
@@ -168,6 +186,12 @@ versions in the "cloud". )
     window on the server, with the super user name (``ubuntu`` in our
     case) and using either *Google Authentication* or the *master access code*
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+.. 
+
  9. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
 
     ``cat ~/.graphterm/gterm_gcode.txt``
@@ -178,6 +202,13 @@ versions in the "cloud". )
  10. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
 
     ``ec2list``
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png
+   :align: center
+   :width: 95%
+   :figwidth: 90%
+ 
+
 
 Optional steps
 ===========================================================================
