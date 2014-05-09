@@ -3,6 +3,20 @@ Release Notes
 .. contents::
 
 
+0.54.0 (May 8, 2014)
+---------------------------------------------------------------------------------
+
+ - Major docs update
+
+ - Image display from unauthenticated (cookie-less) terminals
+
+ - Introduced aliases: ``gpython`` and ``gipython``
+
+ - Cleaned up inline plotting
+
+ - Cleaned up gterm_setup
+
+
 0.53.0 (May 5, 2014)
 ---------------------------------------------------------------------------------
 

@@ -213,7 +213,7 @@ notebooks, e,g.::
     gls *.ipynb
 
 Then click on the notebook that you wish to open.
-Alternatively, you can also the ``gopen`` or ``gpython`` commands::
+Alternatively, you can use the ``gopen`` or ``gpython`` commands::
 
     gopen notebook.ipynb
 
