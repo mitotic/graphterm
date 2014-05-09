@@ -21,12 +21,22 @@ lower-case), e.g., ``jsmith`` for Jim Smith.  If you have a *Google
 GMail* account, you can choose to link it to your GraphTerm server
 account for password-less logins by clicking the *Google Auth* button.
 
+.. figure:: file:///Users/rsarava/app4/repo/mitotic/graphterm/doc-images/gt-login.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+ 
 *Note:* If the URL is of the ``https//...`` form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
 exception. The instructor may ask you to ignore these warnings and
 accept the certificate, if the GraphTerm server has been configured to
 use a self-signed certificate. **Also, self-signed certificates do not
 work with Safari on the Mac; use Chrome or Firefox instead.**
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-acct.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
  
 If you just created a new user account, note down your user name and
 personal access code, as you will need it for logging in later (unless
@@ -49,6 +59,11 @@ Internet Explorer 10 should also be usable, with some limitations.
 Creating  and leaving terminal sessions
 -------------------------------------------------------------------------------------------
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-host-list.png
+   :align: center
+   :width: 95%
+   :figwidth: 90%
+ 
 After logging in, choose the host that has the same name as your user
 name, and then you can connect to an existing terminal session or
 create a new terminal session. You can choose a specific name for a
@@ -56,12 +71,22 @@ new terminal session, or type the special name ``new`` to
 automatically choose names like ``tty1``, ``tty2`` etc. You can also
 create new terminals as needed using the *terminal/new* menu option.
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-create-session.png
+   :align: center
+   :width: 95%
+   :figwidth: 90%
+ 
 You can type standard Unix commands, like ``cd``, ``ls``, ``cp``
 etc. in the terminal. The *command* menu lists some commonly used
 commands. Often, it is preferable to use the GraphTerm-aware ``gls``
 command, instead of the standard ``ls`` command, as it allows you to
 navigate directories by clicking.
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session.png
+   :align: center
+   :width: 95%
+   :figwidth: 90%
+ 
 To leave a terminal session, use the *terminal/detach* option, which
 will return you to the list of terminals. Detaching a terminal still
 keeps it alive, and you connect to it at a later time, without losing
@@ -188,9 +213,16 @@ notebooks, e,g.::
     gls *.ipynb
 
 Then click on the notebook that you wish to open.
-Alternatively, you can also the ``gopen`` command::
+Alternatively, you can also the ``gopen`` or ``gpython`` commands::
 
     gopen notebook.ipynb
+
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
 
 Once you have opened a notebook, you can enter code in the notebook
 cells.  Type either *Control-Enter* to execute code in-place, or

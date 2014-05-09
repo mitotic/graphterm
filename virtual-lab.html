@@ -201,12 +201,18 @@ instructor, like your first initial followed by your last name (all
 lower-case), e.g., <tt class="docutils literal"><span class="pre">jsmith</span></tt> for Jim Smith.  If you have a <em>Google
 GMail</em> account, you can choose to link it to your GraphTerm server
 account for password-less logins by clicking the <em>Google Auth</em> button.</p>
+<div class="figure align-center" style="width: 85%">
+<img alt="file:///Users/rsarava/app4/repo/mitotic/graphterm/doc-images/gt-login.png" src="file:///Users/rsarava/app4/repo/mitotic/graphterm/doc-images/gt-login.png" style="width: 90%;" />
+</div>
 <p><em>Note:</em> If the URL is of the <tt class="docutils literal"><span class="pre">https//...</span></tt> form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
 exception. The instructor may ask you to ignore these warnings and
 accept the certificate, if the GraphTerm server has been configured to
 use a self-signed certificate. <strong>Also, self-signed certificates do not
 work with Safari on the Mac; use Chrome or Firefox instead.</strong></p>
+<div class="figure align-center" style="width: 85%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-acct.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-acct.png" style="width: 90%;" />
+</div>
 <p>If you just created a new user account, note down your user name and
 personal access code, as you will need it for logging in later (unless
 you are using <em>Google Authentication</em>). You may optionally enter your email
@@ -224,17 +230,26 @@ Internet Explorer 10 should also be usable, with some limitations.</p>
 </div>
 <div class="section" id="creating-and-leaving-terminal-sessions">
 <h2><a class="toc-backref" href="#id3">Creating  and leaving terminal sessions</a><a class="headerlink" href="#creating-and-leaving-terminal-sessions" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-center" style="width: 90%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-host-list.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-host-list.png" style="width: 95%;" />
+</div>
 <p>After logging in, choose the host that has the same name as your user
 name, and then you can connect to an existing terminal session or
 create a new terminal session. You can choose a specific name for a
 new terminal session, or type the special name <tt class="docutils literal"><span class="pre">new</span></tt> to
 automatically choose names like <tt class="docutils literal"><span class="pre">tty1</span></tt>, <tt class="docutils literal"><span class="pre">tty2</span></tt> etc. You can also
 create new terminals as needed using the <em>terminal/new</em> menu option.</p>
+<div class="figure align-center" style="width: 90%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-create-session.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-create-session.png" style="width: 95%;" />
+</div>
 <p>You can type standard Unix commands, like <tt class="docutils literal"><span class="pre">cd</span></tt>, <tt class="docutils literal"><span class="pre">ls</span></tt>, <tt class="docutils literal"><span class="pre">cp</span></tt>
 etc. in the terminal. The <em>command</em> menu lists some commonly used
 commands. Often, it is preferable to use the GraphTerm-aware <tt class="docutils literal"><span class="pre">gls</span></tt>
 command, instead of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> command, as it allows you to
 navigate directories by clicking.</p>
+<div class="figure align-center" style="width: 90%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session.png" style="width: 95%;" />
+</div>
 <p>To leave a terminal session, use the <em>terminal/detach</em> option, which
 will return you to the list of terminals. Detaching a terminal still
 keeps it alive, and you connect to it at a later time, without losing
@@ -342,8 +357,11 @@ notebooks, e,g.:</p>
 <div class="highlight-python"><pre>gls *.ipynb</pre>
 </div>
 <p>Then click on the notebook that you wish to open.
-Alternatively, you can also the <tt class="docutils literal"><span class="pre">gopen</span></tt> command:</p>
+Alternatively, you can also the <tt class="docutils literal"><span class="pre">gopen</span></tt> or <tt class="docutils literal"><span class="pre">gpython</span></tt> commands:</p>
 <div class="highlight-python"><pre>gopen notebook.ipynb</pre>
+</div>
+<div class="figure align-center" style="width: 85%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" style="width: 90%;" />
 </div>
 <p>Once you have opened a notebook, you can enter code in the notebook
 cells.  Type either <em>Control-Enter</em> to execute code in-place, or

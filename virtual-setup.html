@@ -255,11 +255,17 @@ with Ubuntu Linux.</p>
 If the domain name is <tt class="docutils literal"><span class="pre">localhost</span></tt>, the filename would simply be <tt class="docutils literal"><span class="pre">_gterm_auth.txt</span></tt>.
 For automatic new user creation, the group code is in <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
 </div></blockquote>
-<ol class="arabic" start="4">
-<li><p class="first">Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphterm
+<ol class="arabic simple" start="4">
+<li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphterm
 window on the server, with the super user name (<tt class="docutils literal"><span class="pre">root</span></tt> in our
-case) and the <em>master access code</em></p>
-</li>
+case) and the <em>master access code</em></li>
+</ol>
+</div></blockquote>
+<div class="figure align-center" style="width: 85%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png" style="width: 90%;" />
+</div>
+<blockquote>
+<div><ol class="arabic" start="5">
 <li><p class="first">Run the following command in the graphterm window to obtain the
 individual access code for each user:</p>
 <p><tt class="docutils literal"><span class="pre">gauth</span> <span class="pre">-m</span> <span class="pre">username</span></tt></p>
@@ -301,6 +307,13 @@ your browser. You can also open one using the URL <a class="reference external" 
 (<em>Note:</em> This is insecure on a shared, multi-user, computer; omit
 the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> server option in that case.)</p>
 </li>
+</ol>
+</div></blockquote>
+<div class="figure align-center" style="width: 90%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png" style="width: 95%;" />
+</div>
+<blockquote>
+<div><ol class="arabic" start="4">
 <li><p class="first">Run the following command within the graphterm window to create a Linux server:</p>
 <p><tt class="docutils literal"><span class="pre">ec2launch</span></tt></p>
 <p>The first time, you will be asked to enter your AWS access
@@ -311,6 +324,13 @@ and <tt class="docutils literal"><span class="pre">netcdf</span></tt> options. W
 generated command line should look something like this:</p>
 <p><tt class="docutils literal"><span class="pre">ec2launch</span> <span class="pre">-f</span> <span class="pre">--type=m3.medium</span> <span class="pre">--key_name=ec2key</span> <span class="pre">--ami=ami-2f8f9246</span> <span class="pre">--gmail_addr=user&#64;gmail.com</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--pylab</span> <span class="pre">--netcdf</span> <span class="pre">testlab</span></tt></p>
 </li>
+</ol>
+</div></blockquote>
+<div class="figure align-center" style="width: 90%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png" style="width: 95%;" />
+</div>
+<blockquote>
+<div><ol class="arabic" start="5">
 <li><p class="first">After the new AWS Linux server has completed configuration, which
 can take several minutes, its IP address and <em>server domain name</em>
 will be displayed. If all went well, and you provided your GMail
@@ -331,11 +351,17 @@ domain name to login to the password-less super user account <tt class="docutils
 <div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)</p>
 </div></blockquote>
-<ol class="arabic" start="8">
-<li><p class="first">Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem
+<ol class="arabic simple" start="8">
+<li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem
 window on the server, with the super user name (<tt class="docutils literal"><span class="pre">ubuntu</span></tt> in our
-case) and using either <em>Google Authentication</em> or the <em>master access code</em></p>
-</li>
+case) and using either <em>Google Authentication</em> or the <em>master access code</em></li>
+</ol>
+</div></blockquote>
+<div class="figure align-center" style="width: 85%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" style="width: 90%;" />
+</div>
+<blockquote>
+<div><ol class="arabic" start="9">
 <li><p class="first">Run the following command in the server graphterm window to display the group access code which should be entered by new users:</p>
 <p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
 <p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
@@ -347,6 +373,9 @@ all lab users.</p>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">ec2list</span></tt></div></blockquote>
 </div></blockquote>
+<div class="figure align-center" style="width: 90%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" style="width: 95%;" />
+</div>
 </div>
 <div class="section" id="optional-steps">
 <h3><a class="toc-backref" href="#id5">Optional steps</a><a class="headerlink" href="#optional-steps" title="Permalink to this headline">¶</a></h3>
