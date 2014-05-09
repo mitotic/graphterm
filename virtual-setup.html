@@ -224,7 +224,9 @@ with multi-user support.</p>
 <li><p class="first">Install <tt class="docutils literal"><span class="pre">graphterm</span></tt> on your server using the following two commands:</p>
 <p><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">graphterm</span></tt> OR <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">easy_install</span> <span class="pre">graphterm</span></tt></p>
 <p><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt></p>
-<p>(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command to
+<p>Omit the <tt class="docutils literal"><span class="pre">sudo</span></tt> if you are installing as a non-root user within
+an Anaconda or Enthought Python environment, for example.
+(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">gterm_setup</span></tt> command to
 be able to use the GraphTerm toolchain.)</p>
 </li>
 <li><p class="first">Say all the user home directories begin with <tt class="docutils literal"><span class="pre">/Users...</span></tt>, then
@@ -234,11 +236,14 @@ privileges:</p>
 </ol>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gtermserver</span> <span class="pre">--daemon=start</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--user_setup=manual</span> <span class="pre">--users_dir=/Users</span> <span class="pre">--logging</span> <span class="pre">--port=80</span> <span class="pre">--host=server_domain_name_or_ip</span></tt></p>
-<p>To stop the server, use <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gtermserver</span> <span class="pre">--daemon=stop</span></tt>.
-You can also omit the <tt class="docutils literal"><span class="pre">--daemon</span></tt> option, to run the server in the
-foreground for testing. If you want automatic new user creation, you can use the
-<tt class="docutils literal"><span class="pre">--user_setup=auto</span></tt> option, but you may need to modify the shell
-script <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm_user_setup</span></tt>, which currently works
+<p>To stop the server, use <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gtermserver</span> <span class="pre">--daemon=stop</span></tt>.  You
+can also omit the <tt class="docutils literal"><span class="pre">--daemon</span></tt> option, to run the server in the
+foreground for testing. To install GraphTerm as a service, you can
+copy the script <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/graphtermd</span></tt> to <tt class="docutils literal"><span class="pre">/etc/init.d</span></tt>
+and edit it to modify the command line options. If you want automatic
+new user creation, you can use the <tt class="docutils literal"><span class="pre">--user_setup=auto</span></tt> option,
+but you may need to modify the shell script
+<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm_user_setup</span></tt>, which has only been tested
 with Ubuntu Linux.</p>
 </div></blockquote>
 <ol class="arabic simple" start="3">
@@ -247,6 +252,7 @@ with Ubuntu Linux.</p>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)
+If the domain name is <tt class="docutils literal"><span class="pre">localhost</span></tt>, the filename would simply be <tt class="docutils literal"><span class="pre">_gterm_auth.txt</span></tt>.
 For automatic new user creation, the group code is in <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
 </div></blockquote>
 <ol class="arabic" start="4">
@@ -255,10 +261,12 @@ window on the server, with the super user name (<tt class="docutils literal"><sp
 case) and the <em>master access code</em></p>
 </li>
 <li><p class="first">Run the following command in the graphterm window to obtain the
-inidvidual user access code:</p>
+individual access code for each user:</p>
 <p><tt class="docutils literal"><span class="pre">gauth</span> <span class="pre">-m</span> <span class="pre">username</span></tt></p>
 <p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
-each user.</p>
+each user. The first time an user enters their access code, the
+<tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> directory will be created, and there will be an
+option to enter the GMail address for authentication.</p>
 </li>
 </ol>
 </div></blockquote>

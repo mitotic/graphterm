@@ -5,7 +5,7 @@ Using the GraphTerm Virtual Computer Lab
 *********************************************************************************
 .. contents::
 
-.. index:: virtual computer lab, remote terminal, remote access
+.. index:: virtual computer lab, logging in
 
 
 Logging in

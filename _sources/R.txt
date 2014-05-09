@@ -26,6 +26,11 @@ example::
     >  hist(x, col="green")
     >  g$frame()              # New plot
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
 
 The notebook mode of GraphTerm will also work with ``R``, without any
 additional software. GraphTerm can open Markdown files (in a format
@@ -35,3 +40,9 @@ using the same format.  The file
 contains a sample notebook displaying inline graphics (see :ref:`r_shot`).  To open the
 notebook, click on it in the ``gls`` output, or use the
 *notebook/open* menu option after starting ``R``.
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+

@@ -189,33 +189,39 @@ displaying inline graphics, you can switch to notebook mode simply by
 typing <em>Shift-Enter</em>, just like you would on your local computer.
 (Note that saving/reading notebook files will take place on your
 current local directory, not on the remote system.)</p>
+<div class="figure align-center" style="width: 85%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" style="width: 90%;" />
+</div>
 </div>
 <div class="section" id="remote-installation">
-<span id="index-1"></span><h2><a class="toc-backref" href="#id3">Remote installation</a><a class="headerlink" href="#remote-installation" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">Remote installation</a><a class="headerlink" href="#remote-installation" title="Permalink to this headline">¶</a></h2>
 <p>A minimalist remote installation of the GraphTerm environment requires
-copying four files from the local <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory to the
+copying six files from the local <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory to the
 directory <tt class="docutils literal"><span class="pre">~/graphterm/bin</span></tt> on the remote computer:</p>
 <div class="highlight-python"><pre>cd $GTERM_DIR/bin
 ssh user@remote_server mkdir -p graphterm/bin
-scp gterm.py gmatplot.py gpylab.py gprofile user@remote_server:graphterm/bin</pre>
+scp gterm.py gmatplot.py gpylab.py gimage galiases gprofile user@remote_server:graphterm/bin</pre>
 </div>
 <p>If you will be using R, also copy the file <tt class="docutils literal"><span class="pre">gterm.R</span></tt>. Then, append the
-following line to your remote <tt class="docutils literal"><span class="pre">~/.profile</span></tt> file:</p>
+following line to your remote <tt class="docutils literal"><span class="pre">~/.profile</span></tt> or <tt class="docutils literal"><span class="pre">~/.bash_profile</span></tt> setup:</p>
 <div class="highlight-python"><pre>source ~/graphterm/bin/gprofile</pre>
 </div>
-<p>This runs the <tt class="docutils literal"><span class="pre">gprofile</span></tt> script to initialize the shell environment
-each time you login to the remote computer.</p>
+<p>and the following line to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt>:</p>
+<div class="highlight-python"><pre>source ~/graphterm/bin/galiases</pre>
+</div>
+<p>These scripts define convenient aliases like <tt class="docutils literal"><span class="pre">gpython</span></tt> and add
+<tt class="docutils literal"><span class="pre">~/graphterm/bin</span></tt> to your PATH variable, so that you can use the
+<tt class="docutils literal"><span class="pre">gimage</span></tt> command to display inline images.</p>
 <p>For a more complete configuration, you can install GraphTerm in your
 home directory on the remote system, even if you never plan to run the
 server. Download the <tt class="docutils literal"><span class="pre">graphterm-version.tar.gz</span></tt> source tarball from
 <a class="reference external" href="https://pypi.python.org/pypi/graphterm">https://pypi.python.org/pypi/graphterm</a>, untar it and copy the
 subdirectory <tt class="docutils literal"><span class="pre">graphterm</span></tt> to <tt class="docutils literal"><span class="pre">~/graphterm</span></tt>. (If you have root
 access, you can choose to install <tt class="docutils literal"><span class="pre">graphterm</span></tt> for all users on the
-remote computer using <tt class="docutils literal"><span class="pre">easy_install</span></tt> and append <tt class="docutils literal"><span class="pre">gprofile</span></tt> to
-<tt class="docutils literal"><span class="pre">/etc/profile</span></tt>.)</p>
+remote computer using <tt class="docutils literal"><span class="pre">easy_install</span> <span class="pre">graphterm</span></tt> followed by <tt class="docutils literal"><span class="pre">gterm_setup</span></tt>.)</p>
 </div>
 <div class="section" id="port-forwarding">
-<span id="index-2"></span><h2><a class="toc-backref" href="#id4">Port forwarding</a><a class="headerlink" href="#port-forwarding" title="Permalink to this headline">¶</a></h2>
+<span id="index-1"></span><h2><a class="toc-backref" href="#id4">Port forwarding</a><a class="headerlink" href="#port-forwarding" title="Permalink to this headline">¶</a></h2>
 <p>The more advanced features of GraphTerm are explicitly disabled from
 working across SSH login boundaries for security reasons.  If you need
 the full suite of features, the most secure way to access the
@@ -235,7 +241,7 @@ the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p
 </div>
 </div>
 <div class="section" id="reverse-port-forwarding">
-<span id="index-3"></span><h2><a class="toc-backref" href="#id5">Reverse port forwarding</a><a class="headerlink" href="#reverse-port-forwarding" title="Permalink to this headline">¶</a></h2>
+<span id="index-2"></span><h2><a class="toc-backref" href="#id5">Reverse port forwarding</a><a class="headerlink" href="#reverse-port-forwarding" title="Permalink to this headline">¶</a></h2>
 <p>A completely different approach is to use reverse forwarding.
 <em>Warning: If the remote computer is insecure, reverse forwarding
 should be used caution, and preferably with multiuser authentication

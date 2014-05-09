@@ -33,6 +33,30 @@ practical applications are:
    via a "dashboard", and users can collaborate with each other by
    sharing terminals and notebooks.
 
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   **Inline plotting on a remote machine (via standard SSH)**
+
+   ..
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   **Monitoring multiple user terminals in a "virtual computer lab"**
+
+   ..
+
+
 GraphTerm builds upon two earlier projects, 
 `XMLTerm <http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html>`_
 which implemented a terminal using the Mozilla framework and
@@ -91,8 +115,10 @@ shell on your Mac/Linux/Unix computer. For a quick install, if the python
 use the following two commands::
 
    sudo easy_install graphterm    OR    sudo pip install graphterm
-   sudo gterm_setup            # Sets up the command toolchain
+   sudo gterm_setup
 
+If you wish to install GraphTerm as a non-root user within an Anaconda
+or Enthought Python environment, you can omit the ``sudo`` prefix.
 (If ``setuptools`` is not installed, consider installing it using
 ``apt-get install -y python-setuptools`` on Debian Linux systems
 or its equivalent on other systems.)

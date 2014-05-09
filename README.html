@@ -201,6 +201,18 @@ via a &#8220;dashboard&#8221;, and users can collaborate with each other by
 sharing terminals and notebooks.</li>
 </ul>
 </div></blockquote>
+<div class="figure align-center" style="width: 85%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" style="width: 90%;" />
+<p class="caption"><strong>Inline plotting on a remote machine (via standard SSH)</strong></p>
+<div class="legend">
+</div>
+</div>
+<hr style="margin-bottom: 3em;"><div class="figure align-center" style="width: 85%">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png" style="width: 90%;" />
+<p class="caption"><strong>Monitoring multiple user terminals in a &#8220;virtual computer lab&#8221;</strong></p>
+<div class="legend">
+</div>
+</div>
 <p>GraphTerm builds upon two earlier projects,
 <a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a>
 which implemented a terminal using the Mozilla framework and
@@ -252,9 +264,11 @@ shell on your Mac/Linux/Unix computer. For a quick install, if the python
 <tt class="docutils literal"><span class="pre">setuptools</span></tt> module is already installed on your system,
 use the following two commands:</p>
 <div class="highlight-python"><pre>sudo easy_install graphterm    OR    sudo pip install graphterm
-sudo gterm_setup            # Sets up the command toolchain</pre>
+sudo gterm_setup</pre>
 </div>
-<p>(If <tt class="docutils literal"><span class="pre">setuptools</span></tt> is not installed, consider installing it using
+<p>If you wish to install GraphTerm as a non-root user within an Anaconda
+or Enthought Python environment, you can omit the <tt class="docutils literal"><span class="pre">sudo</span></tt> prefix.
+(If <tt class="docutils literal"><span class="pre">setuptools</span></tt> is not installed, consider installing it using
 <tt class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">python-setuptools</span></tt> on Debian Linux systems
 or its equivalent on other systems.)</p>
 <p>For a manual install procedure, download the release tarball from the
