@@ -114,11 +114,12 @@ shell on your Mac/Linux/Unix computer. For a quick install, if the python
 ``setuptools`` module is already installed on your system,
 use the following two commands::
 
-   sudo easy_install graphterm    OR    sudo pip install graphterm
+   sudo easy_install graphterm
    sudo gterm_setup
 
 If you wish to install GraphTerm as a non-root user within an Anaconda
 or Enthought Python environment, you can omit the ``sudo`` prefix.
+The ``pip install graphterm`` command will also work, *but not with* ``sudo``.
 (If ``setuptools`` is not installed, consider installing it using
 ``apt-get install -y python-setuptools`` on Debian Linux systems
 or its equivalent on other systems.)

@@ -45,7 +45,7 @@ Case 1: Mac or Linux server with user accounts already created
 
  1. Install ``graphterm`` on your server using the following two commands:
 
-    ``sudo pip install graphterm`` OR ``sudo easy_install graphterm``
+    ``sudo easy_install graphterm``
 
     ``sudo gterm_setup``
 
@@ -123,7 +123,7 @@ versions in the "cloud". )
 
  3. Install and run graphterm on your local (single-user) computer:
 
-    ``sudo pip install graphterm`` OR ``sudo easy_install graphterm``
+    ``sudo easy_install graphterm``
 
     ``sudo gterm_setup``
 
