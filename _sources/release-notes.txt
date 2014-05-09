@@ -3,14 +3,14 @@ Release Notes
 .. contents::
 
 
-0.54.0 (May 8, 2014)
+0.54.2 (May 8, 2014)
 ---------------------------------------------------------------------------------
 
  - Major docs update
 
  - Image display from unauthenticated (cookie-less) terminals
 
- - Introduced aliases: ``gpython`` and ``gipython``
+ - Introduced shortcut commands: ``gpython`` and ``gipython``
 
  - Cleaned up inline plotting
 
