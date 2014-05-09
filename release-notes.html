@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Release Notes &mdash; GraphTerm 0.53.0 documentation</title>
+    <title>Release Notes &mdash; GraphTerm 0.54.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.53.0',
+        VERSION:     '0.54.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.53.0 documentation"
+          title="Search within GraphTerm 0.54.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.53.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.54.0 documentation" href="index.html" />
     <link rel="prev" title="Widgets, sockets, and interactivity" href="widgets.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -110,6 +110,7 @@ code.mindmeldr.com
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Release Notes</a><ul>
+<li><a class="reference internal" href="#may-8-2014">0.54.0 (May 8, 2014)</a></li>
 <li><a class="reference internal" href="#may-5-2014">0.53.0 (May 5, 2014)</a></li>
 <li><a class="reference internal" href="#april-28-2014">0.52.0 (April 28, 2014)</a></li>
 <li><a class="reference internal" href="#april-22-2014">0.51.1 (April 22, 2014)</a></li>
@@ -171,34 +172,47 @@ code.mindmeldr.com
 <p class="topic-title first">Contents</p>
 <ul class="simple">
 <li><a class="reference internal" href="#release-notes" id="id1">Release Notes</a><ul>
-<li><a class="reference internal" href="#may-5-2014" id="id2">0.53.0 (May 5, 2014)</a></li>
-<li><a class="reference internal" href="#april-28-2014" id="id3">0.52.0 (April 28, 2014)</a></li>
-<li><a class="reference internal" href="#april-22-2014" id="id4">0.51.1 (April 22, 2014)</a></li>
-<li><a class="reference internal" href="#april-21-2014" id="id5">0.51.0 (April 21, 2014)</a></li>
-<li><a class="reference internal" href="#april-17-2014" id="id6">0.50.1 (April 17, 2014)</a></li>
-<li><a class="reference internal" href="#april-15-2014" id="id7">0.50.0 (April 15, 2014)</a></li>
-<li><a class="reference internal" href="#april-14-2014" id="id8">0.49.0 (April 14, 2014)</a></li>
-<li><a class="reference internal" href="#february-3-2014" id="id9">0.40.2 (February 3, 2014)</a></li>
-<li><a class="reference internal" href="#june-26-2013" id="id10">0.40.1 (June 26, 2013)</a></li>
-<li><a class="reference internal" href="#june-25-2013" id="id11">0.40.0 (June 25, 2013)</a></li>
-<li><a class="reference internal" href="#june-21-2013" id="id12">0.39.0 (June 21, 2013)</a></li>
-<li><a class="reference internal" href="#june-3-2013" id="id13">0.38.1 (June 3, 2013)</a></li>
-<li><a class="reference internal" href="#june-2-2013" id="id14">0.38.0 (June 2, 2013)</a></li>
-<li><a class="reference internal" href="#may-29-2013" id="id15">0.37.0 (May 29, 2013)</a></li>
-<li><a class="reference internal" href="#may-26-2013" id="id16">0.36.0 (May 26, 2013)</a></li>
-<li><a class="reference internal" href="#may-20-2013" id="id17">0.35.0 (May 20, 2013)</a></li>
-<li><a class="reference internal" href="#jan-6-2013" id="id18">0.34.0 (Jan. 6, 2013)</a></li>
-<li><a class="reference internal" href="#sep-30-2012" id="id19">0.33.0 (Sep. 30, 2012)</a></li>
-<li><a class="reference internal" href="#sep-15-2012" id="id20">0.32.0 (Sep. 15, 2012)</a></li>
-<li><a class="reference internal" href="#sep-9-2012" id="id21">0.31.0 (Sep. 9, 2012)</a></li>
-<li><a class="reference internal" href="#aug-26-2012" id="id22">0.30.9 (Aug 26, 2012):</a></li>
-<li><a class="reference internal" href="#aug-15-2012" id="id23">0.30.8 (Aug 15, 2012):</a></li>
+<li><a class="reference internal" href="#may-8-2014" id="id2">0.54.0 (May 8, 2014)</a></li>
+<li><a class="reference internal" href="#may-5-2014" id="id3">0.53.0 (May 5, 2014)</a></li>
+<li><a class="reference internal" href="#april-28-2014" id="id4">0.52.0 (April 28, 2014)</a></li>
+<li><a class="reference internal" href="#april-22-2014" id="id5">0.51.1 (April 22, 2014)</a></li>
+<li><a class="reference internal" href="#april-21-2014" id="id6">0.51.0 (April 21, 2014)</a></li>
+<li><a class="reference internal" href="#april-17-2014" id="id7">0.50.1 (April 17, 2014)</a></li>
+<li><a class="reference internal" href="#april-15-2014" id="id8">0.50.0 (April 15, 2014)</a></li>
+<li><a class="reference internal" href="#april-14-2014" id="id9">0.49.0 (April 14, 2014)</a></li>
+<li><a class="reference internal" href="#february-3-2014" id="id10">0.40.2 (February 3, 2014)</a></li>
+<li><a class="reference internal" href="#june-26-2013" id="id11">0.40.1 (June 26, 2013)</a></li>
+<li><a class="reference internal" href="#june-25-2013" id="id12">0.40.0 (June 25, 2013)</a></li>
+<li><a class="reference internal" href="#june-21-2013" id="id13">0.39.0 (June 21, 2013)</a></li>
+<li><a class="reference internal" href="#june-3-2013" id="id14">0.38.1 (June 3, 2013)</a></li>
+<li><a class="reference internal" href="#june-2-2013" id="id15">0.38.0 (June 2, 2013)</a></li>
+<li><a class="reference internal" href="#may-29-2013" id="id16">0.37.0 (May 29, 2013)</a></li>
+<li><a class="reference internal" href="#may-26-2013" id="id17">0.36.0 (May 26, 2013)</a></li>
+<li><a class="reference internal" href="#may-20-2013" id="id18">0.35.0 (May 20, 2013)</a></li>
+<li><a class="reference internal" href="#jan-6-2013" id="id19">0.34.0 (Jan. 6, 2013)</a></li>
+<li><a class="reference internal" href="#sep-30-2012" id="id20">0.33.0 (Sep. 30, 2012)</a></li>
+<li><a class="reference internal" href="#sep-15-2012" id="id21">0.32.0 (Sep. 15, 2012)</a></li>
+<li><a class="reference internal" href="#sep-9-2012" id="id22">0.31.0 (Sep. 9, 2012)</a></li>
+<li><a class="reference internal" href="#aug-26-2012" id="id23">0.30.9 (Aug 26, 2012):</a></li>
+<li><a class="reference internal" href="#aug-15-2012" id="id24">0.30.8 (Aug 15, 2012):</a></li>
 </ul>
 </li>
 </ul>
 </div>
+<div class="section" id="may-8-2014">
+<h2><a class="toc-backref" href="#id2">0.54.0 (May 8, 2014)</a><a class="headerlink" href="#may-8-2014" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Major docs update</li>
+<li>Image display from unauthenticated (cookie-less) terminals</li>
+<li>Introduced aliases: <tt class="docutils literal"><span class="pre">gpython</span></tt> and <tt class="docutils literal"><span class="pre">gipython</span></tt></li>
+<li>Cleaned up inline plotting</li>
+<li>Cleaned up gterm_setup</li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="may-5-2014">
-<h2><a class="toc-backref" href="#id2">0.53.0 (May 5, 2014)</a><a class="headerlink" href="#may-5-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">0.53.0 (May 5, 2014)</a><a class="headerlink" href="#may-5-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Improved remote machine access</li>
@@ -211,7 +225,7 @@ code.mindmeldr.com
 </div></blockquote>
 </div>
 <div class="section" id="april-28-2014">
-<h2><a class="toc-backref" href="#id3">0.52.0 (April 28, 2014)</a><a class="headerlink" href="#april-28-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">0.52.0 (April 28, 2014)</a><a class="headerlink" href="#april-28-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Fixes for user permissions; indentation handling in notebook cells; autosave; killing terminals</li>
@@ -219,7 +233,7 @@ code.mindmeldr.com
 </div></blockquote>
 </div>
 <div class="section" id="april-22-2014">
-<h2><a class="toc-backref" href="#id4">0.51.1 (April 22, 2014)</a><a class="headerlink" href="#april-22-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">0.51.1 (April 22, 2014)</a><a class="headerlink" href="#april-22-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Bug fix release</li>
@@ -227,7 +241,7 @@ code.mindmeldr.com
 </div></blockquote>
 </div>
 <div class="section" id="april-21-2014">
-<h2><a class="toc-backref" href="#id5">0.51.0 (April 21, 2014)</a><a class="headerlink" href="#april-21-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">0.51.0 (April 21, 2014)</a><a class="headerlink" href="#april-21-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Added support for Google Authentication</li>
@@ -237,7 +251,7 @@ code.mindmeldr.com
 </div></blockquote>
 </div>
 <div class="section" id="april-17-2014">
-<h2><a class="toc-backref" href="#id6">0.50.1 (April 17, 2014)</a><a class="headerlink" href="#april-17-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">0.50.1 (April 17, 2014)</a><a class="headerlink" href="#april-17-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Fix to better handle blank lines in notebook code cells</li>
@@ -245,7 +259,7 @@ code.mindmeldr.com
 </div></blockquote>
 </div>
 <div class="section" id="april-15-2014">
-<h2><a class="toc-backref" href="#id7">0.50.0 (April 15, 2014)</a><a class="headerlink" href="#april-15-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">0.50.0 (April 15, 2014)</a><a class="headerlink" href="#april-15-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Cosmetic changes (notebook CSS margins, font size)</li>
@@ -253,7 +267,7 @@ code.mindmeldr.com
 </div></blockquote>
 </div>
 <div class="section" id="april-14-2014">
-<h2><a class="toc-backref" href="#id8">0.49.0 (April 14, 2014)</a><a class="headerlink" href="#april-14-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">0.49.0 (April 14, 2014)</a><a class="headerlink" href="#april-14-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Full implementation of <tt class="docutils literal"><span class="pre">multiuser</span></tt> authentication type to create
@@ -282,7 +296,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="february-3-2014">
-<h2><a class="toc-backref" href="#id9">0.40.2 (February 3, 2014)</a><a class="headerlink" href="#february-3-2014" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id10">0.40.2 (February 3, 2014)</a><a class="headerlink" href="#february-3-2014" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Updated EC2 launching</li>
@@ -290,7 +304,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="june-26-2013">
-<h2><a class="toc-backref" href="#id10">0.40.1 (June 26, 2013)</a><a class="headerlink" href="#june-26-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id11">0.40.1 (June 26, 2013)</a><a class="headerlink" href="#june-26-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Fix for XSS vulnerability (Issue#5)</li>
@@ -299,7 +313,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="june-25-2013">
-<h2><a class="toc-backref" href="#id11">0.40.0 (June 25, 2013)</a><a class="headerlink" href="#june-25-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">0.40.0 (June 25, 2013)</a><a class="headerlink" href="#june-25-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Implemented config file to specify default options for gtermserver</li>
@@ -308,7 +322,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="june-21-2013">
-<h2><a class="toc-backref" href="#id12">0.39.0 (June 21, 2013)</a><a class="headerlink" href="#june-21-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id13">0.39.0 (June 21, 2013)</a><a class="headerlink" href="#june-21-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Support for auto user creation</li>
@@ -321,7 +335,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="june-3-2013">
-<h2><a class="toc-backref" href="#id13">0.38.1 (June 3, 2013)</a><a class="headerlink" href="#june-3-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id14">0.38.1 (June 3, 2013)</a><a class="headerlink" href="#june-3-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Fix for symlinks being ignored in the egg file</li>
@@ -329,7 +343,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="june-2-2013">
-<h2><a class="toc-backref" href="#id14">0.38.0 (June 2, 2013)</a><a class="headerlink" href="#june-2-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id15">0.38.0 (June 2, 2013)</a><a class="headerlink" href="#june-2-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Follow-up release to 0.37.0</li>
@@ -338,7 +352,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="may-29-2013">
-<h2><a class="toc-backref" href="#id15">0.37.0 (May 29, 2013)</a><a class="headerlink" href="#may-29-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id16">0.37.0 (May 29, 2013)</a><a class="headerlink" href="#may-29-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Follow-up release to 0.36.0</li>
@@ -348,7 +362,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="may-26-2013">
-<h2><a class="toc-backref" href="#id16">0.36.0 (May 26, 2013)</a><a class="headerlink" href="#may-26-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id17">0.36.0 (May 26, 2013)</a><a class="headerlink" href="#may-26-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Follow-up release to 0.35.0</li>
@@ -361,7 +375,7 @@ phones)</li>
 </div></blockquote>
 </div>
 <div class="section" id="may-20-2013">
-<h2><a class="toc-backref" href="#id17">0.35.0 (May 20, 2013)</a><a class="headerlink" href="#may-20-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id18">0.35.0 (May 20, 2013)</a><a class="headerlink" href="#may-20-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>New generic notebook mode with code/markdown cell and paging/slide
@@ -396,7 +410,7 @@ files using <em>reveal.js</em></li>
 </div></blockquote>
 </div>
 <div class="section" id="jan-6-2013">
-<h2><a class="toc-backref" href="#id18">0.34.0 (Jan. 6, 2013)</a><a class="headerlink" href="#jan-6-2013" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id19">0.34.0 (Jan. 6, 2013)</a><a class="headerlink" href="#jan-6-2013" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Added <em>gtutor</em> command,  command line version of the pythontutor.com</li>
@@ -410,7 +424,7 @@ Github Pages (code.mindmeldr.com)</li>
 </div></blockquote>
 </div>
 <div class="section" id="sep-30-2012">
-<h2><a class="toc-backref" href="#id19">0.33.0 (Sep. 30, 2012)</a><a class="headerlink" href="#sep-30-2012" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id20">0.33.0 (Sep. 30, 2012)</a><a class="headerlink" href="#sep-30-2012" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Added references to GraphTerm mailing list/Twitter account</li>
@@ -432,7 +446,7 @@ HTML editing)</li>
 </div></blockquote>
 </div>
 <div class="section" id="sep-15-2012">
-<h2><a class="toc-backref" href="#id20">0.32.0 (Sep. 15, 2012)</a><a class="headerlink" href="#sep-15-2012" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id21">0.32.0 (Sep. 15, 2012)</a><a class="headerlink" href="#sep-15-2012" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Now works on Raspberry Pi out-of-the-box!</li>
@@ -448,7 +462,7 @@ HTML editing)</li>
 </div></blockquote>
 </div>
 <div class="section" id="sep-9-2012">
-<h2><a class="toc-backref" href="#id21">0.31.0 (Sep. 9, 2012)</a><a class="headerlink" href="#sep-9-2012" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id22">0.31.0 (Sep. 9, 2012)</a><a class="headerlink" href="#sep-9-2012" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Updated screenshots and documentation</li>
@@ -462,7 +476,7 @@ HTML editing)</li>
 </div></blockquote>
 </div>
 <div class="section" id="aug-26-2012">
-<h2><a class="toc-backref" href="#id22">0.30.9 (Aug 26, 2012):</a><a class="headerlink" href="#aug-26-2012" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id23">0.30.9 (Aug 26, 2012):</a><a class="headerlink" href="#aug-26-2012" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Updated documentation</li>
@@ -481,7 +495,7 @@ HTML editing)</li>
 </div></blockquote>
 </div>
 <div class="section" id="aug-15-2012">
-<h2><a class="toc-backref" href="#id23">0.30.8 (Aug 15, 2012):</a><a class="headerlink" href="#aug-15-2012" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id24">0.30.8 (Aug 15, 2012):</a><a class="headerlink" href="#aug-15-2012" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div>First public release + many quick fixes</div></blockquote>
 </div>

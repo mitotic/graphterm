@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting started &mdash; GraphTerm 0.53.0 documentation</title>
+    <title>Getting started &mdash; GraphTerm 0.54.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.53.0',
+        VERSION:     '0.54.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.53.0 documentation"
+          title="Search within GraphTerm 0.54.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.53.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.54.0 documentation" href="index.html" />
     <link rel="next" title="Remote access and SSH" href="remote.html" />
     <link rel="prev" title="README" href="README.html" />
  
@@ -292,14 +292,14 @@ GraphTerm terminal:</p>
 </div>
 <p>Inline graphics also works with the <tt class="docutils literal"><span class="pre">ipython</span></tt> command in a similar
 manner. Instead of typing the long python command line above, you can use the
-pre-defined aliases <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gipython</span></tt>, e.g.:</p>
+shortcut commands <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gipython</span></tt>, e.g.:</p>
 <div class="highlight-python"><pre>gpython
 &gt;&gt;&gt; plot([1,2], [3,6])</pre>
 </div>
 <div class="figure align-center" style="width: 85%">
 <img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" style="width: 90%;" />
 </div>
-<p>Run <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gmatplot.py</span></tt> for a demo of inline graphics (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Inline data visualization using matplotlib</em></a>).
+<p>Run <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gmatplot.py</span></tt> for a demo of inline graphics (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Simple inline animation using matplotlib</em></a>).
 See the function <tt class="docutils literal"><span class="pre">main</span></tt> in this file for sample plotting code.</p>
 <blockquote>
 <div><ul class="simple">
@@ -350,7 +350,7 @@ notebooks, e,g.:</p>
 <div class="highlight-python"><pre>gls *.ipynb</pre>
 </div>
 <p>Then click on the notebook that you wish to open.
-Alternatively, you can use the <tt class="docutils literal"><span class="pre">gopen</span></tt> command or the <tt class="docutils literal"><span class="pre">gpython</span></tt> alias:</p>
+Alternatively, you can use the <tt class="docutils literal"><span class="pre">gopen</span></tt> or <tt class="docutils literal"><span class="pre">gpython</span></tt> commands:</p>
 <div class="highlight-python"><pre>gopen notebook.ipynb</pre>
 </div>
 <p><tt class="docutils literal"><span class="pre">gopen</span></tt> works for Python and R notebooks. For other languages, you will

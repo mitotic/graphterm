@@ -131,7 +131,7 @@ GraphTerm terminal::
 
 Inline graphics also works with the ``ipython`` command in a similar
 manner. Instead of typing the long python command line above, you can use the
-pre-defined aliases ``gpython`` or ``gipython``, e.g.::
+shortcut commands ``gpython`` or ``gipython``, e.g.::
 
     gpython
     >>> plot([1,2], [3,6])
@@ -206,7 +206,7 @@ notebooks, e,g.::
     gls *.ipynb
 
 Then click on the notebook that you wish to open.
-Alternatively, you can use the ``gopen`` command or the ``gpython`` alias::
+Alternatively, you can use the ``gopen`` or ``gpython`` commands::
 
     gopen notebook.ipynb
 
