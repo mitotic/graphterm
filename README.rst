@@ -33,6 +33,30 @@ practical applications are:
    via a "dashboard", and users can collaborate with each other by
    sharing terminals and notebooks.
 
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   **Inline plotting on a remote machine (via standard SSH)**
+
+   ..
+
+.. raw:: html
+
+   <hr style="margin-bottom: 3em;">
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
+   **Monitoring computers in a "virtual computer lab"**
+
+   ..
+
+
 GraphTerm builds upon two earlier projects, 
 `XMLTerm <http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html>`_
 which implemented a terminal using the Mozilla framework and

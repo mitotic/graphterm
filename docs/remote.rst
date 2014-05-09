@@ -30,6 +30,11 @@ typing *Shift-Enter*, just like you would on your local computer.
 (Note that saving/reading notebook files will take place on your
 current local directory, not on the remote system.)
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
 
 Remote installation
 --------------------------------------------------------------------------------------------

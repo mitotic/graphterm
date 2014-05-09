@@ -67,7 +67,7 @@ Inline word cloud using *d3.js*
 Inline plotting
 ==================================================
 
-.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline_plot.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png
    :align: center
    :width: 90%
    :figwidth: 85%

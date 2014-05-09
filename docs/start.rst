@@ -136,6 +136,11 @@ pre-defined aliases ``gpython`` or ``gipython``, e.g.::
     gpython
     >>> plot([1,2], [3,6])
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
+
 Run ``$GTERM_DIR/bin/gmatplot.py`` for a demo of inline graphics (see  :ref:`matplotlib_shot`).
 See the function ``main`` in this file for sample plotting code.
 
@@ -166,6 +171,10 @@ HTML::
     >>> 'two' : [4., 3., 2., 1.]}
     >>> pd.DataFrame(d)
 
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-pandas.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
 
 .. index:: notebook
 
@@ -204,6 +213,11 @@ Alternatively, you can use the ``gopen`` command or the ``gpython`` alias::
 ``gopen`` works for Python and R notebooks. For other languages, you will
 need to start the interpreter and then use the *notebook/open* menu
 option.
+
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png
+   :align: center
+   :width: 90%
+   :figwidth: 85%
 
 Within notebook mode,
 use *Shift-Enter* to execute a cell and move to the next, or
