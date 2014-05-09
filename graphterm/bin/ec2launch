@@ -226,6 +226,11 @@ startup_commands += ["chmod go-rwx ~"+gterm_user,
                      'echo umask 077 >> /etc/profile',
                      'echo set -o ignoreeof >> /etc/profile' ]
 
+if options.gmail_addr:
+    startup_commands += ["sudo -u "+gterm_user+" -i mkdir -p "+gterm_dir]
+    startup_commands += ["sudo -u "+gterm_user+" -i touch "+gterm_dir+"/gterm_email.txt"]
+    startup_commands += ["sudo -u "+gterm_user+" echo "+options.gmail_addr+" > "+gterm_dir+"/gterm_email.txt"]
+
 initwall_commands = fwall_commands + init_commands
 if initwall_commands:
     startup_commands += initwall_commands
@@ -234,10 +239,6 @@ if initwall_commands:
     startup_commands += [ "chmod +x /etc/init.d/graphterm",
                           "update-rc.d graphterm defaults"]
 
-if options.gmail_addr:
-    startup_commands += ["sudo -u "+gterm_user+" -i mkdir -p "+gterm_dir]
-    startup_commands += ["sudo -u "+gterm_user+" -i touch "+gterm_dir+"/gterm_email.txt"]
-    startup_commands += ["sudo -u "+gterm_user+" echo "+options.gmail_addr+" > "+gterm_dir+"/gterm_email.txt"]
 startup_commands += ["echo ''"]
 startup_commands += ["echo WORKAROUND: Doing 'pip uninstall dap' to eliminate dap module loading errors for Ubuntu 12.04LTS"]
 startup_commands += ["yes | pip uninstall dap || true"]
