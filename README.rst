@@ -34,27 +34,24 @@ practical applications are:
    sharing terminals and notebooks.
 
 
+ **Screenshot 1: Inline plotting on a remote machine (via SSH)**
+
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png
    :align: center
    :width: 90%
    :figwidth: 85%
 
-   **Inline plotting on a remote machine (via standard SSH)**
-
-   ..
-
 .. raw:: html
 
    <hr style="margin-bottom: 3em;">
+..
+
+ **Screenshot 2: Monitoring multiple user terminals in a "virtual computer lab"**
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png
    :align: center
    :width: 90%
    :figwidth: 85%
-
-   **Monitoring computers in a "virtual computer lab"**
-
-   ..
 
 
 GraphTerm builds upon two earlier projects, 
@@ -98,6 +95,9 @@ six different commands from the GraphTerm toolchain: (i) live twitter stream out
 (ii) slideshow from markdown file using ``greveal`` and *reveal.js*,
 (iv) word cloud using ``d3cloud`` and *d3.js*, (v) inline graphics using ``gmatplot.py``,
 and (vi) notebook mode using the standard python interpreter.
+
+
+ **Screenshot 3: Embedding terminals within GraphTerm**
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg
    :align: center
