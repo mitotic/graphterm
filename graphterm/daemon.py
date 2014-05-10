@@ -14,7 +14,8 @@ class Daemon(object):
 	
 	Usage: subclass the Daemon class and override the run() method
 	"""
-	def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+	def __init__(self, pidfile, umask=022, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+		self.umask = umask
 		self.stdin = stdin
 		self.stdout = stdout
 		self.stderr = stderr
@@ -38,7 +39,7 @@ class Daemon(object):
 		# decouple from parent environment
 		os.chdir("/") 
 		os.setsid() 
-		os.umask(077) 
+		os.umask(self.umask) 
 	
 		# do second fork
 		try: 
@@ -154,9 +155,9 @@ class Daemon(object):
 		"""
 
 class ServerDaemon(Daemon):
-	def __init__(self, pidfile, run_function):
+	def __init__(self, pidfile, run_function, umask=022):
 		self.run_function = run_function
-		super(ServerDaemon, self).__init__(pidfile)
+		super(ServerDaemon, self).__init__(pidfile, umask=umask)
 
 	def run(self):
                 self.run_function()

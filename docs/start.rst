@@ -8,12 +8,12 @@ Running GraphTerm
 ====================================================
 
 To install ``GraphTerm``, you need to have Python 2.6+ and the Bash
-shell on your Mac/Linux/Unix computer. For a quick install, if the python
-``setuptools`` module is already installed on your system,
-use the following two commands::
+shell on your Mac/Linux/Unix computer. For a quick install, use one of
+the following two options::
 
-   sudo easy_install graphterm    OR    sudo pip install graphterm
-   sudo gterm_setup            # Sets up the command toolchain
+   sudo pip install graphterm
+        OR
+   sudo easy_install graphterm; sudo gterm_setup
 
 Omit the ``sudo`` if you are installing as a non-root user within
 an Anaconda or Enthought Python environment, for example.

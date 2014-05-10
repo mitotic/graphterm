@@ -5,18 +5,26 @@ import os, sys
 import about
 
 BINDIR = "bin"
-Exec_path = os.path.abspath(os.path.join(os.path.dirname(__file__), BINDIR))
-
-def setup_bindir():
-    print >> sys.stderr, "Configuring", Exec_path
-    for dirpath, dirnames, filenames in os.walk(Exec_path):
-        for filename in filenames:
-            if not filename.startswith(".") and not filename.endswith(".pyc"):
-	        os.chmod(os.path.join(dirpath, filename), 0755)
 
 def main():
+    pkg_dir = os.path.dirname(__file__)
+    for dirname in sys.path:
+        # Find graphterm installation in path (but not in current directory)
+        if not dirname:
+            continue
+        if os.path.isfile(os.path.join(dirname, "graphterm", "__init__.py")):
+            pkg_dir = dirname
+            break
+
+    # graphterm/bin directory
+    Exec_path = os.path.join(os.path.abspath(dirname), "graphterm", BINDIR)
     try:
-        setup_bindir()
+        for dirpath, dirnames, filenames in os.walk(Exec_path):
+            for filename in filenames:
+                if not filename.startswith(".") and not filename.endswith(".pyc"):
+                    os.chmod(os.path.join(dirpath, filename), 0755)
+        print >> sys.stderr, "COMPLETED gterm_setup for path", Exec_path
+
     except Exception, excp:
         pass
 

@@ -3599,7 +3599,7 @@ function CheckUpdates() {
 	if (gParams.about_version == data.info.version) {
 	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').<p> There is  now a <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.', true);
 	} else {
-	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<br>See <a href="'+RELEASE_NOTES_URL+'" target="_blank">Release Notes</a> for details.<br> There is also a <em>new</em> <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.<p>Upgrade using <b>sudo easy_install --upgrade graphterm</b><br>Followed by <b>sudo gterm_setup</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
+	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<br>See <a href="'+RELEASE_NOTES_URL+'" target="_blank">Release Notes</a> for details.<br> There is also a <em>new</em> <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.<p>Upgrade using <b>sudo pip install --upgrade graphterm</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
 	}
     });
     gWebSocket.write([["check_updates"]]);
