@@ -66,7 +66,7 @@ server. Download the ``graphterm-version.tar.gz`` source tarball from
 https://pypi.python.org/pypi/graphterm, untar it and copy the
 subdirectory ``graphterm`` to ``~/graphterm``. (If you have root
 access, you can choose to install ``graphterm`` for all users on the
-remote computer using ``easy_install graphterm`` followed by ``gterm_setup``.)
+remote computer using ``sudo pip install graphterm``.)
 
 
 .. index:: port forwarding

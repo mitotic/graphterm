@@ -45,14 +45,10 @@ Case 1: Mac or Linux server with user accounts already created
 
  1. Install ``graphterm`` on your server using the following two commands:
 
-    ``sudo easy_install graphterm``
-
-    ``sudo gterm_setup``
+    ``sudo pip install graphterm``
 
     Omit the ``sudo`` if you are installing as a non-root user within
     an Anaconda or Enthought Python environment, for example.
-    (*Note:* You need to execute the ``gterm_setup`` command to
-    be able to use the GraphTerm toolchain.)
 
  2. Say all the user home directories begin with ``/Users...``, then
     run the following command to start the GraphTerm server with root
@@ -123,9 +119,7 @@ versions in the "cloud". )
 
  3. Install and run graphterm on your local (single-user) computer:
 
-    ``sudo easy_install graphterm``
-
-    ``sudo gterm_setup``
+    ``sudo pip install graphterm``
 
     ``gtermserver --terminal --auth_type=none``
 
@@ -374,9 +368,10 @@ By default, GraphTerm server is run from this account. The
 auto-user creation while the server is running.
 
 To automatically start the server when the computer is rebooted, copy
-the ``gtermserver`` command line to the executable file ``/etc/init.d/graphterm`` on a Ubuntu
-server, or equivalent for other linux flavors (``ec2launch``
-automatically does this for AWS).
+the ``gtermserver`` command line to the executable script
+``/etc/init.d/graphterm`` on a Ubuntu server followed by
+``update-rc.d graphterm defaults``, or equivalent for other linux flavors
+(``ec2launch`` automatically does this for AWS).
 
 
 Access codes
