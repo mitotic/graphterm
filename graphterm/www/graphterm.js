@@ -62,6 +62,7 @@ var gCols = 0;
 var gWebSocket = null;
 
 var gAuthenticatingCookie = "";
+var gAuthParams = null;
 var gEditing = null;
 
 var gChat = false;
@@ -334,7 +335,12 @@ function getAuth() {
 function AuthPage(auth_params) {
     //console.log("AuthPage", auth_params);
     gAuthenticatingCookie = auth_params.cookie;
+    gAuthParams = auth_params;
     $("#authcode").val("");
+    $("#authcookie").val(gAuthenticatingCookie);
+
+    if (!auth_params.hmac_auth)
+	$("#authcodeprompt").html("Password")
 
     if (auth_params.need_user) {
 	if (auth_params.need_user != "_")
@@ -377,13 +383,20 @@ function AuthGoogle(evt) {
     var auth_code = $("#authcode").val() || "";
     var authHMAC = auth_code ? compute_hmac(undashify(auth_code, SIGN_HEXDIGITS), gAuthenticatingCookie) : "";
     window.location = window.location.protocol+"/"+"/"+window.location.host+"/_gauth/?"+$.param({gterm_cauth: gAuthenticatingCookie, gterm_code: authHMAC, gterm_user:$("#authuser").val()});
+    gAuthParams = null;
     return false;
 }
 
 function Authenticate(evt) {
     console.log("Authenticate: ", evt);
-    var authHMAC = compute_hmac(undashify($("#authcode").val() || "", SIGN_HEXDIGITS), gAuthenticatingCookie);
-    window.location = location.pathname+"?"+$.param({cauth: gAuthenticatingCookie, code: authHMAC, user:$("#authuser").val()});
+    var hmac_auth = gAuthParams.hmac_auth;
+    gAuthParams = null;
+    if (!hmac_auth)
+	return true
+
+    var auth_code = $("#authcode").val() || "";
+    auth_code = compute_hmac(undashify(auth_code, SIGN_HEXDIGITS), gAuthenticatingCookie);
+    window.location = location.pathname+"?"+$.param({cauth: gAuthenticatingCookie, code: auth_code, user:$("#authuser").val()});
     return false;
 }
 
@@ -394,11 +407,11 @@ function EmailSubmit(evt) {
     return false;
 }
 
-function gtermListTerminals(user, host, allow_new, terminals) {
+function gtermListTerminals(connect_params, terminals) {
     $("#terminal").hide();
     $("#session-container").hide();
 
-    var header = (user ? 'User: <b>'+user+'</b><br>\n' : '') + 'Host: <b>' + host + '</b><p>\n';
+    var header = (connect_params.user ? 'User: <b>'+connect_params.user+'</b><br>\n' : '') + 'Host: <b>' + connect_params.host + '</b><p>\n';
     if (terminals.length) {
 	$("#gterm-terminal-list-table").append('<tr><td><em>Sessions</em></td></tr>\n')
 	for (var j=0; j<terminals.length; j++) {
@@ -408,19 +421,19 @@ function gtermListTerminals(user, host, allow_new, terminals) {
 	    term_html += '<td class="gterm-terminal-list-name">'+term_name+(terminals[j][3] > 1 ? ('('+terminals[j][3]+')') : '') + '</td> ';
 	    if (terminals[j][2]) {
 		// Stealable session
-		term_html += '<td> <a href="/'+host+'/'+term_name+'/?qauth='+getAuth()+'">watch</a></td>';
-		term_html += '<td> <a href="/'+host+'/'+term_name+'/steal/?qauth='+getAuth()+'">steal</a></td>';
+		term_html += '<td> <a href="/'+connect_params.host+'/'+term_name+'/?qauth='+getAuth()+'">watch</a></td>';
+		term_html += '<td> <a href="/_steal/'+connect_params.host+'/'+term_name+'/?qauth='+getAuth()+'&cauth='+connect_params.cookie+'">steal</a></td>';
 	    } else {
 		// Not stealable; check if session is connectable
-		term_html += '<td> <a href="/'+host+'/'+term_name+'/watch/?qauth='+getAuth()+'">watch</a></td>';
+		term_html += '<td> <a href="/_watch/'+connect_params.host+'/'+term_name+'/?qauth='+getAuth()+'&cauth='+connect_params.cookie+'">watch</a></td>';
 		if (terminals[j][1])
-		    term_html += '<td> <a href="/'+host+'/'+term_name+'/?qauth='+getAuth()+'">connect</a></td>';
+		    term_html += '<td> <a href="/'+connect_params.host+'/'+term_name+'/?qauth='+getAuth()+'">connect</a></td>';
 	    }
 	    term_html += '<td>idle '+terminals[j][4]+'min.</td>';
 	    term_html += '</tr>';
 	    $("#gterm-terminal-list-table").append(term_html);
 	}
-    } else if (!allow_new) {
+    } else if (!connect_params.allow_new) {
 	header += 'No GraphTerm sessions currently accessible<br>';
     }
     $(document).unbind("keydown");
@@ -429,7 +442,7 @@ function gtermListTerminals(user, host, allow_new, terminals) {
 
     $("#gterm-terminal-list-header").html(header);
     $("#gterm-terminal-list").show();
-    if (allow_new)
+    if (connect_params.allow_new)
 	$("#gterm-terminal-list-open").show();
     else
 	$("#gterm-terminal-list-open").hide();
@@ -1174,9 +1187,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		}
 
             } else if (action == "term_list") {
-		if (command[1])
-		    setCookie("GRAPHTERM_AUTH", command[1]);
-		gtermListTerminals(command[2], command[3], command[4], command[5]); 
+		var connect_params = command[1];
+		if (connect_params.state_id)
+		    setCookie("GRAPHTERM_AUTH", connect_params.state_id);
+		gtermListTerminals(connect_params, command[2]); 
 
             } else if (action == "log") {
 		var logPrefix = command[1];
@@ -2536,6 +2550,9 @@ function GTMenuCommand(selectKey, newValue, force) {
     case "interrupt":
 	cmd = String.fromCharCode(3);
 	break;
+    case "ipython":
+	cmd = advanced ? "gipython" : "gipython #optional_notebook_name";
+	break;
     case "list":
 	cmd = advanced ? "gls" : "gls #filename_pattern";
 	break;
@@ -2545,6 +2562,9 @@ function GTMenuCommand(selectKey, newValue, force) {
 	} else {
 	    cmd = "gnbserver";
 	}
+	break;
+    case "python":
+	cmd = advanced ? "gpython" : "gpython #optional_notebook_name";
 	break;
     case "rename":
 	cmd = advanced ? "mv " : "mv OLD_FILE NEW_FILE_OR_DIR";
@@ -3615,7 +3635,7 @@ function ReconnectHost() {
 function StealSession() {
     if (!window.confirm("Steal control of "+gParams.host+"/"+gParams.term+"?"))
 	return;
-    var steal_url = window.location.protocol+"/"+"/"+window.location.host+"/"+gParams.host+"/"+gParams.term+"/steal"; // Split the double slash to avoid confusing the JS minifier
+    var steal_url = window.location.protocol+"/"+"/_steal/"+window.location.host+"/"+gParams.host+"/"+gParams.term+'/?qauth='+getAuth()+'&websocket='+gParams.websocket_id; // Split the double slash to avoid confusing the JS minifier
     console.log("StealSession: ", steal_url);
     window.location = steal_url;
 }

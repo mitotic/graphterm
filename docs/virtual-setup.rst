@@ -37,11 +37,16 @@ protected from users.*
 Quick setup
 --------------------------------------------------------------------------------------------
 
-The following steps allow you to quickly launch a "virtual computer lab"
-with multi-user support.
+The following steps allow you to quickly launch a "virtual computer
+lab" with multi-user support. GraphTerm supports multi-user logins
+using digest authentication with shared secrets, or using your Google
+sign-on. This avoids the need for storing passwords or other sensitive
+information on the server, thus reducing the security concerns
+associated with a publicly accessible server.
+
 
 Case 1: Mac or Linux server with user accounts already created
-================================================================
+============================================================================================
 
  1. Install ``graphterm`` on your server using the following two commands:
 
@@ -51,22 +56,25 @@ Case 1: Mac or Linux server with user accounts already created
     an Anaconda or Enthought Python environment, for example.
 
  2. Say all the user home directories begin with ``/Users...``, then
-    run the following command to start the GraphTerm server with root
-    privileges:
+    run the following command to start the GraphTerm server as the
+    ``root`` user:
 
-   ``sudo gtermserver --daemon=start --auth_type=multiuser --user_setup=manual --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
+   ``gtermserver --daemon=start --auth_type=multiuser --user_setup=manual --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
 
-   To stop the server, use ``sudo gtermserver --daemon=stop``.  You
+   To stop the server, use ``gtermserver --daemon=stop``. You
    can also omit the ``--daemon`` option, to run the server in the
    foreground for testing. To install GraphTerm as a service, you can
    copy the script ``$GTERM_DIR/bin/graphtermd`` to ``/etc/init.d``
    and edit it to modify the command line options. If you want automatic
    new user creation, you can use the ``--user_setup=auto`` option,
-   but you may need to modify the shell script
+   but you may need to modify the user configuration shell script
    ``$GTERM_DIR/bin/gterm_user_setup``, which has only been tested
-   with Ubuntu Linux.
+   with Ubuntu Linux. You can use the ``--auth_type=login``
+   option for a more traditional login authentication, but it
+   requires the use of ``--https`` or ``--host=localhost`` for security.
+   [If using login authentication, the remaining steps can be skipped.]
 
- 3.  Run the following command as root user to display the *master access code*:
+ 3. Run the following command as root user to display the *master access code*:
 
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
@@ -97,7 +105,7 @@ Case 1: Mac or Linux server with user accounts already created
 
 
 Case 2: On-demand server using Amazon AWS
-================================================================
+=================================================================================
 
 If you do not already have a Linux server available to set up a
 virtual computer lab, you can easily create one on demand using Amazon
@@ -292,7 +300,8 @@ additional packages, like ``pylab`` for plotting or ``R`` for
 statistical analysis.
 
 An important configuration choice is the authentication type
-(``auth_type``), which may be one of ``singleuser``, ``none``, ``name``, or ``multiuser``.
+(``auth_type``), which may be one of ``singleuser``, ``none``,
+``name``, ``multiuser``, or ``login``.
 
    *singleuser*: Authentication type is meant for a single user on a
    shared computer. You will need to enter the code found in
@@ -316,6 +325,11 @@ An important configuration choice is the authentication type
    to use Google Authentication, they will also be able to login using
    their GMail account.) The ``--users_dir=/home`` option can be used
    to specify the root for all user home directories.
+
+   *login*: This uses the standard Unix password authentication,
+   but is permitted only with a *localhost* server or with HTTPS (for
+   security). Server must be run as ``root`` and users will not be
+   created automatically. (Not available with ``ec2launch``)
 
 Once you fill in the form for ``ec2launch`` and submit it, a command
 line will be automatically generated, with the specified options, to launch

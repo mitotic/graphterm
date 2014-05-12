@@ -30,9 +30,9 @@ omit the ``--auth_type=none`` option
 when starting the server, and enter the authentication code stored in
 the file ``~/.graphterm/_gterm_auth.txt`` as needed.
 
-You can access the GraphTerm server
-using a browser that supports websockets, such as Google Chrome,
-Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
+You can access the GraphTerm server using any browser that supports
+websockets. Google Chrome works best, but Firefox, Safari, or IE10
+are also supported. Start by entering the following URL::
 
     http://localhost:8900
 
@@ -206,13 +206,13 @@ notebooks, e,g.::
     gls *.ipynb
 
 Then click on the notebook that you wish to open.
-Alternatively, you can use the ``gopen`` or ``gpython`` commands::
+Alternatively, you can use the ``gpython`` or ``gopen`` commands
+python notebooks::
 
-    gopen notebook.ipynb
+    gpython notebook.ipynb
 
-``gopen`` works for Python and R notebooks. For other languages, you will
-need to start the interpreter and then use the *notebook/open* menu
-option.
+For other languages, you will need to start the interpreter and then
+use the *notebook/open* menu option.
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png
    :align: center
@@ -297,11 +297,14 @@ be used ony for teaching and demonstration purposes. In this case, the
 account, with no access code. The ``--auth_type=multiuser`` option,
 which requires the server to run with root privileges, is suitable for
 a multiple user lab setting, providing a choice of either access code
-HMAC authentication or Google Authentication. The ``--nolocal`` option
-can be used to disable root access via the browser, in this case. The
-HTTPS protocol can be enabled for the public server, using either
-self-signed or authoritative certificates, to provide additional
-security.
+HMAC authentication or Google Authentication. The
+``--auth_type=login`` option, which is permitted only with a
+*localhost* server or with HTTPS, implements the standard password
+login.  The ``--nolocal`` option can be used to disable root access
+via the browser. The HTTPS protocol can be enabled for the public
+server, using either self-signed or authoritative certificates, to
+provide additional security. (See see :doc:`virtual-setup` for more on
+authentication options.)
 
 When working with sensitive information, it would be best to run the
 server on ``localhost`` (the default) and use SSH port forwarding to

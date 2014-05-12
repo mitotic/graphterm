@@ -317,6 +317,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if cmd:
                         logging.warning("SHUTDOWN %s", cmd[0])
                     self.shutdown()
+                    IO_loop.add_callback(host_shutdown)
 
                 elif action == "reconnect":
                     self.term_reconnect(cmd[1])
@@ -835,6 +836,11 @@ def gterm_connect(host_name, server_addr, server_port=gterm.DEFAULT_HOST_PORT, c
 
     return (host_connection, host_secret, trace_shell)
 
+def host_shutdown():
+    global Gterm_host
+    gterm_shutdown(Trace_shell)
+    Gterm_host = None
+
 def run_host(options, args):
     global Gterm_host, Host_secret, Trace_shell, Xterm, Killterm
     host_name = args[0]
@@ -874,11 +880,6 @@ def run_host(options, args):
     Xterm = Gterm_host.xterm
     Killterm = Gterm_host.remove_term
 
-    def host_shutdown():
-        global Gterm_host
-        gterm_shutdown(Trace_shell)
-        Gterm_host = None
-
     def sigterm(signal, frame):
         logging.warning("SIGTERM signal received")
         IO_loop.add_callback(host_shutdown)
@@ -897,7 +898,8 @@ def run_host(options, args):
         print >> sys.stderr, "Interrupted"
 
     finally:
-        IO_loop.add_callback(host_shutdown)
+        if IO_loop:
+            IO_loop.add_callback(host_shutdown)
 
 
 def main():

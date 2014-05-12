@@ -156,9 +156,9 @@ when starting the server, and enter the authentication code stored in
 the file ``~/.graphterm/_gterm_auth.txt`` as needed. (The ``gterm``
 command can automatically enter this code for you.)
 
-You can access the GraphTerm server
-using a browser that supports websockets, such as Google Chrome,
-Firefox, Safari, or IE10 (Chrome works best), by entering the following URL::
+You can access the GraphTerm server using any browser that supports
+websockets. Google Chrome works best, but Firefox, Safari, or IE10
+are also supported. Start by entering the following URL::
 
     http://localhost:8900
 

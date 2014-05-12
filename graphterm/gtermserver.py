@@ -199,6 +199,9 @@ def ssl_cert_gen(certfile, keyfile="", hostname="localhost", cwd=None, new=False
 def get_user(ws):
     return ws.authorized.get("user", "") if ws and ws.authorized else ""
 
+def get_first_arg(query_data, argname, default=""):
+    return query_data.get(argname, [default])[0]
+
 class GTSocket(tornado.websocket.WebSocketHandler):
     _all_websockets = {}
     _all_paths = collections.defaultdict(set)
@@ -210,7 +213,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
     _webcast_paths = OrderedDict()
     _cookie_states = OrderedDict()
     _auth_users = OrderedDict()
-    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, SINGLE_AUTH, MULTI_AUTH = range(5)
+    WEBCAST_AUTH, NULL_AUTH, NAME_AUTH, SINGLE_AUTH, MULTI_AUTH, LOGIN_AUTH = range(6)
     # Note: WEBCAST_AUTH is used only for sockets, not for the server
     _auth_code = uuid.uuid4().hex[:gterm.SIGN_HEXDIGITS]
     _auth_type = SINGLE_AUTH
@@ -235,8 +238,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if auth_type in ("none", "name"):
             cls._auth_type = cls.NULL_AUTH if auth_type == "none" else cls.NAME_AUTH
             cls._auth_code = ""
-        elif auth_type in ("singleuser", "multiuser"):
-            cls._auth_type = cls.SINGLE_AUTH if auth_type == "singleuser" else cls.MULTI_AUTH
+        elif auth_type in ("singleuser", "multiuser", "login"):
+            cls._auth_type = cls.SINGLE_AUTH if auth_type == "singleuser" else (cls.LOGIN_AUTH if auth_type == "login" else cls.MULTI_AUTH)
             code = code.strip()
             assert code, "Must provide non-blank auth_code"
             cls._auth_code = code
@@ -256,12 +259,19 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         while len(cls._connect_cookies) > 100:
             cls._connect_cookies.popitem(last=False)
         new_cookie = uuid.uuid4().hex[:12]
-        cls._connect_cookies[new_cookie] = 1
+        cls._connect_cookies[new_cookie] = {}  # connect_data (from form submission)
         return new_cookie
 
     @classmethod
-    def check_connect_cookie(cls, value):
-        return cls._connect_cookies.pop(value, None)            
+    def check_connect_cookie(cls, cookie):
+        return cls._connect_cookies.pop(cookie, None)            
+
+    @classmethod
+    def update_connect_cookie(cls, cookie, connect_data):
+        if cookie not in cls._connect_cookies:
+            return False
+        cls._connect_cookies[cookie] = connect_data
+        return True
 
     @classmethod
     def get_websocket(cls, websocket_id):
@@ -389,9 +399,16 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 except Exception:
                     pass
 
-            cauth = query_data.get("cauth", [""])[0]
-            if not self.check_connect_cookie(cauth):
+            cauth = get_first_arg(query_data, "cauth")
+            connect_data = self.check_connect_cookie(cauth)
+            if connect_data is None:
+                # Invalid connect cookie
                 cauth = None
+            elif connect_data:
+                # Overwrite form data with query data
+                tem_data = query_data
+                query_data = connect_data
+                query_data.update(tem_data)
 
             if not Server_settings["allow_embed"] and "embedded" in query_data:
                 self.write_json([["body", "Terminal cannot be embedded in web page on different host. Restart server with --allow_embed option to permit cross-host embedding."]])
@@ -404,10 +421,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     # No authorization code needed
                     self.authorized = self.add_state("", self.NULL_AUTH)
                 else:
-                    user = query_data.get("user", [""])[0].lower()
-                    code = query_data.get("code", [""])[0]
-                    eauth = query_data.get("eauth", [""])[0]
-                    tem_email = query_data.get("email", [""])[0].lower()
+                    user = get_first_arg(query_data, "user").lower()
+                    code = get_first_arg(query_data, "code")
+                    eauth = get_first_arg(query_data, "eauth")
+                    tem_email = get_first_arg(query_data, "email").lower()
 
                     if user and (user == gterm.LOCAL_HOST or not gtermhost.USER_RE.match(user)):
                         # Username "local" is not allowed to prevent localhost access
@@ -458,7 +475,26 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         else:
                             # CGI escape username
                             auth_message = "User name %s already in use" % cgi_escape(user)
-                    elif self._auth_type >= self.MULTI_AUTH:
+                    elif self._auth_type == self.LOGIN_AUTH:
+                        # Login authentication
+                        try:
+                            import simplepam
+                            if not simplepam.authenticate(user, code, service="login"):
+                                auth_message = "Login failed for user %s; check username/password" % (cgi_escape(user),)
+                            else:
+                                self.authorized = self.add_state(user, self.LOGIN_AUTH)
+                                if not self.is_super(user) and not TerminalConnection.get_connection(user):
+                                    # Set up user and create .graphterm directory
+                                    if self.setup_user(user):
+                                        new_user_code = "activated"
+                                    else:
+                                        self.write_json([["abort", "Error in setting up user "+user]])
+                                        self.close()
+                                        return
+                        except Exception, excp:
+                            logging.error("ERROR in login authentication for user %s: %s", user, excp)
+                            auth_message = "Login failed for user %s (internal error)" % (cgi_escape(user),)
+                    elif self._auth_type == self.MULTI_AUTH:
                         validated = False
                         if code == gterm.compute_hmac(self._auth_code, cauth):
                             # Validation using master secret
@@ -525,6 +561,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             need_code = code or need_code
 
                     auth_params = {"need_user": need_user, "need_code": need_code,
+                                   "hmac_auth": self._auth_type != self.LOGIN_AUTH,
                                    "goog_auth": self._auth_type == self.MULTI_AUTH and not Server_settings["nogoog_auth"],
                                    "cookie": self.get_connect_cookie(), "message": auth_message}
                     self.write_json([["authenticate", auth_params]])
@@ -532,7 +569,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
             logging.info("GTSocket.open: Authenticated: %s", self.authorized)
-            qauth = query_data.get("qauth", [""])[0]
+            qauth = get_first_arg(query_data, "qauth")
             if not Server_settings["no_formcheck"] and not cauth and (not qauth or qauth != get_qauth(self.authorized["state_id"])):
                 # Invalid query auth; clear any form data (always cleared for webcasts and when user is first authorized)
                 query_data = {}
@@ -552,7 +589,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             is_super_user = self.is_super(user) or self.is_single()
 
             if len(path_comps) < 1 or not path_comps[0]:
-                tem_email = query_data.get("save_email", [""])[0].lower()
+                tem_email = get_first_arg(query_data, "save_email").lower()
                 if gterm.EMAIL_RE.match(tem_email) and user and user != gterm.LOCAL_HOST:
                     try:
                         TerminalConnection.send_to_connection(user, "request", "", user, [["set_email", tem_email]])
@@ -561,16 +598,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         logging.error("Unable to set email for user %s: %s: %s", user, tem_email, excp)
 
                 host_list = TerminalConnection.get_connection_ids()
-                if self._auth_type >= self.MULTI_AUTH and not is_super_user:
+                if self._auth_type == self.LOGIN_AUTH and not is_super_user:
+                    host_list = [ user ] if user in host_list else []
+                elif self._auth_type == self.MULTI_AUTH and not is_super_user:
                     if Server_settings["allow_share"]:
                         host_list = [h for h in host_list if h != gterm.LOCAL_HOST]
                     elif Server_settings["user_groups"]:
                         host_list = [h for h in host_list if h == user or same_group(h, user) ]
                     else:
-                        if user in host_list:
-                            host_list = [ user ]
-                        else:
-                            host_list = []
+                        host_list = [ user ] if user in host_list else []
                 host_list.sort()
                 self.write_json([["host_list", self.authorized["state_id"], user, new_user_code, new_user_email, host_list]])
                 self.close()
@@ -585,19 +621,27 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 return
 
             if self._auth_type >= self.MULTI_AUTH and not is_super_user:
+                # Host access control
                 if host == gterm.LOCAL_HOST:
                     self.write_json([["abort", "Local host access not allowed for user %s" % user]])
                     self.close()
                     return
-                if host != user and not same_group(host, user) and not Server_settings["allow_share"]:
+                if host != user and self._auth_type == self.LOGIN_AUTH:
+                    self.write_json([["abort", "Inaccesible host %s" % host]])
+                    self.close()
+                    return
+                if host != user and self._auth_type == self.MULTI_AUTH and not same_group(host, user) and not Server_settings["allow_share"]:
                     self.write_json([["abort", "Inaccesible host %s" % host]])
                     self.close()
                     return
 
             term_chat = False
             host_connect = None
-            
+
             option = path_comps[2] if len(path_comps) > 2 else ""
+            if not option:
+                option = get_first_arg(query_data, "action")
+
             if wildhost:
                 allow_wild_host = (not self._super_users and self._auth_type <= self.SINGLE_AUTH) or is_super_user
                 if not allow_wild_host:
@@ -633,7 +677,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             term_list.append( [tem_name, True, False, len(self._watch_dict[path]), 0])
                     term_list.sort()
                     allow_new = (self._auth_type <= self.SINGLE_AUTH) or is_super_user or ((user and user == host) and (len(term_list) < Server_settings["max_terminals"]))
-                    self.write_json([["term_list", self.authorized["state_id"], user, host, allow_new, term_list]])
+                    connect_params = {"state_id": self.authorized["state_id"],
+                                      "cookie": self.get_connect_cookie(),
+                                      "user": user, "host": host, "allow_new": allow_new}
+                    self.write_json([["term_list", connect_params, term_list]])
                     self.close()
                     return
 
@@ -798,7 +845,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "controller": controller, "super_user": is_super_user, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "chat": term_chat, "update_opts": {},
-                                        "state_id": self.authorized["state_id"]}]])
+                                        "state_id": self.authorized["state_id"], "websocket_id": self.websocket_id}]])
             logging.info("GTSocket.open: Opened %s:%s", self.remote_path, get_user(self))
         except Exception, excp:
             import traceback
@@ -1619,6 +1666,49 @@ def run_server(options, args):
     global IO_loop, Http_server, TCP_server, Local_client, Host_secret, Host_settings, Server_settings, Term_settings, Trace_shell
     import signal
 
+    class ActionHandler(tornado.web.RequestHandler):
+        def get(self):
+            comps = self.request.path.split("/")
+            new_path = "/" + "/".join(comps[2:])
+            action = comps[1]
+            args = dict(self.request.arguments)
+            if comps[1] == "_steal":
+                args["action"] = "steal"
+            if comps[1] == "_watch":
+                args["action"] = "watch"
+
+            cauth = self.get_argument("cauth", "")
+            if not cauth:
+                qauth = self.get_argument("qauth", "")
+                ws_id = self.get_argument("websocket", "")
+                if qauth and ws_id:
+                    ws = GTSocket.get_websocket(ws_id)
+                    if ws and qauth == get_qauth(ws.authorized["state_id"]):
+                        # Validated form fields
+                        cauth = GTSocket.get_connect_cookie()
+            if cauth:
+                new_path += "?" + urllib.urlencode({"cauth": cauth})
+                if GTSocket.update_connect_cookie(cauth, args):
+                    self.redirect(new_path)
+                    return
+            logging.error("GET error: %s", self.request.uri)
+            self.write("Internal error in GET: %s" % self.request.uri)
+
+    class FormHandler(tornado.web.RequestHandler):
+        def post(self):
+            comps = self.request.uri.split("/")
+            new_uri = "/" + "/".join(comps[2:])
+            args = dict(self.request.arguments)
+
+            cauth = self.get_argument("cauth", "")
+            if cauth:
+                new_uri += "?" + urllib.urlencode({"cauth": cauth})
+                if GTSocket.update_connect_cookie(cauth, args):
+                    self.redirect(new_uri)
+                    return
+            logging.error("POST error: %s", self.request.uri)
+            self.write("Internal error in POST: %s" % self.request.uri)
+
     class AuthHandler(tornado.web.RequestHandler):
         def get(self):
             self.set_header("Content-Type", "text/plain")
@@ -1686,6 +1776,12 @@ def run_server(options, args):
         server_url = "http://"+external_host+("" if external_port == 80 else ":%d" % external_port)
     new_url = server_url + "/local/new"
 
+    if options.auth_type == "login":
+        if os.geteuid():
+            sys.exit("Error: Must run server as root for --auth_type=login")
+        if not options.https and external_host != "localhost":
+            sys.exit("Error: At this time --auth_type=login is permitted only with https or localhost (for security reasons)")
+
     gtermhost_args = []
     if external_host != "localhost":
         gtermhost_args.append("--external_host=%s" % external_host)
@@ -1725,7 +1821,7 @@ def run_server(options, args):
     if options.auth_type in ("none", "name"):
         # No auth code
         auth_code = ""
-    elif options.auth_type in ("singleuser", "multiuser"):
+    elif options.auth_type in ("singleuser", "multiuser", "login"):
         auth_file = gterm.get_auth_filename(server=external_host)
         if os.path.exists(auth_file):
             # Read auth code
@@ -1743,7 +1839,7 @@ def run_server(options, args):
                 print >> sys.stderr, "Error in writing authentication file: %s" % excp
                 sys.exit(1)
     else:
-        print >> sys.stderr, "Invalid authentication type '%s'; must be one of none/name/singleuser/multiuser" % options.auth_type
+        print >> sys.stderr, "Invalid authentication type '%s'; must be one of none/name/singleuser/multiuser/login" % options.auth_type
         sys.exit(1)
 
     GTSocket.set_auth_code(options.auth_type, code=auth_code)
@@ -1770,6 +1866,9 @@ def run_server(options, args):
 
     handlers = [(r"/_auth/.*", AuthHandler),
                 (r"/_gauth/.*", GoogleAuthHandler),
+                (r"/_form/.*", FormHandler),
+                (r"/_steal/.*", ActionHandler),
+                (r"/_watch/.*", ActionHandler),
                 (r"/_websocket/.*", GTSocket),
                 (gterm.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
                 (gterm.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
@@ -1830,9 +1929,14 @@ def run_server(options, args):
         key_version = "1"
         key_secret = auth_code
         local_key_secret = gterm.user_hmac(key_secret, gterm.LOCAL_HOST, key_version=key_version)
-    TCP_server = TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
-                                                     key_secret=key_secret, key_version=key_version,
-                                                     key_id=str(internal_port), ssl_options=internal_server_ssl)
+
+    try:
+        TCP_server = TerminalConnection.start_tcp_server(internal_host, internal_port, io_loop=IO_loop,
+                                                         key_secret=key_secret, key_version=key_version,
+                                                         key_id=str(internal_port), ssl_options=internal_server_ssl)
+    except Exception, excp:
+        logging.error("%s\nError in starting internal host server\nCheck if gtermserver is already running using 'ps -ef|grep gterm'", excp)
+        sys.exit(1)
 
     if options.internal_https or options.nolocal:
         # Internal https causes tornado to loop  (client fails to connect to server)
@@ -1872,6 +1976,8 @@ def run_server(options, args):
                 print >> sys.stderr, "Group Code also saved to file "+gcode_file
             except Exception, excp:
                 pass
+        elif options.auth_type == "login":
+            print >> sys.stderr, "\nLogin authentication required"
     else:
         print >> sys.stderr, "\n**WARNING** No authentication required"
 
@@ -1915,6 +2021,14 @@ def run_server(options, args):
         print >> sys.stderr, "\nStopping server"
         gtermhost.gterm_shutdown(Trace_shell)
         if TCP_server:
+            # For now, shutting down gtermserver shuts down all gtermhosts as well.
+            # Otherwise, port 8899 does not appear to be freed!
+            try:
+                for conn in TerminalConnection._all_connections.values():
+                    conn.send_request("request", "", "", [["shutdown", "Shutting down"]])
+                TerminalConnection.shutdown_all()
+            except Exception:
+                pass
             TerminalConnection.stop_tcp_server(TCP_server, IO_loop)
             TCP_server = None
         if Http_server:

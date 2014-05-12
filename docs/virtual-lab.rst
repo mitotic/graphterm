@@ -12,7 +12,8 @@ Logging in
 --------------------------------------------------------------------------------------------
 
 Open the URL provided by the instructor (usually of the form
-``http://hostname.domain``) in your web browser. Then type in the user
+``http://hostname.domain``) in your web browser. (Google Chrome works
+best, but Firefox, Safari, or IE10 would also work.) Then type in the user
 name and the access code. If you are creating a new account, you will
 need to enter the *group access code* obtained from your
 instructor. Select a user name that will be meaningful to the
@@ -56,7 +57,7 @@ access code (after the first time).
 Internet Explorer 10 should also be usable, with some limitations.
 
 
-Creating  and leaving terminal sessions
+Creating and leaving terminal sessions
 -------------------------------------------------------------------------------------------
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-host-list.png
@@ -213,9 +214,9 @@ notebooks, e,g.::
     gls *.ipynb
 
 Then click on the notebook that you wish to open.
-Alternatively, you can use the ``gopen`` or ``gpython`` commands::
+Alternatively, you can use the ``gpython`` or ``gopen`` commands::
 
-    gopen notebook.ipynb
+    gpython notebook.ipynb
 
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png
