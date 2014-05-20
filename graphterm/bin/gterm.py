@@ -778,7 +778,7 @@ def setup_logging(log_level=logging.ERROR, filename="", file_level=None):
         fhandler.setFormatter(formatter)
         logger.addHandler(fhandler)
 
-Form_template =  """<div id="gterm-form-%s" class="gterm-form"><span class="gterm-form-title">%s</span> %s
+Form_template =  """<div id="gterm-form-%s" class="gterm-form"><div class="gterm-form-message">%s</div><span class="gterm-form-title">%s</span> %s
 <input id="gterm-form-command-%s" class="gterm-form-button gterm-form-command" type="submit" data-gtermformnames="%s"></input>  <input class="gterm-form-button gterm-form-cancel" type="button" value="Cancel"></input>
 </div>"""
 
@@ -880,7 +880,7 @@ class FormParser(object):
             
         return "\n".join(input_list)
 
-    def create_form(self, id_suffix=None, prefill=None):
+    def create_form(self, id_suffix=None, prefill=None, errmsg=""):
         """
         id_suffix: Form id suffix
         prefill: (options, args) for prefilling
@@ -896,7 +896,7 @@ class FormParser(object):
                     prefill_opts[opt_info[0]] = getattr(prefill[0], opt_info[0])
         opt_names = ",".join(x[0] for x in (self.arg_list+self.opt_list))
         input_html = self.create_input_html(id_suffix, prefill_opts=prefill_opts)
-        return Form_template % (id_suffix, self.title, input_html, id_suffix, opt_names) 
+        return Form_template % (id_suffix, errmsg, self.title, input_html, id_suffix, opt_names) 
         
     def parse_args(self, args=None, stderr=False):
         if sys.stdin.isatty() and args is None and (len(sys.argv) < 2 or (len(sys.argv) == 2 and sys.argv[1] == "-g")):

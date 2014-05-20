@@ -1677,17 +1677,18 @@ def run_server(options, args):
             if comps[1] == "_watch":
                 args["action"] = "watch"
 
+            qauth = self.get_argument("qauth", "")
             cauth = self.get_argument("cauth", "")
-            if not cauth:
-                qauth = self.get_argument("qauth", "")
+            if not cauth and qauth:
                 ws_id = self.get_argument("websocket", "")
-                if qauth and ws_id:
+                if ws_id:
                     ws = GTSocket.get_websocket(ws_id)
                     if ws and qauth == get_qauth(ws.authorized["state_id"]):
                         # Validated form fields
                         cauth = GTSocket.get_connect_cookie()
+                        args["cauth"] = cauth
             if cauth:
-                new_path += "?" + urllib.urlencode({"cauth": cauth})
+                new_path += "?" + urllib.urlencode({"qauth": qauth} if qauth else {"cauth": cauth})
                 if GTSocket.update_connect_cookie(cauth, args):
                     self.redirect(new_path)
                     return
@@ -1935,7 +1936,7 @@ def run_server(options, args):
                                                          key_secret=key_secret, key_version=key_version,
                                                          key_id=str(internal_port), ssl_options=internal_server_ssl)
     except Exception, excp:
-        logging.error("%s\nError in starting internal host server\nCheck if gtermserver is already running using 'ps -ef|grep gterm'", excp)
+        logging.error("%s\nError in starting internal host server; port %s may be in use\nCheck if gtermserver is already running using 'ps -ef|grep gterm'", excp, internal_port)
         sys.exit(1)
 
     if options.internal_https or options.nolocal:

@@ -112,15 +112,16 @@ def show(*args, **kwargs):
         overwrite = args[0]
     else:
         overwrite = kwargs.pop("overwrite", not pyplot_dict["new_plot"])
-    format =  kwargs.pop("format", "png")
-    title =  kwargs.pop("title", "")
+    format = kwargs.pop("format", "png")
+    title = kwargs.pop("title", "")
+    fullscreen = kwargs.pop("fullscreen", False)
 
     import matplotlib.pyplot as plt
-    retval = display(plt, overwrite=overwrite, format=format, title=title)
+    retval = display(plt, overwrite=overwrite, format=format, title=title, fullscreen=fullscreen)
     pyplot_dict["new_plot"] = False
     return retval
 
-def display(fig, overwrite=False, format="png", title="", max_bytes=25000000):
+def display(fig, overwrite=False, format="png", title="", fullscreen=False, max_bytes=25000000):
     """Save figure as a blob and display as block image
     """
     if not pyplot_dict:
@@ -140,7 +141,8 @@ def display(fig, overwrite=False, format="png", title="", max_bytes=25000000):
         pyplot_dict["new_plot"] = True
     else:
         #gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
-        gterm.display_blob(gterm.get_blob_id(blob_url), overwrite=overwrite, toggle=True)
+        gterm.display_blob(gterm.get_blob_id(blob_url), overwrite=overwrite, toggle=True,
+                           display="fullscreen" if fullscreen else "block")
 
 def resize_win(dimensions=""):
     """Resize matplotlib default window for terminal"""
