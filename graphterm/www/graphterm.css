@@ -603,7 +603,7 @@ span.gterm-form-title {
 }
 
 input.gterm-input-arg[type=text] {
-    width: 75%;
+    width: 50%;
 }
 
 #terminal {

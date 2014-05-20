@@ -783,7 +783,7 @@ Form_template =  """<div id="gterm-form-%s" class="gterm-form"><div class="gterm
 </div>"""
 
 
-Label_template = """<span class="gterm-form-label %s" data-gtermhelp="%s">%s</span>"""
+Label_template = """<span class="gterm-form-label tooltip %s" title="%s">%s</span>"""
 
 Input_text_template = """<input id="gterm_%s_%s" name="%s" class="gterm-form-input%s" type="text" value="%s" autocomplete="off" %s></input>"""
 
@@ -837,7 +837,7 @@ class FormParser(object):
             if opt_label:
                 label = opt_label
             elif j < arg_count:
-                label = ""
+                label = "arg"+str(j+1)+": "
             elif isinstance(opt_default, bool):
                 label = "--"+opt_name
             else:

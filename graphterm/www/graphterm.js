@@ -1508,6 +1508,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    $(pageletSelector+' .gterm-iframedelete').bindclick(CloseIFrame);
 			    $(pageletSelector+' .gterm-iframeclose').bindclick(CloseIFrame);
 			    $(pageletSelector+' .gterm-iframeexpand').bindclick(ExpandIFrame);
+			    $(pageletSelector+' .tooltip').tooltipster();
 			    GTDropBindings($(pageletSelector+' .droppable'));
 			} catch(err) {
 			    console.log("GTWebSocket.onmessage: Pagelet ERROR: ", err);
@@ -3842,7 +3843,7 @@ function GTEndForm(text, cancel) {
 }
 
 function GTHelpLink(evt) {
-    var helpStr = $(this).attr("data-gtermhelp");
+    var helpStr = $(this).attr("title");
     if (helpStr) {
 	var html = '<div class="gterm-help gterm-prewrap">'+GTPreserveLinebreaks(GTEscape(helpStr))+'</div>';
 	$("#gterm-helparea-content").html(html);
