@@ -411,6 +411,11 @@ def write_blank(display="fullpage", exit_page=False, stderr=False):
         add_headers["exit_page"] = "yes"
     write_pagelet("", display=display, overwrite=True, add_headers=add_headers, stderr=stderr)
 
+def nb_clear(all_cells=False, stderr=False):
+    """Clear output for notebook cell(s)"""
+    all_str = "all=yes" if all_cells else ""
+    raw_wrap_write('<!--gterm nb_clear %s-->' % all_str, stderr=stderr)
+
 def display_blockimg_old(url, overwrite=False, alt="", stderr=False):
     """Display block image in a sequence.
     New image display causes previous images to be hidden.
@@ -464,6 +469,26 @@ def display_blockimg(url, overwrite=False, toggle=False, alt="", stderr=False):
     html = ('<!--gterm pagelet %s-->' % params) + blockimg_html(url, toggle=toggle, alt=alt)
         
     raw_wrap_write(html, stderr=stderr)
+
+IFRAMEFORMAT = '<iframe id="%s" class="gterm-iframe %s" src="%s" %s %s></iframe>'
+def iframe_html(src_url="", html="", add_classes="", width=None, height=None, header=False, fullscreen=False):
+    if not src_url:
+        src_url = create_blob(html, content_type="text/html")
+    max_percent = 95.0 if header else 100.0
+    width_str = (' width="%s"' % width) if width else ' width="100%"'
+    height_str = (' height="%s"' % height) if height else (' height="%d%%"' % max_percent if fullscreen else '')
+
+    frameId = "gframe%09d" % random.randrange(0, 10**9)
+    out_html = IFRAMEFORMAT % (frameId, add_classes, src_url, width_str, height_str)
+
+    if header:
+        if fullscreen:
+            out_html = '<span class="gterm-iframeheader gterm-iframeexpand">&#x29c9;</span><span class="gterm-iframeclose gterm-iframeheader">&#x2a2f;</span>' + out_html
+        else:
+            container_id = "gframecontainer%09d" % random.randrange(0, 10**9)
+            out_html = '<div id="'+container_id+'"> <span class="gterm-iframeheader gterm-iframedelete" gterm-iframe-container="'+container_id+'">&#215;</span>' + out_html + '</div>'
+
+    return out_html
 
 def open_url(url, target="_blank", stderr=False):
     """Open url in new window"""
@@ -528,7 +553,7 @@ def edit_file(filename="", dir="", content=None, create=False, editor="ace", std
             else:
                 print >> sys.stderr, "Error in saving file: No file path"
 
-def open_notebook(filename="", dir="", content=None, command_path="", prompts=[], stderr=False):
+def open_notebook(filename="", dir="", content=None, command_path="", share="", prompts=[], stderr=False):
     """Open notebook"""
     filepath = ""
     if filename:
@@ -548,7 +573,7 @@ def open_notebook(filename="", dir="", content=None, command_path="", prompts=[]
             prompts = PROMPTS_LIST[command][:]
 
     headers = {"x_gterm_response": "open_notebook",
-               "x_gterm_parameters": {"filepath": filepath, "prompts": prompts, "current_directory": dir}
+    "x_gterm_parameters": {"filepath": filepath, "share": share, "prompts": prompts, "current_directory": dir}
                }
 
     wrap_encoded_file_or_data(filepath, content=content, headers=headers, stderr=stderr)
@@ -1153,19 +1178,24 @@ def process_args(args=None):
         filepath = my_args[0]
         if filepath.endswith(".md") or filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
             if filepath.startswith("http:") or filepath.startswith("https:"):
-                response = urllib2.urlopen(filepath)
-                content = response.read()
-                filepath = os.path.basename(filepath)
+                ##response = urllib2.urlopen(filepath)
+                ##content = response.read()
+                ##filepath = os.path.basename(filepath)
+                content = None
             else:
                 content = None
             # Switch to notebook mode (after prompt is displayed)
-            open_notebook(filepath, content=content)
+            share = "share" if "-share." in filepath else ""
+            open_notebook(filepath, share=share, content=content)
             return True
     return False
 
 def nb_setup():
     nbmode()
     process_args()
+    if sys.flags.interactive and sys.path and sys.path[0]:
+        # Include current dir in path for interactive mode
+        sys.path.insert(0, '')
 
 def main():
     global Http_addr, Http_port

@@ -83,7 +83,8 @@ MD_FENCE_RE = re.compile(r"^\s*{(\S+)(\s.*)?}")
 DEFAULT_FILE_PREFIX = "Untitled"
 DEFAULT_FILENUM_RE = re.compile("^(\d+)")
 
-ANSWER_PREFIX = "##answer## "
+ANSWER_PREFIX = "##Answer: "
+FILL_PREFIX = "##... (fill in code here)"
 MARKUP_TYPES = set(["markdown"])
 
 BLOCKIMGFORMAT = '<!--gterm pagelet blob=%s--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="%s" alt="%s"></div>'
@@ -907,6 +908,7 @@ class Terminal(object):
         self.note_input = []
         self.note_start = None
         self.note_slide = None
+        self.note_initialized = False
 
     def init(self):
         self.esc_seq={
@@ -1024,7 +1026,7 @@ class Terminal(object):
         self.screen = self.alt_screen if self.alt_mode else self.main_screen
         self.needs_updating = True
 
-    def open_notebook(self, filepath, prompts=[], content=None):
+    def open_notebook(self, filepath, share="", prompts=[], content=None):
         if prompts:
             prompts = [str(p) for p in prompts]
         self.note_start = None
@@ -1112,9 +1114,16 @@ class Terminal(object):
             note_lang = gterm.EXTN2LANG[ext[1:]]
         note_tail = ext + note_tail
 
-        note_fill = prefix.endswith("-fill")
-        if note_fill:
-            filepath = os.path.join(os.path.basename(filepath), prefix+"ed"+note_tail)
+        note_form = ""
+        if prefix.endswith("-fill"):
+            note_form = "fill"
+        if prefix.endswith("-share"):
+            note_form = "share"
+        if prefix.endswith("-lock"):
+            note_form = "lock"
+        if note_form:
+            new_prefix = prefix+"d" if note_form == "share" else prefix+"ed"
+            filepath = os.path.join(os.path.dirname(filepath), new_prefix+note_tail)
 
         status_msg = ""
         fullname = os.path.expanduser(filepath)
@@ -1130,9 +1139,10 @@ class Terminal(object):
                 status_msg = "You will not be able to save the notebook in this directory - autosave is disabled"
         
         self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
-                            "lang": note_lang, "shell": note_shell, "fill": note_fill, "mod_offset": self.note_mod_offset,
-                            "autosave": writable}
-        self.screen_callback(self.term_name, "", "note_open", [self.note_params, status_msg])
+                            "lang": note_lang, "shell": note_shell, "form": note_form, "lock_offset": 0,
+                            "mod_offset": self.note_mod_offset, "autosave": writable}
+        share_content = content if share and content else ""
+        self.screen_callback(self.term_name, "", "note_open", [self.note_params, status_msg, share_content])
         if content:
             if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
                 self.read_ipynb(content)
@@ -1142,6 +1152,7 @@ class Terminal(object):
         if not self.note_cells["curIndex"]:
             self.add_cell("")
         self.select_cell(self.note_cells["cellIndices"][0], next_code=True)
+        self.note_initialized = True
 
     def close_notebook(self, discard=False):
         if not self.note_cells:
@@ -1172,6 +1183,10 @@ class Terminal(object):
         self.zero_screen()
         self.screen_callback(self.term_name, "", "note_close", [])
         self.update()
+
+    def note_lock(self, offset):
+        self.note_params["lock_offset"] = offset
+        self.unhide_cells()
 
     def update_mod_offset(self):
         cur_index = self.note_cells["curIndex"]
@@ -1271,7 +1286,8 @@ class Terminal(object):
             self.note_params["autosave"] = writable  # NOTE: Not updated in browser
             update_filename = True
 
-        save_fill = os.path.splitext(fname)[0].endswith("-fill")
+        fprefix = os.path.splitext(fname)[0]
+        save_form = fprefix.endswith("-fill") or fprefix.endswith("-share")
         fig_suffix = safe_filename(fname)
         curly_fence = fname.endswith(".R") or self.note_params["command"] == "R"
         md_lines = []
@@ -1285,6 +1301,8 @@ class Terminal(object):
         embed_fig_count = 0
         for j, cell_index in enumerate(self.note_cells["cellIndices"]):
             cell = self.note_cells["cells"][cell_index]
+            if cell["cellParams"]["hidden"]:
+                break
             cell_out = False
             if format == "ipynb":
                 if j:
@@ -1359,7 +1377,7 @@ class Terminal(object):
                                 prompt_num += 1
                                 out_json = nb_json(out_lines, ipy_raw)
                                 md_lines += [IPYNB_JSON_PYOUT % dict(out_prompt=prompt_num, text=out_json)]
-                            elif save_fill:
+                            elif save_form:
                                 md_lines += ["```expect"] + out_lines + ["```"] + [""]
                             else:
                                 md_lines += ["```output"] + out_lines + ["```"] + [""]
@@ -1375,7 +1393,7 @@ class Terminal(object):
                                 md_lines += [IPYNB_JSON_DATA % dict(format=content_type.split("/")[1], base64=content)]
                                 cell_out = True
                             else:
-                                fig_prefix = "expect" if save_fill else "output"
+                                fig_prefix = "expect" if save_form else "output"
                                 ref_id = "%s-fig%d-%s" % (fig_prefix, len(ref_blobs)+1, fig_suffix)
                                 ref_blobs[ref_id] = data_uri
                                 md_lines.append("![image][%s]" % ref_id)
@@ -1393,7 +1411,7 @@ class Terminal(object):
                         md_lines += ["```output"] + out_lines + ["```"] + [""]
                     cell_out = True
                     out_lines = []
-            elif not cell["cellOutput"] and cell["cellType"] not in MARKUP_TYPES and save_fill:
+            elif not cell["cellOutput"] and cell["cellType"] not in MARKUP_TYPES and save_form:
                 if format != "ipynb":
                     # Ensure at least one blank line in expect output
                     md_lines += ["```expect"] + [""] + ["```"] + [""]
@@ -1622,6 +1640,9 @@ class Terminal(object):
         """ If before_cell_number is 0(-1), add new cell after(before) current cell
             If before_cell_number > 0, add new_cell before before_cell_number
         """
+        if self.note_params["form"] and self.note_initialized:
+            return None
+
         if not new_cell_type:
             new_cell_type = gterm.LANGUAGES.get(self.note_params["command"], "code")
         fmatch = MD_FENCE_RE.match(new_cell_type)
@@ -1656,7 +1677,7 @@ class Terminal(object):
             before_cell_index = self.note_cells["cellIndices"][before_cell_number-1]
             self.note_cells["cellIndices"].insert(before_cell_number-1, cell_index)
 
-        if self.note_params["fill"]:
+        if self.note_params["form"]:
             page_cell_index = self.find_page_cell_index()
             start_num = self.note_cells["cellIndices"].index(page_cell_index)
             cur_num = self.note_cells["cellIndices"].index(cell_index)
@@ -1739,7 +1760,7 @@ class Terminal(object):
         return cell_index
 
     def select_cell(self, cell_index=0, move_up=False, next_code=False):
-        """Select cell. If next_code, select next code cell, if possible, else cell_index, is specified, or do nothing"""
+        """Select cell. If next_code, select next code cell, if possible, else cell_index, if specified, or do nothing"""
         if not self.note_cells:
             return
         cur_index = self.note_cells["curIndex"]
@@ -1749,7 +1770,10 @@ class Terminal(object):
                 # Start searching from cell next to current
                 cur_num += 1
             for cindex in self.note_cells["cellIndices"][cur_num:]:
-                if self.note_cells["cells"][cindex]["cellType"] not in MARKUP_TYPES:
+                cell = self.note_cells["cells"][cindex]
+                if cell["cellParams"]["hidden"]:
+                    return
+                if cell["cellType"] not in MARKUP_TYPES:
                     cell_index = cindex
                     break
             if not cell_index:
@@ -1891,6 +1915,28 @@ class Terminal(object):
         except Exception, excp:
             pass
 
+    def unhide_cells(self):
+        cur_index = self.note_cells["curIndex"]
+        start_offset = self.note_params["lock_offset"] if self.note_params["form"] == "lock" else self.note_cells["cellIndices"].index(cur_index)+1
+        break_next = False
+        for j, cindex in enumerate(self.note_cells["cellIndices"][start_offset:]):
+            # Unhide all cells up to, and including, the next code cell in current page
+            if self.is_page_break(cindex):
+                break
+            cell = self.note_cells["cells"][cindex]
+            if cell["cellParams"]["hidden"]:
+                cell["cellParams"]["hidden"] = False
+                cell_input = "\n".join(self.get_cell_input(cindex))
+                self.screen_callback(self.term_name, "", "note_cell_value", [cell_input, cindex, cell["cellType"] in MARKUP_TYPES])
+            if break_next:
+                break
+            if cell["cellType"] not in MARKUP_TYPES:
+                if start_offset+j+1 < len(self.note_cells["cellIndices"]) and self.note_cells["cells"][self.note_cells["cellIndices"][start_offset+j+1]]["cellType"] in MARKUP_TYPES:
+                    # Unhide markdown cell immediately following code cell
+                    break_next = True
+                else:
+                    break
+
     def update_cell(self, cell_index, execute, save, input_data):
         if not self.note_cells:
             return
@@ -1898,37 +1944,22 @@ class Terminal(object):
         if not cur_index:
             return
         assert cell_index == cur_index
+        cur_num = self.note_cells["cellIndices"].index(cur_index)
         cur_cell = self.note_cells["cells"][cur_index]
         cell_lines = split_lines(input_data.replace("\x00",""))   # Delete NULs
         self.note_update_time = time.time()
         if save:
             # Update cell input
             self.update_mod_offset()
-            if not self.note_params["fill"]:
+            if not self.note_params["form"]:
                 cur_cell["cellInput"] = cell_lines
-            else:
+            elif self.note_params["form"] != "lock" or cur_num < self.note_params["lock_offset"]:
                 # Notebook form mode
                 cur_cell["cellInput"] = self.filled_cell_input(cell_lines)
                 cur_cell["cellParams"]["filled"] = True
                 self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input()), cur_index, False])
-                cur_num = self.note_cells["cellIndices"].index(cur_index)
-                break_next = False
-                for j, cindex in enumerate(self.note_cells["cellIndices"][cur_num+1:]):
-                    # Unhide all cells up to, and including, the next code cell in current page
-                    if self.is_page_break(cindex):
-                        break
-                    cell = self.note_cells["cells"][cindex]
-                    cell["cellParams"]["hidden"] = False
-                    cell_input = "\n".join(self.get_cell_input(cindex))
-                    self.screen_callback(self.term_name, "", "note_cell_value", [cell_input, cindex, cell["cellType"] in MARKUP_TYPES])
-                    if break_next:
-                        break
-                    if cell["cellType"] not in MARKUP_TYPES:
-                        if cur_num+1+j+1 < len(self.note_cells["cellIndices"]) and self.note_cells["cells"][self.note_cells["cellIndices"][cur_num+1+j+1]]["cellType"] in MARKUP_TYPES:
-                            # Unhide markdown cell immediately following code cell
-                            break_next = True
-                        else:
-                            break
+                if self.note_params["form"] != "lock":
+                    self.unhide_cells()
 
         if not execute:
             return
@@ -2004,24 +2035,63 @@ class Terminal(object):
     def filled_cell_input(self, new_input):
         cell = self.note_cells["cells"][self.note_cells["curIndex"]]
         old_lines = cell["cellInput"]
-        nold = len(old_lines)
-        nmatch = len(new_input)
-        for j, new_line in enumerate(new_input):
-            if j >= nold or old_lines[j] != new_line:
-                # Line mismatch between old and new
-                nmatch = j
-                break
-        answer_lines = [line for line in old_lines if line.startswith(ANSWER_PREFIX)]
-        return new_input[:nmatch] + answer_lines + new_input[nmatch:]        
+        out_lines = []
+        j = 0
+        while j < len(old_lines) and not old_lines[j].strip():
+            # Skip blank old lines
+            j += 1
+        k = 0
+        while k < len(new_input):
+            if j >= len(old_lines) or old_lines[j] == new_input[k]:
+                # Old and new lines match; keep displaying (unmodified) lines
+                if new_input[k].strip() != FILL_PREFIX:
+                    out_lines.append(new_input[k])
+                j += 1
+                k += 1
+                continue
+
+            # Skip old lines until next answer block and display block
+            answered = False
+            while j < len(old_lines):
+                if old_lines[j].startswith(ANSWER_PREFIX):
+                    answered = True
+                    out_lines.append(old_lines[j])
+                elif answered:
+                    break
+                j += 1
+
+            while j < len(old_lines) and not old_lines[j].strip():
+                # Skip blank old lines
+                j += 1
+
+            # Keep displaying (modified) new lines until old line is matched
+            while k < len(new_input):
+                if j < len(old_lines) and old_lines[j] == new_input[k]:
+                    break
+                if new_input[k].strip() != FILL_PREFIX:
+                    out_lines.append(new_input[k])
+                k += 1
+
+        return out_lines
         
     def get_cell_input(self, cell_index=0):
         """ Returns copy of input for cell """
         cell = self.note_cells["cells"][cell_index or self.note_cells["curIndex"]]
         if cell["cellParams"]["hidden"]:
             return []
-        if not self.note_params["fill"] or cell["cellType"] in MARKUP_TYPES or cell["cellParams"]["filled"]:
+        if not self.note_params["form"] or cell["cellType"] in MARKUP_TYPES or cell["cellParams"]["filled"]:
             return cell["cellInput"][:]
-        return [line for line in cell["cellInput"] if not line.startswith(ANSWER_PREFIX)]
+        answer_block = False
+        out_lines = []
+        for line in cell["cellInput"]:
+            if not line.startswith(ANSWER_PREFIX):
+                answer_block = False
+                out_lines.append(line)
+            elif not answer_block:
+                answer_block = True
+                out_lines.append(FILL_PREFIX) # Only for first line of answer block         
+                out_lines.append("")
+        return out_lines
 
     def erase_output(self, all_cells):
         cur_index = self.note_cells["curIndex"]
@@ -2844,15 +2914,19 @@ class Terminal(object):
                         self.save_notebook(filepath, params=response_params)
                 elif response_type == "open_notebook":
                     if not self.note_start and not self.note_cells:
+                        share = response_params.get("share", "")
                         prompts = response_params.get("prompts", [])
                         if not prompts:
                             command = os.path.basename(self.command_path) if self.command_path else ""
                             if command in gterm.PROMPTS_LIST:
                                 prompts = gterm.PROMPTS_LIST[command][:]
                         if prompts:
-                            self.note_start = (prompts[0], filepath, prompts, content)
+                            self.note_start = (prompts[0], filepath, share, prompts, content)
                         else:
-                            self.note_start = (">>> ", filepath, [], content)
+                            self.note_start = (">>> ", filepath, share, [], content)
+                elif response_type == "nb_clear":
+                    if self.note_cells:
+                        self.erase_output( bool(response_params.get("all")) )
                 else:
                     headers["content_length"] = len(content)
                     params = {"validated": self.gterm_validated, "headers": headers}
@@ -3192,7 +3266,7 @@ class Terminal(object):
                         self.note_expect_prompt = False
                         self.note_found_prompt = True
             elif self.note_start and line.startswith(self.note_start[0]):
-                self.open_notebook(self.note_start[1], prompts=self.note_start[2], content=self.note_start[3])
+                self.open_notebook(self.note_start[1], share=self.note_start[2], prompts=self.note_start[3], content=self.note_start[4])
 
 class Multiplex(object):
     def __init__(self, screen_callback, command=None, shared_secret="",
@@ -3530,12 +3604,12 @@ class Multiplex(object):
                 return ""
             return term.click_paste(text, file_url=file_url, options=options)
 
-    def open_notebook(self, term_name, filepath, prompts, content):
+    def open_notebook(self, term_name, filepath, share, prompts, content):
         with self.lock:
             term = self.proc.get(term_name)
             if not term:
                 return ""
-            return term.open_notebook(filepath, prompts, content)
+            return term.open_notebook(filepath, share, prompts, content)
 
     def close_notebook(self, term_name, discard):
         with self.lock:
@@ -3550,6 +3624,13 @@ class Multiplex(object):
             if not term:
                 return ""
             return term.save_notebook(filepath, input_data, params)
+
+    def note_lock(self, term_name, offset):
+        with self.lock:
+            term = self.proc.get(term_name)
+            if not term:
+                return ""
+            return term.note_lock(offset)
 
     def add_cell(self, term_name, new_cell_type, init_text, before_cell_number):
         with self.lock:

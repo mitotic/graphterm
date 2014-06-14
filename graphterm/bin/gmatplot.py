@@ -113,19 +113,24 @@ def show(*args, **kwargs):
     else:
         overwrite = kwargs.pop("overwrite", not pyplot_dict["new_plot"])
     format = kwargs.pop("format", "png")
+    outfile = kwargs.pop("outfile", "")
     title = kwargs.pop("title", "")
     fullscreen = kwargs.pop("fullscreen", False)
 
     import matplotlib.pyplot as plt
-    retval = display(plt, overwrite=overwrite, format=format, title=title, fullscreen=fullscreen)
+    retval = display(plt, overwrite=overwrite, format=format, outfile=outfile, title=title, fullscreen=fullscreen)
     pyplot_dict["new_plot"] = False
     return retval
 
-def display(fig, overwrite=False, format="png", title="", fullscreen=False, max_bytes=25000000):
+def display(fig, overwrite=False, format="png", outfile="", title="", fullscreen=False, max_bytes=25000000):
     """Save figure as a blob and display as block image
     """
     if not pyplot_dict:
         raise Exception("gmatplot.setup not invoked")
+
+    if outfile:
+        fig.savefig(outfile, format=format)
+        return
 
     content_type = "application/pdf" if format=="pdf" else "image/"+format
     outbuf = gterm.BlobStringIO(content_type, host=(gterm.Host or "*"), max_bytes=max_bytes)
@@ -134,6 +139,7 @@ def display(fig, overwrite=False, format="png", title="", fullscreen=False, max_
         fig.savefig(outbuf, format=format)
     finally:
         pyplot_dict["drawing"] = False
+
     blob_url = outbuf.close()
     ##gterm.display_blockimg_old(blob_url, overwrite=overwrite, alt=title)
     if pyplot_dict["new_cell"]:

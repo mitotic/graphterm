@@ -8,7 +8,7 @@ For multiplexed display use:
    gframe -r 300 -l 50 -c 4 -b -t -p tty a b c d '[abcd]'
 
 To recursively display terminal /local/tty1, use:
-   gframe --height 300 -b -n -t /local/tty1/watch
+   gframe -r 300 -b -n -t /local/tty1/watch
 """
 
 import math
@@ -96,7 +96,7 @@ nrows = ((nframes-1) // ncols) + 1
 
 max_percent = 100.0 if options.noheader else 95.0
 if options.rowheight:
-    frameHeight = ' height="%s" ' % options.rowheight
+    frameHeight = options.rowheight
 elif options.columns:
     if options.lastheight and nrows > 1:
         if options.lastheight.endswith("%"):
@@ -107,9 +107,9 @@ elif options.columns:
         height_percent = (max_percent - 5 - lh_precent) / (nrows - 1)
     else:
         height_percent = (max_percent - 5) / nrows
-    frameHeight = ' height="%d%%" ' % height_percent
+    frameHeight = str(height_percent)+"%"
 else:
-    frameHeight = ' height="%d%%" ' % max_percent if options.fullscreen else ''
+    frameHeight = str(max_percent)+"%" if options.fullscreen else ''
 
 for j, url in enumerate(iframe_urls):
     irow = j//ncols
@@ -117,7 +117,7 @@ for j, url in enumerate(iframe_urls):
         # Last row
         n = ((nframes-1) % ncols)+1
         if options.lastheight:
-            frameHeight = ' height="%s" ' % options.lastheight
+            frameHeight = options.lastheight
     else:
         n = ncols
     if options.width:
@@ -125,15 +125,9 @@ for j, url in enumerate(iframe_urls):
     else:
         width = str(100 if nframes == 1 else math.floor(96.0/n)) + "%"
     frameId = "gframe%09d" % random.randrange(0, 10**9)
-    iframe_html += IFRAMEFORMAT % (frameId, add_class+("" if irow else " gterm-iframe-firstrow"), url, width, frameHeight)
-
-if not options.noheader:
-    if options.fullscreen:
-        iframe_html = '<span class="gterm-iframeheader gterm-iframeexpand">&#x29c9;</span><span class="gterm-iframeclose gterm-iframeheader">&#x2a2f;</span>' + iframe_html
-    else:
-        container_id = "gframecontainer%09d" % random.randrange(0, 10**9)
-        iframe_html = '<div id="'+container_id+'"> <span class="gterm-iframeheader gterm-iframedelete" gterm-iframe-container="'+container_id+'">&#215;</span>' + iframe_html + '</div>'
-        
+    add_classes = add_class+("" if irow else " gterm-iframe-firstrow")
+    iframe_html = gterm.iframe_html(url, add_classes=add_classes, width=width, height=frameHeight,
+                                    header=not options.noheader, fullscreen=options.fullscreen)
 
 # TODO: Wrap iframe in div box with close X header for non fullscreen mode
 

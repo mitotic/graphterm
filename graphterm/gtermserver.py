@@ -744,7 +744,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 terminal_params = {"share_locked": self._auth_type > self.SINGLE_AUTH,
                                    "share_private": start_private, "share_tandem": False,
                                    "alert_status": False, "widget_token": "", "last_active": time.time(),
-                                   "nb_name": "", "nb_mod_offset": 0,
+                                   "nb_name": "", "nb_file": "", "nb_mod_offset": 0, "nb_form": "", "nb_content": "",
                                    "owner": term_owner, "state_id": self.authorized["state_id"], "auth_type": self.authorized["auth_type"]}
                 terminal_params.update(Term_settings)
                 self._terminal_params[path] = terminal_params
@@ -1076,6 +1076,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     pass
 
                 elif not kill_term:
+                    if msg[0] == "open_notebook" and msg[1].startswith("/") and msg[1].count("/") == 2:
+                        tparams = self.get_terminal_params(msg[1][1:])
+                        if tparams and tparams["nb_content"]:
+                            msg[1] = tparams["nb_file"].replace("-shared.", "-lock.")
+                            msg[4] = tparams["nb_content"]
+
                     req_list.append(msg)
                     if msg[0] == "save_prefs":
                         normalized_host = gtermhost.get_normalized_host(remote_host)
@@ -1198,7 +1204,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         cls._host_params.get(gtermhost.get_normalized_host(host), {})[param_name] = value
         
     @classmethod
-    def get_matching_paths(cls, matchpath, user, state_id, auth_type):
+    def get_matching_paths(cls, matchpath, user, state_id, auth_type, nb_name=""):
         is_super_user = GTSocket.is_super_or_single(user, auth_type)
         matched = []
         if isinstance(matchpath, basestring):
@@ -1215,9 +1221,18 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     match_params = GTSocket.get_terminal_params(path)
                     if match_params and (is_super_user or (user and user == match_params["owner"]) or
                                          (not user and state_id == match_params["state_id"])):
-                        matched.append(path)
+                        if not nb_name or nb_name == match_params["nb_name"]:
+                            matched.append(path)
         return matched
         
+    @classmethod
+    def send_requests(cls, term_path, paths, command_list, include_self=False):
+        for path in paths:
+            if not include_self and path == term_path:
+                continue
+            host, term_name = path.split("/")
+            cls.send_to_connection(host, "request", term_name, "", command_list)
+
     def __init__(self, stream, address, server_address, key_secret=None, key_version=None, key_id=None, ssl_options={}):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
                                                  key_secret=key_secret, key_version=key_version, key_id=key_id,
@@ -1262,6 +1277,9 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
         terminal_params = GTSocket.get_terminal_params(term_path)
         if terminal_params:
             terminal_params["last_active"] = time.time()
+            is_super_user = GTSocket.is_super_or_single(terminal_params["owner"], GTSocket._auth_type)
+        else:
+            is_super_user = False
         for msg in msg_list:
             if msg[0] == "term_params":
                 client_version = msg[1]["version"]
@@ -1289,10 +1307,27 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 args = msg[2]
                 if msg[1] == "note_mod_offset":
                     terminal_params["nb_mod_offset"] = args[0]
-                else:
-                    note_params = args[0] if msg[1] == "note_open" else {}
-                    terminal_params["nb_name"] = note_params.get("name", "Untitled") if msg[1] == "note_open" else ""
+                    if is_super_user and terminal_params["nb_name"] and terminal_params["nb_form"]:
+                        matchpaths = TerminalConnection.get_matching_paths(wildcard2re("*"), terminal_params["owner"],
+                                                                           terminal_params["state_id"],
+                                                                           terminal_params["auth_type"],
+                                                                           nb_name=terminal_params["nb_name"].replace("-share.", "-lock."))
+                        TerminalConnection.send_requests(term_path, matchpaths, [["note_lock", args[0]]])
+                elif msg[1] == "note_open":
+                    note_params = args[0]
+                    terminal_params["nb_name"] = note_params.get("name", "Untitled")
+                    terminal_params["nb_file"] = note_params.get("file", "Untitled")
+                    terminal_params["nb_form"] = note_params.get("form", "")
+                    if is_super_user and args[2]:
+                        terminal_params["nb_content"] = args[2]
+                elif msg[1] == "note_close":
+                    terminal_params["nb_name"] = ""
+                    terminal_params["nb_file"] = ""
+                    terminal_params["nb_form"] = ""
+                    terminal_params["nb_content"] = ""
+
                 fwd_list.append(msg)
+
             elif  msg[0] == "terminal" and msg[1] == "remote_command":
                 # Send input to matching paths, if created by same user or session, or if super user
                 include_self = msg[2][0]
@@ -1302,11 +1337,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 matchpaths = TerminalConnection.get_matching_paths(checkpath, terminal_params["owner"],
                                                                    terminal_params["state_id"],
                                                                    terminal_params["auth_type"])
-                for matchpath in matchpaths:
-                    if not include_self and matchpath == term_path:
-                        continue
-                    matchhost, matchterm = matchpath.split("/")
-                    TerminalConnection.send_to_connection(matchhost, "request", matchterm, "", [["keypress", remote_command]])
+                TerminalConnection.send_requests(term_path, matchpaths, [["keypress", remote_command]], include_self=include_self)
             elif  msg[0] == "terminal" and msg[1] == "graphterm_output":
                 args = msg[2]
                 params = args[0]
@@ -1322,7 +1353,6 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     action_js = action_params.get("js", "")
                     action_exec = action_params.get("exec", "")
                     action_regexp = re.compile(action_args[0]) if action_args else None
-                    is_super_user = GTSocket.is_super_or_single(terminal_params["owner"], GTSocket._auth_type)
                     content_type = "text/plain" if text_only else "text/html"
                     errmsg = ""
                     content = ""

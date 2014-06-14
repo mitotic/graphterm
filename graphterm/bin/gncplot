@@ -3,6 +3,8 @@
 
 """
 gncplot: 2D visualization of netCDF data
+
+E.g., gncplot --variable=air --lon=0 --time=0 --lev=1000,0 --label --output=cs.png air.mon.ltm.nc
 """
 
 import os
@@ -100,6 +102,9 @@ if dim_varname_list:
 for dname in dim_varname_list:
     form_parser.add_option(dname.lower(), "", help=dim_varnames[dname]+" value[,value]")
 
+form_parser.add_option("title", "", help="Plot title")
+form_parser.add_option("label", False, help="Label contours")
+form_parser.add_option("output", "", short="o", help="Write PNG image to file")
 form_parser.add_option("verbose", False, help="Verbose diagnostic messages")
 
 form_parser.add_option("form", False, help="Force form display", raw=True)
@@ -195,7 +200,7 @@ if nplotdim:
         else:
             Y_coord = ncfile.variables[plot_dims[0]][:]
 
-def show_plot(slice_obj, title, fullscreen=False):
+def show_plot(slice_obj, title, output="", clabel=False, fullscreen=False):
     plot_data = plot_obj[slice_obj]
     if not nplotdim:
         print title, plot_data
@@ -210,16 +215,23 @@ def show_plot(slice_obj, title, fullscreen=False):
     else:
         plt.contourf(X_coord, Y_coord, plot_data, 10)
         plt.colorbar(orientation="horizontal")
+        if options.label:
+            cont = plt.contour(X_coord, Y_coord, plot_data, 10)
+            plt.clabel(cont)
         if X_lim:
             plt.xlim(*X_lim)
         if Y_lim:
             plt.ylim(*Y_lim)
 
     plt.title(title)
-    gm.show(fullscreen=fullscreen, overwrite=fullscreen)
+    gm.show(fullscreen=fullscreen, overwrite=fullscreen, outfile=output)
+
+if options.output:
+    show_plot(slice_obj, options.title or title_prefix, output=options.output, clabel=options.label)
+    sys.exit(0)
 
 if not options.fullscreen or not scroll_var:
-    show_plot(slice_obj, title_prefix, fullscreen=options.fullscreen)
+    show_plot(slice_obj, options.title or title_prefix, clabel=options.label, fullscreen=options.fullscreen)
     sys.exit(0)
 
 Stdin_fd = sys.stdin.fileno()

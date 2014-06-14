@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Convert PDF file to set of PNG image files
+
+if [ $# -lt 1 ]; then
+    echo "Usage: pdf2png pdf_file [dest_dir [convert_args]]"
+    exit 1
+fi
+
+filepath=$1
+shift
+filename=$(basename $filepath .pdf)
+
+dest_prefix=""
+if [ $# -gt 0 ]; then
+    if [ ! -d $1 ]; then
+	echo "Destination directory $1 does not exist"
+	exit 1
+    fi
+    dest_prefix="$1/"
+    shift
+fi
+
+convert_args="-density 150 -quality 85"
+if [ $# -gt 0 ]; then
+    convert_args="$*"
+fi
+
+echo convert $convert_args $filepath "${dest_prefix}${filename}-%02d.png"
+convert $convert_args $filepath "${dest_prefix}${filename}-%02d.png"

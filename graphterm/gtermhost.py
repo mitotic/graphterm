@@ -287,9 +287,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           paste_command <text>
           get_finder <kind> <directory>
           save_data <save_params> <filedata>
-          open_notebook <filepath> <prompts> <content>
+          open_notebook <filepath> <share> <prompts> <content>
           close_notebook <discard>
           save_notebook <filepath> <input_data> <params>
+          note_lock <offset>
           add_cell <new_cell_type> <init_text> <before_cell_index>
           select_cell <cell_index> <move_up> <next_code>
           select_page <move_up> <endpoint> <slide>
@@ -374,9 +375,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         self.paste_command(term_name, paste_text)
 
                 elif action == "open_notebook":
-                    # open_notebook <filepath> <prompts> <content>
+                    # open_notebook <filepath> <share> <prompts> <content>
                     if self.lineterm:
-                        self.lineterm.open_notebook(term_name, cmd[0], cmd[1], cmd[2])
+                        self.lineterm.open_notebook(term_name, cmd[0], cmd[1], cmd[2], cmd[3])
 
                 elif action == "close_notebook":
                     # close_notebook <discard>
@@ -387,6 +388,11 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     # save_notebook <filepath> <input_data> <params>
                     if self.lineterm:
                         self.lineterm.save_notebook(term_name, cmd[0], cmd[1], cmd[2])
+
+                elif action == "note_lock":
+                    # note_lock <offset>
+                    if self.lineterm:
+                        self.lineterm.note_lock(term_name, cmd[0])
 
                 elif action == "add_cell":
                     # add_cell <new_cell_type> <init_text> <before_cell_index>
