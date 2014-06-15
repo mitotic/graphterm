@@ -5,12 +5,13 @@
 This notebook demonstrates the fillable and shareable notebook
 features of GraphTerm. Code lines ending with comment ``## ANSWER``
 will be hidden when this notebook is renamed as
-``name-fill.py.gnb.md`` or ``name-share.py.gnb.md``. The ``-share``
-suffix enables the super user to share the notebook with other users
-for viewing and filling synchronously. The ``-submit`` suffix enables
-asynchronous sharing. If a subdirectory SUBMIT is present in the same
-directory as a shared notebook file, other users can *submit* a filled
-shared notebook to this directory.
+``name-fill.py.gnb.md`` or ``name-share.py.gnb.md`` or
+``name-submit.py.gnb.md``. The ``-share`` suffix enables the super
+user to share the notebook with other users for viewing and filling
+synchronously. The ``-submit`` suffix enables asynchronous sharing. If
+a subdirectory SUBMIT is present in the same directory as a shared
+notebook file, other users can *submit* a filled shared notebook to
+this directory.
 
 Use *Control-Enter* to execute filled code without saving it. This can
 be repeated as needed, until the filled code yields the correct
@@ -38,7 +39,8 @@ regular notebook, append the comment ``## ANSWER`` to code lines that
 need to be hidden, execute the code sequentially and save it with the
 suffix ``-fill`` (or ``-share`` or ``-submit``) appended to the base
 name of the file. This will automatically convert the code output to
-*expected output*.
+*expected output*. (Note: The ``## ANSWER`` suffix may also be used in
+the ``expect`` block of fillable notebook to hide test results.)
 
 ---
 

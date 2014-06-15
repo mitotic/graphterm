@@ -84,7 +84,8 @@ DEFAULT_FILE_PREFIX = "Untitled"
 DEFAULT_FILENUM_RE = re.compile("^(\d+)")
 
 ANSWER_SUFFIX = "## ANSWER"
-FILL_PREFIX = "##... (fill in code here)"
+ANSWER_FILL = "##... (fill in code here)"
+ANSWER_TEST = "*... (hidden test results)*"
 HIDDEN_STR = "##Hidden"
 
 MARKUP_TYPES = set(["markdown"])
@@ -183,6 +184,10 @@ def make_lterm_cookie():
 # Meta info indices
 JCURDIR = 0
 JCONTINUATION = 1
+
+def normalize_lines(lines):
+    """Return only non-blank lines, with multiple spaces replaced by a single space"""
+    return [" ".join(line.strip().split()) for line in lines if line.strip()]
 
 def split_lines(text, chomp=False):
     lines = text.replace("\r\n","\n").replace("\r","\n").split("\n")
@@ -1119,20 +1124,34 @@ class Terminal(object):
         note_tail = ext + note_tail
 
         note_form = ""
-        sfx = "ed"
+        new_prefix = prefix
         if prefix.endswith("-fill"):
             note_form = "fill"
+            new_prefix = "filled"
         if prefix.endswith("-share"):
             note_form = "share"
-            sfx = "d"
+            new_prefix = "shared"
+        if prefix.endswith("-shared"):
+            note_form = "shared"
         if prefix.endswith("-submit"):
             note_form = "submit"
-            sfx = "ted"
-        if prefix.endswith("-lock"):
-            note_form = "lock"
+            new_prefix = "submitting"
+        if prefix.endswith("-submitting"):
+            note_form = "submitting"
+
         if note_form:
-            new_prefix = prefix+sfx
             filepath = os.path.join(os.path.dirname(filepath), new_prefix+note_tail)
+
+        if "share" in params:
+            share_opt = params["share"]
+        else:
+            share_opt = "share" if note_form in ("share", "submit") else ""
+
+        if "submit" in params:
+            submit_opt = params["submit"]
+        else:
+            submit_dir = os.path.join(os.path.dirname(filepath), "SUBMIT")
+            submit_opt = os.path.abspath(submit_dir) if os.path.isdir(submit_dir) else ""
 
         status_msg = []
         fullname = os.path.expanduser(filepath)
@@ -1150,18 +1169,18 @@ class Terminal(object):
         self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
                             "lang": note_lang, "shell": note_shell, "form": note_form,
                             "lock_offset": params.get("lock_offset", 0), "mod_offset": self.note_mod_offset,
-                            "submit": params.get("submit", ""), "terminal": params.get("terminal", ""), "autosave": writable}
+                            "submit": submit_opt, "terminal": params.get("terminal", ""), "autosave": writable}
 
         self.note_hide_offset = self.note_params["lock_offset"]
-        self.note_share = content if params.get("share") and content else ""
-        if self.note_params["form"] == "fill":
-            status_msg.append("Opening fillable notebook")
-        elif self.note_params["form"] in ("share", "submit"):
+        self.note_share = content if share_opt and content else ""
+        if share_opt:
             status_msg.append("Sharing notebook content with others as /%s/%s" % (self.host, self.term_name))
             if self.note_params["submit"]:
                 status_msg.append("Notebooks can be submitted to directory "+self.note_params["submit"])
-        elif self.note_params["form"] == "lock":
-            status_msg.append("Opening fillable locked notebook from /"+self.note_params["terminal"])
+        elif self.note_params["form"] == "fill":
+            status_msg.append("Opening fillable notebook")
+        elif self.note_params["form"] == "shared":
+            status_msg.append("Opening fillable shared notebook from /"+self.note_params["terminal"])
             if self.note_params["submit"]:
                 status_msg.append("Notebook submission enabled")
 
@@ -1536,7 +1555,9 @@ class Terminal(object):
         code_cell = None
         code_lines = None
         raw_lines = []
+        expect_lines = []
         leaving_block = None
+        prev_cell = None
         blob_ids = {}
         try:
             state = None
@@ -1553,7 +1574,7 @@ class Terminal(object):
                         if state in ("output", "expect"):
                             if raw_lines and leaving_block != state:
                                 # Add raw cell (only if not continuation of previous block)
-                                self.add_cell("markdown", init_text="\n".join(raw_lines))
+                                prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
                                 raw_lines = []
                             if state == "output":
                                 if code_cell:
@@ -1573,7 +1594,7 @@ class Terminal(object):
                             code_lines = []
                             if raw_lines:
                                 # Add raw cell
-                                self.add_cell("markdown", init_text="\n".join(raw_lines))
+                                prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
                                 raw_lines = []
                         leaving_block = None
                     else:
@@ -1585,10 +1606,13 @@ class Terminal(object):
                                 raw_lines += [""]
                         elif state == "expect":
                             raw_lines += [""]
+                            if prev_cell and prev_cell["cellType"] not in MARKUP_TYPES:
+                                prev_cell["cellExpectOutput"] += expect_lines
+                            expect_lines = []
                         else:
                             # Leaving code block
                             self.update()
-                            self.add_cell(state, init_text="\n".join(code_lines))
+                            prev_cell = self.add_cell(state, init_text="\n".join(code_lines))
                             code_lines = None
                             code_cell = self.note_cells["cells"][self.note_cells["curIndex"]]
                         state = None
@@ -1604,6 +1628,7 @@ class Terminal(object):
                     elif state == "expect":
                         # Within expect block
                         raw_lines += ["    "+line]
+                        expect_lines += [line[:-len(ANSWER_SUFFIX)] if line.endswith(ANSWER_SUFFIX) else line]
                     else:
                         # Within code block
                         code_lines.append(line)
@@ -1630,7 +1655,7 @@ class Terminal(object):
                             code_cell = None
                         if raw_lines and leaving_block is not None and leaving_block != fig_prefix:
                             # Add raw cell (figure does not belong to continuation of previous block)
-                            self.add_cell("markdown", init_text="\n".join(raw_lines))
+                            prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
                             raw_lines = []
                         # Append image
                         raw_lines.append("![%s](%s)" % (alt, blob_url))
@@ -1657,7 +1682,7 @@ class Terminal(object):
                     # Non-blank line outside fenced block
                     if raw_lines and leaving_block is not None:
                         # Add raw cell (not continuation)
-                        self.add_cell("markdown", init_text="\n".join(raw_lines))
+                        prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
                         raw_lines = []
                     leaving_block = None
 
@@ -1670,8 +1695,8 @@ class Terminal(object):
                         # Page break
                         if raw_lines:
                             # Split raw block
-                            self.add_cell("markdown", init_text="\n".join(raw_lines))
-                        self.add_cell("markdown", init_text=gterm.PAGE_BREAK)
+                            prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
+                        prev_cell = self.add_cell("markdown", init_text=gterm.PAGE_BREAK)
                         raw_lines = []
                     else:
                         # Append non-blank line to markdown block
@@ -1682,7 +1707,7 @@ class Terminal(object):
                 if code_cell:
                     self.update()
                     code_cell = None
-                self.add_cell("markdown", init_text="\n".join(raw_lines))
+                prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
                 raw_lines = []
         except Exception, excp:
             logging.warning("read_md: %s", excp)
@@ -1719,7 +1744,7 @@ class Terminal(object):
         cell_index = self.note_cells["maxIndex"]
         cell_params = {"executed": False, "filled": False, "hidden": False}
         new_cell = {"cellIndex": cell_index, "cellType": new_cell_type, "cellFile": filename,
-                    "cellInput": [], "cellFillInput": [], "cellOutput": [],
+                    "cellInput": [], "cellFillInput": [], "cellOutput": [], "cellExpectOutput": [],
                     "cellTypeExtra": new_cell_extra, "cellParams": cell_params}
         new_cell["cellInput"] = split_lines(init_text) if init_text else []
         self.note_cells["cells"][cell_index] = new_cell
@@ -2008,8 +2033,8 @@ class Terminal(object):
         self.note_update_time = time.time()
         if save:
             # Update cell input
-            if self.note_params["form"] == "lock" and not form_advance:
-                # Ignore save updates for locked forms, unless triggered
+            if self.note_params["form"] == "shared" and not form_advance:
+                # Ignore save updates for shared forms, unless triggered
                 return
             self.update_mod_offset()
             if not self.note_params["form"]:
@@ -2028,11 +2053,14 @@ class Terminal(object):
                     if not cell["cellParams"]["filled"]:
                         cell["cellParams"]["filled"] = True
 
+                prev_cell = None
+                next_cell = None
                 if cur_loc:
                     prev_index = self.note_cells["cellIndices"][cur_loc-1]
                     prev_cell = self.note_cells["cells"][prev_index] if not self.is_page_break(prev_index) else None
-                else:
-                    prev_cell = None
+                if cur_loc < len(self.note_cells["cellIndices"])-1:
+                    next_index = self.note_cells["cellIndices"][cur_loc+1]
+                    next_cell = self.note_cells["cells"][next_index]
 
                 if prev_cell and prev_cell["cellType"] in MARKUP_TYPES:
                     # Previous non-page-break markup cell found
@@ -2043,6 +2071,7 @@ class Terminal(object):
                         self.scroll_screen(self.active_rows)
                         scroll_lines = strip_prompt_lines(self.note_screen_buf.scroll_lines, self.note_prompts)
 
+                        expect_lines = []
                         for scroll_line in scroll_lines:
                             opts = scroll_line[JPARAMS][JOPTS]
                             blob_id = opts.get("blob")
@@ -2052,6 +2081,10 @@ class Terminal(object):
                                     prev_cell["cellInput"].append( "![%s](%s)" % ("image", blob_url) )
                             else:
                                 prev_cell["cellInput"].append("    "+scroll_line[JLINE])
+                                expect_lines.append(scroll_line[JLINE])
+
+                        if cur_cell["cellExpectOutput"] and normalize_lines(cur_cell["cellExpectOutput"]) == normalize_lines(expect_lines):
+                            prev_cell["cellInput"] += ["", "**---YOUR OUTPUT MATCHES ANSWER TEXT---**", ""]
 
                     prev_cell["cellInput"] += ["", "*Expected Input:*", ""]
 
@@ -2061,6 +2094,10 @@ class Terminal(object):
                 else:
                     # Do not fill current cell
                     cur_cell["cellInput"] = self.filled_cell_input(cell_lines)
+
+                if next_cell and next_cell["cellType"] in MARKUP_TYPES:
+                    next_cell["cellParams"]["filled"] = True
+                    self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input(next_index)), next_index, True])
 
                 self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input()), cur_index, True])
                 cur_cell["cellFillInput"] = []
@@ -2160,7 +2197,7 @@ class Terminal(object):
         while k < len(new_input):
             if j >= len(old_lines) or old_lines[j] == new_input[k]:
                 # Old and new lines match; keep displaying (unmodified) lines
-                if new_input[k].strip() != FILL_PREFIX:
+                if new_input[k].strip() != ANSWER_FILL:
                     out_lines.append(new_input[k])
                 j += 1
                 k += 1
@@ -2184,7 +2221,7 @@ class Terminal(object):
             while k < len(new_input):
                 if j < len(old_lines) and old_lines[j] == new_input[k]:
                     break
-                if new_input[k].strip() != FILL_PREFIX:
+                if new_input[k].strip() != ANSWER_FILL:
                     out_lines.append(new_input[k])
                 k += 1
 
@@ -2195,8 +2232,9 @@ class Terminal(object):
         if not cell_index:
             cell_index = self.note_cells["curIndex"]
         cell = self.note_cells["cells"][cell_index]
+        markup_cell = (cell["cellType"] in MARKUP_TYPES)
         if cell["cellParams"]["hidden"]:
-            if cell["cellType"] in MARKUP_TYPES:
+            if markup_cell:
                 cur_loc = self.note_cells["cellIndices"].index(cell_index)
                 page_start = not cur_loc or self.is_page_break(self.note_cells["cellIndices"][cur_loc-1])
                 if page_start and cell["cellInput"] and cell["cellInput"][0].startswith("#"):
@@ -2206,18 +2244,21 @@ class Terminal(object):
             else:
                 return [HIDDEN_STR]
 
-        if not self.note_params["form"] or cell["cellType"] in MARKUP_TYPES or cell["cellParams"]["filled"]:
+        if not self.note_params["form"] or cell["cellParams"]["filled"]:
             return cell["cellInput"][:]
-        answer_block = False
+        hidden_block = False
         out_lines = []
         for line in cell["cellInput"]:
-            if not line.endswith(ANSWER_SUFFIX):
-                answer_block = False
+            if line.endswith(ANSWER_SUFFIX):
+                if not hidden_block:
+                    hidden_block = True
+                    fill_str = ANSWER_TEST if markup_cell else ANSWER_FILL
+                    out_lines.append(fill_str) # Only for first line of hidden block         
+                    out_lines.append("")
+            else:
+                hidden_block = False
                 out_lines.append(line)
-            elif not answer_block:
-                answer_block = True
-                out_lines.append(FILL_PREFIX) # Only for first line of answer block         
-                out_lines.append("")
+
         return out_lines
 
     def erase_output(self, all_cells):

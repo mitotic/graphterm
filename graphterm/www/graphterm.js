@@ -1521,7 +1521,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			var nb_params = cmd_arg[0];
 			gNotebook = new GTNotebook(nb_params);
 			$("#terminal").addClass("gterm-notebook");
-			if (nb_params.form && nb_params.form == "lock" && nb_params.submit)
+			if (nb_params.submit && nb_params.form && (nb_params.form == "shared" || nb_params.form == "submitting") )
 			    $("#terminal").addClass("gterm-notebook-submit");
 			if (cmd_arg[1])
 			    alert(cmd_arg[1]);
@@ -4284,7 +4284,7 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	if (window.confirm("Submit notebook?")) {
 	    this.saveNotebook("", {submit: "submit"}); 
 	}
-    } else if (command == "run" || command == "runbutton") {
+    } else if (command == "run" || (!this.note_params.form && command == "runbutton")) {
 	var createNew = (command == "run" && !this.note_params.form);
 	if (cellParams.cellType in MARKUP_TYPES) {
 	    this.renderCell(false, false);
@@ -4295,10 +4295,10 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else {
 	    if (!this.note_params.form ||
-		(this.note_params.form != "lock" && window.confirm("Do you wish to display correct answer?")) )
+		(this.note_params.form != "shared" && window.confirm("Do you wish to display correct answer?")) )
 		this.update_text(true, true, createNew);
 	}
-    } else if (command == "execute") {
+    } else if (command == "execute"|| (this.note_params.form && command == "runbutton")) {
 	if (cellParams.cellType in MARKUP_TYPES) {
 	    this.update_text(false, false);
 	    this.renderCell(true, false);

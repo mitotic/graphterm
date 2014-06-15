@@ -1185,10 +1185,7 @@ def process_args(args=None):
             else:
                 content = None
             # Switch to notebook mode (after prompt is displayed)
-            share = "share" if ("-share." in filepath or "-submit." in filepath) else ""
-            submit_dir = os.path.join(os.path.dirname(filepath), "SUBMIT")
-            submit = os.path.abspath(submit_dir) if os.path.isdir(submit_dir) else ""
-            open_notebook(filepath, params={"share": share, "submit": submit}, content=content)
+            open_notebook(filepath, params={}, content=content)
             return True
     return False
 

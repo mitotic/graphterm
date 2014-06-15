@@ -1081,9 +1081,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         tempath = msg[1][1:]
                         tparams = self.get_terminal_params(tempath)
                         if tparams and tparams["nb_content"]:
-                            msg[1] = tparams["nb_file"].replace("-shared.", "-lock.").replace("-submitted.", "-submit.")
+                            msg[1] = tparams["nb_file"]
                             msg[2] = []
-                            msg[3] = {"share": False, "submit": tparams["nb_submit"],
+                            msg[3] = {"share": "", "submit": tparams["nb_submit"],
                                       "terminal": tempath, "lock_offset": tparams["nb_mod_offset"]}
                             msg[4] = tparams["nb_content"]
 
@@ -1316,7 +1316,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         matchpaths = TerminalConnection.get_matching_paths(wildcard2re("*"), terminal_params["owner"],
                                                                            terminal_params["state_id"],
                                                                            terminal_params["auth_type"],
-                                                                           nb_name=terminal_params["nb_name"].replace("-share.", "-lock."))
+                                                                           nb_name=terminal_params["nb_name"].replace("-share.", "-shared."))
                         TerminalConnection.send_requests(term_path, matchpaths, [["note_lock", args[0]]])
                 elif msg[1] == "note_open":
                     note_params = args[0]
@@ -1344,7 +1344,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 user = terminal_params["owner"]
                 tparams = GTSocket.get_terminal_params(tpath)
                 if tparams and tparams["nb_submit"]:
-                    fpath = os.path.join(tparams["nb_submit"], user+"_"+os.path.basename(tparams["nb_file"]).replace("-shared.", "-submitted."))
+                    fpath = os.path.join(tparams["nb_submit"], user+"_"+os.path.basename(tparams["nb_file"]))
                     thost, tname = tpath.split("/")
                     TerminalConnection.send_to_connection(thost, "request", tname, "", [["submit_notebook", term_path, fpath, filedata]])
 
