@@ -52,6 +52,7 @@ var DEBUG_LOG = function (str) {console.log(str)};
 var OSH_ECHO = true;
 
 var ELLIPSIS = "...";
+var HIDDEN_STR = "##Hidden";
 
 var gRowHeight = 16;
 var gColWidth  = 8;
@@ -1517,8 +1518,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 
 		} else if (cmd_type == "note_open") {
 		    if (!gNotebook) {
-			gNotebook = new GTNotebook(cmd_arg[0]);
+			var nb_params = cmd_arg[0];
+			gNotebook = new GTNotebook(nb_params);
 			$("#terminal").addClass("gterm-notebook");
+			if (nb_params.form && nb_params.form == "lock" && nb_params.submit)
+			    $("#terminal").addClass("gterm-notebook-submit");
 			if (cmd_arg[1])
 			    alert(cmd_arg[1]);
 		    }
@@ -4072,7 +4076,7 @@ function GTActivateNotebook(filepath, prompts) {
     }
     if (gWebSocket && gParams.controller) {
 	var share = filepath.indexOf('-share.') > -1;
-	gWebSocket.write([["open_notebook", filepath, share, prompts || [], null]]);
+	gWebSocket.write([["open_notebook", filepath, prompts || [], {share: share}, null]]);
     }
 }
 
@@ -4144,6 +4148,7 @@ GTNotebook.prototype.close = function() {
 
     gNotebook = null;
     $("#terminal").removeClass("gterm-notebook");
+    $("#terminal").removeClass("gterm-notebook-submit");
     $("#terminal").removeClass("gterm-noteslides");
     if (gWebSocket && gParams.controller)
 	gWebSocket.term_input("\n");
@@ -4275,6 +4280,10 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	if (filepath) {
 	    this.saveNotebook(filepath, {popstatus: "alert"}); 
 	}
+    } else if (command == "submit") {
+	if (window.confirm("Submit notebook?")) {
+	    this.saveNotebook("", {submit: "submit"}); 
+	}
     } else if (command == "run" || command == "runbutton") {
 	var createNew = command == "run";
 	if (cellParams.cellType in MARKUP_TYPES) {
@@ -4285,7 +4294,8 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    else
 		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else {
-	    this.update_text(true, true, createNew);
+	    if (!this.note_params.form || window.confirm("Do you wish to display correct answer?"))
+		this.update_text(true, true, createNew);
 	}
     } else if (command == "execute") {
 	if (cellParams.cellType in MARKUP_TYPES) {
@@ -4354,6 +4364,7 @@ GTNotebook.prototype.getCellId = function(cellIndex) {
 GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, inputData) {
     var cellId = this.getCellId(cellIndex);
     var cellParams = { cellType: cellType, cellIndex: cellIndex, cellId: cellId };
+    var hidden = (inputData == HIDDEN_STR);
     this.cellParams[cellIndex] = cellParams;
     var cellHtml = '<div id="'+cellId+'" class="gterm-notecell-container"><textarea id="'+cellId+'-textarea" class="gterm-notecell-input gterm-notecell-text" spellcheck="false"></textarea><div class="gterm-notecell-busy">Running...</div><div id="'+cellId+'-output" class="gterm-notecell-output"></div><div id="'+cellId+'-screen" class="gterm-notecell-screen"></div></div>';
     var newElem;
@@ -4362,6 +4373,7 @@ GTNotebook.prototype.addCell = function(cellIndex, cellType, beforeCellIndex, in
     } else {
 	newElem = $(cellHtml).insertBefore("#"+this.getCellId(beforeCellIndex));
     }
+    newElem.toggleClass("gterm-notecell-hidden", hidden);
     if (this.slide_mode)
 	newElem.addClass("gterm-noteslides-show");
     this.curIndex = cellIndex;
@@ -4498,6 +4510,9 @@ GTNotebook.prototype.cellValue = function(inputData, cellIndex, render) {
     cellIndex = cellIndex || this.curIndex;
     if (cellIndex == this.curIndex)
 	this.lastTextValue = inputData;
+    var hidden = (inputData == HIDDEN_STR);
+    var cellElem = $("#"+this.getCellId(cellIndex));
+    cellElem.toggleClass("gterm-notecell-hidden", hidden);
     var textElem = $("#"+this.getCellId(cellIndex)+"-textarea");
     textElem.val(inputData);
     if (render)

@@ -553,7 +553,7 @@ def edit_file(filename="", dir="", content=None, create=False, editor="ace", std
             else:
                 print >> sys.stderr, "Error in saving file: No file path"
 
-def open_notebook(filename="", dir="", content=None, command_path="", share="", prompts=[], stderr=False):
+def open_notebook(filename="", dir="", content=None, command_path="", prompts=[], params={}, stderr=False):
     """Open notebook"""
     filepath = ""
     if filename:
@@ -573,7 +573,7 @@ def open_notebook(filename="", dir="", content=None, command_path="", share="", 
             prompts = PROMPTS_LIST[command][:]
 
     headers = {"x_gterm_response": "open_notebook",
-    "x_gterm_parameters": {"filepath": filepath, "share": share, "prompts": prompts, "current_directory": dir}
+    "x_gterm_parameters": {"filepath": filepath, "prompts": prompts, "nb_params": params, "current_directory": dir}
                }
 
     wrap_encoded_file_or_data(filepath, content=content, headers=headers, stderr=stderr)
@@ -1186,7 +1186,9 @@ def process_args(args=None):
                 content = None
             # Switch to notebook mode (after prompt is displayed)
             share = "share" if "-share." in filepath else ""
-            open_notebook(filepath, share=share, content=content)
+            submit_dir = os.path.join(os.path.dirname(filepath), "SUBMIT")
+            submit = os.path.abspath(submit_dir) if os.path.isdir(submit_dir) else ""
+            open_notebook(filepath, params={"share": share, "submit": submit}, content=content)
             return True
     return False
 

@@ -63,7 +63,7 @@ gexample <- function() {
 gnotebook <- function(filepath="") {
   gwrite(paste('{"x_gterm_response": "open_notebook",',
                '"x_gterm_parameters": {"filepath": "', filepath, '",',
-               '"prompts": [], "current_directory": "', Sys.getenv("PWD"),'"} }\n\n', sep=""))
+               '"prompts": [], "nb_params": {}, "current_directory": "', Sys.getenv("PWD"),'"} }\n\n', sep=""))
 }
 
 gwrite <- function(data) {

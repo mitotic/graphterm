@@ -260,6 +260,7 @@ hr {
  #terminal:not(.gterm-locked) .sf-menu .gterm-only-locked,
  #terminal.gterm-notebook .sf-menu .gterm-non-notebook,
  #terminal:not(.gterm-notebook) .sf-menu .gterm-only-notebook,
+ #terminal:not(.gterm-notebook-submit) .sf-menu .gterm-only-notebook-submit,
  #terminal.gterm-embed .sf-menu .gterm-non-embed,
  #terminal:not(.gterm-embed) .sf-menu .gterm-only-embed,
  body:not(.touchscreen) .sf-menu .gterm-only-touch,
@@ -641,6 +642,10 @@ textarea.gterm-notecell-markup {
 div.gterm-notecell-output.gterm-notecell-markdown,
  div.gterm-cell-input.gterm-notecell-markdown {
     font-family: helvetica, arial, sans-serif;
+}
+
+#terminal .gterm-notecell-hidden {
+    display: none;
 }
 
 #terminal.gterm-noteslides.gterm-menubar-hide .gterm-header,

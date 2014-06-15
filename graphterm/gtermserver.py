@@ -744,7 +744,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 terminal_params = {"share_locked": self._auth_type > self.SINGLE_AUTH,
                                    "share_private": start_private, "share_tandem": False,
                                    "alert_status": False, "widget_token": "", "last_active": time.time(),
-                                   "nb_name": "", "nb_file": "", "nb_mod_offset": 0, "nb_form": "", "nb_content": "",
+                                   "nb_name": "", "nb_file": "", "nb_mod_offset": 0,
+                                   "nb_form": "", "nb_submit": "", "nb_content": "",
                                    "owner": term_owner, "state_id": self.authorized["state_id"], "auth_type": self.authorized["auth_type"]}
                 terminal_params.update(Term_settings)
                 self._terminal_params[path] = terminal_params
@@ -908,7 +909,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 ws.close()
 
     def on_message(self, message):
-        ##logging.warning("GTSocket.on_message: %s", message)
+        ##logging.error("GTSocket.on_message: %s - %s", self.remote_path, message)
         if not self.remote_path:
             return
 
@@ -1077,9 +1078,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 elif not kill_term:
                     if msg[0] == "open_notebook" and msg[1].startswith("/") and msg[1].count("/") == 2:
-                        tparams = self.get_terminal_params(msg[1][1:])
+                        tempath = msg[1][1:]
+                        tparams = self.get_terminal_params(tempath)
                         if tparams and tparams["nb_content"]:
                             msg[1] = tparams["nb_file"].replace("-shared.", "-lock.")
+                            msg[2] = []
+                            msg[3] = {"share": False, "submit": tparams["nb_submit"],
+                                      "terminal": tempath, "lock_offset": tparams["nb_mod_offset"]}
                             msg[4] = tparams["nb_content"]
 
                     req_list.append(msg)
@@ -1318,15 +1323,38 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     terminal_params["nb_name"] = note_params.get("name", "Untitled")
                     terminal_params["nb_file"] = note_params.get("file", "Untitled")
                     terminal_params["nb_form"] = note_params.get("form", "")
+                    terminal_params["nb_submit"] = note_params.get("submit", "")
                     if is_super_user and args[2]:
                         terminal_params["nb_content"] = args[2]
+                    args[2] = ""  # Do not transmit notebook content to browser
                 elif msg[1] == "note_close":
                     terminal_params["nb_name"] = ""
                     terminal_params["nb_file"] = ""
                     terminal_params["nb_form"] = ""
+                    terminal_params["nb_submit"] = ""
                     terminal_params["nb_content"] = ""
 
                 fwd_list.append(msg)
+
+            elif  msg[0] == "terminal" and msg[1] == "note_submit":
+                tpath = msg[2][0]
+                filedata = msg[2][1]
+                user = terminal_params["owner"]
+                tparams = GTSocket.get_terminal_params(tpath)
+                if tparams and tparams["nb_submit"]:
+                    fpath = os.path.join(tparams["nb_submit"], user+"_"+os.path.basename(tparams["nb_file"]).replace("-shared.", "-submitted."))
+                    thost, tname = tpath.split("/")
+                    TerminalConnection.send_to_connection(thost, "request", tname, "", [["submit_notebook", term_path, fpath, filedata]])
+
+            elif  msg[0] == "terminal" and msg[1] == "remote_alert":
+                if GTSocket.is_super_or_single(terminal_params["owner"], terminal_params["auth_type"]):
+                    remote_path = msg[2][0]
+                    msg = msg[2][1]
+                    js_msg = ["terminal", "alert", [ msg ]]
+                    for ws_id in GTSocket.get_terminal_control_set(remote_path):
+                        ws = GTSocket.get_websocket(ws_id)
+                        if ws:
+                            ws.write_json([js_msg])
 
             elif  msg[0] == "terminal" and msg[1] == "remote_command":
                 # Send input to matching paths, if created by same user or session, or if super user

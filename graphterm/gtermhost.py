@@ -290,6 +290,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           open_notebook <filepath> <share> <prompts> <content>
           close_notebook <discard>
           save_notebook <filepath> <input_data> <params>
+          submit_notebook <source_terminal> <filepath> <file_data>
           note_lock <offset>
           add_cell <new_cell_type> <init_text> <before_cell_index>
           select_cell <cell_index> <move_up> <next_code>
@@ -388,6 +389,18 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     # save_notebook <filepath> <input_data> <params>
                     if self.lineterm:
                         self.lineterm.save_notebook(term_name, cmd[0], cmd[1], cmd[2])
+
+                elif action == "submit_notebook":
+                    # submit_notebook <source_terminal> <filepath> <filedata>
+                    try:
+                        with open(cmd[1], "w") as f:
+                            f.write(cmd[2])
+                        status_msg = "Submitted notebook %s" % cmd[1]
+                    except Exception, excp:
+                        status_msg = "Error in submitting notebook %s: %s" % (cmd[1], excp)
+                        logging.error("TerminalClient.remote_request: %s", status_msg)
+
+                    self.remote_response(term_name, "", [["terminal", "remote_alert", [cmd[0], status_msg] ]])
 
                 elif action == "note_lock":
                     # note_lock <offset>
