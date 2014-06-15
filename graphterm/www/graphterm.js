@@ -4285,7 +4285,7 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    this.saveNotebook("", {submit: "submit"}); 
 	}
     } else if (command == "run" || command == "runbutton") {
-	var createNew = command == "run";
+	var createNew = (command == "run" && !this.note_params.form);
 	if (cellParams.cellType in MARKUP_TYPES) {
 	    this.renderCell(false, false);
 	    this.update_text(false, false, createNew);
@@ -4294,7 +4294,8 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    else
 		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else {
-	    if (!this.note_params.form || window.confirm("Do you wish to display correct answer?"))
+	    if (!this.note_params.form ||
+		(this.note_params.form != "lock" && window.confirm("Do you wish to display correct answer?")) )
 		this.update_text(true, true, createNew);
 	}
     } else if (command == "execute") {

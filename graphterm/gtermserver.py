@@ -1081,7 +1081,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         tempath = msg[1][1:]
                         tparams = self.get_terminal_params(tempath)
                         if tparams and tparams["nb_content"]:
-                            msg[1] = tparams["nb_file"].replace("-shared.", "-lock.")
+                            msg[1] = tparams["nb_file"].replace("-shared.", "-lock.").replace("-submitted.", "-submit.")
                             msg[2] = []
                             msg[3] = {"share": False, "submit": tparams["nb_submit"],
                                       "terminal": tempath, "lock_offset": tparams["nb_mod_offset"]}
@@ -1320,6 +1320,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         TerminalConnection.send_requests(term_path, matchpaths, [["note_lock", args[0]]])
                 elif msg[1] == "note_open":
                     note_params = args[0]
+                    terminal_params["nb_mod_offset"] = 0
                     terminal_params["nb_name"] = note_params.get("name", "Untitled")
                     terminal_params["nb_file"] = note_params.get("file", "Untitled")
                     terminal_params["nb_form"] = note_params.get("form", "")
@@ -1328,6 +1329,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         terminal_params["nb_content"] = args[2]
                     args[2] = ""  # Do not transmit notebook content to browser
                 elif msg[1] == "note_close":
+                    terminal_params["nb_mod_offset"] = 0
                     terminal_params["nb_name"] = ""
                     terminal_params["nb_file"] = ""
                     terminal_params["nb_form"] = ""
