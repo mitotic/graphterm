@@ -204,6 +204,8 @@ on a cloud server</li>
 browser, both in class and from home</li>
 <li>Students can collaborate by accessing each others terminals and
 using a rudimentary <em>chat</em> feature</li>
+<li><a class="reference internal" href="progressive.html"><em>Progressively fillable notebooks</em></a> can be used to provide scaffolding
+for teaching students to write complex programs</li>
 <li>The instructor can monitor students&#8217; work while it is in progress and comment on it using <em>chat</em></li>
 </ul>
 <p>A companion section provides information on <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> after
@@ -215,8 +217,12 @@ used if there is sensitive information on the server that should be
 protected from users.</em></p>
 <div class="section" id="quick-setup">
 <h2><a class="toc-backref" href="#id2">Quick setup</a><a class="headerlink" href="#quick-setup" title="Permalink to this headline">¶</a></h2>
-<p>The following steps allow you to quickly launch a &#8220;virtual computer lab&#8221;
-with multi-user support.</p>
+<p>The following steps allow you to quickly launch a &#8220;virtual computer
+lab&#8221; with multi-user support. GraphTerm supports multi-user logins
+using digest authentication with shared secrets, or using your Google
+sign-on. This avoids the need for storing passwords or other sensitive
+information on the server, thus reducing the security concerns
+associated with a publicly accessible server.</p>
 <div class="section" id="case-1-mac-or-linux-server-with-user-accounts-already-created">
 <h3><a class="toc-backref" href="#id3">Case 1: Mac or Linux server with user accounts already created</a><a class="headerlink" href="#case-1-mac-or-linux-server-with-user-accounts-already-created" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -227,35 +233,36 @@ with multi-user support.</p>
 an Anaconda or Enthought Python environment, for example.</p>
 </li>
 <li><p class="first">Say all the user home directories begin with <tt class="docutils literal"><span class="pre">/Users...</span></tt>, then
-run the following command to start the GraphTerm server with root
-privileges:</p>
+run the following command to start the GraphTerm server as the
+<tt class="docutils literal"><span class="pre">root</span></tt> user:</p>
 </li>
 </ol>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gtermserver</span> <span class="pre">--daemon=start</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--user_setup=manual</span> <span class="pre">--users_dir=/Users</span> <span class="pre">--logging</span> <span class="pre">--port=80</span> <span class="pre">--host=server_domain_name_or_ip</span></tt></p>
-<p>To stop the server, use <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gtermserver</span> <span class="pre">--daemon=stop</span></tt>.  You
+<div><p><tt class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">--daemon=start</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--user_setup=manual</span> <span class="pre">--users_dir=/Users</span> <span class="pre">--logging</span> <span class="pre">--port=80</span> <span class="pre">--host=server_domain_name_or_ip</span></tt></p>
+<p>To stop the server, use <tt class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">--daemon=stop</span></tt>. You
 can also omit the <tt class="docutils literal"><span class="pre">--daemon</span></tt> option, to run the server in the
 foreground for testing. To install GraphTerm as a service, you can
 copy the script <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/graphtermd</span></tt> to <tt class="docutils literal"><span class="pre">/etc/init.d</span></tt>
 and edit it to modify the command line options. If you want automatic
 new user creation, you can use the <tt class="docutils literal"><span class="pre">--user_setup=auto</span></tt> option,
-but you may need to modify the shell script
+but you may need to modify the user configuration shell script
 <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm_user_setup</span></tt>, which has only been tested
-with Ubuntu Linux.</p>
+with Ubuntu Linux. You can use the <tt class="docutils literal"><span class="pre">--auth_type=login</span></tt>
+option for a more traditional login authentication, but it
+requires the use of <tt class="docutils literal"><span class="pre">--https</span></tt> or <tt class="docutils literal"><span class="pre">--host=localhost</span></tt> for security.
+[If using login authentication, the remaining steps can be skipped.]</p>
 </div></blockquote>
-<ol class="arabic simple" start="3">
-<li>Run the following command as root user to display the <em>master access code</em>:</li>
-</ol>
-<blockquote>
-<div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
+<ol class="arabic" start="3">
+<li><p class="first">Run the following command as root user to display the <em>master access code</em>:</p>
+<p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)
 If the domain name is <tt class="docutils literal"><span class="pre">localhost</span></tt>, the filename would simply be <tt class="docutils literal"><span class="pre">_gterm_auth.txt</span></tt>.
 For automatic new user creation, the group code is in <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
-</div></blockquote>
-<ol class="arabic simple" start="4">
-<li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphterm
+</li>
+<li><p class="first">Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphterm
 window on the server, with the super user name (<tt class="docutils literal"><span class="pre">root</span></tt> in our
-case) and the <em>master access code</em></li>
+case) and the <em>master access code</em></p>
+</li>
 </ol>
 </div></blockquote>
 <div class="figure align-center" style="width: 85%">
@@ -318,7 +325,7 @@ Then run the command again, enter a tagname (e.g., <tt class="docutils literal">
 choose <tt class="docutils literal"><span class="pre">auth_type</span></tt> as <tt class="docutils literal"><span class="pre">multiuser</span></tt>, and select the <tt class="docutils literal"><span class="pre">pylab</span></tt>
 and <tt class="docutils literal"><span class="pre">netcdf</span></tt> options. When you press the <em>submit</em> button, the
 generated command line should look something like this:</p>
-<p><tt class="docutils literal"><span class="pre">ec2launch</span> <span class="pre">-f</span> <span class="pre">--type=m3.medium</span> <span class="pre">--key_name=ec2key</span> <span class="pre">--ami=ami-2f8f9246</span> <span class="pre">--gmail_addr=user&#64;gmail.com</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--pylab</span> <span class="pre">--netcdf</span> <span class="pre">testlab</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">ec2launch</span> <span class="pre">--type=m3.medium</span> <span class="pre">--key_name=ec2key</span> <span class="pre">--ami=ami-2f8f9246</span> <span class="pre">--gmail_addr=user&#64;gmail.com</span> <span class="pre">--auth_type=multiuser</span> <span class="pre">--pylab</span> <span class="pre">--netcdf</span> <span class="pre">testlab</span></tt></p>
 </li>
 </ol>
 </div></blockquote>
@@ -456,7 +463,8 @@ with the server IP address. You can also specify whether to install
 additional packages, like <tt class="docutils literal"><span class="pre">pylab</span></tt> for plotting or <tt class="docutils literal"><span class="pre">R</span></tt> for
 statistical analysis.</p>
 <p>An important configuration choice is the authentication type
-(<tt class="docutils literal"><span class="pre">auth_type</span></tt>), which may be one of <tt class="docutils literal"><span class="pre">singleuser</span></tt>, <tt class="docutils literal"><span class="pre">none</span></tt>, <tt class="docutils literal"><span class="pre">name</span></tt>, or <tt class="docutils literal"><span class="pre">multiuser</span></tt>.</p>
+(<tt class="docutils literal"><span class="pre">auth_type</span></tt>), which may be one of <tt class="docutils literal"><span class="pre">singleuser</span></tt>, <tt class="docutils literal"><span class="pre">none</span></tt>,
+<tt class="docutils literal"><span class="pre">name</span></tt>, <tt class="docutils literal"><span class="pre">multiuser</span></tt>, or <tt class="docutils literal"><span class="pre">login</span></tt>.</p>
 <blockquote>
 <div><p><em>singleuser</em>: Authentication type is meant for a single user on a
 shared computer. You will need to enter the code found in
@@ -477,6 +485,10 @@ the access codes using the <tt class="docutils literal"><span class="pre">gauth<
 to use Google Authentication, they will also be able to login using
 their GMail account.) The <tt class="docutils literal"><span class="pre">--users_dir=/home</span></tt> option can be used
 to specify the root for all user home directories.</p>
+<p><em>login</em>: This uses the standard Unix password authentication,
+but is permitted only with a <em>localhost</em> server or with HTTPS (for
+security). Server must be run as <tt class="docutils literal"><span class="pre">root</span></tt> and users will not be
+created automatically. (Not available with <tt class="docutils literal"><span class="pre">ec2launch</span></tt>)</p>
 </div></blockquote>
 <p>Once you fill in the form for <tt class="docutils literal"><span class="pre">ec2launch</span></tt> and submit it, a command
 line will be automatically generated, with the specified options, to launch
@@ -604,6 +616,8 @@ dictionary, e.g.:</p>
 </pre></div>
 </div>
 <p>Users in the same group can see each others&#8217; terminals for collaboration.</p>
+<p><em>Note</em>: At this time, the GraphTerm server needs to be restarted if the group
+configuration is changed.</p>
 </div>
 <div class="section" id="secondary-cloud-instances">
 <h2><a class="toc-backref" href="#id16">Secondary cloud instances</a><a class="headerlink" href="#secondary-cloud-instances" title="Permalink to this headline">¶</a></h2>

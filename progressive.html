@@ -1,0 +1,347 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Progressively fillable notebooks &mdash; GraphTerm 0.54.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.54.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within GraphTerm 0.54.3 documentation"
+          href="_static/opensearch.xml"/>
+    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="next" title="Using GraphTerm with R" href="R.html" />
+    <link rel="prev" title="Using the GraphTerm Virtual Computer Lab" href="virtual-lab.html" />
+ 
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
+<script type="text/javascript">
+// Google Analytics setup
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35342722-1']);
+  _gaq.push(['_trackPageview']);
+
+function goApp() {
+   if (window.navigator.standalone) {
+      // Go home
+      location.href = "/";
+   } else {
+      // Go to top level domain
+      var url = location.protocol + "//" + location.hostname.split(".").slice(-2).join(".");
+      if (location.port)
+        url += ":" + location.port;
+      location.href = url;
+   }
+}
+
+// Prevent internal links in iOS standalone web apps from opening in browser
+(function(document,navigator,standalone) {
+            // prevents links from apps from oppening in mobile safari
+            // this javascript must be the first script in your <head>
+            if ((standalone in navigator) && navigator[standalone]) {
+                var curnode, location=document.location, stop=/^(a|html)$/i;
+                document.addEventListener('click', function(e) {
+                    curnode=e.target;
+                    while (!(stop).test(curnode.nodeName)) {
+                        curnode=curnode.parentNode;
+                    }
+                    // Conditions to do this only on links to your own app
+                    if ('href' in curnode) {
+                        e.preventDefault();
+                        location.href = curnode.href;
+                    }
+                },false);
+            }
+        })(document,window.navigator,'standalone');
+
+</script>
+
+  </head>
+  <body>
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<h1>
+<a href="/"> 
+code.mindmeldr.com
+<!--
+<img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
+-->
+</a>/<a href="/graphterm">graphterm</a>
+</h1>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="R.html" title="Using GraphTerm with R"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="virtual-lab.html" title="Using the GraphTerm Virtual Computer Lab"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Progressively fillable notebooks</a><ul>
+<li><a class="reference internal" href="#creating-progressively-fillable-notebooks">Creating progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#using-progressively-fillable-notebooks">Using progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#synchronous-sharing-of-progressively-fillable-notebooks">Synchronous sharing of progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks">Assigning work using asynchronous progressively fillable notebooks</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="virtual-lab.html"
+                        title="previous chapter">Using the GraphTerm Virtual Computer Lab</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="R.html"
+                        title="next chapter">Using GraphTerm with R</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/progressive.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="progressively-fillable-notebooks">
+<span id="progressive"></span><h1><a class="toc-backref" href="#id1">Progressively fillable notebooks</a><a class="headerlink" href="#progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#progressively-fillable-notebooks" id="id1">Progressively fillable notebooks</a><ul>
+<li><a class="reference internal" href="#creating-progressively-fillable-notebooks" id="id2">Creating progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#using-progressively-fillable-notebooks" id="id3">Using progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#synchronous-sharing-of-progressively-fillable-notebooks" id="id4">Synchronous sharing of progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks" id="id5">Assigning work using asynchronous progressively fillable notebooks</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p id="index-0">A common difficulty encountered by students on their first exposure to
+programming concepts is the inability to string together simple steps
+to accomplish a complex task. For example, they may grasp the concept
+of an <tt class="docutils literal"><span class="pre">if</span></tt> block and a <tt class="docutils literal"><span class="pre">for</span></tt> loop separately, but putting those
+constructs together turns out to be much harder. When assigned a
+multi-step task to perform, some of the students will get stuck on the
+first task and never make any progress. One can address this by
+progressively revealing the solutions to each step, and then moving on
+to the next step. If this is done in a synchronous fashion for the
+whole lab, the stronger students will need to wait at
+each step for the weaker students to catch up.</p>
+<p>An alternative approach is to automate this process to allow students
+make incremental progress. As the Notebook interface has proved to be
+extremely popular with the students, an experimental <em>progressively fillable</em>
+version of notebooks has recently been
+implemented in the GraphTerm server. A notebook code cell is assigned
+to each step of a multi-step task, with associated markup cells for
+explanatory text. Initially, only the first code cell is visible, and
+the remaining code cells are hidden. The code cell contains a
+&#8220;skeleton&#8221; program, with missing lines
+(<a href="#figfillablea">Fig.  7</a>). The expected textual or graphical output
+of the code is also shown. Students can enter the missing lines and
+repeatedly execute the code using <em>Control-Enter</em> to reproduce the
+expected results. If the program runs successfully, or if they are
+ready to give up, they press <em>Shift-Enter</em> to move on. The last
+version of the code executed by the student, whether right or wrong,
+is saved in the notebook (as markup), and the correct version of the
+code is then displayed in the cell and executed to produce the desired
+result (<a href="#figfillableb">Fig.  8</a>). The next code cell becomes visible
+and the whole process is repeated for the next step of the task.</p>
+<p>One can think of progressively fillable notebooks as providing &#8220;training
+wheels&#8221; for the inexperienced programmer trying to balance different
+algorithmic concepts at the same time. This approach is somewhat
+analogous to simple unit testing using the <tt class="docutils literal"><span class="pre">doctest</span></tt> Python module,
+which runs functions with specified input and compares the results to
+the expected output.</p>
+<div class="figure" id="figfillablea">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" />
+<p class="caption">Figure 7: View of progressively fillable notebook before user completes <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. Note two
+comment line where it says <tt class="docutils literal"><span class="pre">(fill</span> <span class="pre">in</span> <span class="pre">code</span> <span class="pre">here)</span></tt>. The user can
+replace these lines with code and execute it. The resulting output
+should be compared to the expected output, shown below the code
+cell.</p>
+</div>
+<div class="figure" id="figfillableb">
+<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" />
+<p class="caption">Figure 8: View of progressively fillable notebook after user has completed <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. The last
+version of code entered and executed by the user is included the
+markup, and the code cell now displays the &#8220;correct&#8221; version of the
+code. Note the comment suffix <tt class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></tt> on selected lines of
+code. These lines were hidden in the unfilled view.</p>
+</div>
+<div class="section" id="creating-progressively-fillable-notebooks">
+<h2><a class="toc-backref" href="#id2">Creating progressively fillable notebooks</a><a class="headerlink" href="#creating-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<p>The user interface for creating progressively fillable notebooks in this
+experimental implementation is very simple. The instructor creates a regular
+notebook, with each code cell corresponding to a specific step of a
+complex task. The comment string <tt class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></tt> is appended to all code
+lines that are to be hidden (<a href="#figfillableb">Fig.  8</a>). The code in each
+successive step can depend on the previous step being completed
+correctly. Each code cell is executed in sequence to produce output
+for the step. The notebook is then saved with the suffix <tt class="docutils literal"><span class="pre">-fill.py.gnb.md</span></tt>
+appended to the base filename to indicate that it is fillable. This
+saving step creates new markup from the output of each code cell to
+display the expected output in the progressively fillable version of the
+notebook. Once filled by the students, the notebooks can be
+submitted for grading, as they contain a record of the last attempt
+at completing each step, even if unsuccessful.</p>
+</div>
+<div class="section" id="using-progressively-fillable-notebooks">
+<h2><a class="toc-backref" href="#id3">Using progressively fillable notebooks</a><a class="headerlink" href="#using-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<p>Use <em>Control-Enter</em> to execute filled code without saving it. This can
+be repeated as needed, until the filled code yields the correct
+results. (As a special case, deleting the entire code cell and typing
+<em>Control-Enter</em> will restore the originally displayed content.)  Use
+<em>Shift-Enter</em> to save filled code and advance to the next code
+cell. The previous code cell will display the correct (ANSWER) code
+after this operation, and the filled code cannot be modified. Cells
+further down are hidden until your reach them after successive
+<em>Shift-Enter</em> operations, but if the first line of a Markdown cell
+following a page break (<em>triple-dash</em>) starts with &#8220;#&#8221;, then the first
+line alone is displayed (as a section heading). The
+<em>notebook/page/slide</em> menu option can be used to enable page view.</p>
+</div>
+<div class="section" id="synchronous-sharing-of-progressively-fillable-notebooks">
+<h2><a class="toc-backref" href="#id4">Synchronous sharing of progressively fillable notebooks</a><a class="headerlink" href="#synchronous-sharing-of-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<p>Progressively fillable notebooks can be deployed in a synchronous
+fashion, where the instructor guides students through each step in a
+complex calculation:</p>
+<ul class="simple">
+<li>Edit a regular notebook to make it fillable as described above, but
+save using a suffix starting with <tt class="docutils literal"><span class="pre">-share</span></tt> in the filename
+(instead of <tt class="docutils literal"><span class="pre">-fill</span></tt>).</li>
+<li>Open the <tt class="docutils literal"><span class="pre">nb_name-share.py.gnb.md</span></tt> notebook in a terminal with a
+session path like <tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>. The GraphTerm server will
+automatically export the notebook content for access by other users.</li>
+<li>To access a shared notebook, other users should use the
+<em>notebook/open</em> menu option and type in the name of the terminal path,
+(<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>). Other users can only execute code using
+<em>Control-Enter</em> and cannot advance to the next code cell until the
+instructor has executed <em>Shift-Enter</em> on the current cell.
+(The last attempt by each user at running code in the cell is
+recorded in that user&#8217;s notebook.) Users joining late can start
+accessing the shared notebook any time and should execute cells
+sequentially using <em>Control-Enter</em> until they reach the current cell.</li>
+<li>If a subdirectory SUBMIT is present in the same directory as the
+shared notebook file, other users can <em>submit</em> the filled shared
+notebook to this directory using the <em>notebook/submit</em> menu option.</li>
+</ul>
+</div>
+<div class="section" id="assigning-work-using-asynchronous-progressively-fillable-notebooks">
+<h2><a class="toc-backref" href="#id5">Assigning work using asynchronous progressively fillable notebooks</a><a class="headerlink" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<p>An instructor can also deploy progressively fillable notebooks in an
+asynchronous fashion, where students work on the steps in a notebook
+at their own pace and then submit their filled notebook at the end:</p>
+<ul class="simple">
+<li>Edit a regular notebook to make it fillable as described above, but
+save using a suffix starting with <tt class="docutils literal"><span class="pre">-assign</span></tt> in the filename
+(instead of <tt class="docutils literal"><span class="pre">-fill</span></tt>).</li>
+<li>Open the <tt class="docutils literal"><span class="pre">nb_name-assign.py.gnb.md</span></tt> notebook in a terminal with a
+session path like <tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>.</li>
+<li>While the instructor&#8217;s terminal session is active, other users can
+use the <em>notebook/open</em> menu option and type in the name of the
+terminal path (<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>) to open the notebook. Then they
+can work on it using <em>Control-Enter</em> to try out code, and
+<em>Shift-Enter</em> to display the correct answer and move on to the next
+step.</li>
+<li>If a subdirectory SUBMIT is present in the same directory as the
+shared notebook file, other users can <em>submit</em> the filled shared
+notebook to this directory using the <em>notebook/submit</em> menu option.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="R.html" title="Using GraphTerm with R"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="virtual-lab.html" title="Using the GraphTerm Virtual Computer Lab"
+             >previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+ 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2012-2014 R. Saravanan.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+<div class="footer">
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ?
+              'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+  })();
+</script>
+</div>
+
+  </body>
+</html>

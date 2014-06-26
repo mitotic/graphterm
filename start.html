@@ -212,9 +212,9 @@ using the default browser. For multi-user computers,
 omit the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option
 when starting the server, and enter the authentication code stored in
 the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> as needed.</p>
-<p>You can access the GraphTerm server
-using a browser that supports websockets, such as Google Chrome,
-Firefox, Safari, or IE10 (Chrome works best), by entering the following URL:</p>
+<p>You can access the GraphTerm server using any browser that supports
+websockets. Google Chrome works best, but Firefox, Safari, or IE10
+are also supported. Start by entering the following URL:</p>
 <div class="highlight-python"><pre>http://localhost:8900</pre>
 </div>
 <p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm <em>host</em> you
@@ -350,12 +350,12 @@ notebooks, e,g.:</p>
 <div class="highlight-python"><pre>gls *.ipynb</pre>
 </div>
 <p>Then click on the notebook that you wish to open.
-Alternatively, you can use the <tt class="docutils literal"><span class="pre">gopen</span></tt> or <tt class="docutils literal"><span class="pre">gpython</span></tt> commands:</p>
-<div class="highlight-python"><pre>gopen notebook.ipynb</pre>
+Alternatively, you can use the <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gopen</span></tt> commands
+python notebooks:</p>
+<div class="highlight-python"><pre>gpython notebook.ipynb</pre>
 </div>
-<p><tt class="docutils literal"><span class="pre">gopen</span></tt> works for Python and R notebooks. For other languages, you will
-need to start the interpreter and then use the <em>notebook/open</em> menu
-option.</p>
+<p>For other languages, you will need to start the interpreter and then
+use the <em>notebook/open</em> menu option.</p>
 <div class="figure align-center" style="width: 85%">
 <img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" style="width: 90%;" />
 </div>
@@ -419,11 +419,14 @@ be used ony for teaching and demonstration purposes. In this case, the
 account, with no access code. The <tt class="docutils literal"><span class="pre">--auth_type=multiuser</span></tt> option,
 which requires the server to run with root privileges, is suitable for
 a multiple user lab setting, providing a choice of either access code
-HMAC authentication or Google Authentication. The <tt class="docutils literal"><span class="pre">--nolocal</span></tt> option
-can be used to disable root access via the browser, in this case. The
-HTTPS protocol can be enabled for the public server, using either
-self-signed or authoritative certificates, to provide additional
-security.</p>
+HMAC authentication or Google Authentication. The
+<tt class="docutils literal"><span class="pre">--auth_type=login</span></tt> option, which is permitted only with a
+<em>localhost</em> server or with HTTPS, implements the standard password
+login.  The <tt class="docutils literal"><span class="pre">--nolocal</span></tt> option can be used to disable root access
+via the browser. The HTTPS protocol can be enabled for the public
+server, using either self-signed or authoritative certificates, to
+provide additional security. (See see <a class="reference internal" href="virtual-setup.html"><em>Setting up a Virtual Computer Lab</em></a> for more on
+authentication options.)</p>
 <p>When working with sensitive information, it would be best to run the
 server on <tt class="docutils literal"><span class="pre">localhost</span></tt> (the default) and use SSH port forwarding to
 connect to it from other computers as needed (see <a class="reference internal" href="remote.html"><em>Remote access and SSH</em></a>).</p>
