@@ -1206,7 +1206,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$("#terminal").show();
 		$("#session-container").show();
 		gParams = command[1];
-		if (gParams.mathjax)
+		if (gParams.mathjax && !window.MathJax)
 		    GTLoadMathJax();
 		GTMenuStateUpdate(gParams.state_values);
 		resizeTerminal();
@@ -5272,6 +5272,7 @@ function GTLoadMathJax() {
           "    processEscapes: true,\n" +
           "    processEnvironments: true\n" +
           " },\n" +
+          " skipStartupTypeset: true,\n" +
           " displayAlign: 'left',\n" +
           " 'HTML-CSS': {\n" +
           "    styles: {'.MathJax_Display': {'margin': 0}}\n" +
