@@ -116,6 +116,8 @@ var gPromptAction = null;
 var gNotebook = null;
 var gNotebookId = [0, 0];
 
+var gTempId = 0;
+
 var gParams = {};
 
 var GTPrompt = "&gt; ";
@@ -242,6 +244,88 @@ function md2html(mdText, safe, firstLine) {
 	html = html.substr(3, html.length-7);
     }
     return html;
+}
+
+
+function math_md2html(mdText, safe, firstLine) {
+  // Convert Markdown to HTML, preserving escaped math markup for MathJax processing
+  // References:
+  //   http://stackoverflow.com/questions/11228558/let-pagedown-and-mathjax-work-together
+  //   http://www.math.union.edu/~dpvc/transfer/mathjax/mathjax-editing.js
+
+  if (!gParams.mathjax)  // TEMPORARY (while MathJax implementation is being tested)
+      return md2html(mdText, safe, firstLine);
+
+  if (!mdText)
+      return "";
+  var blocks, start, end, last, braces; // used in searching for math
+  var math;                             // stores math until markdone is done
+  var inline = "$";     // the inline math delimiter
+
+  var SPLIT = /(\$\$?|\\(?:begin|end)\{[a-z]*\*?\}|\\[\\{}$]|[{}]|(?:\n\s*)+|@@\d+@@)/i;
+
+  function processMath(i,j) {
+    var block = blocks.slice(i,j+1).join("")
+      .replace(/&/g,"&amp;")                   // use HTML entity for &
+      .replace(/</g,"&lt;")                    // use HTML entity for <
+      .replace(/>/g,"&gt;")                    // use HTML entity for >
+    ;
+    if (gIExplorer) {block = block.replace(/(%[^\n]*)\n/g,"$1<br/>\n")}
+    while (j > i) {blocks[j] = ""; j--}
+    blocks[i] = "@@"+math.length+"@@"; math.push(block);
+    start = end = last = null;
+ }
+
+  function removeMath(text) {
+    start = end = last = null;       // for tracking math delimiters
+    math = [];                       // stores math strings for latter
+
+    blocks = text.replace(/\r\n?/g,"\n").split(SPLIT);
+    for (var i = 1, m = blocks.length; i < m; i += 2) {
+      var block = blocks[i];
+      if (block.charAt(0) === "@") {
+        //
+        //  Things that look like our math markers will get
+        //  stored and then retrieved along with the math.
+        //
+        blocks[i] = "@@"+math.length+"@@";
+        math.push(block);
+      } else if (start) {
+        //
+        //  If we are in math, look for the end delimiter,
+        //    but don't go past double line breaks, and
+        //    and balance braces within the math.
+        //
+        if (block === end) {
+          if (braces) {last = i} else {processMath(start,i)}
+        } else if (block.match(/\n.*\n/)) {
+          if (last) {i = last; processMath(start,i)}
+          start = end = last = null; braces = 0;
+        } else if (block === "{") {braces++}
+          else if (block === "}" && braces) {braces--}
+      } else {
+        //
+        //  Look for math start delimiters and when
+        //    found, set up the end delimiter.
+        //
+        if (block === inline || block === "$$") {
+          start = i; end = block; braces = 0;
+        } else if (block.substr(1,5) === "begin") {
+          start = i; end = "\\end"+block.substr(6); braces = 0;
+        }
+      }
+    }
+    if (last) {processMath(start,last)}
+    return blocks.join("");
+  }
+  
+  function replaceMath(text) {
+    text = text.replace(/@@(\d+)@@/g,function (match,n) {return math[n]});
+    math = null;
+    return text;
+  }
+
+  return replaceMath(md2html(removeMath(mdText), safe, firstLine));
 }
 
 function createFileURI(uri) {
@@ -1122,6 +1206,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		$("#terminal").show();
 		$("#session-container").show();
 		gParams = command[1];
+		if (gParams.mathjax)
+		    GTLoadMathJax();
 		GTMenuStateUpdate(gParams.state_values);
 		resizeTerminal();
 		GTUpdateController();
@@ -1476,7 +1562,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    var newElem = $(pagelet_html);
 			    if (newElem.hasClass("gterm-blockseq")) {
 				var prevBlock = $("#session-bufscreen .pagelet.gterm-blockseq:not(.gterm-toggleblock)");
-				if (response_params.block && response_params.block == "overwrite" && prevBlock.length == 1 && prevBlock.is($("#session-bufscreen :last-child")) ) {
+				if (response_params.overwrite && prevBlock.length == 1 && prevBlock.is($("#session-bufscreen :last-child")) ) {
 				    // Overwrite previous blockseq element
 				    if (prevBlock.find(".gterm-blockimg").length == 1 && newElem.find(".gterm-blockimg").length == 1) {
 					// Replace IMG src attribute
@@ -1784,8 +1870,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				GTAppendPagelet($("#session-bufscreen"), row_params, entry_class, "pagelet entry "+entry_class+' '+add_class, markup);
 				delayed_scroll = true;
 			    } else if (row_params[JTYPE] == "markdown") {
-				row_html = '<div class="gterm-notecell-buffered gterm-notecell-markdown '+entry_class+' '+add_class+'">\n'+md2html(markup)+'\n</div>';
+				gTempId += 1;
+				var cellId = 'gterm-mdcell'+gTempId;
+				row_html = '<div id="'+cellId+'" class="gterm-notecell-buffered gterm-notecell-markdown '+entry_class+' '+add_class+'">\n'+math_md2html(markup)+'\n</div>';
 				$(row_html).appendTo("#session-bufscreen");
+				GTApplyMathJax(cellId);
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], update_opts.pre_offset, prompt_offset, prompt_id) : markup;
 				row_html = '<pre '+id_attr+' class="row entry '+entry_class+' '+add_class+'">'+row_escaped+"\n</pre>";
@@ -4400,11 +4489,13 @@ GTNotebook.prototype.renderCell = function(showInput, hideOutput, cellIndex) {
 	var text = inputElem.val();
 	if (!$.trim(text) && !this.note_params.form)
 	    text = "EMPTY MARKDOWN CELL";
-	outputElem.html(md2html(text));
-	if (hideOutput)
+	outputElem.html(math_md2html(text));
+	if (hideOutput) {
 	    outputElem.hide();
-	else
+	} else {
+	    GTApplyMathJax(this.getCellId(cellIndex)+"-output");
 	    outputElem.show();
+	}
 	    
 	if (showInput)
 	    this.cellFocus(true);
@@ -5166,6 +5257,39 @@ function ScrollScreen(alt_mode) {
 	ScrollTop(bot_offset - winHeight + gBottomMargin);
     else
  	ScrollTop(0);
+}
+
+function GTLoadMathJax() {
+    try{
+	var head = document.getElementsByTagName("head")[0], script;
+	var script = document.createElement("script");
+	script.type = "text/x-mathjax-config";
+	script[(window.opera ? "innerHTML" : "text")] =
+	  "MathJax.Hub.Config({\n" +
+          " tex2jax: {\n" +
+          "    inlineMath: [ ['$','$'], ['\\\\(','\\\\)'] ],\n" +
+          "    displayMath: [ ['$$','$$'], ['\\\\[','\\\\]'] ],\n" +
+          "    processEscapes: true,\n" +
+          "    processEnvironments: true\n" +
+          " },\n" +
+          " displayAlign: 'left',\n" +
+          " 'HTML-CSS': {\n" +
+          "    styles: {'.MathJax_Display': {'margin': 0}}\n" +
+          " }\n" +
+	  "});"
+	head.appendChild(script);
+	script = document.createElement("script");
+	script.type = "text/javascript";
+	script.src  = "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+	head.appendChild(script);
+    } catch(ex) {
+    }
+}
+
+function GTApplyMathJax(elementId) {
+    if (!window.MathJax)
+	return
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,elementId]);
 }
 
 $(window).unload(function() {

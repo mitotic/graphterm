@@ -1133,11 +1133,11 @@ class Terminal(object):
             new_prefix = "shared"
         if prefix.endswith("-shared"):
             note_form = "shared"
-        if prefix.endswith("-submit"):
-            note_form = "submit"
-            new_prefix = "submitting"
-        if prefix.endswith("-submitting"):
-            note_form = "submitting"
+        if prefix.endswith("-assign"):
+            note_form = "assign"
+            new_prefix = "assigned"
+        if prefix.endswith("-assigned"):
+            note_form = "assigned"
 
         if note_form:
             filepath = os.path.join(os.path.dirname(filepath), new_prefix+note_tail)
@@ -1145,10 +1145,10 @@ class Terminal(object):
         if "share" in params:
             share_opt = params["share"]
         else:
-            share_opt = "share" if note_form in ("share", "submit") else ""
+            share_opt = "share" if note_form in ("share", "assign") else ""
 
-        if "submit" in params:
-            submit_opt = params["submit"]
+        if "assign" in params:
+            submit_opt = params["assign"]
         else:
             submit_dir = os.path.join(os.path.dirname(filepath), "SUBMIT")
             submit_opt = os.path.abspath(submit_dir) if os.path.isdir(submit_dir) else ""
@@ -1338,7 +1338,7 @@ class Terminal(object):
             update_filename = True
 
         fprefix = os.path.splitext(fname)[0]
-        save_form = fprefix.endswith("-fill") or fprefix.endswith("-share") or fprefix.endswith("-submit")
+        save_form = fprefix.endswith("-fill") or fprefix.endswith("-share") or fprefix.endswith("-assign")
         fig_suffix = safe_filename(fname)
         curly_fence = fname.endswith(".R") or self.note_params["command"] == "R"
         md_lines = []

@@ -425,7 +425,7 @@ def display_blockimg_old(url, overwrite=False, alt="", stderr=False):
     IMGFORMAT = '<span class="gterm-togglelink"><em>&lt;'+(alt or 'image')+'&gt;</em></span><img class="gterm-blockimg gterm-togglelink" src="%s"'+alt_attr+'><br>'
     add_headers = {"classes": "gterm-blockseq"}
     if overwrite:
-        add_headers["block"] = "overwrite"
+        add_headers["overwrite"] = "yes"
     write_pagelet_old(IMGFORMAT % url, add_headers=add_headers, stderr=stderr)
 
 def blockimg_html(url, toggle=False, alt=""):
@@ -479,14 +479,14 @@ def iframe_html(src_url="", html="", add_classes="", width=None, height=None, he
     height_str = (' height="%s"' % height) if height else (' height="%d%%"' % max_percent if fullscreen else '')
 
     frameId = "gframe%09d" % random.randrange(0, 10**9)
-    out_html = IFRAMEFORMAT % (frameId, add_classes, src_url, width_str, height_str)
+    return IFRAMEFORMAT % (frameId, add_classes, src_url, width_str, height_str)
 
-    if header:
-        if fullscreen:
-            out_html = '<span class="gterm-iframeheader gterm-iframeexpand">&#x29c9;</span><span class="gterm-iframeclose gterm-iframeheader">&#x2a2f;</span>' + out_html
-        else:
-            container_id = "gframecontainer%09d" % random.randrange(0, 10**9)
-            out_html = '<div id="'+container_id+'"> <span class="gterm-iframeheader gterm-iframedelete" gterm-iframe-container="'+container_id+'">&#215;</span>' + out_html + '</div>'
+def iframe_header_html(out_html, fullscreen=False):
+    if fullscreen:
+        out_html = '<span class="gterm-iframeheader gterm-iframeexpand">&#x29c9;</span><span class="gterm-iframeclose gterm-iframeheader">&#x2a2f;</span>' + out_html
+    else:
+        container_id = "gframecontainer%09d" % random.randrange(0, 10**9)
+        out_html = '<div id="'+container_id+'"> <span class="gterm-iframeheader gterm-iframedelete" gterm-iframe-container="'+container_id+'">&#215;</span>' + out_html + '</div>'
 
     return out_html
 

@@ -841,8 +841,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
                                         "state_values": state_values, "watchers": users,
-                                        "nb_server": Server_settings["nb_server"],
-                                        "nb_autosave": Server_settings["nb_autosave"],
+                                        "nb_server": Server_settings["nb_server"], "nb_autosave": Server_settings["nb_autosave"],
+                                        "mathjax": Server_settings["mathjax"],
                                         "controller": controller, "super_user": is_super_user, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "chat": term_chat, "update_opts": {},
@@ -1733,9 +1733,9 @@ def run_server(options, args):
             action = comps[1]
             args = dict(self.request.arguments)
             if comps[1] == "_steal":
-                args["action"] = "steal"
+                args["action"] = ["steal"]
             if comps[1] == "_watch":
-                args["action"] = "watch"
+                args["action"] = ["watch"]
 
             qauth = self.get_argument("qauth", "")
             cauth = self.get_argument("cauth", "")
@@ -1746,9 +1746,10 @@ def run_server(options, args):
                     if ws and qauth == get_qauth(ws.authorized["state_id"]):
                         # Validated form fields
                         cauth = GTSocket.get_connect_cookie()
-                        args["cauth"] = cauth
             if cauth:
-                new_path += "?" + urllib.urlencode({"qauth": qauth} if qauth else {"cauth": cauth})
+                new_path += "?" + urllib.urlencode({"cauth": cauth})
+                if qauth:
+                    new_path += "&" + urllib.urlencode({"qauth": qauth})
                 if GTSocket.update_connect_cookie(cauth, args):
                     self.redirect(new_path)
                     return
@@ -1863,7 +1864,7 @@ def run_server(options, args):
                        "nb_autosave": options.nb_autosave, "nb_server": options.nb_server,
                        "nogoog_auth": options.nogoog_auth, "user_groups": membership_dict,
                        "users_dir": options.users_dir, "gtermhost_args": gtermhost_args,
-                       "max_terminals": options.max_terminals}
+                       "mathjax": not options.nomathjax, "max_terminals": options.max_terminals}
 
     Host_settings = {"lterm_params": {"nb_ext": options.nb_ext, "term_opts": options.term_opts,
                                       "lc_export": options.lc_export},
@@ -2171,6 +2172,8 @@ def main():
     parser.add_option("blob_host", default="",
                       help="blob server host name (or IP address) (default: same as server)")
 
+    parser.add_option("nomathjax", default=False, opt_type="flag",
+                      help="Disable MathJax")
     parser.add_option("nolocal", default=False, opt_type="flag",
                       help="Disable connection to 'local' host")
     parser.add_option("nogoog_auth", default=False, opt_type="flag",

@@ -126,8 +126,11 @@ for j, url in enumerate(iframe_urls):
         width = str(100 if nframes == 1 else math.floor(96.0/n)) + "%"
     frameId = "gframe%09d" % random.randrange(0, 10**9)
     add_classes = add_class+("" if irow else " gterm-iframe-firstrow")
-    iframe_html = gterm.iframe_html(url, add_classes=add_classes, width=width, height=frameHeight,
-                                    header=not options.noheader, fullscreen=options.fullscreen)
+    iframe_html += gterm.iframe_html(url, add_classes=add_classes, width=width, height=frameHeight,
+                                     header=not options.noheader, fullscreen=options.fullscreen)
+
+if not options.noheader:
+    iframe_html = gterm.iframe_header_html(iframe_html, fullscreen=options.fullscreen)
 
 # TODO: Wrap iframe in div box with close X header for non fullscreen mode
 
