@@ -11,7 +11,11 @@ except ImportError:
     about = None
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo',
-              'sphinx.ext.autosummary', 'sphinx.ext.extlinks', 'rst2pdf.pdfbuilder']
+              'sphinx.ext.autosummary', 'sphinx.ext.extlinks', 'rst2pdf.pdfbuilder', 'sphinx.ext.numfig']
+
+# numfig:
+numfig_number_figures = True
+numfig_figure_caption_prefix = "Figure"
 
 master_doc = 'contents'
 templates_path = ['_templates']

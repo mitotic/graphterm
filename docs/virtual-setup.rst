@@ -22,6 +22,9 @@ GraphTerm on a Linux/Mac server.  Some notable features are:
 - Students can collaborate by accessing each others terminals and
   using a rudimentary *chat* feature
 
+- :doc:`progressive` can be used to provide scaffolding
+  for teaching students to write complex programs
+
 - The instructor can monitor students' work while it is in progress and comment on it using *chat*
 
 A companion section provides information on :doc:`virtual-lab` after
@@ -153,7 +156,7 @@ versions in the "cloud". )
     and ``netcdf`` options. When you press the *submit* button, the
     generated command line should look something like this:
 
-    ``ec2launch -f --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --gmail_addr=user@gmail.com --auth_type=multiuser --pylab --netcdf testlab``
+    ``ec2launch --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --gmail_addr=user@gmail.com --auth_type=multiuser --pylab --netcdf testlab``
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png
    :align: center
@@ -484,6 +487,9 @@ dictionary, e.g.::
      "group2": ["user3", "user4", "user5"]}
 
 Users in the same group can see each others' terminals for collaboration.
+
+*Note*: At this time, the GraphTerm server needs to be restarted if the group
+configuration is changed.
 
 Secondary cloud instances
 --------------------------------------------------------------------------------------------

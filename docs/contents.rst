@@ -12,13 +12,12 @@ Documentation contents
    remote
    virtual-setup
    virtual-lab
+   progressive
    R
    features
    troubleshooting
    screenshots
-   tutorials
    talks
-   videos
    implementation
    advanced
    release-notes
