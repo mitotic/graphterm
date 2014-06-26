@@ -1,17 +1,15 @@
-<!--gterm notebook command=python-->
+# Progressively fillable notebook demo
 
-# Fillable shared notebook demo
-
-This notebook demonstrates the fillable and shareable notebook
+This notebook demonstrates the progressively fillable notebook
 features of GraphTerm. Code lines ending with comment ``## ANSWER``
 will be hidden when this notebook is renamed as
 ``name-fill.py.gnb.md`` or ``name-share.py.gnb.md`` or
-``name-submit.py.gnb.md``. The ``-share`` suffix enables the super
+``name-assign.py.gnb.md``. The ``-share`` suffix enables the super
 user to share the notebook with other users for viewing and filling
-synchronously. The ``-submit`` suffix enables asynchronous sharing. If
+synchronously. The ``-assign`` suffix enables asynchronous sharing. If
 a subdirectory SUBMIT is present in the same directory as a shared
 notebook file, other users can *submit* a filled shared notebook to
-this directory.
+this directory using the *notebook/submit* menu option.
 
 Use *Control-Enter* to execute filled code without saving it. This can
 be repeated as needed, until the filled code yields the correct
@@ -26,21 +24,22 @@ following a page break (*triple-dash*) starts with "#", then the first
 line alone is displayed (as a section heading). The
 *notebook/page/slide* menu option can be used to enable page view.
 
-To access a shared notebook, other users should use the
-*notebook/open* menu option and type in the name of the terminal path,
-e.g., ``/user/session_name`` For synchronous sharing, other users can
-only execute code using *Control-Enter* and cannot advance to the next
-code cell until the super user has executed *Shift-Enter* on the
-current cell. New users can start accessing the shared notebook any
-time and should execute cells sequentially using *Control-Enter*.
+To access a shared notebook, other users should start ``gpython`` and
+select the *notebook/open* menu option, typing in the name of the
+terminal path (``/user/session_name``). For synchronous sharing, other
+users can only execute code using *Control-Enter* and cannot advance
+to the next code cell until the super user has executed *Shift-Enter*
+on the current cell. New users can start accessing the shared notebook
+any time and should execute cells sequentially using *Control-Enter*.
 
-To create a fillable notebook that displays *expected output*, open a
-regular notebook, append the comment ``## ANSWER`` to code lines that
-need to be hidden, execute the code sequentially and save it with the
-suffix ``-fill`` (or ``-share`` or ``-submit``) appended to the base
-name of the file. This will automatically convert the code output to
-*expected output*. (Note: The ``## ANSWER`` suffix may also be used in
-the ``expect`` block of fillable notebook to hide test results.)
+To create a progressively fillable notebook that displays *expected
+output*, open a regular notebook, append the comment ``## ANSWER`` to
+code lines that need to be hidden, execute the code sequentially and
+save it with the suffix ``-fill`` (or ``-share`` or ``-assign``)
+appended to the base name of the file. This will automatically convert
+the code output to *expected output*. (Note: The ``## ANSWER`` suffix
+may also be used in the ``expect`` block of fillable notebook to hide
+test results.)
 
 ---
 

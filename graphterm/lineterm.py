@@ -1124,23 +1124,23 @@ class Terminal(object):
         note_tail = ext + note_tail
 
         note_form = ""
-        new_prefix = prefix
+        mod_prefix = ""
         if prefix.endswith("-fill"):
             note_form = "fill"
-            new_prefix = "filled"
+            mod_prefix = "ed"
         if prefix.endswith("-share"):
             note_form = "share"
-            new_prefix = "shared"
+            mod_prefix = "d"
         if prefix.endswith("-shared"):
             note_form = "shared"
         if prefix.endswith("-assign"):
             note_form = "assign"
-            new_prefix = "assigned"
+            mod_prefix = "ed"
         if prefix.endswith("-assigned"):
             note_form = "assigned"
 
         if note_form:
-            filepath = os.path.join(os.path.dirname(filepath), new_prefix+note_tail)
+            filepath = os.path.join(os.path.dirname(filepath), prefix+mod_prefix+note_tail)
 
         if "share" in params:
             share_opt = params["share"]
@@ -1589,6 +1589,7 @@ class Terminal(object):
                                     # Beginning of expect block
                                     raw_lines += ["", "*Expected output:*"]
                                 raw_lines += [""]
+                                expect_lines += [""]
                         else:
                             # Entering new code block
                             code_lines = []
@@ -1651,6 +1652,9 @@ class Terminal(object):
                         # Non-output image
                         if code_cell:
                             # Leave code block
+                            if fig_prefix == "expect" and not code_cell["cellExpectOutput"]:
+                                # Expecting figure output for code cell
+                                code_cell["cellExpectOutput"] += [""]
                             self.update()
                             code_cell = None
                         if raw_lines and leaving_block is not None and leaving_block != fig_prefix:
@@ -1757,17 +1761,18 @@ class Terminal(object):
             before_cell_index = self.note_cells["cellIndices"][before_cell_number-1]
             self.note_cells["cellIndices"].insert(before_cell_number-1, cell_index)
 
+        cur_loc = self.note_cells["cellIndices"].index(cell_index)
         if self.note_params["form"]:
             # Hide all cells following first (or first locked) code cell
-            cur_loc = self.note_cells["cellIndices"].index(cell_index)
             if cur_loc < self.note_hide_offset:
                 new_cell["cellParams"]["filled"] = True
             elif cur_loc == self.note_hide_offset and new_cell_type in MARKUP_TYPES:
                 # Markdown cell preceding code cell
                 self.note_hide_offset = cur_loc + 1
             elif cur_loc == self.note_hide_offset+1 and new_cell_type in MARKUP_TYPES:
-                # Do not hide markdown cell immediately following code cell
-                pass
+                # Do not hide markdown cell immediately following code cell, if output is expected
+                prev_code_cell = self.note_cells["cells"][self.note_cells["cellIndices"][self.note_hide_offset]]
+                new_cell["cellParams"]["hidden"] = not prev_code_cell["cellExpectOutput"]
             elif cur_loc > self.note_hide_offset:
                 new_cell["cellParams"]["hidden"] = True
 
@@ -2019,6 +2024,9 @@ class Terminal(object):
                 break
             self.note_hide_offset = start_offset + j
             code_found = not markup_type
+            if code_found and not cell["cellExpectOutput"]:
+                # Code cell with no expected output
+                break
 
     def update_cell(self, cell_index, execute, save, input_data, form_advance=False):
         if not self.note_cells:

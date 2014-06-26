@@ -247,6 +247,7 @@ function md2html(mdText, safe, firstLine) {
 }
 
 
+var MATHCOMMENT = "<!--MathJax-->";
 function math_md2html(mdText, safe, firstLine) {
   // Convert Markdown to HTML, preserving escaped math markup for MathJax processing
   // References:
@@ -274,7 +275,7 @@ function math_md2html(mdText, safe, firstLine) {
     while (j > i) {blocks[j] = ""; j--}
     blocks[i] = "@@"+math.length+"@@"; math.push(block);
     start = end = last = null;
- }
+  }
 
   function removeMath(text) {
     start = end = last = null;       // for tracking math delimiters
@@ -321,11 +322,13 @@ function math_md2html(mdText, safe, firstLine) {
   
   function replaceMath(text) {
     text = text.replace(/@@(\d+)@@/g,function (match,n) {return math[n]});
-    math = null;
     return text;
   }
-
-  return replaceMath(md2html(removeMath(mdText), safe, firstLine));
+  var mdHtml = md2html(removeMath(mdText), safe, firstLine);
+  if (math.length)
+      mdHtml = MATHCOMMENT+replaceMath(mdHtml);
+  math = null;
+  return mdHtml;
 }
 
 function createFileURI(uri) {
@@ -1872,9 +1875,11 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    } else if (row_params[JTYPE] == "markdown") {
 				gTempId += 1;
 				var cellId = 'gterm-mdcell'+gTempId;
-				row_html = '<div id="'+cellId+'" class="gterm-notecell-buffered gterm-notecell-markdown '+entry_class+' '+add_class+'">\n'+math_md2html(markup)+'\n</div>';
+				var cell_html = math_md2html(markup);
+				row_html = '<div id="'+cellId+'" class="gterm-notecell-buffered gterm-notecell-markdown '+entry_class+' '+add_class+'">\n'+cell_html+'\n</div>';
 				$(row_html).appendTo("#session-bufscreen");
-				GTApplyMathJax(cellId);
+				if (_.str.startsWith(cell_html, MATHCOMMENT))
+				    GTApplyMathJax(cellId);
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], update_opts.pre_offset, prompt_offset, prompt_id) : markup;
 				row_html = '<pre '+id_attr+' class="row entry '+entry_class+' '+add_class+'">'+row_escaped+"\n</pre>";
@@ -3486,6 +3491,11 @@ function AjaxKeypress(evt) {
 	    return false;
 	}
 
+	if (gNotebook && evt.altKey) {
+	    gNotebook.handleCommand("execinsert");
+	    return false;
+	}
+
 	if (gNotebook)
 	    gNotebook.poll(true);
     }
@@ -4203,6 +4213,7 @@ function GTNotebook(params) {
     this.cellParams = {};
     this.curIndex = 0;
     this.openNext = false;
+    this.createNext = false;
 					      
     this.lastPollTime = epoch_time();
     this.lastUpdateTime = epoch_time();
@@ -4374,25 +4385,36 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    this.saveNotebook("", {submit: "submit"}); 
 	}
     } else if (command == "run" || (!this.note_params.form && command == "runbutton")) {
-	var createNew = (command == "run" && !this.note_params.form);
 	if (cellParams.cellType in MARKUP_TYPES) {
 	    this.renderCell(false, false);
-	    this.update_text(false, false, createNew);
+	    this.update_text(false, false, false);
 	    if (this.curIndex == this.getLastIndex())
 		gNotebook.remoteAddCell("", "", 0);
 	    else
 		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else {
 	    if (!this.note_params.form ||
-		(this.note_params.form != "shared" && window.confirm("Do you wish to display correct answer?")) )
+		(this.note_params.form != "shared" && window.confirm("Do you wish to display correct answer?")) ) {
+		var createNew = (command == "run" && !this.note_params.form);
 		this.update_text(true, true, createNew);
+	    }
 	}
     } else if (command == "execute"|| (this.note_params.form && command == "runbutton")) {
 	if (cellParams.cellType in MARKUP_TYPES) {
-	    this.update_text(false, false);
+	    this.update_text(false, false, false);
 	    this.renderCell(true, false);
 	} else {
-	    this.update_text(true, false);
+	    this.update_text(true, false, false);
+	}
+    } else if (command == "execinsert") {
+	if (!this.note_params.form) {
+	    if (cellParams.cellType in MARKUP_TYPES) {
+		this.renderCell(false, false);
+		this.update_text(false, false, false);
+		gNotebook.remoteAddCell("", "", 0);
+	    } else {
+		this.update_text(true, true, true);
+	    }
 	}
     } else if (command == "markdown") {
 	gWebSocket.write([["update_type", newValue ? "markdown" : ""]]);
@@ -4489,11 +4511,13 @@ GTNotebook.prototype.renderCell = function(showInput, hideOutput, cellIndex) {
 	var text = inputElem.val();
 	if (!$.trim(text) && !this.note_params.form)
 	    text = "EMPTY MARKDOWN CELL";
-	outputElem.html(math_md2html(text));
+	var outputHtml = math_md2html(text);
+	outputElem.html(outputHtml);
 	if (hideOutput) {
 	    outputElem.hide();
 	} else {
-	    GTApplyMathJax(this.getCellId(cellIndex)+"-output");
+	    if (_.str.startsWith(outputHtml, MATHCOMMENT))
+		GTApplyMathJax(this.getCellId(cellIndex)+"-output");
 	    outputElem.show();
 	}
 	    
@@ -4644,10 +4668,12 @@ GTNotebook.prototype.cellScrollOutput = function() {
 
 GTNotebook.prototype.update_text = function(execute, openNext, createNew) {
     if (execute) {
-	if (!createNew && this.curIndex == this.getLastIndex())
+	if (!createNew && this.curIndex == this.getLastIndex()) {
 	    this.openNext = false;
-	else
+	} else {
 	    this.openNext = !!openNext;
+	    this.createNext = createNew;
+	}
 
 	this.cellFocus(false);
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").show();
@@ -4751,11 +4777,12 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 	// "End of output"
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();
 	if (this.openNext) {
-	    this.openNext = false;
-	    if (this.curIndex == this.getLastIndex())
+	    if (this.createNext || this.curIndex == this.getLastIndex())
 		gNotebook.remoteAddCell("", "", 0);
 	    else
 		gWebSocket.write([["select_cell", 0, false, true]]);
+	    this.openNext = false;
+	    this.createNext = false;
 	} else if (this.curIndex == this.getLastIndex()) {
 	    // Last cell
 	    this.cellFocus(true, selectAll, true);

@@ -1,6 +1,6 @@
-# Progressive shared notebook demo
+# Progressively fillable notebook demo
 
-This notebook demonstrates the progressively fillable and shareable notebook
+This notebook demonstrates the progressively fillable notebook
 features of GraphTerm. Code lines ending with comment ``## ANSWER``
 will be hidden when this notebook is renamed as
 ``name-fill.py.gnb.md`` or ``name-share.py.gnb.md`` or
@@ -24,21 +24,22 @@ following a page break (*triple-dash*) starts with "#", then the first
 line alone is displayed (as a section heading). The
 *notebook/page/slide* menu option can be used to enable page view.
 
-To access a shared notebook, other users should use the
-*notebook/open* menu option and type in the name of the terminal path,
-e.g., ``/user/session_name`` For synchronous sharing, other users can
-only execute code using *Control-Enter* and cannot advance to the next
-code cell until the super user has executed *Shift-Enter* on the
-current cell. New users can start accessing the shared notebook any
-time and should execute cells sequentially using *Control-Enter*.
+To access a shared notebook, other users should start ``gpython`` and
+select the *notebook/open* menu option, typing in the name of the
+terminal path (``/user/session_name``). For synchronous sharing, other
+users can only execute code using *Control-Enter* and cannot advance
+to the next code cell until the super user has executed *Shift-Enter*
+on the current cell. New users can start accessing the shared notebook
+any time and should execute cells sequentially using *Control-Enter*.
 
-To create a progressive notebook that displays *expected output*, open a
-regular notebook, append the comment ``## ANSWER`` to code lines that
-need to be hidden, execute the code sequentially and save it with the
-suffix ``-fill`` (or ``-share`` or ``-assign``) appended to the base
-name of the file. This will automatically convert the code output to
-*expected output*.
-
+To create a progressively fillable notebook that displays *expected
+output*, open a regular notebook, append the comment ``## ANSWER`` to
+code lines that need to be hidden, execute the code sequentially and
+save it with the suffix ``-fill`` (or ``-share`` or ``-assign``)
+appended to the base name of the file. This will automatically convert
+the code output to *expected output*. (Note: The ``## ANSWER`` suffix
+may also be used in the ``expect`` block of fillable notebook to hide
+test results.)
 
 ---
 
@@ -46,7 +47,6 @@ name of the file. This will automatically convert the code output to
 
 Write a function ``abs_add`` that returns the sum of the absolute values of two numbers and another
 function ``abs_sub`` that computes the difference of absolute values. Test the two functions.
-
 
 ```python
 # Part 1a: Define the function abs_add

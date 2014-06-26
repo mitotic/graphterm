@@ -1312,7 +1312,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 args = msg[2]
                 if msg[1] == "note_mod_offset":
                     terminal_params["nb_mod_offset"] = args[0]
-                    if is_super_user and terminal_params["nb_name"] and terminal_params["nb_form"]:
+                    if is_super_user and terminal_params["nb_name"] and terminal_params["nb_form"] == "share":
                         matchpaths = TerminalConnection.get_matching_paths(wildcard2re("*"), terminal_params["owner"],
                                                                            terminal_params["state_id"],
                                                                            terminal_params["auth_type"],
