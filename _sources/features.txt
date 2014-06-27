@@ -50,6 +50,8 @@ The commands reside in the directory ``$GTERM_DIR/bin`` and include the followin
 
    ``gmenu item subitem``   To access the menubar from the command line
 
+   ``gncplot --variable=air --lon=0 --time=0 --lev=1000,0 air.mon.ltm.nc`` 2-D visualization of variables from a netCDF file
+
    ``gopen filename``    To open a file using the OS-specific ``open`` command
 
    ``gqrcode URL|text``    Display inline QR code
@@ -280,6 +282,10 @@ that has the images for a slideshow, and type::
 
 To select a subset of images in the directory, you can use a wildcard
 pattern. For publicly webcasting a slideshow, use the ``-b`` option.
+The convenience command ``pdf2png`` can be used to convert a PDF file
+to a set of images for viewing as a slide show::
+
+  pdf2png slides.pdf; gimage -f slides-*.png
 
 
 .. index:: execution tracing, online python tutor, python tutor

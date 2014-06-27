@@ -109,7 +109,7 @@ GraphTerm supports inline graphics display with ``matplotlib`` and
 ``pandas`` Python packages (see below) and also with R (see
 :doc:`R`). It also supports a lightweight notebook interface.
 
-.. index:: inline graphics, matplotlib
+.. index:: inline graphics, matplotlib, gpython, gipython
 
 .. _inline_graphics:
 

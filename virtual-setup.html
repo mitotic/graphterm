@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Setting up a Virtual Computer Lab &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>Setting up a Virtual Computer Lab &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="next" title="Using the GraphTerm Virtual Computer Lab" href="virtual-lab.html" />
     <link rel="prev" title="Remote access and SSH" href="remote.html" />
  
@@ -250,14 +248,14 @@ but you may need to modify the user configuration shell script
 with Ubuntu Linux. You can use the <tt class="docutils literal"><span class="pre">--auth_type=login</span></tt>
 option for a more traditional login authentication, but it
 requires the use of <tt class="docutils literal"><span class="pre">--https</span></tt> or <tt class="docutils literal"><span class="pre">--host=localhost</span></tt> for security.
-[If using login authentication, the remaining steps can be skipped.]</p>
+[If using login authentication, all the remaining steps can be skipped.]</p>
 </div></blockquote>
 <ol class="arabic" start="3">
 <li><p class="first">Run the following command as root user to display the <em>master access code</em>:</p>
 <p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)
 If the domain name is <tt class="docutils literal"><span class="pre">localhost</span></tt>, the filename would simply be <tt class="docutils literal"><span class="pre">_gterm_auth.txt</span></tt>.
-For automatic new user creation, the group code is in <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
+For automatic new user creation, the <em>group code</em> is in <tt class="docutils literal"><span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
 </li>
 <li><p class="first">Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphterm
 window on the server, with the super user name (<tt class="docutils literal"><span class="pre">root</span></tt> in our
@@ -266,7 +264,7 @@ case) and the <em>master access code</em></p>
 </ol>
 </div></blockquote>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login3.png" style="width: 90%;" /></a>
 </div>
 <blockquote>
 <div><ol class="arabic" start="5">
@@ -277,6 +275,8 @@ individual access code for each user:</p>
 each user. The first time an user enters their access code, the
 <tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> directory will be created, and there will be an
 option to enter the GMail address for authentication.</p>
+</li>
+<li><p class="first">If you wish to set up Google Authentication, follow the instructions at the URL <tt class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></tt></p>
 </li>
 </ol>
 </div></blockquote>
@@ -313,7 +313,7 @@ the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> 
 </ol>
 </div></blockquote>
 <div class="figure align-center" style="width: 90%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png" style="width: 95%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session2.png" style="width: 95%;" /></a>
 </div>
 <blockquote>
 <div><ol class="arabic" start="4">
@@ -330,14 +330,18 @@ generated command line should look something like this:</p>
 </ol>
 </div></blockquote>
 <div class="figure align-center" style="width: 90%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png" style="width: 95%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2launch.png" style="width: 95%;" /></a>
 </div>
 <blockquote>
 <div><ol class="arabic" start="5">
 <li><p class="first">After the new AWS Linux server has completed configuration, which
 can take several minutes, its IP address and <em>server domain name</em>
-will be displayed. If all went well, and you provided your GMail
-address, <em>skip to Step 8.</em></p>
+will be displayed.</p>
+</li>
+<li><p class="first">If all went well and you are using Google Authentication, type the URL
+<tt class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></tt> to view instructions on how to
+set it up. If you provided your GMail address for <tt class="docutils literal"><span class="pre">ec2launch</span></tt>,
+<em>skip to Step 9</em> after completing the setup.</p>
 </li>
 <li><p class="first">If you are not using Google Authentication, or something went
 wrong with the AWS setup, type the following command using the new
@@ -354,30 +358,32 @@ domain name to login to the password-less super user account <tt class="docutils
 <div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)</p>
 </div></blockquote>
-<ol class="arabic simple" start="8">
+<ol class="arabic simple" start="9">
 <li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem
 window on the server, with the super user name (<tt class="docutils literal"><span class="pre">ubuntu</span></tt> in our
 case) and using either <em>Google Authentication</em> or the <em>master access code</em></li>
 </ol>
 </div></blockquote>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" style="width: 90%;" /></a>
 </div>
 <blockquote>
-<div><ol class="arabic" start="9">
-<li><p class="first">Run the following command in the server graphterm window to display the group access code which should be entered by new users:</p>
-<p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
+<div><ol class="arabic simple" start="10">
+<li>Run the following command in the server graphterm window to display the group access code which should be entered by new users:</li>
+</ol>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
 <p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
 all lab users.</p>
-</li>
-<li><p class="first">If using AWS, run the following command on your local graphterm window to list and/or kill your instances:</p>
-</li>
+</div></blockquote>
+<ol class="arabic simple" start="11">
+<li>If using AWS, run the following command on your local graphterm window to list and/or kill your instances:</li>
 </ol>
 <blockquote>
 <div><tt class="docutils literal"><span class="pre">ec2list</span></tt></div></blockquote>
 </div></blockquote>
 <div class="figure align-center" style="width: 90%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" style="width: 95%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" style="width: 95%;" /></a>
 </div>
 </div>
 <div class="section" id="optional-steps">
@@ -547,20 +553,23 @@ user, and can be used to sign in as any user. (To generate new random
 access codes, simply delete this file.)  To display the access code
 for a particular user, use the following command within a GraphTerm on
 the remore machine:</p>
-<div class="highlight-python"><pre>gauth -m username</pre>
+<div class="highlight-python"><div class="highlight"><pre>gauth -m username
+</pre></div>
 </div>
 <p>The user-specific access code is also save in the user&#8217;s home
 directory in <tt class="docutils literal"><span class="pre">~user/.graphterm/user&#64;server_gterm_auth.txt</span></tt>.</p>
 <p>To avoid having to type in the access code every time, you can
 download the executable python script <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.py</span></tt>
 to your desktop/laptop computer. You can then type the following command:</p>
-<div class="highlight-python"><pre>gterm.py -u user http://server_domain</pre>
+<div class="highlight-python"><div class="highlight"><pre>gterm.py -u user http://server_domain
+</pre></div>
 </div>
 <p>to open a terminal on the remote server. You will be asked for the
 access code the first time, and then it can be saved in your
 local <tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> directory for future use.</p>
 <p>To display the group access code (needed to generate new accounts), type:</p>
-<div class="highlight-python"><pre>gauth -g -m super_username</pre>
+<div class="highlight-python"><div class="highlight"><pre>gauth -g -m super_username
+</pre></div>
 </div>
 <p>on the server.</p>
 </div>
@@ -591,19 +600,22 @@ server, by copying the file <tt class="docutils literal"><span class="pre">~/.gr
 <h2><a class="toc-backref" href="#id14">Administering the virtual computer lab</a><a class="headerlink" href="#administering-the-virtual-computer-lab" title="Permalink to this headline">¶</a></h2>
 <p>The super user can use the shell script <tt class="docutils literal"><span class="pre">gterm_user_setup</span></tt>
 in <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> to manually configure new users:</p>
-<div class="highlight-python"><pre>sudo gterm_user_setup username activate server_domain user_email</pre>
+<div class="highlight-python"><div class="highlight"><pre>sudo gterm_user_setup username activate server_domain user_email
+</pre></div>
 </div>
 <p><em>Note:</em> This script may need to be modified to work on non-AWS servers.</p>
 <p>The <tt class="docutils literal"><span class="pre">gadmin</span></tt> command (a work in progress) performs administrative
 actions to monitor users:</p>
-<div class="highlight-python"><pre># Display status for all terminals with path name matching python regexp
-gadmin -a sessions [regexp]</pre>
+<div class="highlight-python"><div class="highlight"><pre># Display status for all terminals with path name matching python regexp
+gadmin -a sessions [regexp]
+</pre></div>
 </div>
 <p>Clicking on the displayed terminal list will open up the terminal for
 viewing (see <a class="reference internal" href="screenshots.html#gadmin-users-shot"><em>Dashboard for a &#8220;virtual computer lab&#8221; - listing user terminal activity</em></a>).</p>
 <p>You can also view multiple user terminals embedded in your own
 terminal using the <tt class="docutils literal"><span class="pre">gframe</span></tt> command (see <a class="reference internal" href="screenshots.html#gadmin-terminals-shot"><em>Dashboard for a &#8220;virtual computer lab&#8221; - viewing user terminals</em></a>):</p>
-<div class="highlight-python"><pre>gframe --rowheight 300 --border --columns 3 --terminal /bob/quiz1 /jane/quiz1 /jose/quiz1</pre>
+<div class="highlight-python"><div class="highlight"><pre>gframe --rowheight 300 --border --columns 3 --terminal /bob/quiz1 /jane/quiz1 /jose/quiz1
+</pre></div>
 </div>
 </div>
 <div class="section" id="configuring-groups">
@@ -623,7 +635,8 @@ configuration is changed.</p>
 <h2><a class="toc-backref" href="#id16">Secondary cloud instances</a><a class="headerlink" href="#secondary-cloud-instances" title="Permalink to this headline">¶</a></h2>
 <p>Secondary cloud instances can connect to the GraphTerm server on
 the primary instance using the command:</p>
-<div class="highlight-python"><pre>gtermhost --daemon=start --server_addr=&lt;server_domain_or_address&gt; &lt;secondary_host_name&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>gtermhost --daemon=start --server_addr=&lt;server_domain_or_address&gt; &lt;secondary_host_name&gt;
+</pre></div>
 </div>
 <p><em>Note:</em> It would be better to use an internal (non-public) network address to
 connect secondary cloud instances.</p>
@@ -657,7 +670,7 @@ connect secondary cloud instances.</p>
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

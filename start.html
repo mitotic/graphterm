@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting started &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>Getting started &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="next" title="Remote access and SSH" href="remote.html" />
     <link rel="prev" title="README" href="README.html" />
  
@@ -195,9 +193,10 @@ code.mindmeldr.com
 <p>To install <tt class="docutils literal"><span class="pre">GraphTerm</span></tt>, you need to have Python 2.6+ and the Bash
 shell on your Mac/Linux/Unix computer. For a quick install, use one of
 the following two options:</p>
-<div class="highlight-python"><pre>sudo pip install graphterm
+<div class="highlight-python"><div class="highlight"><pre>sudo pip install graphterm
      OR
-sudo easy_install graphterm; sudo gterm_setup</pre>
+sudo easy_install graphterm; sudo gterm_setup
+</pre></div>
 </div>
 <p>Omit the <tt class="docutils literal"><span class="pre">sudo</span></tt> if you are installing as a non-root user within
 an Anaconda or Enthought Python environment, for example.
@@ -215,7 +214,8 @@ the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth
 <p>You can access the GraphTerm server using any browser that supports
 websockets. Google Chrome works best, but Firefox, Safari, or IE10
 are also supported. Start by entering the following URL:</p>
-<div class="highlight-python"><pre>http://localhost:8900</pre>
+<div class="highlight-python"><div class="highlight"><pre>http://localhost:8900
+</pre></div>
 </div>
 <p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm <em>host</em> you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
@@ -224,8 +224,9 @@ Within a GraphTerm window, you can use <em>terminal/new</em> menu option
 to create a new GraphTerm session.</p>
 <p>You can also open additional GraphTerm terminal windows using
 the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
-<div class="highlight-python"><pre>gterm --noauth [session_name]
-gterm -u ubuntu --browser="Google Chrome" https://example.com:8900</pre>
+<div class="highlight-python"><div class="highlight"><pre>gterm --noauth [session_name]
+gterm -u ubuntu --browser=&quot;Google Chrome&quot; https://example.com:8900
+</pre></div>
 </div>
 <p>where the terminal session name argument is optional.  (This
 command can automatically process authentication codes from your
@@ -241,9 +242,10 @@ security is not important.  Another useful no authentication mode is
 more on running publicly accessible GraphTerm servers,
 see <a class="reference internal" href="virtual-setup.html#virtual-setup"><em>Setting up a Virtual Computer Lab</em></a>.)</p>
 <p>Within the terminal, try out the following commands:</p>
-<div class="highlight-python"><pre>hello_gterm.sh
+<div class="highlight-python"><div class="highlight"><pre>hello_gterm.sh
 gls &lt;directory&gt;
-gvi &lt;text-filename&gt;</pre>
+gvi &lt;text-filename&gt;
+</pre></div>
 </div>
 <p>The <tt class="docutils literal"><span class="pre">gls</span></tt> and <tt class="docutils literal"><span class="pre">gvi</span></tt> commands in the GraphTerm toolchain imitate
 basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands (see
@@ -282,22 +284,24 @@ typing on touch devices.</p>
 <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory can be used to start up the python
 interpreter in <tt class="docutils literal"><span class="pre">pylab</span></tt> mode for inline graphics within the
 GraphTerm terminal:</p>
-<div class="highlight-python"><pre>python -i $GTERM_DIR/bin/gpylab.py
+<div class="highlight-python"><div class="highlight"><pre>python -i $GTERM_DIR/bin/gpylab.py
 &gt;&gt;&gt; plot([1,2,4])
 &gt;&gt;&gt; plot([1,3,9])     # Overplot
 &gt;&gt;&gt; figure()          # Clear figure
 &gt;&gt;&gt; plot([1,3,9])
 &gt;&gt;&gt; newfig()          # New figure
-&gt;&gt;&gt; plot([1,4,12])</pre>
+&gt;&gt;&gt; plot([1,4,12])
+</pre></div>
 </div>
 <p>Inline graphics also works with the <tt class="docutils literal"><span class="pre">ipython</span></tt> command in a similar
 manner. Instead of typing the long python command line above, you can use the
 shortcut commands <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gipython</span></tt>, e.g.:</p>
-<div class="highlight-python"><pre>gpython
-&gt;&gt;&gt; plot([1,2], [3,6])</pre>
+<div class="highlight-python"><div class="highlight"><pre>gpython
+&gt;&gt;&gt; plot([1,2], [3,6])
+</pre></div>
 </div>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" style="width: 90%;" /></a>
 </div>
 <p>Run <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gmatplot.py</span></tt> for a demo of inline graphics (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Simple inline animation using matplotlib</em></a>).
 See the function <tt class="docutils literal"><span class="pre">main</span></tt> in this file for sample plotting code.</p>
@@ -318,14 +322,15 @@ See the function <tt class="docutils literal"><span class="pre">main</span></tt>
 <span id="pandas-mode"></span><span id="index-2"></span><h3><a class="toc-backref" href="#id7">Inline tables using pandas</a><a class="headerlink" href="#inline-tables-using-pandas" title="Permalink to this headline">¶</a></h3>
 <p>GraphTerm can display <tt class="docutils literal"><span class="pre">pandas</span></tt> DataFrame objects as a table using
 HTML:</p>
-<div class="highlight-python"><pre>gpython
+<div class="highlight-python"><div class="highlight"><pre>gpython
 &gt;&gt;&gt; import pandas as pd
-&gt;&gt;&gt; d = {'one' : [1., 2., 3., 4.],
-&gt;&gt;&gt; 'two' : [4., 3., 2., 1.]}
-&gt;&gt;&gt; pd.DataFrame(d)</pre>
+&gt;&gt;&gt; d = {&#39;one&#39; : [1., 2., 3., 4.],
+&gt;&gt;&gt; &#39;two&#39; : [4., 3., 2., 1.]}
+&gt;&gt;&gt; pd.DataFrame(d)
+</pre></div>
 </div>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-pandas.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-pandas.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-pandas.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-pandas.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-pandas.png" style="width: 90%;" /></a>
 </div>
 </div>
 <div class="section" id="notebook-mode">
@@ -347,17 +352,19 @@ Alternatively, you can select <em>notebook/new/default</em> menu option after
 starting the program (this works even with <tt class="docutils literal"><span class="pre">bash</span></tt>!).</p>
 <p>To open an existing notebook, use the <tt class="docutils literal"><span class="pre">gls</span></tt> command to list your
 notebooks, e,g.:</p>
-<div class="highlight-python"><pre>gls *.ipynb</pre>
+<div class="highlight-python"><div class="highlight"><pre>gls *.ipynb
+</pre></div>
 </div>
 <p>Then click on the notebook that you wish to open.
 Alternatively, you can use the <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gopen</span></tt> commands
 python notebooks:</p>
-<div class="highlight-python"><pre>gpython notebook.ipynb</pre>
+<div class="highlight-python"><div class="highlight"><pre>gpython notebook.ipynb
+</pre></div>
 </div>
 <p>For other languages, you will need to start the interpreter and then
 use the <em>notebook/open</em> menu option.</p>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" style="width: 90%;" /></a>
 </div>
 <p>Within notebook mode,
 use <em>Shift-Enter</em> to execute a cell and move to the next, or
@@ -380,7 +387,8 @@ to return to the terminal mode.</p>
 <p>For each host, terminal sessions are assigned default names like
 <tt class="docutils literal"><span class="pre">tty1</span></tt>, <tt class="docutils literal"><span class="pre">tty2</span></tt> etc. You can also create unique terminal session names simply by using it in an
 URL, e.g.:</p>
-<div class="highlight-python"><pre>http://localhost:8900/local/mysession</pre>
+<div class="highlight-python"><div class="highlight"><pre>http://localhost:8900/local/mysession
+</pre></div>
 </div>
 <p>The first user to create a session &#8220;owns&#8221; it, and can make the session
 publicly available by disabling the <em>share/private</em> menubar option.
@@ -461,7 +469,7 @@ connect to it from other computers as needed (see <a class="reference internal" 
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

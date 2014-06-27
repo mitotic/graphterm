@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>README &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>README &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="next" title="Getting started" href="start.html" />
     <link rel="prev" title="Contact" href="contact.html" />
  
@@ -203,12 +201,12 @@ sharing terminals and notebooks.</li>
 <p><strong>Screenshot 1: Inline plotting on a remote machine (via SSH)</strong></p>
 </div></blockquote>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ssh-plot.png" style="width: 90%;" /></a>
 </div>
 <hr style="margin-bottom: 3em;"><blockquote>
 <div><strong>Screenshot 2: Monitoring multiple user terminals in a &#8220;virtual computer lab&#8221;</strong></div></blockquote>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png" style="width: 90%;" /></a>
 </div>
 <p>GraphTerm builds upon two earlier projects,
 <a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a>
@@ -253,7 +251,7 @@ and (vi) notebook mode using the standard python interpreter.</p>
 <blockquote>
 <div><strong>Screenshot 3: Embedding terminals within GraphTerm</strong></div></blockquote>
 <div class="figure align-center" style="width: 100%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-metro.jpg" style="width: 90%;" /></a>
 </div>
 </div>
 <div class="section" id="installation">
@@ -261,16 +259,18 @@ and (vi) notebook mode using the standard python interpreter.</p>
 <p>To install <tt class="docutils literal"><span class="pre">GraphTerm</span></tt>, you need to have Python 2.6+ and the Bash
 shell on your Mac/Linux/Unix computer. For a quick install, use one of
 the following two options:</p>
-<div class="highlight-python"><pre>sudo pip install graphterm
+<div class="highlight-python"><div class="highlight"><pre>sudo pip install graphterm
      OR
-sudo easy_install graphterm; sudo gterm_setup</pre>
+sudo easy_install graphterm; sudo gterm_setup
+</pre></div>
 </div>
 <p>If you wish to install GraphTerm as a non-root user within an Anaconda
 or Enthought Python environment, you can omit the <tt class="docutils literal"><span class="pre">sudo</span></tt> prefix.</p>
 <p>For a manual install procedure, download the release tarball from the
 <a class="reference external" href="http://pypi.python.org/pypi/graphterm">Python Package Index</a>, untar,
 and execute the following command in the <tt class="docutils literal"><span class="pre">graphterm-&lt;version&gt;</span></tt> directory:</p>
-<div class="highlight-python"><pre>python setup.py install</pre>
+<div class="highlight-python"><div class="highlight"><pre>python setup.py install
+</pre></div>
 </div>
 <p>For the manual install, you will also need to install the <tt class="docutils literal"><span class="pre">tornado</span></tt>
 web server, which can be downloaded from
@@ -301,7 +301,8 @@ command can automatically enter this code for you.)</p>
 <p>You can access the GraphTerm server using any browser that supports
 websockets. Google Chrome works best, but Firefox, Safari, or IE10
 are also supported. Start by entering the following URL:</p>
-<div class="highlight-python"><pre>http://localhost:8900</pre>
+<div class="highlight-python"><div class="highlight"><pre>http://localhost:8900
+</pre></div>
 </div>
 <p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm host you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
@@ -315,8 +316,9 @@ the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p
 </div>
 <p>where the terminal session name argument is optional.</p>
 <p>Once you have a terminal, try out the following commands:</p>
-<div class="highlight-python"><pre>gls &lt;directory&gt;
-gvi &lt;text-filename&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>gls &lt;directory&gt;
+gvi &lt;text-filename&gt;
+</pre></div>
 </div>
 <p>These are commands in the GraphTerm toolchain that imitate
 basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands.
@@ -335,7 +337,8 @@ using GraphTerm.</p>
 See the <a class="reference external" href="http://code.mindmeldr.com/graphterm/tutorials.html">Tutorials and Talks</a>
 page for more advanced usage examples.</p>
 <p>You can also use the following command:</p>
-<div class="highlight-python"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f</pre>
+<div class="highlight-python"><div class="highlight"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
+</pre></div>
 </div>
 <p>to view a slideshow about GraphTerm within GraphTerm.
 Type <tt class="docutils literal"><span class="pre">b</span></tt> three times in quick succession to exit the slideshow.</p>
@@ -428,7 +431,7 @@ menu plugin</li>
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

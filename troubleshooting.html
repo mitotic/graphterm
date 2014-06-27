@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Troubleshooting FAQ &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>Troubleshooting FAQ &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="next" title="Screenshots" href="screenshots.html" />
     <link rel="prev" title="GraphTerm toolchain and features" href="features.html" />
  
@@ -135,6 +133,7 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#server">Server</a><ul>
 <li><a class="reference internal" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a></li>
 <li><a class="reference internal" href="#can-i-run-the-graphterm-server-on-port-80-or-443">Can I run the GraphTerm server on port 80 (or 443)?</a></li>
+<li><a class="reference internal" href="#how-do-i-get-google-authentication-to-work">How do I get Google Authentication to work?</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#using-graphterm-on-windows">Using GraphTerm on Windows</a><ul>
@@ -209,15 +208,16 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#server" id="id14">Server</a><ul>
 <li><a class="reference internal" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" id="id15">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a></li>
 <li><a class="reference internal" href="#can-i-run-the-graphterm-server-on-port-80-or-443" id="id16">Can I run the GraphTerm server on port 80 (or 443)?</a></li>
+<li><a class="reference internal" href="#how-do-i-get-google-authentication-to-work" id="id17">How do I get Google Authentication to work?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-graphterm-on-windows" id="id17">Using GraphTerm on Windows</a><ul>
-<li><a class="reference internal" href="#does-graphterm-work-on-windows" id="id18">Does GraphTerm work on Windows?</a></li>
-<li><a class="reference internal" href="#graphterm-fails-to-load-properly-on-windows" id="id19">GraphTerm fails to load properly on Windows?</a></li>
+<li><a class="reference internal" href="#using-graphterm-on-windows" id="id18">Using GraphTerm on Windows</a><ul>
+<li><a class="reference internal" href="#does-graphterm-work-on-windows" id="id19">Does GraphTerm work on Windows?</a></li>
+<li><a class="reference internal" href="#graphterm-fails-to-load-properly-on-windows" id="id20">GraphTerm fails to load properly on Windows?</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-graphterm-on-tablets" id="id20">Using GraphTerm on tablets</a><ul>
-<li><a class="reference internal" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" id="id21">How do I access the virtual keyboard on iPad/Android?</a></li>
+<li><a class="reference internal" href="#using-graphterm-on-tablets" id="id21">Using GraphTerm on tablets</a><ul>
+<li><a class="reference internal" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" id="id22">How do I access the virtual keyboard on iPad/Android?</a></li>
 </ul>
 </li>
 </ul>
@@ -349,14 +349,19 @@ connections to the default port 8900 .</p>
 at this stage of GraphTerm development. A better way to achieve this is
 to redirect traffic from port 80 to port 8900. On a Linux server, this
 can be achieved by executing a single command (as root):</p>
-<div class="highlight-python"><pre>iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900</pre>
+<div class="highlight-python"><div class="highlight"><pre>iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900
+</pre></div>
 </div>
+</div>
+<div class="section" id="how-do-i-get-google-authentication-to-work">
+<span id="index-11"></span><h3><a class="toc-backref" href="#id17">How do I get Google Authentication to work?</a><a class="headerlink" href="#how-do-i-get-google-authentication-to-work" title="Permalink to this headline">¶</a></h3>
+<p>Follow the instructions at the URL <tt class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></tt></p>
 </div>
 </div>
 <div class="section" id="using-graphterm-on-windows">
-<span id="index-11"></span><h2><a class="toc-backref" href="#id17">Using GraphTerm on Windows</a><a class="headerlink" href="#using-graphterm-on-windows" title="Permalink to this headline">¶</a></h2>
+<span id="index-12"></span><h2><a class="toc-backref" href="#id18">Using GraphTerm on Windows</a><a class="headerlink" href="#using-graphterm-on-windows" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="does-graphterm-work-on-windows">
-<h3><a class="toc-backref" href="#id18">Does GraphTerm work on Windows?</a><a class="headerlink" href="#does-graphterm-work-on-windows" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id19">Does GraphTerm work on Windows?</a><a class="headerlink" href="#does-graphterm-work-on-windows" title="Permalink to this headline">¶</a></h3>
 <p>The GraphTerm client should work on a Windows browser that supports Websockets,
 like the  latest versions of Chrome/Firefox/Safari or IE10. The
 GraphTerm server is currently not supported on Windows. (Although the
@@ -364,7 +369,7 @@ server is written in pure python, it needs access to the
 pseudo-terminal device that is only supported on Unix/Linux.)</p>
 </div>
 <div class="section" id="graphterm-fails-to-load-properly-on-windows">
-<h3><a class="toc-backref" href="#id19">GraphTerm fails to load properly on Windows?</a><a class="headerlink" href="#graphterm-fails-to-load-properly-on-windows" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id20">GraphTerm fails to load properly on Windows?</a><a class="headerlink" href="#graphterm-fails-to-load-properly-on-windows" title="Permalink to this headline">¶</a></h3>
 <p>Ensure that you are using a browser that supports Websockets, like the
 latest versions of Chrome/Firefox/Safari or IE10.
 Some Anti-virus programs block Websockets on the browser. You may need to
@@ -373,9 +378,9 @@ server is running.</p>
 </div>
 </div>
 <div class="section" id="using-graphterm-on-tablets">
-<span id="index-12"></span><h2><a class="toc-backref" href="#id20">Using GraphTerm on tablets</a><a class="headerlink" href="#using-graphterm-on-tablets" title="Permalink to this headline">¶</a></h2>
+<span id="index-13"></span><h2><a class="toc-backref" href="#id21">Using GraphTerm on tablets</a><a class="headerlink" href="#using-graphterm-on-tablets" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="how-do-i-access-the-virtual-keyboard-on-ipad-android">
-<h3><a class="toc-backref" href="#id21">How do I access the virtual keyboard on iPad/Android?</a><a class="headerlink" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id22">How do I access the virtual keyboard on iPad/Android?</a><a class="headerlink" href="#how-do-i-access-the-virtual-keyboard-on-ipad-android" title="Permalink to this headline">¶</a></h3>
 <p>GraphTerm can be used on touch devices (phones/tablets), with some
 limitations. Use the <em>view/footer</em> menu to enter keyboard input, send
 special characters, access arrow keys etc. Tap the <em>Kbrd</em> in the
@@ -414,7 +419,7 @@ typing on touch devices.</p>
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

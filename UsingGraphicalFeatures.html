@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using the graphical features of GraphTerm &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>Using the graphical features of GraphTerm &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,12 +24,12 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
-    <link rel="up" title="Tutorials etc." href="tutorials.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
+    <link rel="up" title="Talks, tutorials, and videos" href="talks.html" />
     <link rel="next" title="Use GraphTerm as a remote terminal (like screen or tmux)" href="UseAsRemoteTerminal.html" />
-    <link rel="prev" title="Tutorials etc." href="tutorials.html" />
+    <link rel="prev" title="Talks, tutorials, and videos" href="talks.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -102,13 +100,13 @@ code.mindmeldr.com
           <a href="UseAsRemoteTerminal.html" title="Use GraphTerm as a remote terminal (like screen or tmux)"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="tutorials.html" title="Tutorials etc."
+          <a href="talks.html" title="Talks, tutorials, and videos"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="tutorials.html" accesskey="U">Tutorials etc.</a> &raquo;</li> 
+          <li><a href="talks.html" accesskey="U">Talks, tutorials, and videos</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -132,8 +130,8 @@ code.mindmeldr.com
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="tutorials.html"
-                        title="previous chapter">Tutorials etc.</a></p>
+  <p class="topless"><a href="talks.html"
+                        title="previous chapter">Talks, tutorials, and videos</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="UseAsRemoteTerminal.html"
                         title="next chapter">Use GraphTerm as a remote terminal (like screen or tmux)</a></p>
@@ -246,7 +244,8 @@ rename it as a backup copy with a slightly different name. You can do
 that in GraphTerm by first typing  <tt class="docutils literal"><span class="pre">cp</span></tt> in the command line and
 clicking on the displayed filename (or icon) twice, resulting in a
 command line of the form:</p>
-<div class="highlight-python"><pre>cp filepath filepath</pre>
+<div class="highlight-python"><div class="highlight"><pre>cp filepath filepath
+</pre></div>
 </div>
 <p>You can then edit the second filepath to modify it, and press Enter to
 execute the copy command.</p>
@@ -317,19 +316,21 @@ give it any name you like.) The first time you use the client, you
 will be prompted to enter the access credentials associated
 with your Twitter app.</p>
 <p>Once the app is setup, the Twitter client can be used as follows:</p>
-<div class="highlight-python"><pre># Post a tweet from your account
+<div class="highlight-python"><div class="highlight"><pre># Post a tweet from your account
 gtweet My first tweet
-# Display all tweets mentioning "python"
+# Display all tweets mentioning &quot;python&quot;
 gtweet --search python
 # Display direct messages and tweets directed to the user
-gtweet --recv</pre>
+gtweet --recv
+</pre></div>
 </div>
 <p>By default, the Twitter client displays tweets graphically using
 the fullscreen (<tt class="docutils literal"><span class="pre">-f</span></tt>) option, although it also has text (<tt class="docutils literal"><span class="pre">--text</span></tt>)
 and CSV format (<tt class="docutils literal"><span class="pre">--csv</span></tt>) output options. You can also combine the
 the fullscreen and the text/csv options to save a copy of all the displayed
 tweets as follows:</p>
-<div class="highlight-python"><pre>gtweet -f --csv --search python &gt; tweets.csv</pre>
+<div class="highlight-python"><div class="highlight"><pre>gtweet -f --csv --search python &gt; tweets.csv
+</pre></div>
 </div>
 </div>
 </div>
@@ -350,19 +351,19 @@ tweets as follows:</p>
           <a href="UseAsRemoteTerminal.html" title="Use GraphTerm as a remote terminal (like screen or tmux)"
              >next</a> |</li>
         <li class="right" >
-          <a href="tutorials.html" title="Tutorials etc."
+          <a href="talks.html" title="Talks, tutorials, and videos"
              >previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="tutorials.html" >Tutorials etc.</a> &raquo;</li> 
+          <li><a href="talks.html" >Talks, tutorials, and videos</a> &raquo;</li> 
       </ul>
     </div>
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

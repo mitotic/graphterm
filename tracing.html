@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using GraphTerm with OTrace &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>Using GraphTerm with OTrace &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="up" title="Advanced topics" href="advanced.html" />
     <link rel="next" title="Widgets, sockets, and interactivity" href="widgets.html" />
     <link rel="prev" title="API for writing GraphTerm-aware programs" href="API.html" />
@@ -152,7 +150,8 @@ code.mindmeldr.com
 an object-oriented python debugger. Any Python program
 can serve as a &#8220;host&#8221; and be connected to the GraphTerm server
 using the <tt class="docutils literal"><span class="pre">gotrace</span></tt> command:</p>
-<div class="highlight-python"><pre>gotrace example.py</pre>
+<div class="highlight-python"><div class="highlight"><pre>gotrace example.py
+</pre></div>
 </div>
 <p>The above command loads <tt class="docutils literal"><span class="pre">example.py</span></tt> as a module and connects
 to the GraphTerm server for debugging. This program will appear in
@@ -161,7 +160,8 @@ the list of hosts under the name <tt class="docutils literal"><span class="pre">
 the <tt class="docutils literal"><span class="pre">run</span> <span class="pre">&lt;function&gt;</span></tt> command to begin executing a function in
 <tt class="docutils literal"><span class="pre">example.py</span></tt>. You can also initiate program execution
 directly from the command line as follows:</p>
-<div class="highlight-python"><pre>gotrace -f test example.py arg1 arg2</pre>
+<div class="highlight-python"><div class="highlight"><pre>gotrace -f test example.py arg1 arg2
+</pre></div>
 </div>
 <p>The above command executes the function <tt class="docutils literal"><span class="pre">test(arg=[])</span></tt> in
 <tt class="docutils literal"><span class="pre">example.py</span></tt>, where <tt class="docutils literal"><span class="pre">arg</span></tt> is a list of string arguments from
@@ -203,7 +203,7 @@ to the GraphTerm server for monitoring/debugging. See
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

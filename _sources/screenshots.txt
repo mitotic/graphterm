@@ -138,7 +138,7 @@ Inline contour plots using matplotlib
 .. _gadmin_users_shot:
 
 Dashboard for a "virtual computer lab" - listing user terminal activity
-==================================================
+====================================================================================================
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-users.png
    :align: center
@@ -159,7 +159,7 @@ Dashboard for a "virtual computer lab" - listing user terminal activity
 .. _gadmin_terminals_shot:
 
 Dashboard for a "virtual computer lab" - viewing user terminals
-==================================================
+====================================================================================================
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-gadmin-terminals.png
    :align: center

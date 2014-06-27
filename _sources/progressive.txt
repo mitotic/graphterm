@@ -87,7 +87,6 @@ notebook. Once filled by the students, the notebooks can be
 submitted for grading, as they contain a record of the last attempt
 at completing each step, even if unsuccessful.
 
-
 Using progressively fillable notebooks
 ---------------------------------------------------
 
@@ -120,15 +119,16 @@ complex calculation:
   session path like ``/local/nb_name``. The GraphTerm server will
   automatically export the notebook content for access by other users.
 
-- To access a shared notebook, other users should use the
-  *notebook/open* menu option and type in the name of the terminal path,
-  (``/local/nb_name``). Other users can only execute code using
-  *Control-Enter* and cannot advance to the next code cell until the
-  instructor has executed *Shift-Enter* on the current cell.
+- To access a shared notebook, other users should start ``gpython``
+  and select the *notebook/open* menu option, typing in the name of the
+  terminal path (``/local/nb_name``). Other users can only execute
+  code using *Control-Enter* and cannot advance to the next code cell
+  until the instructor has executed *Shift-Enter* on the current cell.
   (The last attempt by each user at running code in the cell is
   recorded in that user's notebook.) Users joining late can start
   accessing the shared notebook any time and should execute cells
-  sequentially using *Control-Enter* until they reach the current cell.
+  sequentially using *Control-Enter* until they reach the current
+  cell.
 
 - If a subdirectory SUBMIT is present in the same directory as the
   shared notebook file, other users can *submit* the filled shared
@@ -150,12 +150,28 @@ at their own pace and then submit their filled notebook at the end:
   session path like ``/local/nb_name``.
 
 - While the instructor's terminal session is active, other users can
-  use the *notebook/open* menu option and type in the name of the
-  terminal path (``/local/nb_name``) to open the notebook. Then they
-  can work on it using *Control-Enter* to try out code, and
-  *Shift-Enter* to display the correct answer and move on to the next
-  step.
+  start ``gpython`` and select the *notebook/open* menu option, typing
+  in the name of the terminal path (``/local/nb_name``) to open the
+  notebook. Then they can work on it using *Control-Enter* to try out
+  code, and *Shift-Enter* to display the correct answer and move on to
+  the next step.
 
 - If a subdirectory SUBMIT is present in the same directory as the
   shared notebook file, other users can *submit* the filled shared
   notebook to this directory using the *notebook/submit* menu option.
+
+
+Sample fillable notebooks
+-----------------------------------------------
+
+The Python notebook file ``$GTERM_DIR/notebooks/Progressive-demo.py.gnb.md``
+was opened, executed, and saved as a sample fillable notebook with the
+name ``Progressive-fill.py.gnb.md``. You may open this file to test
+the fillable features. You may also copy this file as
+``Progressive-share.py.gnb.md`` to share it, or copy it as
+``Progressive-assign.py.gnb.md`` to create an assignment.
+
+There is also a fillable Bash notebook
+``$GTERM_DIR/notebooks/Shell-fill.sh.gnb.md``, that you can open using
+the *notebook/open* menu option or by clicking on the output of the
+``gls`` command.

@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using GraphTerm with R &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>Using GraphTerm with R &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="next" title="GraphTerm toolchain and features" href="features.html" />
     <link rel="prev" title="Progressively fillable notebooks" href="progressive.html" />
  
@@ -153,21 +151,22 @@ inline graphics.  The following <tt class="docutils literal"><span class="pre">R
 libraries, or their equivalents, may need to be installed:
 <tt class="docutils literal"><span class="pre">libcurl4-openssl-dev</span> <span class="pre">libcairo2-dev</span> <span class="pre">libxt-dev</span></tt>. Here&#8217;s a plotting
 example:</p>
-<div class="highlight-python"><pre>$ R -q
-install.packages(c("RCurl", "Cairo", "png"))  # The first time
-gterm &lt;- paste(Sys.getenv("GTERM_DIR"),"/bin/gterm.R", sep="")
+<div class="highlight-python"><div class="highlight"><pre>$ R -q
+install.packages(c(&quot;RCurl&quot;, &quot;Cairo&quot;, &quot;png&quot;))  # The first time
+gterm &lt;- paste(Sys.getenv(&quot;GTERM_DIR&quot;),&quot;/bin/gterm.R&quot;, sep=&quot;&quot;)
 source(gterm)          # Load GraphTerm API helper functions
 g &lt;- gcairo()          # Initialize Cairo device for GraphTerm output
 x &lt;- rnorm(100,0,1)
-hist(x, col="blue")
+hist(x, col=&quot;blue&quot;)
 g$frame()              # Display plot as inline image
-hist(x, col="red")
+hist(x, col=&quot;red&quot;)
 g$frame(TRUE)          # Overwrite previous plot
-hist(x, col="green")
-g$frame()              # New plot</pre>
+hist(x, col=&quot;green&quot;)
+g$frame()              # New plot
+</pre></div>
 </div>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png" style="width: 90%;" /></a>
 </div>
 <p>The notebook mode of GraphTerm will also work with <tt class="docutils literal"><span class="pre">R</span></tt>, without any
 additional software. GraphTerm can open Markdown files (in a format
@@ -177,7 +176,7 @@ contains a sample notebook displaying inline graphics (see <a class="reference i
 notebook, click on it in the <tt class="docutils literal"><span class="pre">gls</span></tt> output, or use the
 <em>notebook/open</em> menu option after starting <tt class="docutils literal"><span class="pre">R</span></tt>.</p>
 <div class="figure align-center" style="width: 85%">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png" style="width: 90%;" />
+<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png" style="width: 90%;" /></a>
 </div>
 </div>
 
@@ -208,7 +207,7 @@ notebook, click on it in the <tt class="docutils literal"><span class="pre">gls<
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

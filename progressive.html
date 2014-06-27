@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Progressively fillable notebooks &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>Progressively fillable notebooks &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="next" title="Using GraphTerm with R" href="R.html" />
     <link rel="prev" title="Using the GraphTerm Virtual Computer Lab" href="virtual-lab.html" />
  
@@ -118,6 +116,7 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#using-progressively-fillable-notebooks">Using progressively fillable notebooks</a></li>
 <li><a class="reference internal" href="#synchronous-sharing-of-progressively-fillable-notebooks">Synchronous sharing of progressively fillable notebooks</a></li>
 <li><a class="reference internal" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks">Assigning work using asynchronous progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#sample-fillable-notebooks">Sample fillable notebooks</a></li>
 </ul>
 </li>
 </ul>
@@ -164,6 +163,7 @@ code.mindmeldr.com
 <li><a class="reference internal" href="#using-progressively-fillable-notebooks" id="id3">Using progressively fillable notebooks</a></li>
 <li><a class="reference internal" href="#synchronous-sharing-of-progressively-fillable-notebooks" id="id4">Synchronous sharing of progressively fillable notebooks</a></li>
 <li><a class="reference internal" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks" id="id5">Assigning work using asynchronous progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#sample-fillable-notebooks" id="id6">Sample fillable notebooks</a></li>
 </ul>
 </li>
 </ul>
@@ -264,15 +264,16 @@ save using a suffix starting with <tt class="docutils literal"><span class="pre"
 <li>Open the <tt class="docutils literal"><span class="pre">nb_name-share.py.gnb.md</span></tt> notebook in a terminal with a
 session path like <tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>. The GraphTerm server will
 automatically export the notebook content for access by other users.</li>
-<li>To access a shared notebook, other users should use the
-<em>notebook/open</em> menu option and type in the name of the terminal path,
-(<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>). Other users can only execute code using
-<em>Control-Enter</em> and cannot advance to the next code cell until the
-instructor has executed <em>Shift-Enter</em> on the current cell.
+<li>To access a shared notebook, other users should start <tt class="docutils literal"><span class="pre">gpython</span></tt>
+and select the <em>notebook/open</em> menu option, typing in the name of the
+terminal path (<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>). Other users can only execute
+code using <em>Control-Enter</em> and cannot advance to the next code cell
+until the instructor has executed <em>Shift-Enter</em> on the current cell.
 (The last attempt by each user at running code in the cell is
 recorded in that user&#8217;s notebook.) Users joining late can start
 accessing the shared notebook any time and should execute cells
-sequentially using <em>Control-Enter</em> until they reach the current cell.</li>
+sequentially using <em>Control-Enter</em> until they reach the current
+cell.</li>
 <li>If a subdirectory SUBMIT is present in the same directory as the
 shared notebook file, other users can <em>submit</em> the filled shared
 notebook to this directory using the <em>notebook/submit</em> menu option.</li>
@@ -290,15 +291,28 @@ save using a suffix starting with <tt class="docutils literal"><span class="pre"
 <li>Open the <tt class="docutils literal"><span class="pre">nb_name-assign.py.gnb.md</span></tt> notebook in a terminal with a
 session path like <tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>.</li>
 <li>While the instructor&#8217;s terminal session is active, other users can
-use the <em>notebook/open</em> menu option and type in the name of the
-terminal path (<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>) to open the notebook. Then they
-can work on it using <em>Control-Enter</em> to try out code, and
-<em>Shift-Enter</em> to display the correct answer and move on to the next
-step.</li>
+start <tt class="docutils literal"><span class="pre">gpython</span></tt> and select the <em>notebook/open</em> menu option, typing
+in the name of the terminal path (<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>) to open the
+notebook. Then they can work on it using <em>Control-Enter</em> to try out
+code, and <em>Shift-Enter</em> to display the correct answer and move on to
+the next step.</li>
 <li>If a subdirectory SUBMIT is present in the same directory as the
 shared notebook file, other users can <em>submit</em> the filled shared
 notebook to this directory using the <em>notebook/submit</em> menu option.</li>
 </ul>
+</div>
+<div class="section" id="sample-fillable-notebooks">
+<h2><a class="toc-backref" href="#id6">Sample fillable notebooks</a><a class="headerlink" href="#sample-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<p>The Python notebook file <tt class="docutils literal"><span class="pre">$GTERM_DIR/notebooks/Progressive-demo.py.gnb.md</span></tt>
+was opened, executed, and saved as a sample fillable notebook with the
+name <tt class="docutils literal"><span class="pre">Progressive-fill.py.gnb.md</span></tt>. You may open this file to test
+the fillable features. You may also copy this file as
+<tt class="docutils literal"><span class="pre">Progressive-share.py.gnb.md</span></tt> to share it, or copy it as
+<tt class="docutils literal"><span class="pre">Progressive-assign.py.gnb.md</span></tt> to create an assignment.</p>
+<p>There is also a fillable Bash notebook
+<tt class="docutils literal"><span class="pre">$GTERM_DIR/notebooks/Shell-fill.sh.gnb.md</span></tt>, that you can open using
+the <em>notebook/open</em> menu option or by clicking on the output of the
+<tt class="docutils literal"><span class="pre">gls</span></tt> command.</p>
 </div>
 </div>
 
@@ -329,7 +343,7 @@ notebook to this directory using the <em>notebook/submit</em> menu option.</li>
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

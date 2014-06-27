@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>GraphTerm toolchain and features &mdash; GraphTerm 0.54.3 documentation</title>
+    <title>GraphTerm toolchain and features &mdash; GraphTerm 0.55.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.54.3',
+        URL_ROOT:    './',
+        VERSION:     '0.55.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.54.3 documentation"
+          title="Search within GraphTerm 0.55.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.54.3 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
     <link rel="next" title="Troubleshooting FAQ" href="troubleshooting.html" />
     <link rel="prev" title="Using GraphTerm with R" href="R.html" />
  
@@ -238,6 +236,7 @@ Landslide, a web-based slideshow program  (see  <a class="reference internal" hr
 <p><tt class="docutils literal"><span class="pre">gls</span> <span class="pre">[-i]</span> <span class="pre">[filenames]</span></tt>   Generate clickable directory listing</p>
 <p><tt class="docutils literal"><span class="pre">gmatplot.py</span></tt>   An inline <tt class="docutils literal"><span class="pre">matplotlib</span></tt> plotting package (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Simple inline animation using matplotlib</em></a>)</p>
 <p><tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">item</span> <span class="pre">subitem</span></tt>   To access the menubar from the command line</p>
+<p><tt class="docutils literal"><span class="pre">gncplot</span> <span class="pre">--variable=air</span> <span class="pre">--lon=0</span> <span class="pre">--time=0</span> <span class="pre">--lev=1000,0</span> <span class="pre">air.mon.ltm.nc</span></tt> 2-D visualization of variables from a netCDF file</p>
 <p><tt class="docutils literal"><span class="pre">gopen</span> <span class="pre">filename</span></tt>    To open a file using the OS-specific <tt class="docutils literal"><span class="pre">open</span></tt> command</p>
 <p><tt class="docutils literal"><span class="pre">gqrcode</span> <span class="pre">URL|text</span></tt>    Display inline QR code</p>
 <p><tt class="docutils literal"><span class="pre">greveal</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>    A GraphTerm-aware interface to <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>, a web-based slideshow program</p>
@@ -302,11 +301,13 @@ is usually, but not always, the first letter of the item name. For example,
 the sequence <em>Control-J t c</em> will select the menu item <em>terminal/clear</em></p>
 <p>The menubar can also be accessed from the
 command line, using the <tt class="docutils literal"><span class="pre">gmenu</span></tt> command, e.g.:</p>
-<div class="highlight-python"><pre>gmenu terminal clear</pre>
+<div class="highlight-python"><div class="highlight"><pre>gmenu terminal clear
+</pre></div>
 </div>
 <p>A single-word menu name is typed to select each menu level, and
 preceding level names may be omitted, as long as there is no ambiguity, e.g.:</p>
-<div class="highlight-python"><pre>gmenu clear</pre>
+<div class="highlight-python"><div class="highlight"><pre>gmenu clear
+</pre></div>
 </div>
 </div>
 <div class="section" id="command-recall">
@@ -385,13 +386,15 @@ can be used to create a slideshow from Markdown (.md) or reStructured
 Text (.rst) files (see  <a class="reference internal" href="screenshots.html#landslide-shot"><em>Web slideshows using Landslide</em></a>). A few sample <tt class="docutils literal"><span class="pre">.md</span></tt> files are provided in the
 <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/landslide</span></tt> directory of the distribution. To view a slideshow about
 GraphTerm, type:</p>
-<div class="highlight-python"><pre>glandslide -o $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f</pre>
+<div class="highlight-python"><div class="highlight"><pre>glandslide -o $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
+</pre></div>
 </div>
 <p>Type <tt class="docutils literal"><span class="pre">h</span></tt> for help and <tt class="docutils literal"><span class="pre">q</span></tt> to quit the slideshow. (The unmodified
 Landslide program can also be used, but remote sharing will not work.)</p>
 <p>The <tt class="docutils literal"><span class="pre">greveal</span></tt> command can be used to display Markdown files as
 slideshows using <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>:</p>
-<div class="highlight-python"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f</pre>
+<div class="highlight-python"><div class="highlight"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
+</pre></div>
 </div>
 <p>Type <tt class="docutils literal"><span class="pre">b</span></tt> three times in quick succession to exit the slideshow.</p>
 <p>The <tt class="docutils literal"><span class="pre">gimage</span></tt> command, which displays images inline, can also be used for
@@ -401,7 +404,12 @@ that has the images for a slideshow, and type:</p>
 </pre></div>
 </div>
 <p>To select a subset of images in the directory, you can use a wildcard
-pattern. For publicly webcasting a slideshow, use the <tt class="docutils literal"><span class="pre">-b</span></tt> option.</p>
+pattern. For publicly webcasting a slideshow, use the <tt class="docutils literal"><span class="pre">-b</span></tt> option.
+The convenience command <tt class="docutils literal"><span class="pre">pdf2png</span></tt> can be used to convert a PDF file
+to a set of images for viewing as a slide show:</p>
+<div class="highlight-python"><div class="highlight"><pre>pdf2png slides.pdf; gimage -f slides-*.png
+</pre></div>
+</div>
 </div>
 <div class="section" id="code-tracing-using-python-tutor">
 <span id="python-tutor"></span><span id="index-12"></span><h3><a class="toc-backref" href="#id22">Code tracing using Python Tutor</a><a class="headerlink" href="#code-tracing-using-python-tutor" title="Permalink to this headline">¶</a></h3>
@@ -410,7 +418,8 @@ Online Python Tutorial from <a class="reference external" href="http://pythontut
 It produces HTML output that can be piped to <tt class="docutils literal"><span class="pre">gframe</span></tt> for inline
 display (see  <a class="reference internal" href="screenshots.html#pytutor-shot"><em>Code tracing using online version of Python Tutor</em></a>).
 To trace the execution of a sample program <tt class="docutils literal"><span class="pre">example.py</span></tt>, use it as follows:</p>
-<div class="highlight-python"><pre>gtutor example.py | gframe -f</pre>
+<div class="highlight-python"><div class="highlight"><pre>gtutor example.py | gframe -f
+</pre></div>
 </div>
 <p>More sample programs may be found in the directory <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/pytutor/example-code</span></tt>.
 Of course, you can use <tt class="docutils literal"><span class="pre">gtutor</span></tt> to trace any other (small) python program as well.
@@ -443,7 +452,8 @@ authentication, but will not be able to steal it.
 <span id="embedding"></span><span id="index-14"></span><h3><a class="toc-backref" href="#id25">Embedding and remote terminal commands</a><a class="headerlink" href="#embedding-and-remote-terminal-commands" title="Permalink to this headline">¶</a></h3>
 <p>Additional GraphTerm terminals can be embedded within any GraphTerm
 terminal. For example, the following command:</p>
-<div class="highlight-python"><pre>gframe -b -t terma termb</pre>
+<div class="highlight-python"><div class="highlight"><pre>gframe -b -t terma termb
+</pre></div>
 </div>
 <p>creates two terminals, <tt class="docutils literal"><span class="pre">terma</span></tt> and <tt class="docutils literal"><span class="pre">termb</span></tt> and embeds them within
 the current terminal. The demo script
@@ -451,14 +461,16 @@ the current terminal. The demo script
 illustrates the embedding of multiple terminals, each running a
 different command (see screenshot <a class="reference internal" href="screenshots.html#metro-shot"><em>metro.sh</em></a>). The script also demonstrates the use of the <tt class="docutils literal"><span class="pre">gsh</span></tt>
 command to execute commands remotely on a terminal, e.g.:</p>
-<div class="highlight-python"><pre>gsh terma yweather -f austin</pre>
+<div class="highlight-python"><div class="highlight"><pre>gsh terma yweather -f austin
+</pre></div>
 </div>
 <p>The terminal name argument for <tt class="docutils literal"><span class="pre">gsh</span></tt> can be a wildcard
 expression, e.g. <tt class="docutils literal"><span class="pre">'term*'</span></tt>. Unlike <tt class="docutils literal"><span class="pre">ssh</span></tt>, the <tt class="docutils literal"><span class="pre">gsh</span></tt> command does
 not display the output of the remote command. You will need to view it
 in the remote terminal. To load a remote terminal in the current
 browser window, you can use:</p>
-<div class="highlight-python"><pre>gload terma</pre>
+<div class="highlight-python"><div class="highlight"><pre>gload terma
+</pre></div>
 </div>
 </div>
 <div class="section" id="wildcard-sessions-and-multiplexing">
@@ -466,7 +478,8 @@ browser window, you can use:</p>
 <p>A terminal session path is of the form <tt class="docutils literal"><span class="pre">session_host/session_name</span></tt>. You can
 use the shell wildcard patterns <tt class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></tt> in the session path. For
 example, you can open a wildcard session for multiple hosts using the URL:</p>
-<div class="highlight-python"><pre>http://localhost:8900/*/tty1/?qauth=code</pre>
+<div class="highlight-python"><div class="highlight"><pre>http://localhost:8900/*/tty1/?qauth=code
+</pre></div>
 </div>
 <p>For normal shell terminals, a wildcard session will open a &#8220;blank&#8221; window,
 but any input you type in it will be broadcast to all sessions
@@ -488,7 +501,8 @@ regular shell terminals.</p>
 is connected by default (but this can be disabled using the
 <tt class="docutils literal"><span class="pre">--nolocal</span></tt> option). To connect an additional host, run the
 following command on the computer you wish to connect:</p>
-<div class="highlight-python"><pre>gtermhost --server_addr=&lt;serveraddr&gt; &lt;hostname&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>gtermhost --server_addr=&lt;serveraddr&gt; &lt;hostname&gt;
+</pre></div>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">serveraddr</span></tt> is the address or name of the computer where the
 GraphTerm server is running. You can use the
@@ -533,7 +547,7 @@ be dynamically introspected and debugged using <a class="reference external" hre
 
     <div class="footer">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
 <div class="footer">
 <script type="text/javascript">

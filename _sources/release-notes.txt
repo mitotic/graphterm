@@ -3,6 +3,21 @@ Release Notes
 .. contents::
 
 
+0.55.0 (June 26, 2014)
+---------------------------------------------------------------------------------
+
+ - Progressively fillable notebooks for scaffolding
+
+ - MathJax implemented for TeX formulas
+
+ - ``gncplot`` for 2-D visualization of netCDF data
+
+ - Login authentication type implemented
+
+ - Tooltips for forms
+
+ - Leaflet zoomable demo
+
 0.54.3 (May 8, 2014)
 ---------------------------------------------------------------------------------
 
