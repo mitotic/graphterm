@@ -105,9 +105,6 @@ Case 1: Mac or Linux server with user accounts already created
     ``~/.graphterm`` directory will be created, and there will be an
     option to enter the GMail address for authentication.
 
- 6. If you wish to set up Google Authentication, follow the instructions at the URL ``http://server_domain_name/_gauth``
-
-
 
 Case 2: On-demand server using Amazon AWS
 =================================================================================
@@ -168,15 +165,7 @@ versions in the "cloud". )
 
  5. After the new AWS Linux server has completed configuration, which
     can take several minutes, its IP address and *server domain name*
-    will be displayed.
-
- 6. If all went well and you are using Google Authentication, type the URL
-    ``http://server_domain_name/_gauth`` to view instructions on how to
-    set it up. If you provided your GMail address for ``ec2launch``,
-    *skip to Step 9* after completing the setup.
-
- 7. If you are not using Google Authentication, or something went
-    wrong with the AWS setup, type the following command using the new
+    will be displayed. Then type the following command using the new
     domain name to login to the password-less super user account ``ubuntu``:
 
     ``ec2ssh ubuntu@server_domain_name``
@@ -185,17 +174,21 @@ versions in the "cloud". )
 
     ``ps -ef | grep gtermserver``
 
-    If not, and if using AWS, check for errors in the setup procedure by typing ``sudo tail /root/ec2launch.log``
+    If not, and if using AWS, check for errors in the setup procedure
+    by typing ``sudo tail /root/ec2launch.log``
 
- 8.  Run the following command on the server to display the *master access code*:
+    To restart the server, use ``gtermserver --daemon=stop`` followed by
+    ``sudo /etc/init.d/graphterm``
+
+ 6. Run the following command on the server to display the *master access code*:
 
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
     (Ignore the port number following the hexadecimal access code.)
 
- 9. Use the URL http://server_domain_name to open a new graphtem
+ 7. Use the URL http://server_domain_name to open a new graphterm
     window on the server, with the super user name (``ubuntu`` in our
-    case) and using either *Google Authentication* or the *master access code*
+    case), using the *master access code*
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png
    :align: center
@@ -203,14 +196,14 @@ versions in the "cloud". )
    :figwidth: 85%
 .. 
 
- 10. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
+ 8. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
 
     ``cat ~/.graphterm/gterm_gcode.txt``
 
     Distribute this code and a printed copy of :doc:`virtual-lab` to
     all lab users.
 
- 11. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
+ 9. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
 
     ``ec2list``
 
@@ -219,6 +212,14 @@ versions in the "cloud". )
    :width: 95%
    :figwidth: 90%
  
+
+
+Google Authentication
+===========================================================================
+
+ - If you wish to set up Google Authentication, follow the
+   instructions at URL ``http://server_domain_name/_gauth`` and then
+   restart the server using ``sudo reboot``
 
 
 Optional steps

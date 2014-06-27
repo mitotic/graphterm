@@ -1882,28 +1882,29 @@ def run_server(options, args):
             msg = """<pre><em>%s</em>
 <p>
 If you are the administrator, please create the file
-<b>~/.graphterm/graphterm_oauth.json</b> for the user account
+<b>~/.graphterm/gterm_oauth.json</b> for the user account
 running <b>gtermserver</b>. The file should contain the following
 Google OAuth info for your project:<br>
     <b>{"google_oauth": {"key": "...", "secret": "..."}}</b>
 
-Ensure that your project has the following URI settings:
+Ensure that your web application has the following URI settings:
 
  <em>Authorized Javascript origins:</em> <b>%s</b>
 
- <em>Authorized Redirect URI:</em> <b>%s/_gauth/</b>
+ <em>Authorized Redirect URI:</em> <b>%s/_gauth/</b> (Note: The trailing slash is important)
 
-If you have not set up a project for Google authentication, here is how to do it:
+If you have not set up the GraphTerm web app for Google authentication, here is how to do it:
     * Go to the Google Dev Console at <a href="http://console.developers.google.com" target="_blank">http://console.developers.google.com</a>
     * Select a project, or create a new one.
     * In the sidebar on the left, select <em>APIs & Auth</em>.
-    * In the sidebar on the left, select <em>Consent Screen</em> to customize the Consent screen.
+    * In the sidebar on the left, select <em>Consent Screen</em> to customize the Product name etc.
     * In the sidebar on the left, select <em>Credentials</em>.
     * In the OAuth section of the page, select <em>Create New Client ID</em>.
     * Edit settings to set the Authorized URIs to the values shown above.
-    * Copy the "Client ID key" and "Client secret" values to the file <b>graphterm_oauth.json</b>
+    * Copy the web application "Client ID key" and "Client secret" to the file <b>gterm_oauth.json</b>
     * If using AWS, copy the file to the server using the command
-         <b>ec2scp graphterm_oauth.json ubuntu@%s:.graphterm</b>
+         <b>ec2scp gterm_oauth.json ubuntu@%s:.graphterm</b>
+    * Restart the server
 </pre>
 """
             self.write(msg % (header, Host_settings["server_url"], Host_settings["server_url"], Server_settings["external_host"]))
@@ -2025,7 +2026,7 @@ If you have not set up a project for Google authentication, here is how to do it
                 ]
 
     settings = {"log_function": lambda x:None}
-    oauth_file = os.path.join(gterm.App_dir, "graphterm_oauth.json")
+    oauth_file = os.path.join(gterm.App_dir, "gterm_oauth.json")
     if os.path.isfile(oauth_file):
         try:
             with open(oauth_file) as f:
