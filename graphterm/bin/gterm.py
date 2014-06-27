@@ -35,8 +35,8 @@ import uuid
 
 from optparse import OptionParser
 
-API_VERSION = "0.54.0"
-API_MIN_VERSION = "0.54"
+API_VERSION = "0.55.0"
+API_MIN_VERSION = "0.55"
 
 HEX_DIGITS = 16          # Digits to be retained for HMAC, auth_code etc
 SIGN_HEXDIGITS = 16      # User-entered keys (should match packetserver setup)

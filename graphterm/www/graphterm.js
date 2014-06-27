@@ -4394,7 +4394,7 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else {
 	    if (!this.note_params.form ||
-		(this.note_params.form != "shared" && window.confirm("Do you wish to display correct answer?")) ) {
+		(this.note_params.form != "shared" && window.confirm("Proceed to next cell?")) ) {
 		var createNew = (command == "run" && !this.note_params.form);
 		this.update_text(true, true, createNew);
 	    }

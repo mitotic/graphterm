@@ -1,6 +1,6 @@
-version = "0.54.3+"
+version = "0.55.0"
 
-min_version = "0.54"
+min_version = "0.55"
 
 description = "GraphTerm: A Graphical Terminal Interface"
 

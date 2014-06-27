@@ -1650,11 +1650,14 @@ class Terminal(object):
                                                            row_params=["pagelet", {"blob": blob_id}])
                     else:
                         # Non-output image
+                        expect_image = False
                         if code_cell:
                             # Leave code block
                             if fig_prefix == "expect" and not code_cell["cellExpectOutput"]:
                                 # Expecting figure output for code cell
-                                code_cell["cellExpectOutput"] += [""]
+                                if not code_cell["cellExpectOutput"]:
+                                    code_cell["cellExpectOutput"] += [""]
+                                    expect_image = True
                             self.update()
                             code_cell = None
                         if raw_lines and leaving_block is not None and leaving_block != fig_prefix:
@@ -1662,6 +1665,8 @@ class Terminal(object):
                             prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
                             raw_lines = []
                         # Append image
+                        if expect_image:
+                            raw_lines += ["", "*Expected output:*", ""]
                         raw_lines.append("![%s](%s)" % (alt, blob_url))
 
                     leaving_block = fig_prefix if fig_prefix in ("expect", "output") else None
@@ -2037,7 +2042,7 @@ class Terminal(object):
         assert cell_index == cur_index
         cur_loc = self.note_cells["cellIndices"].index(cur_index)
         cur_cell = self.note_cells["cells"][cur_index]
-        cell_lines = split_lines(input_data.replace("\x00",""))   # Delete NULs
+        cell_lines = split_lines(uclean(input_data.replace("\x00",""),encoded=True))   # Delete NULs
         self.note_update_time = time.time()
         if save:
             # Update cell input
@@ -2138,7 +2143,7 @@ class Terminal(object):
                         line = line[len(prompt):]
                         break
                 unindented_line = line.lstrip()
-                if not unindented_line or unindented_line.startswith("#"):
+                if not unindented_line or unindented_line.startswith("#") or unindented_line.startswith("%matplotlib inline"):
                     # Blank or comment line
                     if prev_blank:
                         # Force indent
