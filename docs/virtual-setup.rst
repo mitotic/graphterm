@@ -59,7 +59,7 @@ Case 1: Mac or Linux server with user accounts already created
     an Anaconda or Enthought Python environment, for example.
 
  2. Say all the user home directories begin with ``/Users...``, then
-    run the following command to start the GraphTerm server as the
+    run a command like the following to start the GraphTerm server as the
     ``root`` user:
 
    ``gtermserver --daemon=start --auth_type=multiuser --user_setup=manual --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
@@ -74,7 +74,9 @@ Case 1: Mac or Linux server with user accounts already created
    ``$GTERM_DIR/bin/gterm_user_setup``, which has only been tested
    with Ubuntu Linux. You can use the ``--auth_type=login``
    option for a more traditional login authentication, but it
-   requires the use of ``--https`` or ``--host=localhost`` for security.
+   requires the use of ``--https`` or ``--host=localhost`` for
+   security. SSH port forwarding can be used for remotely accessing a
+   ``localhost`` server (e.g., ``ssh -L 9900:localhost:8900 remote_name``)
    [If using login authentication, all the remaining steps can be skipped.]
 
  3. Run the following command as root user to display the *master access code*:
@@ -104,6 +106,9 @@ Case 1: Mac or Linux server with user accounts already created
     each user. The first time an user enters their access code, the
     ``~/.graphterm`` directory will be created, and there will be an
     option to enter the GMail address for authentication.
+
+ 6. To restart the server, use ``gtermserver --daemon=stop`` followed by
+    ``gtermserver --daemon=start ...``
 
 
 Case 2: On-demand server using Amazon AWS
