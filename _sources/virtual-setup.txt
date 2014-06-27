@@ -214,12 +214,16 @@ versions in the "cloud". )
  
 
 
-Optional steps
+Google Authentication
 ===========================================================================
 
  - If you wish to set up Google Authentication, follow the
    instructions at URL ``http://server_domain_name/_gauth`` and then
    restart the server using ``sudo reboot``
+
+
+Optional steps
+===========================================================================
 
  - You can use the command ``gls --download $GTERM_DIR/bin/gterm.py``
    to download the executable script ``gterm.py`` to your local
