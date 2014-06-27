@@ -1824,6 +1824,92 @@ def run_server(options, args):
             logging.info("GoogleAuthHandler: u=%s, url=%s, %s", gterm_user, url, user_info)
             self.redirect(url)
 
+    class GoogleOAuth2LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
+        @tornado.gen.coroutine
+        def get(self):
+            if self._OAUTH_SETTINGS_KEY not in self.settings:
+                self.setup_msg("Google Authentication has not yet been set up for this server.")
+                return
+            auth_uri = Host_settings["server_url"]+"/_gauth/"
+            if not self.get_argument('code', False):
+                gterm_cauth = self.get_argument("gterm_cauth", "")
+                gterm_code = self.get_argument("gterm_code", "")
+                gterm_user = self.get_argument("gterm_user", "")
+                if not gterm_cauth:
+                    self.setup_msg("Google Authentication Setup Instructions")
+                    return
+
+                state_param = ",".join([gterm_cauth, gterm_code, gterm_user])
+                yield self.authorize_redirect(
+                    redirect_uri=auth_uri,
+                    client_id=self.settings['google_oauth']['key'],
+                    scope=['profile', 'email'],
+                    response_type='code',
+                    extra_params={'approval_prompt': 'auto', 'state': state_param})
+            else:
+                state_value = self.get_argument('state', "")
+                user = yield self.get_authenticated_user(
+                    redirect_uri=auth_uri,
+                    code=self.get_argument('code'))
+                # Save the user with e.g. set_secure_cookie
+                try:
+                    comps = user['id_token'].split('.')
+                    if len(comps) != 3:
+                        raise Exception('Wrong number of comps in Google id token: %s' % (user,)) 
+
+                    b64string = comps[1].encode('ascii') 
+                    padded = b64string + '=' * (4 - len(b64string) % 4) 
+                    user_info = json.loads(base64.urlsafe_b64decode(padded))
+
+                    vals = state_value.split(",")
+                    if len(vals) != 3 or not vals[0]: 
+                        raise Exception('Invalid state values: %s' % state_value)
+                    gterm_cauth, gterm_code, gterm_user = vals
+
+                    gterm_email = user_info.get("email", "").lower()
+                    if not gterm_email or not user_info.get("email_verified", False):
+                        raise Exception("GoogleAuthHandler: No valid email in user info for %s" % gterm_user)
+                    query = {"cauth": gterm_cauth, "code": gterm_code,  "user": gterm_user, "email": gterm_email, "name": user_info.get("name","")}
+                    query["eauth"] = gterm.compute_hmac(gterm.user_hmac(GTSocket._auth_code, gterm_email, key_version="email"), gterm_cauth)
+                    url = "/?"+urllib.urlencode(query)
+                    logging.info("GoogleOAuth2Handler: u=%s, url=%s, %s", gterm_user, url, user_info)
+                    self.redirect(url)
+                except Exception, excp:
+                    self.write("Error in Google Authentication: "+str(excp))
+                    self.finish()
+
+        def setup_msg(self, header):
+            msg = """<pre><em>%s</em>
+<p>
+If you are the administrator, please create the file
+<b>~/.graphterm/graphterm_oauth.json</b> for the user account
+running <b>gtermserver</b>. The file should contain the following
+Google OAuth info for your project:<br>
+    <b>{"google_oauth": {"key": "...", "secret": "..."}}</b>
+
+Ensure that your project has the following URI settings:
+
+ <em>Authorized Javascript origins:</em> <b>%s</b>
+
+ <em>Authorized Redirect URI:</em> <b>%s/_gauth/</b>
+
+If you have not set up a project for Google authentication, here is how to do it:
+    * Go to the Google Dev Console at <a href="http://console.developers.google.com" target="_blank">http://console.developers.google.com</a>
+    * Select a project, or create a new one.
+    * In the sidebar on the left, select <em>APIs & Auth</em>.
+    * In the sidebar on the left, select <em>Consent Screen</em> to customize the Consent screen.
+    * In the sidebar on the left, select <em>Credentials</em>.
+    * In the OAuth section of the page, select <em>Create New Client ID</em>.
+    * Edit settings to set the Authorized URIs to the values shown above.
+    * Copy the "Client ID key" and "Client secret" values to the file <b>graphterm_oauth.json</b>
+    * If using AWS, copy the file to the server using the command
+         <b>ec2scp graphterm_oauth.json ubuntu@%s:.graphterm</b>
+</pre>
+"""
+            self.write(msg % (header, Host_settings["server_url"], Host_settings["server_url"], Server_settings["external_host"]))
+            self.finish()
+            return
+
     gterm.create_app_directory()
 
     http_port = options.port
@@ -1927,7 +2013,7 @@ def run_server(options, args):
                 GTSocket._auth_users[user] = gterm.user_hmac(auth_code, user, key_version="1")
 
     handlers = [(r"/_auth/.*", AuthHandler),
-                (r"/_gauth/.*", GoogleAuthHandler),
+                (r"/_gauth/.*", GoogleOAuth2LoginHandler),
                 (r"/_form/.*", FormHandler),
                 (r"/_steal/.*", ActionHandler),
                 (r"/_watch/.*", ActionHandler),
@@ -1938,7 +2024,18 @@ def run_server(options, args):
                 (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
                 ]
 
-    application = tornado.web.Application(handlers, log_function=lambda x:None)
+    settings = {"log_function": lambda x:None}
+    oauth_file = os.path.join(gterm.App_dir, "graphterm_oauth.json")
+    if os.path.isfile(oauth_file):
+        try:
+            with open(oauth_file) as f:
+                oauth_creds = json.loads(f.read())
+                settings["google_oauth"] = oauth_creds["google_oauth"]
+            print >> sys.stderr, "Read Google OAuth info from", oauth_file
+        except Exception, excp:
+            print >> sys.stderr, "Error in reading Google OAuth info from %s: %s" % (oauth_file, excp)
+
+    application = tornado.web.Application(handlers, **settings)
 
     ##logging.warning("DocRoot: "+Doc_rootdir);
 

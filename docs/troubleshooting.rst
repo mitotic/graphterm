@@ -177,6 +177,13 @@ can be achieved by executing a single command (as root)::
   iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to 8900
 
 
+.. index:: google authentication
+
+How do I get Google Authentication to work?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Follow the instructions at the URL ``http://server_domain_name/_gauth``
+
 
 .. index:: Windows
  

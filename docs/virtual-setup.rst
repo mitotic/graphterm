@@ -75,7 +75,7 @@ Case 1: Mac or Linux server with user accounts already created
    with Ubuntu Linux. You can use the ``--auth_type=login``
    option for a more traditional login authentication, but it
    requires the use of ``--https`` or ``--host=localhost`` for security.
-   [If using login authentication, the remaining steps can be skipped.]
+   [If using login authentication, all the remaining steps can be skipped.]
 
  3. Run the following command as root user to display the *master access code*:
 
@@ -83,7 +83,7 @@ Case 1: Mac or Linux server with user accounts already created
 
     (Ignore the port number following the hexadecimal access code.)
     If the domain name is ``localhost``, the filename would simply be ``_gterm_auth.txt``.
-    For automatic new user creation, the group code is in ``~/.graphterm/gterm_gcode.txt``
+    For automatic new user creation, the *group code* is in ``~/.graphterm/gterm_gcode.txt``
 
  4. Use the URL http://server_domain_name to open a new graphterm
     window on the server, with the super user name (``root`` in our
@@ -104,6 +104,8 @@ Case 1: Mac or Linux server with user accounts already created
     each user. The first time an user enters their access code, the
     ``~/.graphterm`` directory will be created, and there will be an
     option to enter the GMail address for authentication.
+
+ 6. If you wish to set up Google Authentication, follow the instructions at the URL ``http://server_domain_name/_gauth``
 
 
 
@@ -166,10 +168,14 @@ versions in the "cloud". )
 
  5. After the new AWS Linux server has completed configuration, which
     can take several minutes, its IP address and *server domain name*
-    will be displayed. If all went well, and you provided your GMail
-    address, *skip to Step 8.*
+    will be displayed.
 
- 6. If you are not using Google Authentication, or something went
+ 6. If all went well and you are using Google Authentication, type the URL
+    ``http://server_domain_name/_gauth`` to view instructions on how to
+    set it up. If you provided your GMail address for ``ec2launch``,
+    *skip to Step 9* after completing the setup.
+
+ 7. If you are not using Google Authentication, or something went
     wrong with the AWS setup, type the following command using the new
     domain name to login to the password-less super user account ``ubuntu``:
 
@@ -181,13 +187,13 @@ versions in the "cloud". )
 
     If not, and if using AWS, check for errors in the setup procedure by typing ``sudo tail /root/ec2launch.log``
 
- 7.  Run the following command on the server to display the *master access code*:
+ 8.  Run the following command on the server to display the *master access code*:
 
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
     (Ignore the port number following the hexadecimal access code.)
 
- 8. Use the URL http://server_domain_name to open a new graphtem
+ 9. Use the URL http://server_domain_name to open a new graphtem
     window on the server, with the super user name (``ubuntu`` in our
     case) and using either *Google Authentication* or the *master access code*
 
@@ -197,14 +203,14 @@ versions in the "cloud". )
    :figwidth: 85%
 .. 
 
- 9. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
+ 10. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
 
     ``cat ~/.graphterm/gterm_gcode.txt``
 
     Distribute this code and a printed copy of :doc:`virtual-lab` to
     all lab users.
 
- 10. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
+ 11. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
 
     ``ec2list``
 
