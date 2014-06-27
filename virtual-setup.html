@@ -276,8 +276,6 @@ each user. The first time an user enters their access code, the
 <tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> directory will be created, and there will be an
 option to enter the GMail address for authentication.</p>
 </li>
-<li><p class="first">If you wish to set up Google Authentication, follow the instructions at the URL <tt class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></tt></p>
-</li>
 </ol>
 </div></blockquote>
 </div>
@@ -336,51 +334,40 @@ generated command line should look something like this:</p>
 <div><ol class="arabic" start="5">
 <li><p class="first">After the new AWS Linux server has completed configuration, which
 can take several minutes, its IP address and <em>server domain name</em>
-will be displayed.</p>
-</li>
-<li><p class="first">If all went well and you are using Google Authentication, type the URL
-<tt class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></tt> to view instructions on how to
-set it up. If you provided your GMail address for <tt class="docutils literal"><span class="pre">ec2launch</span></tt>,
-<em>skip to Step 9</em> after completing the setup.</p>
-</li>
-<li><p class="first">If you are not using Google Authentication, or something went
-wrong with the AWS setup, type the following command using the new
+will be displayed. Then type the following command using the new
 domain name to login to the password-less super user account <tt class="docutils literal"><span class="pre">ubuntu</span></tt>:</p>
 <p><tt class="docutils literal"><span class="pre">ec2ssh</span> <span class="pre">ubuntu&#64;server_domain_name</span></tt></p>
 <p>Run the following command on the server to verify that <tt class="docutils literal"><span class="pre">gtermserver</span></tt> is running:</p>
 <p><tt class="docutils literal"><span class="pre">ps</span> <span class="pre">-ef</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">gtermserver</span></tt></p>
-<p>If not, and if using AWS, check for errors in the setup procedure by typing <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">tail</span> <span class="pre">/root/ec2launch.log</span></tt></p>
+<p>If not, and if using AWS, check for errors in the setup procedure
+by typing <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">tail</span> <span class="pre">/root/ec2launch.log</span></tt></p>
+<p>To restart the server, use <tt class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">--daemon=stop</span></tt> followed by
+<tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">/etc/init.d/graphterm</span></tt></p>
 </li>
 <li><p class="first">Run the following command on the server to display the <em>master access code</em>:</p>
-</li>
-</ol>
-<blockquote>
-<div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/&#64;server_domain_name_gterm_auth.txt</span></tt></p>
 <p>(Ignore the port number following the hexadecimal access code.)</p>
-</div></blockquote>
-<ol class="arabic simple" start="9">
-<li>Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphtem
+</li>
+<li><p class="first">Use the URL <a class="reference external" href="http://server_domain_name">http://server_domain_name</a> to open a new graphterm
 window on the server, with the super user name (<tt class="docutils literal"><span class="pre">ubuntu</span></tt> in our
-case) and using either <em>Google Authentication</em> or the <em>master access code</em></li>
+case), using the <em>master access code</em></p>
+</li>
 </ol>
 </div></blockquote>
 <div class="figure align-center" style="width: 85%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png" style="width: 90%;" /></a>
 </div>
 <blockquote>
-<div><ol class="arabic simple" start="10">
-<li>Run the following command in the server graphterm window to display the group access code which should be entered by new users:</li>
-</ol>
-<blockquote>
-<div><p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
+<div><ol class="arabic" start="8">
+<li><p class="first">Run the following command in the server graphterm window to display the group access code which should be entered by new users:</p>
+<p><tt class="docutils literal"><span class="pre">cat</span> <span class="pre">~/.graphterm/gterm_gcode.txt</span></tt></p>
 <p>Distribute this code and a printed copy of <a class="reference internal" href="virtual-lab.html"><em>Using the GraphTerm Virtual Computer Lab</em></a> to
 all lab users.</p>
-</div></blockquote>
-<ol class="arabic simple" start="11">
-<li>If using AWS, run the following command on your local graphterm window to list and/or kill your instances:</li>
+</li>
+<li><p class="first">If using AWS, run the following command on your local graphterm window to list and/or kill your instances:</p>
+<p><tt class="docutils literal"><span class="pre">ec2list</span></tt></p>
+</li>
 </ol>
-<blockquote>
-<div><tt class="docutils literal"><span class="pre">ec2list</span></tt></div></blockquote>
 </div></blockquote>
 <div class="figure align-center" style="width: 90%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-ec2list.png" style="width: 95%;" /></a>
@@ -390,6 +377,10 @@ all lab users.</p>
 <h3><a class="toc-backref" href="#id5">Optional steps</a><a class="headerlink" href="#optional-steps" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul>
+<li><p class="first">If you wish to set up Google Authentication, follow the
+instructions at URL <tt class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></tt> and then
+restart the server using <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">reboot</span></tt></p>
+</li>
 <li><p class="first">You can use the command <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span> <span class="pre">$GTERM_DIR/bin/gterm.py</span></tt>
 to download the executable script <tt class="docutils literal"><span class="pre">gterm.py</span></tt> to your local
 computer and save the master access code in the local file
