@@ -1172,7 +1172,7 @@ class Terminal(object):
         self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
                             "lang": note_lang, "shell": note_shell, "form": note_form,
                             "lock_offset": lock_offset, "mod_offset": self.note_mod_offset,
-                            "submit": submit_opt, "terminal": params.get("terminal", ""), "autosave": writable}
+                            "submit": submit_opt, "master": params.get("master", ""), "autosave": writable}
 
         self.note_share = content if share_opt and content else ""
         if share_opt:
@@ -1182,7 +1182,7 @@ class Terminal(object):
         elif self.note_params["form"] == "fill":
             status_msg.append("Opening fillable notebook")
         elif self.note_params["form"] == "shared":
-            status_msg.append("Opening fillable shared notebook from /"+self.note_params["terminal"])
+            status_msg.append("Opening fillable shared notebook from /"+self.note_params["master"])
             if self.note_params["submit"]:
                 status_msg.append("Notebook submission enabled")
 
@@ -1197,6 +1197,8 @@ class Terminal(object):
             self.add_cell("")
         self.select_cell(self.note_cells["cellIndices"][0], next_code=True)
         self.note_initialized = True
+        if self.note_params["form"].endswith("ed"):
+            self.note_hide_offset = len(self.note_cells["cellIndices"])
 
     def close_notebook(self, discard=False):
         if not self.note_cells:
@@ -1500,7 +1502,7 @@ class Terminal(object):
             md_lines += [IPYNB_JSON_FOOTER]
         filedata = "\n".join(s if isinstance(s, str) else s.encode(ENCODING, "replace") for s in md_lines) + "\n"
         if submit:
-            self.screen_callback(self.term_name, "", "note_submit", [self.note_params["terminal"], filedata])
+            self.screen_callback(self.term_name, "", "note_submit", [self.note_params["master"], filedata])
             return True
 
         save_params = {"x_gterm_filepath": fullpath, "content_type": "text/x-markdown"}
@@ -1773,18 +1775,21 @@ class Terminal(object):
 
         cur_loc = self.note_cells["cellIndices"].index(cell_index)
         if self.note_params["form"]:
-            # Hide all cells following first (or first locked) code cell
-            if cur_loc < self.note_hide_offset:
+            if self.note_params["form"].endswith("ed"):
                 new_cell["cellParams"]["filled"] = True
-            elif cur_loc == self.note_hide_offset and new_cell_type in MARKUP_TYPES:
-                # Markdown cell preceding code cell
-                self.note_hide_offset = cur_loc + 1
-            elif cur_loc == self.note_hide_offset+1 and new_cell_type in MARKUP_TYPES:
-                # Do not hide markdown cell immediately following code cell, if output is expected
-                prev_code_cell = self.note_cells["cells"][self.note_cells["cellIndices"][self.note_hide_offset]]
-                new_cell["cellParams"]["hidden"] = not prev_code_cell["cellExpectOutput"]
-            elif cur_loc > self.note_hide_offset:
-                new_cell["cellParams"]["hidden"] = True
+            else:
+                # Hide all cells following first (or first locked) code cell
+                if cur_loc < self.note_hide_offset:
+                    new_cell["cellParams"]["filled"] = True
+                elif cur_loc == self.note_hide_offset and new_cell_type in MARKUP_TYPES:
+                    # Markdown cell preceding code cell
+                    self.note_hide_offset = cur_loc + 1
+                elif cur_loc == self.note_hide_offset+1 and new_cell_type in MARKUP_TYPES:
+                    # Do not hide markdown cell immediately following code cell, if output is expected
+                    prev_code_cell = self.note_cells["cells"][self.note_cells["cellIndices"][self.note_hide_offset]]
+                    new_cell["cellParams"]["hidden"] = not prev_code_cell["cellExpectOutput"]
+                elif cur_loc > self.note_hide_offset:
+                    new_cell["cellParams"]["hidden"] = True
 
         self.note_update_time = time.time()
         self.screen_callback(self.term_name, "", "note_add_cell",

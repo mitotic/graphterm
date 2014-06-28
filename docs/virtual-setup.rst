@@ -216,15 +216,46 @@ versions in the "cloud". )
    :align: center
    :width: 95%
    :figwidth: 90%
- 
 
+
+.. index:: Google authentication, GMail
 
 Google Authentication
 ===========================================================================
 
- - If you wish to set up Google Authentication, follow the
-   instructions at URL ``http://server_domain_name/_gauth`` and then
-   restart the server using ``sudo reboot``
+If you wish to set up Google Authentication, follow the instructions
+at the URL ``http://server_domain_name/_gauth`` and then restart the
+server using ``sudo reboot``.
+
+The email address linked to each user's account is stored in the file
+``~/.graphterm/gterm_email.txt``, which may created, modified, or
+deleted, as needed. After having set up the server, if you later
+decide to use your *GMail* account to authenticate, you may enter your
+*GMail* address in this file. (If you selected the ``gmail_addr``
+option during ``ec2launch``, this file would already have been
+created.)
+
+
+.. index:: Dropbox, backup
+
+Dropbox and backup
+===========================================================================
+
+If you wish to have automatic backup and remote access for files, you
+can use the Dropbox service which provides a `Linux client
+<https://www.dropbox.com/install?os=lnx>`_. You can store all
+important files, including submitted notebooks, in Dropbox folders
+which are backed up and can be accessed remotely from other computers.
+To selectively sync folders on the remote server, download the Dropbox
+CLI client ``dropbox.py`` from the Linux install page and execute the
+following commands::
+
+  dropbox.py exclude add Dropbox/*         # Exclude Dropbox/*
+  dropbox.py exclude remove Dropbox/gterm  # Sync Dropbox/gterm
+
+Instructions for automatically running Dropbox on system startup, with
+support for multiple users, may be found at
+http://pixeldust.wikidot.com/linode-setup%3adropbox
 
 
 Optional steps
@@ -237,12 +268,6 @@ Optional steps
    following local command to quickly create remote graphterm windows:
 
     ``gterm.py -u ubuntu --browser=Firefox http://server_domain_name``
-
- - After having set up the server, if you later decide to use your
-   *GMail* account to authenticate, enter your *GMail* address in the
-   file ``~/.graphterm/gterm_email.txt`` on the server. (If you selected
-   the ``gmail_addr`` option during ``ec2launch``, this file would
-   already have been created.)
 
  - Instead of AWS, if you wish to use a different cloud computing
    provider, you can either modify ``ec2launch`` or write your own

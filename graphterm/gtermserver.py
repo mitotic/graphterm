@@ -745,7 +745,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                    "share_private": start_private, "share_tandem": False,
                                    "alert_status": False, "widget_token": "", "last_active": time.time(),
                                    "nb_name": "", "nb_file": "", "nb_mod_offset": 0,
-                                   "nb_form": "", "nb_submit": "", "nb_content": "",
+                                   "nb_form": "", "nb_submit": "", "nb_content": "", "nb_master": "", "nb_hosts": {},
                                    "owner": term_owner, "state_id": self.authorized["state_id"], "auth_type": self.authorized["auth_type"]}
                 terminal_params.update(Term_settings)
                 self._terminal_params[path] = terminal_params
@@ -1081,11 +1081,18 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         tempath = msg[1][1:]
                         tparams = self.get_terminal_params(tempath)
                         if tparams and tparams["nb_content"]:
+                            lock_offset = tparams["nb_mod_offset"] if tparams["nb_form"] == "share" else 0
+                            nb_hosts = tparams["nb_hosts"]
+                            if remote_host in nb_hosts:
+                                lock_offset = max(lock_offset, nb_hosts[remote_host])
+                            else:
+                                nb_hosts[remote_host] = lock_offset
                             msg[1] = tparams["nb_file"]
                             msg[2] = []
                             msg[3] = {"share": "", "submit": tparams["nb_submit"],
-                                      "terminal": tempath, "lock_offset": tparams["nb_mod_offset"]}
+                                      "master": tempath, "lock_offset": lock_offset}
                             msg[4] = tparams["nb_content"]
+                            terminal_params["nb_master"] = tempath
 
                     req_list.append(msg)
                     if msg[0] == "save_prefs":
@@ -1190,6 +1197,7 @@ def kill_remote(path, user):
     except Exception, excp:
         pass
 
+
 def is_wildcard(path):
     return "?" in path or "*" in path or "[" in path
 
@@ -1236,7 +1244,10 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
             if not include_self and path == term_path:
                 continue
             host, term_name = path.split("/")
-            cls.send_to_connection(host, "request", term_name, "", command_list)
+            try:
+                cls.send_to_connection(host, "request", term_name, "", command_list)
+            except Exception, excp:
+                pass
 
     def __init__(self, stream, address, server_address, key_secret=None, key_version=None, key_id=None, ssl_options={}):
         super(TerminalConnection, self).__init__(stream, address, server_address, server_type="frame",
@@ -1318,6 +1329,10 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                                                            terminal_params["auth_type"],
                                                                            nb_name=terminal_params["nb_name"].replace("-share.", "-shared."))
                         TerminalConnection.send_requests(term_path, matchpaths, [["note_lock", args[0]]])
+                    elif terminal_params["nb_master"]:
+                        tparams = GTSocket.get_terminal_params(terminal_params["nb_master"])
+                        if tparams:
+                            tparams["nb_hosts"][self.connection_id] = max(tparams["nb_hosts"].get(self.connection_id,0), args[0])
                 elif msg[1] == "note_open":
                     note_params = args[0]
                     terminal_params["nb_mod_offset"] = note_params.get("mod_offset", 0)
@@ -1327,6 +1342,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     terminal_params["nb_submit"] = note_params.get("submit", "")
                     if is_super_user and args[2]:
                         terminal_params["nb_content"] = args[2]
+                    terminal_params["nb_hosts"] = {}   # nb_master may already be set by open_notebook
                     args[2] = ""  # Do not transmit notebook content to browser
                 elif msg[1] == "note_close":
                     terminal_params["nb_mod_offset"] = 0
@@ -1335,6 +1351,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     terminal_params["nb_form"] = ""
                     terminal_params["nb_submit"] = ""
                     terminal_params["nb_content"] = ""
+                    terminal_params["nb_master"] = ""
+                    terminal_params["nb_hosts"] = {}
 
                 fwd_list.append(msg)
 

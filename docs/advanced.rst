@@ -5,6 +5,7 @@ Advanced topics
    :maxdepth: 1
 
    API
+   format
    tracing
    widgets
 

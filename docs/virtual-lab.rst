@@ -21,8 +21,10 @@ instructor, like your first initial followed by your last name (all
 lower-case), e.g., ``jsmith`` for Jim Smith.  If you have a *Google
 GMail* account, you can choose to link it to your GraphTerm server
 account for password-less logins by clicking the *Google Auth* button.
+(You will still need to enter the group access code the very first
+time to create your new account and link it to your GMail account.)
 
-.. figure:: file:///Users/rsarava/app4/repo/mitotic/graphterm/doc-images/gt-login.png
+.. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login.png
    :align: center
    :width: 90%
    :figwidth: 85%
@@ -41,12 +43,13 @@ work with Safari on the Mac; use Chrome or Firefox instead.**
  
 If you just created a new user account, note down your user name and
 personal access code, as you will need it for logging in later (unless
-you are using *Google Authentication*). You may optionally enter your email
+you are using Google Authentication). You may optionally enter your email
 address at this point. If you forget your personal access code, the
-instructor can retrieve it for you.  If you have a Mac/Linux
-desktop/laptop, you can download the executable python script
-``$GTERM_DIR/bin/gterm.py`` and type the following command on your
-desktop/laptop::
+instructor can retrieve it for you.
+
+If you have a Mac/Linux desktop/laptop, you can download the
+executable python script ``$GTERM_DIR/bin/gterm.py`` and type the
+following command on your desktop/laptop::
 
     gterm.py -u user http://hostname.domain
 
@@ -159,6 +162,8 @@ then use the standard paste command on your computer (*Command-V* on
 the Mac and *Control-V* on other systems). If the keyboard command
 does not work, you can try the *terminal/paste special* menu option.
 
+.. index:: notebook mode
+
 
 GraphTerm Notebook interface
 --------------------------------------------------------------------------------------------
@@ -166,7 +171,7 @@ GraphTerm Notebook interface
 Two ways to use the notebook interface are supported in the virtual
 computer lab:
 
- 1. Using the *lightweight* notebook interface built into the
+ 1. Using the *lightweight* :ref:`notebook_mode` built into the
  remote GraphTerm terminal.
 
  2. Running the IPython Notebook server on the remote computer and
@@ -202,7 +207,7 @@ server, it can degrade performance on a shared computer. Please
 consider shutting down the server when you are not using it.
 
 
-Opening python notebooks in GraphTerm
+Opening Python notebooks in GraphTerm
 --------------------------------------------------------------------------------------------
 
 To open a new python notebook, use the menu command

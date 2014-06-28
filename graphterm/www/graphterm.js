@@ -1610,7 +1610,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			var nb_params = cmd_arg[0];
 			gNotebook = new GTNotebook(nb_params);
 			$("#terminal").addClass("gterm-notebook");
-			if (nb_params.submit && nb_params.form && (nb_params.form == "shared" || nb_params.form == "submitting") )
+			if (nb_params.submit && nb_params.form && (nb_params.form == "shared" || nb_params.form == "assigned") )
 			    $("#terminal").addClass("gterm-notebook-submit");
 			if (cmd_arg[1])
 			    alert(cmd_arg[1]);
