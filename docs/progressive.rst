@@ -31,7 +31,8 @@ the remaining code cells are hidden. The code cell contains a
 "skeleton" program, with missing lines
 (:num:`Fig. #figfillablea`). The expected textual or graphical output
 of the code is also shown. Students can enter the missing lines and
-repeatedly execute the code using *Control-Enter* to reproduce the
+repeatedly execute the code using *Control-Enter* (or the *run*
+button) to try to reproduce the
 expected results. If the program runs successfully, or if they are
 ready to give up, they press *Shift-Enter* to move on. The last
 version of the code executed by the student, whether right or wrong,

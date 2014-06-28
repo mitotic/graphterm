@@ -1165,13 +1165,15 @@ class Terminal(object):
             writable = os.access(os.path.dirname(fullpath), os.W_OK | os.X_OK)
             if not writable:
                 status_msg.append("You will not be able to save the notebook in this directory - autosave is disabled")
-        
+
+        lock_offset = params.get("lock_offset", 0)
+        self.note_mod_offset = lock_offset
+        self.note_hide_offset = lock_offset
         self.note_params = {"name": note_name, "file": filepath, "dir": note_dir, "command": note_command,
                             "lang": note_lang, "shell": note_shell, "form": note_form,
-                            "lock_offset": params.get("lock_offset", 0), "mod_offset": self.note_mod_offset,
+                            "lock_offset": lock_offset, "mod_offset": self.note_mod_offset,
                             "submit": submit_opt, "terminal": params.get("terminal", ""), "autosave": writable}
 
-        self.note_hide_offset = self.note_params["lock_offset"]
         self.note_share = content if share_opt and content else ""
         if share_opt:
             status_msg.append("Sharing notebook content with others as /%s/%s" % (self.host, self.term_name))
@@ -1286,9 +1288,12 @@ class Terminal(object):
         format = params.get("format", "")
         submit = params.get("submit", "")
 
-        mod_time = self.update_current_cell(input_data)
-        if mod_time:
-            self.update_mod_offset()
+        if self.note_params["form"]:
+            mod_time = time.time()
+        else:
+            mod_time = self.update_current_cell(input_data)
+            if mod_time:
+                self.update_mod_offset()
 
         if (alt_save or auto_save) and self.note_save_time >= self.note_update_time and not submit:
             return False
@@ -2042,8 +2047,16 @@ class Terminal(object):
         assert cell_index == cur_index
         cur_loc = self.note_cells["cellIndices"].index(cur_index)
         cur_cell = self.note_cells["cells"][cur_index]
-        cell_lines = split_lines(uclean(input_data.replace("\x00",""),encoded=True))   # Delete NULs
-        self.note_update_time = time.time()
+
+        if self.note_params["form"] and (cur_cell["cellParams"]["filled"] or cur_cell["cellType"] in MARKUP_TYPES):
+            # Filled/markdown cells in a form cannot be altered
+            cell_lines = cur_cell["cellInput"][:]
+            self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input()), cur_index, True])
+        else:
+            # Unfilled or non-form cells
+            cell_lines = split_lines(uclean(input_data.replace("\x00",""),encoded=True))   # Delete NULs
+            self.note_update_time = time.time()
+
         if save:
             # Update cell input
             if self.note_params["form"] == "shared" and not form_advance:
@@ -2051,15 +2064,11 @@ class Terminal(object):
                 return
             self.update_mod_offset()
             if not self.note_params["form"]:
-                # Not in a form
+                # Not in a form; update cell
                 cur_cell["cellInput"] = cell_lines
 
-            elif cur_cell["cellParams"]["filled"] or cur_cell["cellType"] in MARKUP_TYPES:
-                # Filled/markdown cells in a form cannot be altered
-                cell_lines = cur_cell["cellInput"][:]
-
-            else:
-                # Notebook form mode
+            elif not cur_cell["cellParams"]["filled"] and cur_cell["cellType"] not in MARKUP_TYPES:
+                # Unfilled code cell in fillable notebook form
                 # Fill all cells up to, but excluding, current cell
                 for cindex in self.note_cells["cellIndices"][:cur_loc]:
                     cell = self.note_cells["cells"][cindex]
@@ -2077,7 +2086,8 @@ class Terminal(object):
 
                 if prev_cell and prev_cell["cellType"] in MARKUP_TYPES:
                     # Previous non-page-break markup cell found
-                    prev_cell["cellInput"] += ["**Your Input:**", ""] + ["    "+line for line in cell_lines]
+                    input_lines = cur_cell["cellFillInput"] or cell_lines
+                    prev_cell["cellInput"] += ["**Your Input:**", ""] + ["    "+line for line in input_lines]
 
                     if cur_cell["cellParams"]["executed"]:
                         prev_cell["cellInput"] += ["", "**Your Output:**", ""]
@@ -2096,27 +2106,28 @@ class Terminal(object):
                                 prev_cell["cellInput"].append("    "+scroll_line[JLINE])
                                 expect_lines.append(scroll_line[JLINE])
 
-                        if cur_cell["cellExpectOutput"] and normalize_lines(cur_cell["cellExpectOutput"]) == normalize_lines(expect_lines):
-                            prev_cell["cellInput"] += ["", "**---YOUR OUTPUT MATCHES ANSWER TEXT---**", ""]
+                        norm_output = normalize_lines(cur_cell["cellExpectOutput"])
+                        if norm_output and norm_output == normalize_lines(expect_lines):
+                            prev_cell["cellInput"] += ["", "**---YOUR OUTPUT TEXT MATCHES EXPECTED TEXT---**", ""]
 
                     prev_cell["cellInput"] += ["", "*Expected Input:*", ""]
 
                     self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(prev_cell["cellInput"]), prev_index, True])
-                    cell_lines = cur_cell["cellInput"][:]
+                    cell_lines = cur_cell["cellInput"][:]  # Display correct code
                     cur_cell["cellParams"]["filled"] = True
                 else:
                     # Do not fill current cell
                     cur_cell["cellInput"] = self.filled_cell_input(cell_lines)
 
-                if next_cell and next_cell["cellType"] in MARKUP_TYPES:
-                    next_cell["cellParams"]["filled"] = True
-                    self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input(next_index)), next_index, True])
+                ##if next_cell and next_cell["cellType"] in MARKUP_TYPES:
+                ##    next_cell["cellParams"]["filled"] = True
+                ##    self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input(next_index)), next_index, True])
 
                 self.screen_callback(self.term_name, "", "note_cell_value", ["\n".join(self.get_cell_input()), cur_index, True])
                 cur_cell["cellFillInput"] = []
                 self.unhide_cells()
 
-        elif self.note_params["form"] and cur_cell["cellType"] not in MARKUP_TYPES:
+        elif self.note_params["form"] and not cur_cell["cellParams"]["filled"] and cur_cell["cellType"] not in MARKUP_TYPES:
             if execute or not cur_cell["cellParams"]["executed"]:
                 # Buffer cell value
                 cur_cell["cellFillInput"] = cell_lines
@@ -2144,7 +2155,9 @@ class Terminal(object):
                         break
                 unindented_line = line.lstrip()
                 if not unindented_line or unindented_line.startswith("#") or unindented_line.startswith("%matplotlib inline"):
-                    # Blank or comment line
+                    # Blank or comment line (effectively)
+                    if unindented_line.startswith("%matplotlib inline"):
+                        unindented_line = "#" + unindented_line[1:]
                     if prev_blank:
                         # Force indent
                         tem_line = "".join([" "]*indent) + unindented_line

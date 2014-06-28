@@ -4385,18 +4385,19 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    this.saveNotebook("", {submit: "submit"}); 
 	}
     } else if (command == "run" || (!this.note_params.form && command == "runbutton")) {
+	var createNew = !this.note_params.form && (command == "run") && (this.curIndex == this.getLastIndex());
 	if (cellParams.cellType in MARKUP_TYPES) {
 	    this.renderCell(false, false);
 	    this.update_text(false, false, false);
-	    if (this.curIndex == this.getLastIndex())
+	    if (createNew)
 		gNotebook.remoteAddCell("", "", 0);
 	    else
 		gWebSocket.write([["select_cell", 0, false, true]]);
 	} else {
 	    if (!this.note_params.form ||
 		(this.note_params.form != "shared" && window.confirm("Proceed to next cell?")) ) {
-		var createNew = (command == "run" && !this.note_params.form);
-		this.update_text(true, true, createNew);
+		var openNext = (command == "run") || (!this.note_params.form && this.curIndex < this.getLastIndex());
+		this.update_text(true, openNext, createNew);
 	    }
 	}
     } else if (command == "execute"|| (this.note_params.form && command == "runbutton")) {
@@ -4552,7 +4553,7 @@ GTNotebook.prototype.splitCell = function() {
 	textElem.val(head);
 	$("#"+this.getCellId(this.curIndex)+"-output").html("");
 	$("#"+this.getCellId(this.curIndex)+"-screen").html("");
-	this.update_text();
+	this.update_text(false);
 	this.renderCell(false, false);
 	this.splitting = true;
 	gNotebook.remoteAddCell(cellParams.cellType, tail, 0);
@@ -4668,20 +4669,15 @@ GTNotebook.prototype.cellScrollOutput = function() {
 
 GTNotebook.prototype.update_text = function(execute, openNext, createNew) {
     if (execute) {
-	if (!createNew && this.curIndex == this.getLastIndex()) {
-	    this.openNext = false;
-	} else {
-	    this.openNext = !!openNext;
-	    this.createNext = createNew;
-	}
-
+	this.openNext = !!openNext;
+	this.createNext = !!createNew;
 	this.cellFocus(false);
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").show();
     }
     var textElem = $("#"+this.getCellId(this.curIndex)+"-textarea");
     var text = textElem.val();
     if (gWebSocket && gParams.controller) {
-	var save = !this.note_params.form||openNext;
+	var save = !this.note_params.form || openNext;
 	gWebSocket.write([["update_cell", this.curIndex, execute, save, text]]);
 	this.send("*", this.curIndex, ["cell_input", text]);
 	this.lastTextValue = text;
@@ -4777,7 +4773,7 @@ GTNotebook.prototype.output = function(update_opts, update_rows, update_scroll) 
 	// "End of output"
 	$("#"+this.getCellId(this.curIndex)+" div.gterm-notecell-busy").hide();
 	if (this.openNext) {
-	    if (this.createNext || this.curIndex == this.getLastIndex())
+	    if (this.createNext)
 		gNotebook.remoteAddCell("", "", 0);
 	    else
 		gWebSocket.write([["select_cell", 0, false, true]]);

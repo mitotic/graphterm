@@ -442,7 +442,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                     if tem_email == TerminalConnection.get_host_param(tem_host, "host_email", ""):
                                         auth_email = tem_email
                                     else:
-                                        self.write_json([["abort", "Google authentication failed for user "+user]])
+                                        self.write_json([["abort", "Google authentication failed for user %s <%s>" % (user, tem_email)]])
                                         self.close()
                                 else:
                                     new_user_email = tem_email # Not validated email
@@ -1320,7 +1320,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         TerminalConnection.send_requests(term_path, matchpaths, [["note_lock", args[0]]])
                 elif msg[1] == "note_open":
                     note_params = args[0]
-                    terminal_params["nb_mod_offset"] = 0
+                    terminal_params["nb_mod_offset"] = note_params.get("mod_offset", 0)
                     terminal_params["nb_name"] = note_params.get("name", "Untitled")
                     terminal_params["nb_file"] = note_params.get("file", "Untitled")
                     terminal_params["nb_form"] = note_params.get("form", "")
