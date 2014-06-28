@@ -194,7 +194,7 @@ Running IPython Notebook server
 --------------------------------------------------------------------------------------------
 
 To access the full features of the IPython Notebook, you can run your
-own password-proteced public IPython Notebook server on the remote
+own password-protected public IPython Notebook server on the remote
 machine using the ``gnbserver`` command (*if the instructor has
 enabled this option*). You can then access it using your local browser,
 with an URL of the form ``https://hostname.domain:port``, where

@@ -1984,6 +1984,7 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
         logging.error("Error in parsing term_settings: %s", excp)
         Term_settings = {}
 
+    current_user = getpass.getuser()
     auth_file = ""
     if options.auth_type in ("none", "name"):
         # No auth code
@@ -2002,6 +2003,9 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
             auth_code = GTSocket.get_auth_code()
             try:
                 gterm.write_auth_code(auth_code, server=external_host, port=external_port)
+                if options.auth_type in ("multiuser", "login"):
+                    user_code = gterm.user_hmac(auth_code, current_user, key_version="1")
+                    gterm.write_auth_code(user_code, user=current_user, server=external_host, port=external_port)
             except Exception, excp:
                 print >> sys.stderr, "Error in writing authentication file: %s" % excp
                 sys.exit(1)
@@ -2014,7 +2018,7 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
     super_users = options.super_users.split(",") if options.super_users else []
     if options.auth_type == "multiuser":
         if not super_users:
-            super_users = [ getpass.getuser() ]
+            super_users = [ current_user ]
         if options.user_setup == "auto":
             if not os.path.exists(Auto_add_file):
                 with open(Auto_add_file, "w") as f:

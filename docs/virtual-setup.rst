@@ -58,33 +58,38 @@ Case 1: Mac or Linux server with user accounts already created
     Omit the ``sudo`` if you are installing as a non-root user within
     an Anaconda or Enthought Python environment, for example.
 
- 2. Say all the user home directories begin with ``/Users...``, then
-    run a command like the following to start the GraphTerm server as the
-    ``root`` user:
+ 2. Say all the user home directories begin with ``/Users/...``, then
+    run a command like the following as the
+    ``root`` user to start the GraphTerm server with password-less
+    ``multiuser`` authentication:
 
    ``gtermserver --daemon=start --auth_type=multiuser --user_setup=manual --users_dir=/Users --logging --port=80 --host=server_domain_name_or_ip``
 
-   To stop the server, use ``gtermserver --daemon=stop``. You
-   can also omit the ``--daemon`` option, to run the server in the
-   foreground for testing. To install GraphTerm as a service, you can
-   copy the script ``$GTERM_DIR/bin/graphtermd`` to ``/etc/init.d``
-   and edit it to modify the command line options. If you want automatic
-   new user creation, you can use the ``--user_setup=auto`` option,
-   but you may need to modify the user configuration shell script
+   To stop the server, use ``gtermserver --daemon=stop``. You can also
+   omit the ``--daemon`` option, to run the server in the foreground
+   for testing. To install GraphTerm as a service, you can copy the
+   script ``$GTERM_DIR/bin/graphtermd`` to ``/etc/init.d`` and edit it
+   to modify the command line options. If you want automatic new user
+   creation, you can use the ``--user_setup=auto`` option, but you may
+   need to modify the user configuration shell script
    ``$GTERM_DIR/bin/gterm_user_setup``, which has only been tested
-   with Ubuntu Linux. You can use the ``--auth_type=login``
-   option for a more traditional login authentication, but it
-   requires the use of ``--https`` or ``--host=localhost`` for
-   security. SSH port forwarding can be used for remotely accessing a
-   ``localhost`` server (e.g., ``ssh -L 9900:localhost:8900 remote_name``)
-   [If using login authentication, all the remaining steps can be skipped.]
+   with Ubuntu Linux.
+
+   You can use the ``--auth_type=login`` option for traditional
+   password-based login authentication, but it will only work with
+   ``--https`` or ``--host=localhost`` options (for security). For
+   ``localhost`` servers, SSH port forwarding can be used for remote
+   access (e.g., ``ssh -L 9900:localhost:8900 remote_name``). [*If
+   using login authentication, the remaining setup operations can be
+   skipped.*]
 
  3. Run the following command as root user to display the *master access code*:
 
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
     (Ignore the port number following the hexadecimal access code.)
-    If the domain name is ``localhost``, the filename would simply be ``_gterm_auth.txt``.
+
+    *Note*: If the domain name is ``localhost``, the filename would simply be ``_gterm_auth.txt``.
     For automatic new user creation, the *group code* is in ``~/.graphterm/gterm_gcode.txt``
 
  4. Use the URL http://server_domain_name to open a new graphterm
