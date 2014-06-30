@@ -1845,15 +1845,16 @@ def run_server(options, args):
     class GoogleOAuth2LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
         @tornado.gen.coroutine
         def get(self):
-            if self._OAUTH_SETTINGS_KEY not in self.settings:
+            if self._OAUTH_SETTINGS_KEY not in self.settings or not self.settings[self._OAUTH_SETTINGS_KEY]["key"]:
                 self.setup_msg("Google Authentication has not yet been set up for this server.")
                 return
+            ##logging.error("GoogleOAuth2LoginHandler: req=%s", self.request.uri)
             auth_uri = Host_settings["server_url"]+"/_gauth/"
             if not self.get_argument('code', False):
                 gterm_cauth = self.get_argument("gterm_cauth", "")
                 gterm_code = self.get_argument("gterm_code", "")
                 gterm_user = self.get_argument("gterm_user", "")
-                if not gterm_cauth:
+                if not gterm_cauth and not self.request.uri.startswith("/_gauth/test"):
                     self.setup_msg("Google Authentication Setup Instructions")
                     return
 
@@ -1880,17 +1881,22 @@ def run_server(options, args):
                     user_info = json.loads(base64.urlsafe_b64decode(padded))
 
                     vals = state_value.split(",")
-                    if len(vals) != 3 or not vals[0]: 
+                    if len(vals) != 3: 
                         raise Exception('Invalid state values: %s' % state_value)
                     gterm_cauth, gterm_code, gterm_user = vals
 
                     gterm_email = user_info.get("email", "").lower()
                     if not gterm_email or not user_info.get("email_verified", False):
-                        raise Exception("GoogleAuthHandler: No valid email in user info for %s" % gterm_user)
+                        raise Exception("GoogleOAuth2LoginHandler: No valid email in user info for %s" % gterm_user)
+                    if not gterm_cauth:
+                        self.write("Google authentication succeeded for "+gterm_email)
+                        self.finish()
+                        return
+
                     query = {"cauth": gterm_cauth, "code": gterm_code,  "user": gterm_user, "email": gterm_email, "name": user_info.get("name","")}
                     query["eauth"] = gterm.compute_hmac(gterm.user_hmac(GTSocket._auth_code, gterm_email, key_version="email"), gterm_cauth)
                     url = "/?"+urllib.urlencode(query)
-                    logging.info("GoogleOAuth2Handler: u=%s, url=%s, %s", gterm_user, url, user_info)
+                    logging.info("GoogleOAuth2LoginHandler: u=%s, url=%s, %s", gterm_user, url, user_info)
                     self.redirect(url)
                 except Exception, excp:
                     self.write("Error in Google Authentication: "+str(excp))
@@ -1912,7 +1918,7 @@ Ensure that your web application has the following URI settings:
  <em>Authorized Redirect URI:</em> <b>%s/_gauth/</b> (Note: The trailing slash is important)
 
 If you have not set up the GraphTerm web app for Google authentication, here is how to do it:
-    * Go to the Google Dev Console at <a href="http://console.developers.google.com" target="_blank">http://console.developers.google.com</a>
+    * Go to the Google Dev Console at <a href="https://console.developers.google.com" target="_blank">https://console.developers.google.com</a>
     * Select a project, or create a new one.
     * In the sidebar on the left, select <em>APIs & Auth</em>.
     * In the sidebar on the left, select <em>Consent Screen</em> to customize the Product name etc.

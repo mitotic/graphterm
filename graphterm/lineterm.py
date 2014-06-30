@@ -84,7 +84,7 @@ DEFAULT_FILE_PREFIX = "Untitled"
 DEFAULT_FILENUM_RE = re.compile("^(\d+)")
 
 ANSWER_SUFFIX = "## ANSWER"
-ANSWER_FILL = "##... (fill in code here)"
+ANSWER_FILL = "##... (FILL IN CODE HERE)"
 ANSWER_TEST = "*... (hidden test results)*"
 HIDDEN_STR = "##Hidden"
 
@@ -1291,7 +1291,7 @@ class Terminal(object):
         submit = params.get("submit", "")
 
         if self.note_params["form"]:
-            mod_time = time.time()
+            mod_time = self.update_current_cell()
         else:
             mod_time = self.update_current_cell(input_data)
             if mod_time:

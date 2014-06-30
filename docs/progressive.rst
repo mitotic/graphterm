@@ -8,6 +8,14 @@ Progressively fillable notebooks
 .. index:: progressive, fillable, fill in the blanks
 
 
+.. raw:: html
+
+  <p>
+  <a href="http://www.youtube.com/watch?feature=player_embedded&v=SN-zhm3CCPY" target="_blank"><img src="http://img.youtube.com/vi/SN-zhm3CCPY/0.jpg" alt="Progressively Fillable Notebooks using GraphTerm" width="240" height="180" border="10" /></a>
+
+*YouTube Video demonstrating progressively fillable notebooks in action*
+
+
 A common difficulty encountered by students on their first exposure to
 programming concepts is the inability to string together simple steps
 to accomplish a complex task. For example, they may grasp the concept

@@ -346,13 +346,18 @@ Embedding and remote terminal commands
 Additional GraphTerm terminals can be embedded within any GraphTerm
 terminal. For example, the following command::
 
-    gframe -b -t terma termb
+    gframe --border --terminal terma termb
 
 creates two terminals, ``terma`` and ``termb`` and embeds them within
-the current terminal. The demo script
-`metro.sh <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh>`_
+the current terminal. The demo script `metro.sh
+<https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh>`_
 illustrates the embedding of multiple terminals, each running a
-different command (see screenshot :ref:`metro_shot`). The script also demonstrates the use of the ``gsh``
+different command (see screenshot :ref:`metro_shot`). Clicking on the
+black-and-white *GT* logo of an embedded terminal, or selecting the
+*terminal/full* option (or typing the keyboard shortcut), will expand
+it to fill the browser window.
+
+The ``metro.sh`` script also demonstrates the use of the ``gsh``
 command to execute commands remotely on a terminal, e.g.::
 
     gsh terma yweather -f austin

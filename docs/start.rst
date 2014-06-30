@@ -296,8 +296,8 @@ opening a new terminal. On a single user computer, such as a laptop,
 the ``--auth_type=none`` option, with no access code, can be used
 instead.
 
-Although GraphTerm can be run as a public server, this feature should
-be used ony for teaching and demonstration purposes. In this case, the
+Although GraphTerm can be run as a public server, this feature is best
+used for teaching and demonstration purposes. In this case, the
 ``--auth_type=name`` option can be used, if all users can share an
 account, with no access code. The ``--auth_type=multiuser`` option,
 which requires the server to run with root privileges, is suitable for

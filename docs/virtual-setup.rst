@@ -51,6 +51,14 @@ associated with a publicly accessible server.
 Case 1: Mac or Linux server with user accounts already created
 ============================================================================================
 
+.. raw:: html
+
+  <p>
+  <a href="http://www.youtube.com/watch?feature=player_embedded&v=T518-CstG3E" target="_blank"><img src="http://img.youtube.com/vi/T518-CstG3E/0.jpg" alt="GraphTerm server for multiple users" width="240" height="180" border="10" /></a>
+
+*YouTube Video showing how to set up a GraphTerm server with multiuser authentication*
+
+
  1. Install ``graphterm`` on your server using the following two commands:
 
     ``sudo pip install graphterm``
@@ -112,12 +120,15 @@ Case 1: Mac or Linux server with user accounts already created
     ``~/.graphterm`` directory will be created, and there will be an
     option to enter the GMail address for authentication.
 
- 6. To restart the server, use ``gtermserver --daemon=stop`` followed by
-    ``gtermserver --daemon=start ...``
-
-
 Case 2: On-demand server using Amazon AWS
 =================================================================================
+
+.. raw:: html
+
+  <p>
+  <a href="http://www.youtube.com/watch?feature=player_embedded&v=rvqKzdtJBTE" target="_blank"><img src="http://img.youtube.com/vi/rvqKzdtJBTE/0.jpg" alt="Virtual Computer Lab using GraphTerm and AWS" width="240" height="180" border="10" /></a>
+
+*YouTube Video showing how to set up a virtual computer lab using GraphTerm and AWS*
 
 If you do not already have a Linux server available to set up a
 virtual computer lab, you can easily create one on demand using Amazon
@@ -129,15 +140,18 @@ scripts, and also need to install the ``boto`` python module. (These
 scripts are routinely used during GraphTerm development to test new
 versions in the "cloud". )
 
- 1. You will need to obtain an `AWS <http://aws.amazon.com/>`_ account as
-    `described here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html>`_.
-    The AWS account will be linked to your standard Amazon account.
+ 1. You will need to obtain an `AWS <http://aws.amazon.com/>`_ account
+    as `described here
+    <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html>`_.
+    The AWS account will be linked to your standard Amazon
+    account. (Optionally, you may create an SSH key pair named
+    ``ec2key`` by `clicking here
+    <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_).
+    If you would like to use your GMail account to authenticate, you
+    also need to set up a Google project before starting, following
+    the instructions at :ref:`googleauth`.
 
- 2. Create an SSH key pair to access your AWS instances by `clicking here <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_. You
-    need to name the key pair ``ec2key`` to be able to use the
-    ``ec2ssh`` and ``ec2scp`` commands bundled with GraphTerm.
-
- 3. Install and run graphterm on your local (single-user) computer:
+ 2. Install and run graphterm on your local (single-user) computer:
 
     ``sudo pip install graphterm``
 
@@ -154,7 +168,7 @@ versions in the "cloud". )
    :figwidth: 90%
 .. 
 
- 4. Run the following command within the graphterm window to create a Linux server:
+ 3. Run the following command within the graphterm window to create a Linux server:
 
     ``ec2launch``
 
@@ -162,8 +176,12 @@ versions in the "cloud". )
     credentials, which will be stored in the local file ``~/.boto``.
     Then run the command again, enter a tagname (e.g., ``testlab``),
     choose ``auth_type`` as ``multiuser``, and select the ``pylab``
-    and ``netcdf`` options. When you press the *submit* button, the
-    generated command line should look something like this:
+    and ``netcdf`` options. You may also need to enter your project's
+    Google Client ID and Secret, which were obtained following the
+    instructions at :ref:`googleauth`.
+
+    When you press the *submit* button, the generated command line
+    should look something like this:
 
     ``ec2launch --type=m3.medium --key_name=ec2key --ami=ami-2f8f9246 --gmail_addr=user@gmail.com --auth_type=multiuser --pylab --netcdf testlab``
 
@@ -173,7 +191,7 @@ versions in the "cloud". )
    :figwidth: 90%
 ..
 
- 5. After the new AWS Linux server has completed configuration, which
+ 4. After the new AWS Linux server has completed configuration, which
     can take several minutes, its IP address and *server domain name*
     will be displayed. Then type the following command using the new
     domain name to login to the password-less super user account ``ubuntu``:
@@ -190,15 +208,17 @@ versions in the "cloud". )
     To restart the server, use ``gtermserver --daemon=stop`` followed by
     ``sudo /etc/init.d/graphterm``
 
- 6. Run the following command on the server to display the *master access code*:
+ 5. Run the following command on the server to display the *master access code*:
 
     ``cat ~/.graphterm/@server_domain_name_gterm_auth.txt``
 
-    (Ignore the port number following the hexadecimal access code.)
+    Ignore the port number following the hexadecimal access code. (You
+    do not need the master access code if your Google Authentication
+    is set up properly.)
 
- 7. Use the URL http://server_domain_name to open a new graphterm
+ 6. Use the URL http://server_domain_name to open a new graphterm
     window on the server, with the super user name (``ubuntu`` in our
-    case), using the *master access code*
+    case), using the *master access code* (or Google Authentication.)
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login2.png
    :align: center
@@ -206,14 +226,15 @@ versions in the "cloud". )
    :figwidth: 85%
 .. 
 
- 8. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
+ 7. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
 
     ``cat ~/.graphterm/gterm_gcode.txt``
 
     Distribute this code and a printed copy of :doc:`virtual-lab` to
     all lab users.
 
- 9. If using AWS, run the following command on your local graphterm window to list and/or kill your instances:
+ 8. If using AWS, run the following command on your local graphterm
+    window to list, connect to, or kill your instances:
 
     ``ec2list``
 
@@ -223,14 +244,55 @@ versions in the "cloud". )
    :figwidth: 90%
 
 
+.. index:: restart server
+
+Restarting the server
+===========================================================================
+
+To restart the GraphTerm server, use the commands::
+
+  gtermserver --daemon=stop
+
+  gtermserver --daemon=start ... (arguments)
+
+
 .. index:: Google authentication, GMail
+
+.. _googleauth:
 
 Google Authentication
 ===========================================================================
 
-If you wish to set up Google Authentication, follow the instructions
-at the URL ``http://server_domain_name/_gauth`` and then restart the
-server using ``sudo reboot``.
+.. raw:: html
+
+  <p>
+  <a href="http://www.youtube.com/watch?feature=player_embedded&v=b0WWcj3yBPc" target="_blank"><img src="http://img.youtube.com/vi/b0WWcj3yBPc/0.jpg" alt="Google Authentication for GraphTerm server" width="240" height="180" border="10" /></a>
+
+*YouTube Video showing how to set up Google Authentication*
+
+Here are the instructions to set up Google Authentication:
+
+    * Go to the Google Dev Console at https://console.developers.google.com
+    * Select a project, or create a new one.
+    * In the sidebar on the left, select *APIs & Auth*.
+    * In the sidebar on the left, select *Consent Screen* to customize the Product name etc.
+    * In the sidebar on the left, select *Credentials*.
+    * In the OAuth section of the page, select *Create New Client ID*.
+    * Edit Settings to *temporarily* set the Authorized Javascript Origin to
+      ``http://localhost`` and the  Authorized Redirect URI to
+      ``http://localhost/_gauth_/`` (*the trailing slash is important*)
+    * Note down the web application "Client ID key" and "Client
+      secret" values
+    * If possible, create the file ``~/.graphterm/gterm_oauth.json``
+      for the user account running ``gtermserver``. The file should
+      contain the following JSON content:
+      ``{"google_oauth": {"key": "...", "secret": "..."}}``
+
+If your GraphTerm server is running, the above instructions, with the
+correct redirect URI, may be found at
+``http://server_domain_name/_gauth``.  Any time you create or modify
+the ``~/.graphterm/gterm_oauth.json`` file, you will need to restart
+the GraphTerm server.
 
 The email address linked to each user's account is stored in the file
 ``~/.graphterm/gterm_email.txt``, which may created, modified, or
@@ -307,9 +369,9 @@ registrar.
 
 Alternatively, you can enable the Amazon Route 53 service `Route 53
 <http://aws.amazon.com/route53/faqs/#Getting_started_with_Route_53>`_
-service and create a hosted zone for your domain `example.com``.  This
-will allow the ``ec2launch`` script to automatically assign subdomain
-names like ``sub.example.com`` to your servers. Ensure that the
+service and create a hosted zone for your domain ``example.com``.  This
+will allow the ``ec2launch`` script to automatically handle subdomain
+tag names like ``sub.example.com`` for your servers. Ensure that the
 nameserver records for ``example.com`` at your domain registrar
 point to the AWS nameservers for the hosted zone.
 
@@ -389,8 +451,9 @@ recalled command line and execute it.)
 Managing instances
 --------------------------------------------------------------------------------------------
 
-The ``ec2list`` command can be used to list all running instances, and
-also to terminate them (using the ``kill`` link).
+The ``ec2list`` command can be used to list all running instances, to
+connect using SSH, and also to terminate them (using the ``kill``
+link).
 
 
 Starting and stopping GraphTerm server
@@ -516,6 +579,7 @@ terminal using the ``gframe`` command (see :ref:`gadmin_terminals_shot`)::
 
     gframe --rowheight 300 --border --columns 3 --terminal /bob/quiz1 /jane/quiz1 /jose/quiz1
 
+More information can be found in :ref:`embedding`
 
 
 Configuring groups

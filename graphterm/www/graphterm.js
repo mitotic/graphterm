@@ -5164,6 +5164,17 @@ function GTermHelp() {
                true);
 }
 
+function GTermLogoClick() {
+    try {
+	// If self-embedded, load terminal in current window
+	if (window.frameElement && window.parent && self.location.hostname == top.location.hostname)
+	    load("full");
+    } catch(err) {
+	// If above fails due to cross-frame security
+    }
+    GTShowSplash(true,true);
+}
+
 function GTermAbout() {
     if (gNotebook || gMobileBrowser)
 	GTPopAlert(GTAboutText(), true);
