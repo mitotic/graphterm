@@ -60,6 +60,10 @@ Bin_dir = os.path.dirname(__file__)
 #    unique prompt prefix (maybe null), unique prompt suffix (non-null), prompt body, remote prompt body
 DEFAULT_PROMPTS = ["", "$", "\W", "\h:\W"]
 
+# Special escape sequences for clickable commands (gls, ec2list)
+CMD_ARG = "%[arg]"           # Argument for command
+CMD_NB = "%[notebook]"       # Notebook activation (optionally followed by prompts)
+
 Pack_env = {}
 lc_pack = os.getenv("LC_TELEPHONE", "")
 if lc_pack.startswith("GTERM_EXPORT="):

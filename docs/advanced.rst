@@ -4,7 +4,7 @@ Advanced topics
 .. toctree::
    :maxdepth: 1
 
-   API
+   extend
    format
    tracing
    widgets

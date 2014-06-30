@@ -22,24 +22,26 @@ glscmd = gterm.env("LS_CMD", "") or "gls"
 gopencmd = gterm.env("OPEN_CMD", "") or "gopen"
 gvicmd = gbrowsecmd if gterm.Export_host else gterm.env("VI_CMD", "") or "gvi"
 
-NB2CMD = {"py": "python -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py",
-          "ipynb": "python -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py",
-          "js": "node %[notebook]",
-          "R": "R -q %[notebook]> |+ ",       # Prompts: '> ' and '+ '
-          "sh": " %[notebook]",
+# Note: command must end with space to append filepath when clicked
+NB2CMD = {"py": "python -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py ",
+          "ipynb": "python -i $"+gterm.GT_PREFIX+"DIR/bin/gpylab.py ",
+          "js": "node "+gterm.CMD_NB,
+          "R": "R -q "+gterm.CMD_NB+"> |+ ",       # Prompts: '> ' and '+ '
+          "sh": " "+gterm.CMD_NB,
           }
 
 GENERIC_ICON = "/_static/images/tango-text-x-generic-template.png"
 
-FILE_TYPES = {"directory": ("/_static/images/tango-folder.png", "cd %(path); "+glscmd+" -f"),
+# Note: command must end with space to append filepath when clicked
+FILE_TYPES = {"directory": ("/_static/images/tango-folder.png", "cd "+gterm.CMD_ARG+"; "+glscmd+" -f"),
               "executable": ("/_static/images/tango-application-x-executable.png", ""),
-              "audiofile": ("/_static/images/tango-audio-x-generic.png", gbrowsecmd),
-              "htmlfile": ("/_static/images/tango-text-html.png", gopencmd),
-              "imagefile": ("/_static/images/tango-image-x-generic.png", gimagecmd),
-              "textfile": ("/_static/images/tango-text-x-generic.png", gvicmd),
-              "videofile": ("/_static/images/tango-video-x-generic.png", gopencmd),  # Need to implement streaming...
-              "pdffile": (GENERIC_ICON, gbrowsecmd),
-              "plainfile": (GENERIC_ICON, gopencmd),
+              "audiofile": ("/_static/images/tango-audio-x-generic.png", gbrowsecmd+" "),
+              "htmlfile": ("/_static/images/tango-text-html.png", gopencmd+" "),
+              "imagefile": ("/_static/images/tango-image-x-generic.png", gimagecmd+" "),
+              "textfile": ("/_static/images/tango-text-x-generic.png", gvicmd+" "),
+              "videofile": ("/_static/images/tango-video-x-generic.png", gopencmd+" "),  # Need to implement streaming...
+              "pdffile": (GENERIC_ICON, gbrowsecmd+" "),
+              "plainfile": (GENERIC_ICON, gopencmd+" "),
 }
 
 IMGFORMAT = '<td><a id="glsimg%(id)s" class="gterm-link gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img" src="%(fileicon)s"></img></a>'
@@ -118,7 +120,7 @@ def file2html(filepath, filename, filemode=0):
 
     classes = "droppable" if filetype in ("directory", "executable") else ""
     if options.remove:
-        filecmd = "rm -i"
+        filecmd = "rm -i "
     if not filecmd:
         fileicon, filecmd = FILE_TYPES[filetype]
 

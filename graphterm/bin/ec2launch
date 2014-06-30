@@ -458,7 +458,7 @@ if options.gmail_addr:
     print >> sys.stderr, "***NOTE*** For Google Authentication, update following URI settings for your web application at "+gdev_url
     print >> sys.stderr, "  Authorized Javascript origins: "+web_url
 
-    print >> sys.stderr, "  Authorized Redirect URI: "+web_url+"/_gauth/   (Note: The trailing slash is important)"
+    print >> sys.stderr, "  Authorized Redirect URI: "+web_url+"/_gauth"
     print >> sys.stderr, ""
 
 print >> sys.stderr, "Waiting several minutes for remote setup to complete..."

@@ -1849,7 +1849,7 @@ def run_server(options, args):
                 self.setup_msg("Google Authentication has not yet been set up for this server.")
                 return
             ##logging.error("GoogleOAuth2LoginHandler: req=%s", self.request.uri)
-            auth_uri = Host_settings["server_url"]+"/_gauth/"
+            auth_uri = Host_settings["server_url"]+"/_gauth"
             if not self.get_argument('code', False):
                 gterm_cauth = self.get_argument("gterm_cauth", "")
                 gterm_code = self.get_argument("gterm_code", "")
@@ -1915,7 +1915,7 @@ Ensure that your web application has the following URI settings:
 
  <em>Authorized Javascript origins:</em> <b>%s</b>
 
- <em>Authorized Redirect URI:</em> <b>%s/_gauth/</b> (Note: The trailing slash is important)
+ <em>Authorized Redirect URI:</em> <b>%s/_gauth</b>
 
 If you have not set up the GraphTerm web app for Google authentication, here is how to do it:
     * Go to the Google Dev Console at <a href="https://console.developers.google.com" target="_blank">https://console.developers.google.com</a>
@@ -2042,7 +2042,7 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
                 GTSocket._auth_users[user] = gterm.user_hmac(auth_code, user, key_version="1")
 
     handlers = [(r"/_auth/.*", AuthHandler),
-                (r"/_gauth/.*", GoogleOAuth2LoginHandler),
+                (r"/_gauth.*", GoogleOAuth2LoginHandler),   # Does not work with trailing slash!
                 (r"/_form/.*", FormHandler),
                 (r"/_steal/.*", ActionHandler),
                 (r"/_watch/.*", ActionHandler),

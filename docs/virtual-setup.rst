@@ -280,7 +280,7 @@ Here are the instructions to set up Google Authentication:
     * In the OAuth section of the page, select *Create New Client ID*.
     * Edit Settings to *temporarily* set the Authorized Javascript Origin to
       ``http://localhost`` and the  Authorized Redirect URI to
-      ``http://localhost/_gauth_/`` (*the trailing slash is important*)
+      ``http://localhost/_gauth``
     * Note down the web application "Client ID key" and "Client
       secret" values
     * If possible, create the file ``~/.graphterm/gterm_oauth.json``

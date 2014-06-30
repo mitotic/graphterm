@@ -51,6 +51,10 @@ var DEBUG_LOG = function (str) {console.log(str)};
 
 var OSH_ECHO = true;
 
+// Special escape sequences for clickable commands (gls, ec2list)
+CMD_ARG = "%[arg]"           // Argument for command
+CMD_NB = "%[notebook]"       // Notebook activation (optionally followed by prompts)
+
 var ELLIPSIS = "...";
 var HIDDEN_STR = "##Hidden";
 
@@ -2986,7 +2990,7 @@ function gtermPageletClickHandler(event) {
     var cd_command = (options.command.indexOf("cd ") == 0);
     options.clear_last = (pagelet.length && cd_command) ? pagelet.attr("data-gtermpromptindex") : "0";
 
-    var noffset = options.command.indexOf(" %[notebook]");
+    var noffset = options.command.indexOf(CMD_NB);
     if (noffset > -1) {
 	var filepath = "";
 	if (_.str.startsWith(href, FILE_URI_PREFIX))
@@ -2998,7 +3002,7 @@ function gtermPageletClickHandler(event) {
 	if (qindex > -1)
 	    filepath = filepath.substr(0,qindex);
 
-	var prompts = options.command.substr(noffset+" %[notebook]".length).split(/\|/);
+	var prompts = options.command.substr(noffset+CMD_NB.length).split(/\|/);
 	options.command = options.command.substr(0,noffset) + "  # Notebook: "
 	if (noffset == 0) {
 	    // Shell notebook
@@ -3096,8 +3100,8 @@ function otraceClickHandler(event) {
     } else {
 	var new_command = $(this).attr("data-gtermcmd");
 	var command_line;
-	if (new_command.indexOf("%(path)") >= 0)
-	    command_line = new_command.replace(/%\(path\)/g, filepath);
+	if (new_command.indexOf("%[arg]") >= 0)
+	    command_line = new_command.replace(/%\[arg\]/g, filepath);
 	else
 	    command_line = new_command+" "+filepath;
 
@@ -4998,7 +5002,7 @@ function GTDropHandler(evt) {
 		} else if (gterm_mime == "x-graphterm/directory") {
 		    GTFileDropHandler.call(transfer, evt.target);
 		    var options = {};
-		    options.command = "gupload %(path) && cd %(path) && gls -f";
+		    options.command = "gupload "+CMD_ARG+" && cd "+CMD_ARG+" && gls -f";
 		    options.dest_url = filename;
 		    options.enter = true;
 		    gtermClickPaste("", gterm_url, options);

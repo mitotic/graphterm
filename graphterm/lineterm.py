@@ -3232,7 +3232,7 @@ class Terminal(object):
             directory = meta[JCURDIR] if meta else getcwd(self.pid)
         row_content = test_finder_row % {"fullpath": directory,
                                          "filetype": "directory",
-                                         "clickcmd": "cd %(path); gls -f",
+                                         "clickcmd": "cd "+gterm.CMD_ARG+"; gls -f",
                                          "fileicon": "/_static/images/tango-folder.png",
                                          "filename": "."}
         content = "\n".join([test_finder_head] + 40*[row_content] + [test_finder_tail])
@@ -3277,7 +3277,7 @@ class Terminal(object):
 
         space_prefix = ""
         command_prefix = ""
-        expect_filename = False
+        expect_arg = False
         expect_url = (command in REMOTE_FILE_COMMANDS)
         file_url_comps = split_file_url(file_url, check_host_secret=self.shared_secret)
         if not text and file_url:
@@ -3314,14 +3314,15 @@ class Terminal(object):
             if pre_line and pre_line[0] == u" ":
                 # Strip space associated with prompt
                 pre_line = pre_line[1:]
+
             if not pre_line.strip():
                 # Empty/blank command line
                 if command:
-                    # Command to precede filename
+                    # Specified command; expect command argument (usually filename)
                     command_prefix = command
-                    expect_filename = True
+                    expect_arg = True
                 elif text:
-                    # Use text as command
+                    # No command specified; use text as command
                     cmd_text = shell_unquote(text)
                     validated = False
                     if cmd_text.startswith("file://"):
@@ -3336,16 +3337,16 @@ class Terminal(object):
                         # NOTE: Can use blank space in command line to disable this check
                         raise gterm.MsgException("Command '%s' not found" % text)
                     command_prefix = shell_quote(cmd_text)
+                    if command_prefix and command_prefix[-1] != " ":
+                        command_prefix += " "
                     text = ""
-                if command_prefix and command_prefix[-1] != " ":
-                    command_prefix += " "
             else:
-                # Non-empty command line; expect filename
-                expect_filename = True
+                # Non-empty command line; expect command argument (usually filename)
+                expect_arg = True
                 if pre_line[-1] != u" ":
                     space_prefix = " "
 
-        if cwd and normalize and expect_filename and file_url:
+        if cwd and normalize and expect_arg and file_url:
             # Check if file URI represents subdirectory of CWD
             if expect_url and file_url_comps and file_url_comps[JHOST]:
                 text = create_file_uri(file_url_comps)
@@ -3356,10 +3357,26 @@ class Terminal(object):
 
         if text or command_prefix:
             text = shell_quote(text)
-            if expect_filename and command_prefix.find("%(path)") >= 0:
-                paste_text = command_prefix.replace("%(path)", text)
+            if expect_arg:
+                # Expecting argument (maybe)
+                if command:
+                    # Specified command
+                    if command_prefix.find(gterm.CMD_ARG) >= 0:
+                        # Substitute argument
+                        paste_text = command_prefix.replace(gterm.CMD_ARG, text)
+                    elif command_prefix.endswith(" "):
+                        # Command must end with space to append text argument
+                        paste_text = command_prefix+text+" "
+                    else:
+                        # No argument (ignoring any text)
+                        paste_text = command_prefix
+                else:
+                    # Non-empty command line
+                    paste_text = space_prefix+text+" "
             else:
-                paste_text = command_prefix+space_prefix+text+" "
+                # No command specified (text used as command)
+                paste_text = command_prefix
+
             if dest_paste:
                 if paste_text and paste_text[-1] != " ":
                     paste_text += " "

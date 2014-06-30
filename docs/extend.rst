@@ -1,29 +1,28 @@
 *********************************************************************************
- API for writing GraphTerm-aware programs
+ Extending GraphTerm
 *********************************************************************************
 
 .. contents::
 
-.. index:: API, hello_gterm.sh, graphterm-aware commands
+.. index:: extending GraphTerm, API, hello_gterm.sh, graphterm-aware
+	   commands, toolchain
 
-
-A `graphterm-aware program <https://github.com/mitotic/graphterm/tree/master/graphterm/bin>`_ can
-be written in any language, much like a
-`CGI <http://en.wikipedia.org/wiki/Common_Gateway_Interface>`_ script.
-The program `hello_gterm.sh <https://github.com/mitotic/graphterm/blob/master/graphterm/bin/hello_gterm.sh>`_
+The GraphTerm toolchain can be extended by writing additional
+executable commands in any language, much like a `CGI
+<http://en.wikipedia.org/wiki/Common_Gateway_Interface>`_ script.  The
+program `hello_gterm.sh
+<https://github.com/mitotic/graphterm/blob/master/graphterm/bin/hello_gterm.sh>`_
 is a simple example.  See also the programs ``gls``, ``gimage``,
 ``gframe``, ``gvi``, ``gfeed``, ``yweather``, ``ec2launch`` and
 ``ec2list`` for examples of GraphTerm API usage. You can use the
 ``which gls`` command to figure out where these programs are located.
 The file ``gterm.py`` contains many helper functions for accessing the
-GraphTerm API. See also the `gcowsay
-<https://github.com/mitotic/gcowsay>`_ program for an example of a
-stand-alone GraphTerm-aware command.
+GraphTerm API.
 
-*Note:* This API is poorly documented, primarily because it
-is in a state of flux. If you would like to develop a non-trivial
-application using this API, please be aware that the syntax may change
-without notice.
+*Note:* The GraphTerm Application Programming Interface (API) is
+rather poorly documented, because it is still evolving. If you
+develop a non-trivial application using this API, please be aware that
+some of the details may change.
 
 GraphTerm comment directive
 -----------------------------------------------------------------------
@@ -75,10 +74,10 @@ inline. The following python command will display inline HTML::
 
 The ``data`` and ``display_blob`` actions are unprivileged, i.e., they
 can be executed even with a dummy cookie value of 0. This allows
-"blobs" to be created from
-`<http://en.wikipedia.org/wiki/Data_URI_scheme>_data URIs and displayed even across SSH
-logins. For example, the following two python ``print`` statements
-will display an inline image from a data URL::
+"blobs" to be created from `data URIs
+<http://en.wikipedia.org/wiki/Data_URI_scheme>`_ and displayed even
+across SSH logins. For example, the following two python ``print``
+statements will display an inline image from a data URL::
 
   print "\x1b[?1155;0h"+"<!--gterm data blob=75543619-->"+"image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="+"\x1b[?1155l"
 
@@ -152,3 +151,75 @@ some raw HTML followed by an image::
 
 See the toolchain programs ``gimage``, ``gframe``, etc. for examples
 of this API usage.
+
+Clickable links for generating commands
+-----------------------------------------------------------------------
+
+A program can display clickable HTML links that can automatically
+generate a command line and paste it into the terminal. See the
+``ec2list`` and ``gls`` programs for examples of this usage. Basically
+a clickable HTML ``<a>`` element is identified by the ``class``
+attribute ``gterm-link`` and also contains a special attribute
+``data-gtermcmd`` that represents the command to be executed. If this
+command ends with a space, the displayed text of the element (such as
+a file name) is appended as an argument to the command. (If the
+``href`` attribute of the ``<a>`` element represents a file URI, then
+the file path is appended instead.) To insert the argument elsewhere
+in the command, the special escape sequence ``%[arg]`` can be used in
+the command string.
+
+.. index:: command line parsing
+
+Mapping command line arguments to HTML form elements
+-----------------------------------------------------------------------
+
+Any Python program that parses command line options and arguments can
+be trivially modified to generate an HTML form to request input. The
+``gterm`` module provides a ``FormParser`` object that can be used as
+an almost drop-in replacement for standard command line parsing using
+``optparse.OptionParser``. Here's some example code of this usage
+(modified from ``ec2launch``)::
+
+    import gterm, sys
+
+    # Create FormParser object
+    form_parser = gterm.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname: ", command="ec2launch -f")
+
+    # First argument (required)
+    form_parser.add_argument(label="", help="Instance tagname")
+
+    # Choice option
+    form_parser.add_option("type", ("m3.medium", "m3.large", "c3.large"), help="Instance type")
+
+    # String option
+    form_parser.add_option("gmail_addr", "", help="Full gmail address, user@gmail.com")
+
+    # Boolean option
+    form_parser.add_option("https", False, help="Use https for security")
+
+    # Raw options (not displayed in form)
+    form_parser.add_option("form", False, help="Force form display", raw=True)
+    form_parser.add_option("fullpage", False, short="f", help="Fullpage display", raw=True)
+    form_parser.add_option("text", False, short="t", help="Text only", raw=True)
+
+    (options, args) = form_parser.parse_args()
+
+    if not gterm.Lterm_cookie or not sys.stdout.isatty():
+        # Not running within GraphTerm or stdout is piped; text only
+        options.text = True
+
+    if not args or options.form:
+        # Invoked with no arguments or with force form display option
+        if options.text:
+            # Display text help and quit
+            sys.exit(form_parser.get_usage())
+        # Display form, prefilling it if need be
+        gterm.write_form(form_parser.create_form(prefill=(options, args) if options.form else None), command="ec2launch -f")
+        sys.exit(1)
+
+    # ... code for processing arguments and options
+
+
+See the source for toolchain commands ``ec2launch``, ``gadmin``,
+``gframe``, ``gncplot``, ``greveal``, and ``ystock`` for more
+examples.
