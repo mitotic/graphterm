@@ -4,7 +4,7 @@
 gterm: API module for GraphTerm-aware programs; also serves as terminal launcher
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 # The code in this particular file (gterm.py) is
 # released in the public domain, so that it maybe
@@ -136,11 +136,11 @@ INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
                 "bash": ("sh", "bash", ()),
             }
 
-EXTENSIONS   = dict((prog, values[0]) for prog, values in INTERPRETERS.items())
-LANGUAGES    = dict((prog, values[1]) for prog, values in INTERPRETERS.items())
-PROMPTS_LIST = dict((prog, values[2]) for prog, values in INTERPRETERS.items() if values[2])
-EXTN2LANG    = dict((values[0], values[1]) for prog, values in INTERPRETERS.items())
-EXTN2PROG    = dict((values[0], prog) for prog, values in INTERPRETERS.items() if prog != "ipython")
+EXTENSIONS   = dict((prog, values[0]) for prog, values in list(INTERPRETERS.items()))
+LANGUAGES    = dict((prog, values[1]) for prog, values in list(INTERPRETERS.items()))
+PROMPTS_LIST = dict((prog, values[2]) for prog, values in list(INTERPRETERS.items()) if values[2])
+EXTN2LANG    = dict((values[0], values[1]) for prog, values in list(INTERPRETERS.items()))
+EXTN2PROG    = dict((values[0], prog) for prog, values in list(INTERPRETERS.items()) if prog != "ipython")
 
 PAGE_BREAK = "---"
 
@@ -194,8 +194,8 @@ def create_app_directory(appdir=App_dir):
         try:
             # Create App directory
             os.mkdir(appdir, 0o700)
-        except OSError, excp:
-            print >> sys.stderr, "Error in creating app directory %s: %s" % (appdir, excp)
+        except OSError as excp:
+            print("Error in creating app directory %s: %s" % (appdir, excp), file=sys.stderr)
     
     if os.path.isdir(appdir) and os.stat(appdir).st_mode != 0o700:
         # Protect App directory
@@ -211,7 +211,7 @@ def read_email(appdir=App_dir):
     try:
         with open(email_file) as f:
             return f.read().strip().lower()
-    except Exception, excp:
+    except Exception as excp:
         logging.warning("Error in reading email from %s: %s", email_file, excp)
         return ""
 
@@ -221,7 +221,7 @@ def write_email(addr, appdir=App_dir):
         with open(email_file, "w") as f:
             f.write(addr+"\n")
             return email_file
-    except Exception, excp:
+    except Exception as excp:
         logging.error("Error in writing email to %s: %s", email_file, excp)
         return ""
 
@@ -264,10 +264,10 @@ def read_groups(user=""):
         with open(group_file) as f:
             try:
                 groups = json.loads(f.read())
-                for group, members in groups.iteritems():
+                for group, members in groups.items():
                     for member in members:
                         membership[member] = group
-            except Exception, excp:
+            except Exception as excp:
                 sys.exit("Error in reading group from %s: %s" % (group_file, excp))
     return groups, membership
 
@@ -278,7 +278,7 @@ def read_prefs(user=""):
         with open(prefs_file) as f:
             try:
                 prefs = json.loads(f.read())
-            except Exception, excp:
+            except Exception as excp:
                 logging.error("Error in reading prefs from %s: %s" % (prefs_file, excp))
     return prefs
 
@@ -288,7 +288,7 @@ def write_prefs(prefs_dict, user=""):
         with open(prefs_file, "w") as f:
             f.write(json.dumps(prefs_dict)+"\n")
         return prefs_file, "Saved preferences"
-    except Exception, excp:
+    except Exception as excp:
         logging.error("Error in writing prefs to %s: %s", prefs_file, excp)
         return prefs_file, "ERROR in saving prefs"
 
@@ -306,7 +306,7 @@ def split_version(version_str):
     """Splits version string "major.minor.revision" and returns list of ints [major, minor]"""
     if not version_str:
         return [0, 0]
-    return map(int, version_str.split(".")[:2])
+    return list(map(int, version_str.split(".")[:2]))
 
 Min_version = split_version(Min_version_str or Version_str) 
 Api_version = split_version(API_VERSION)
@@ -368,8 +368,8 @@ def wrap_encoded_file_or_data(filepath, content=None, headers={}, stderr=False):
             try:
                 with open(filepath) as fp:
                     content = fp.read()
-            except Exception, excp:
-                print >> sys.stderr, "Error in reading file %s: %s" % (filepath, excp)
+            except Exception as excp:
+                print("Error in reading file %s: %s" % (filepath, excp), file=sys.stderr)
                 return None
 
         headers.update({"x_gterm_encoding": "base64",
@@ -408,7 +408,7 @@ def write_pagelet(html, display="block", overwrite=False, dir="", add_headers={}
         params += " overwrite=yes"
     if dir:
         params += " current_dir=" + quote(dir)
-    for header, value in add_headers.iteritems():
+    for header, value in add_headers.items():
         params += " " + header + "=" + quote(str(value))
 
     PAGELETFORMAT = '<!--gterm pagelet %s-->'
@@ -547,10 +547,10 @@ def edit_file(filename="", dir="", content=None, create=False, editor="ace", std
                 if create:
                     content = ""
                 else:
-                    print >> sys.stderr, "File %s not found" % filename
+                    print("File %s not found" % filename, file=sys.stderr)
                     return None
             elif not os.path.isfile(filepath):
-                print >> sys.stderr, "File %s not a plain file" % filename
+                print("File %s not a plain file" % filename, file=sys.stderr)
                 return None
 
     params = {"filepath": filepath, "editor": editor, "modify": True, "command": "", "current_directory": dir}
@@ -566,16 +566,16 @@ def edit_file(filename="", dir="", content=None, create=False, editor="ace", std
     if Export_host:
         errmsg, headers, content = receive_data(stderr=stderr)
         if errmsg:
-            print >> sys.stderr, "Error in saving file:", errmsg
+            print("Error in saving file:", errmsg, file=sys.stderr)
         else:
             if not filepath:
                 filepath = headers.get("x_gterm_filepath", "")
             if filepath:
                 with open(filepath, "w") as f:
                     f.write(content)
-                print >> sys.stderr, "Saved ", filepath
+                print("Saved ", filepath, file=sys.stderr)
             else:
-                print >> sys.stderr, "Error in saving file: No file path"
+                print("Error in saving file: No file path", file=sys.stderr)
 
 def open_notebook(filename="", dir="", content=None, command_path="", prompts=[], params={}, stderr=False):
     """Open notebook"""
@@ -585,7 +585,7 @@ def open_notebook(filename="", dir="", content=None, command_path="", prompts=[]
         filepath = os.path.normcase(os.path.abspath(fullname))
 
         if content is None and (not os.path.exists(filepath) or not os.path.isfile(filepath)):
-            print >> sys.stderr, "File %s not found" % filename
+            print("File %s not found" % filename, file=sys.stderr)
             return None
 
     if not command_path:
@@ -621,16 +621,16 @@ def save_notebook(filename="", dir="", stderr=False):
     if Export_host:
         errmsg, headers, content = receive_data(stderr=stderr)
         if errmsg:
-            print >> sys.stderr, "Error in saving notebook:", errmsg
+            print("Error in saving notebook:", errmsg, file=sys.stderr)
         else:
             if not filepath:
                 filepath = headers.get("x_gterm_filepath", "")
             if filepath:
                 with open(filepath, "w") as f:
                     f.write(content)
-                print >> sys.stderr, "Saved ", filepath
+                print("Saved ", filepath, file=sys.stderr)
             else:
-                print >> sys.stderr, "Error in saving notebook: No file path"
+                print("Error in saving notebook: No file path", file=sys.stderr)
 
 def menu_op(target, value=None, stderr=False):
     """Invoke menu operation"""
@@ -668,7 +668,7 @@ def get_blob_id(blob_url):
     else:
         try:
             scheme, netloc, path, query, fragment = urlparse.urlsplit(import_url)
-        except Exception, excp:
+        except Exception as excp:
             return ""
 
     if path.startswith(BLOB_PREFIX):
@@ -693,10 +693,10 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", host=""
         filepath = os.path.normcase(os.path.abspath(fullname))
 
         if not os.path.exists(filepath) or not os.path.isfile(filepath):
-            print >> sys.stderr, "File %s not found" % from_file
+            print("File %s not found" % from_file, file=sys.stderr)
             return None
     elif content is None:
-        print >> sys.stderr, "Error: No content and no file to create blob from"
+        print("Error: No content and no file to create blob from", file=sys.stderr)
         return None
 
     if not content_type and filepath:
@@ -905,7 +905,7 @@ class FormParser(object):
                     attrs += " checked"
                 input_html = Input_checkbox_template % (id_suffix, opt_name, opt_name, classes, attrs)
 
-            elif isinstance(opt_default, (basestring, float, int, long)):
+            elif isinstance(opt_default, (str, float, int)):
                 if first_arg:
                     attrs += ' autofocus="autofocus"'
                 input_html = Input_text_template % (id_suffix, opt_name, opt_name, classes, str(opt_curval).replace('"', "&quot;"), attrs)
@@ -954,7 +954,7 @@ class FormParser(object):
                 assert self.command
                 write_form(self.create_form(), command=self.command, stderr=stderr)
             elif not stderr:
-                print >> sys.stderr, self.get_usage()
+                print(self.get_usage(), file=sys.stderr)
             sys.exit(1)
 
         if self.parser:
@@ -966,7 +966,7 @@ class FormParser(object):
         assert not self.command and sys.stdout.isatty()
         form_values = read_form_input(self.create_form())
         if form_values and trim:
-            form_values = dict((k,v.strip()) for k, v in form_values.items())
+            form_values = dict((k,v.strip()) for k, v in list(form_values.items()))
         return form_values
 
 
@@ -980,7 +980,7 @@ def command_output(command_args, **kwargs):
             proc = subprocess.Popen(command_args, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             return proc.communicate()
-        except Exception, excp:
+        except Exception as excp:
             return "", str(excp)
     if not timeout:
         return command_output_aux()
@@ -1039,7 +1039,7 @@ def receive_data(stderr=False, verbose=False):
                 break
 
         if verbose and not stderr:
-            print >> sys.stderr, "header=%s\n" % (header_line,)
+            print("header=%s\n" % (header_line,), file=sys.stderr)
 
         # Process headers
         if not header_line:
@@ -1056,7 +1056,7 @@ def receive_data(stderr=False, verbose=False):
 
         expect_length = headers["x_gterm_length"]
         if verbose and not stderr:
-            print >> sys.stderr, "type=%s, expect_len=%s\n" % (content_type, expect_length)
+            print("type=%s, expect_len=%s\n" % (content_type, expect_length), file=sys.stderr)
 
         if not expect_length:
             return ("", headers, "")
@@ -1079,7 +1079,7 @@ def receive_data(stderr=False, verbose=False):
                 prefix = line[-offset:]
                 line = line[:-offset]
             if verbose and not stderr:
-                print >> sys.stderr, "line(%d,%s)=%s" % (len(chunk), count, line,)
+                print("line(%d,%s)=%s" % (len(chunk), count, line,), file=sys.stderr)
             digest_buf.update(line)
             content_list.append(base64.b64decode(line))
         assert not prefix
@@ -1087,9 +1087,9 @@ def receive_data(stderr=False, verbose=False):
             return ("MD5 digest mismatch", headers, None)
         else:
             return ("", headers, "".join(content_list))
-    except Exception, excp:
+    except Exception as excp:
         if verbose and not stderr:
-            print >> sys.stderr, "receive_data: ERROR %s" % excp
+            print("receive_data: ERROR %s" % excp, file=sys.stderr)
         return (str(excp), None, None)
     finally:
         termios.tcsetattr(saved_stdin, termios.TCSADRAIN, saved_settings)
@@ -1103,7 +1103,7 @@ def getuid(pid):
         return None
     try:
         return int(std_out.split("\n")[1][1:])
-    except Exception, excp:
+    except Exception as excp:
         logging.warning("getuid: ERROR %s", excp)
         return None
 
@@ -1117,8 +1117,8 @@ def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, u
         try:
             response = urlopen(url)
             return response.read()
-        except Exception, excp:
-            print >> sys.stderr, "Error in accessing URL %s: %s" % (url, excp)
+        except Exception as excp:
+            print("Error in accessing URL %s: %s" % (url, excp), file=sys.stderr)
             return None
 
     import tornado.httpclient
@@ -1140,11 +1140,11 @@ def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, u
     try:
         response = http_client.fetch(request)
         if response.error:
-            print >> sys.stderr, "HTTPClient ERROR response.error", response.error
+            print("HTTPClient ERROR response.error", response.error, file=sys.stderr)
             return None
         return response.body
-    except tornado.httpclient.HTTPError, excp:
-        print >> sys.stderr, "Error in accessing URL %s: %s" % (url, excp)
+    except tornado.httpclient.HTTPError as excp:
+        print("Error in accessing URL %s: %s" % (url, excp), file=sys.stderr)
     return None
 
 def enable_tab_completion():
@@ -1185,10 +1185,10 @@ def nbmode(enable=True):
         Saved_displayhook = sys.displayhook
         sys.displayhook = auto_display
         if sys.flags.interactive:
-            print >> sys.stderr, "NOTE: Enabled notebook mode (affects auto printing of expressions)"
-            print >> sys.stderr, "      To disable, use gterm.nbmode(False)"
+            print("NOTE: Enabled notebook mode (affects auto printing of expressions)", file=sys.stderr)
+            print("      To disable, use gterm.nbmode(False)", file=sys.stderr)
     else:
-        print >> sys.stderr, "NOTE: Disabled notebook mode"
+        print("NOTE: Disabled notebook mode", file=sys.stderr)
         sys.displayhook = Saved_displayhook
 
 def process_args(args=None):
@@ -1264,7 +1264,7 @@ def main():
                 url_server, sep, url_port = comps[1].partition(":")
                 if url_port:
                     url_port = int(url_port)
-            except Exception, excp:
+            except Exception as excp:
                 sys.exit("Invalid URL argument: "+str(excp))
             protocol = comps[0]
             path = comps[2][1:]
@@ -1292,17 +1292,17 @@ def main():
         try:
             # Read user access code
             auth_code, tem_port = read_auth_code(user=options.user, server=server_name)
-        except Exception, excp:
+        except Exception as excp:
             try:
                 # Read master access code
                 auth_code, tem_port = read_auth_code(server=server_name)
                 auth_user = ""
-            except Exception, excp:
+            except Exception as excp:
                 if options.noauth:
                     auth_code = "none"
                     auth_user = ""
                 else:
-                    print >> sys.stderr, "Unable to read auth file", auth_file 
+                    print("Unable to read auth file", auth_file, file=sys.stderr) 
                     auth_code = undashify(getpass.getpass("Access code: "))
                     read_code = True
 
@@ -1315,15 +1315,15 @@ def main():
 
     resp = auth_request(Http_addr, Http_port, client_nonce, user=auth_user, protocol=protocol)
     if not resp:
-        print >> sys.stderr, "\ngterm: Authentication request to GraphTerm server %s:%s failed" % (Http_addr, Http_port)
-        print >> sys.stderr, "gterm: Server may not be running; use 'gtermserver' command to start it."
+        print("\ngterm: Authentication request to GraphTerm server %s:%s failed" % (Http_addr, Http_port), file=sys.stderr)
+        print("gterm: Server may not be running; use 'gtermserver' command to start it.", file=sys.stderr)
         sys.exit(1)
 
     server_nonce, received_token = resp.split(":")
     if not options.noauth:
         client_token, server_token = auth_token(auth_code, "graphterm", Http_addr, server_port, client_nonce, server_nonce)
         if received_token != client_token:
-            print >> sys.stderr, "gterm: GraphTerm server %s:%s failed to authenticate itself\n  Use --noauth option for no authentication, or check port number and auth code in %s" % (Http_addr, Http_port, auth_file)
+            print("gterm: GraphTerm server %s:%s failed to authenticate itself\n  Use --noauth option for no authentication, or check port number and auth code in %s" % (Http_addr, Http_port, auth_file), file=sys.stderr)
             sys.exit(1)
         ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
 
@@ -1331,7 +1331,7 @@ def main():
             confirm = get_input("Save validated access code? (y/[n]): ").strip()
             if confirm.lower().startswith("y"):
                 write_auth_code(auth_code, user=options.user, server=server_name, port=server_port)
-                print >> sys.stderr, "Access code saved to file", auth_file
+                print("Access code saved to file", auth_file, file=sys.stderr)
 
     # Open graphterm window using browser
     url = "%s://%s" % (protocol, Http_addr)
@@ -1349,7 +1349,7 @@ def main():
 
     std_out, std_err = open_browser(url, browser=options.browser)
     if std_err:
-        print >> sys.stderr, "gterm: ERROR in opening browser window '%s' - %s\n Check if server is running. If not, start it with 'gtermserver' command." % (url, std_err)
+        print("gterm: ERROR in opening browser window '%s' - %s\n Check if server is running. If not, start it with 'gtermserver' command." % (url, std_err), file=sys.stderr)
         sys.exit(1)
 
     # TODO: Create minimal browser window (without URL box etc.)

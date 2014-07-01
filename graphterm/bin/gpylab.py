@@ -41,7 +41,7 @@ Notes: Use figure(...) to clear current figure
        Use gterm.nbmode(False) to re-enable default expression printing behaviour
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import sys
 
@@ -70,10 +70,10 @@ try:
 
     ion()
 
-    print >> sys.stderr, "NOTE: Enabled interactive plotting mode, ion()"
-    print >> sys.stderr, "      To disable, use ioff()"
+    print("NOTE: Enabled interactive plotting mode, ion()", file=sys.stderr)
+    print("      To disable, use ioff()", file=sys.stderr)
 except ImportError:
-    print >> sys.stderr, "NOTE: Plotting modules not loaded"
+    print("NOTE: Plotting modules not loaded", file=sys.stderr)
 
 if __name__ == "__main__" and sys.flags.interactive:
     import gterm

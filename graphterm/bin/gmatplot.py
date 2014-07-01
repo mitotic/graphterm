@@ -31,7 +31,7 @@ Note: If setting up using gm.setup(nopatch=True),
 
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import time
 import gterm
@@ -170,14 +170,14 @@ def resize_win(dimensions=""):
         dpi = float(matplotlib.rcParams["figure.dpi"])
         figsize = "%.2f, %.2f" % (0.8*float(width)/dpi, 0.7*float(height)/dpi)
         matplotlib.rcParams["figure.figsize"] = figsize
-    except Exception, excp:
+    except Exception as excp:
         raise Exception("Error in resizing: "+str(excp))
 
 def newfig(*args, **kwargs):
     """New figure
     """
     retval = figure(*args, **kwargs)
-    print ""  # Hack: This is needed to make it work. Otherwise previous figure is repeated
+    print("")  # Hack: This is needed to make it work. Otherwise previous figure is repeated
     show()
     return retval
 
