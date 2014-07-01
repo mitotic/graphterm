@@ -7,6 +7,8 @@ gncplot: 2D visualization of netCDF data
 E.g., gncplot --variable=air --lon=0 --time=0 --lev=1000,0 --label --output=cs.png air.mon.ltm.nc
 """
 
+from __future__ import absolute_import, print_function
+
 import os
 import sys
 import termios
@@ -56,8 +58,8 @@ if not os.path.isfile(filepath):
 
 ncfile = netCDF4.Dataset(filepath)
 
-dimension_names = ncfile.dimensions.keys()
-varnames = ncfile.variables.keys()
+dimension_names = list(ncfile.dimensions.keys())
+varnames = list(ncfile.variables.keys())
 
 coord_varnames = {}
 coord_stdnames = {}
@@ -90,7 +92,7 @@ for varname in varnames:
 
 plot_varnames.sort()
 
-dim_varname_list = dim_varnames.keys()
+dim_varname_list = list(dim_varnames.keys())
 dim_varname_list.sort()
 
 form_parser = gterm.FormParser(usage=usage, title="Visualize netCDF file: ", command="gncplot -f")
@@ -160,7 +162,7 @@ for kdim, dname in enumerate(plot_obj.dimensions):
                     slice_obj.append(slc)
                     plot_slice.append(slc)
                     plot_dims.append(dname)
-        except Exception, excp:
+        except Exception as excp:
             errmsg += "Invalid %s value %s: %s\n" % (dname, cval, excp)
 
 nplotdim = len(plot_dims)
@@ -169,7 +171,7 @@ if not errmsg and nplotdim > 2:
     errmsg += "Too many dimensions to plot; slice out %d dimensions" % (nplotdim-2)
 
 if options.verbose:
-    print >> sys.stderr, "Slice=%s plot_dims=%s" % (slice_obj, plot_dims)
+    print("Slice=%s plot_dims=%s" % (slice_obj, plot_dims), file=sys.stderr)
 
 if errmsg or not options.variable or options.form:
     if gterm.Lterm_cookie:
@@ -203,7 +205,7 @@ if nplotdim:
 def show_plot(slice_obj, title, output="", clabel=False, fullscreen=False):
     plot_data = plot_obj[slice_obj]
     if not nplotdim:
-        print title, plot_data
+        print(title, plot_data)
         return
 
     gm.figure()
@@ -240,7 +242,7 @@ Saved_settings = termios.tcgetattr(Stdin_fd)
 first = True
 jsel = slice_obj[kscroll] if kscroll >= 0 else 0
 try:
-    print >> sys.stderr, "Slideshow: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n'p' => pause, 'r' => resume"
+    print("Slideshow: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n'p' => pause, 'r' => resume", file=sys.stderr)
 
     # Raw tty input without echo
     tty.setraw(Stdin_fd)

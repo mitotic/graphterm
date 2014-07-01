@@ -5,11 +5,16 @@
 gauth: Display graphterm authentication code for user
 """
 
+from __future__ import absolute_import, print_function
+
 import getpass
 import os
 import pwd
 import sys
-import urllib
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 
 import gterm
 
@@ -58,20 +63,20 @@ def main():
             try:
                 with open(os.path.join(os.path.expanduser("~"+user), gterm.APP_DIRNAME, gterm.APP_EMAIL_FILENAME), "r") as f:
                     email_addr = f.read().strip()
-            except Exception, excp:
+            except Exception as excp:
                 pass
         mail_body += "\n"+options.tail+"\n" if options.tail else ""
-        mail_url = 'mailto:'+email_addr+'?subject='+urllib.quote(options.subject)+'&body='+urllib.quote(mail_body)
+        mail_url = 'mailto:'+email_addr+'?subject='+quote(options.subject)+'&body='+quote(mail_body)
         if gterm.Lterm_cookie:
             gterm.wrap_write(mail_body.replace("\n","<br>")+'<p>Click <a href="'+mail_url+'">here</a> to email it')
         else:
-            print mail_body
+            print(mail_body)
     elif options.write:
         user_dir = os.path.join(os.path.expanduser("~"+user), gterm.APP_DIRNAME)
         gterm.create_app_directory(appdir=user_dir)
         gterm.write_auth_code(user_code, appdir=user_dir, user=user, server=server)
     else:
-        print gterm.dashify(user_code)
+        print(gterm.dashify(user_code))
 
 if __name__ == "__main__":
     main()

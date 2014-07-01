@@ -11,6 +11,8 @@ To recursively display terminal /local/tty1, use:
    gframe -r 300 -b -n -t /local/tty1/watch
 """
 
+from __future__ import absolute_import, print_function
+
 import math
 import mimetypes
 import os
@@ -53,7 +55,7 @@ if args:
             if "/" not in arg:
                 arg = "/" + gterm.env("PATH").split("/")[1] + "/" + arg
             elif not arg.startswith("/"):
-                print >> sys.stderr, "Invalid terminal path %s; must begin with /" % arg
+                print("Invalid terminal path %s; must begin with /" % arg, file=sys.stderr)
                 sys.exit(1)
             arg += "/&" if "?" in arg else "/?"
             arg += "qauth=%(qauth)"
@@ -65,7 +67,7 @@ if args:
                 iframe_urls.append(gterm.get_file_url(arg, relative=True, exists=True))
 
             if not iframe_urls[-1]:
-                print >> sys.stderr, "File %s not found" % arg
+                print("File %s not found" % arg, file=sys.stderr)
                 sys.exit(1)
 else:
     try:
@@ -74,7 +76,7 @@ else:
         content = None
 
     if not content:
-        print >> sys.stderr, "Error in reading from stdin"
+        print("Error in reading from stdin", file=sys.stderr)
         sys.exit(1)
 
     iframe_urls = [gterm.create_blob(content, content_type="text/html")]

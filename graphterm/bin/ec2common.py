@@ -2,6 +2,8 @@
 ec2common: Common code to manage Amazon AWS EC2 instances
 """
 
+from __future__ import absolute_import, print_function
+
 import boto
 import os
 import re
@@ -26,7 +28,7 @@ def check_auth_file(auth_file):
     auth_file = os.path.expanduser(auth_file)
     if not os.path.isfile(auth_file):
         if not sys.stdout.isatty():
-            print >> sys.stderr, "Authentication file %s not found!" % (auth_file,)
+            print("Authentication file %s not found!" % (auth_file,), file=sys.stderr)
             sys.exit(1)
         try:
             form_values = Auth_parser.read_input(trim=True)
@@ -36,12 +38,12 @@ def check_auth_file(auth_file):
             if not all(form_values.values()):
                 raise Exception("Missing authentication data")
                 
-            with os.fdopen( os.open(auth_file, os.O_WRONLY|os.O_CREAT, 0600), "w") as f:
+            with os.fdopen( os.open(auth_file, os.O_WRONLY|os.O_CREAT, 0o600), "w") as f:
                 f.write(AUTH_FORMAT % form_values)
-            print >> sys.stderr, "Created authentication file %s; re-type command" % auth_file
+            print("Created authentication file %s; re-type command" % auth_file, file=sys.stderr)
             sys.exit(1)
-        except Exception, excp:
-            print >> sys.stderr, "Error in creating authentication file: %s" % excp
+        except Exception as excp:
+            print("Error in creating authentication file: %s" % excp, file=sys.stderr)
             sys.exit(1)
 
 Default_auth_file = "~/.boto"

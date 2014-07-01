@@ -9,9 +9,10 @@ To runs as a widget:
   gtweet -w -f -s topic > $GTERM_SOCKET &
 """
 
+from __future__ import absolute_import, print_function
+
 import binascii
 import cgi
-import cStringIO as StringIO
 import csv
 import json
 import logging
@@ -20,18 +21,22 @@ import random
 import rfc822
 import sys
 import time
-import urllib
 import uuid
 
 import tornado.auth
 import tornado.httpclient
 
+if sys.version_info[0] >= 3:
+    long = int
+
 try:
     from urllib.request import urlopen
     from urllib.parse import urlencode
+    import io as StringIO
 except ImportError:
     from urllib import urlopen, urlencode
-
+    import cStringIO as StringIO
+    
 import gterm
 
 CONFIG_HELP = """Steps to acquire consumer and access tokens:
@@ -116,8 +121,8 @@ def twitter_request(consumer_token, path, path_prefix=TWITTER_URL_PREFIX, access
         oauth = oauth_request_parameters(consumer_token, url, access_token, all_args, method=method)
         query_args.update(oauth)
 
-    if query_args: url += "?" + urllib.urlencode(query_args)
-    post_data = urllib.urlencode(post_args) if post_args is not None else None
+    if query_args: url += "?" + urlencode(query_args)
+    post_data = urlencode(post_args) if post_args is not None else None
     return tornado.httpclient.HTTPRequest(str(url), method,
                                           headers={"Connection": "keep-alive"},
                                           body=post_data,
@@ -158,7 +163,7 @@ def send_request(path, path_prefix=TWITTER_URL_PREFIX, get_args={}, post_args=No
     http_client = tornado.httpclient.HTTPClient()
     try:
         return http_client.fetch(http_request)
-    except tornado.httpclient.HTTPError, excp:
+    except tornado.httpclient.HTTPError as excp:
         return excp
 
         
@@ -166,7 +171,7 @@ def update_status(text):
     post_args = {"status": text}
     resp = send_request(TWITTER_STATUS_PATH, post_args=post_args)
     if isinstance(resp, Exception):
-        print >> sys.stderr, resp
+        print(resp, file=sys.stderr)
             
 Twitter_stream_restart_time = time.time()
 Twitter_stream_delay = 0
@@ -181,7 +186,7 @@ class TwitterStreamReader(object):
 
     def response_callback(self, response):
         global Twitter_stream_restart_time, Twitter_stream_delay, Twitter_user_stream
-        if isinstance(response, basestring):
+        if isinstance(response, str):
             logging.info("StreamReadResponse: %s", response)
         else:
             logging.error("StreamReadError: %s", response)
@@ -205,8 +210,8 @@ class TwitterStreamReader(object):
 
         try:
             content = json.loads(line)
-        except Exception, excp:
-            print >> sys.stderr, "JSON decoding error '%s': %s" % (excp, line)
+        except Exception as excp:
+            print("JSON decoding error '%s': %s" % (excp, line), file=sys.stderr)
             sys.exit(1)
         self.buffer = ""
 
@@ -261,10 +266,10 @@ class TwitterStreamReader(object):
                 msg_out = "%s: %s\n" % (user_label, message["text"])
             if options.fullscreen:
                 if not sys.stderr.isatty():
-                    print >> sys.stderr, msg_out
+                    print(msg_out, file=sys.stderr)
                     sys.stderr.flush()
             else:
-                print >> sys.stdout, msg_out
+                print(msg_out, file=sys.stdout)
                 sys.stdout.flush()
 
         if options.fullscreen:
@@ -301,7 +306,7 @@ def read_twitter_user_stream(Auth_tokens, keywords=[], recv=False):
     resp = send_request(path, path_prefix=stream_url, get_args=get_args, post_args=post_args,
                         streaming_callback=Twitter_user_stream.handle_stream)
     if isinstance(resp, Exception):
-        print >> sys.stderr, resp
+        print(resp, file=sys.stderr)
 
     return my_id
 
@@ -318,7 +323,7 @@ def check_auth_file(auth_file):
     auth_file = os.path.expanduser(auth_file)
     if not os.path.isfile(auth_file):
         if not Out_tty:
-            print >> sys.stderr, "Authentication file %s not found!\n\n%s%s" % (auth_file, CONFIG_HELP, AUTH_HELP)
+            print("Authentication file %s not found!\n\n%s%s" % (auth_file, CONFIG_HELP, AUTH_HELP), file=sys.stderr)
             sys.exit(1)
         try:
             form_values = Auth_parser.read_input(trim=True)
@@ -328,10 +333,10 @@ def check_auth_file(auth_file):
             if not all(form_values.values()):
                 raise Exception("Missing authentication data")
                 
-            with os.fdopen( os.open(auth_file, os.O_WRONLY|os.O_CREAT, 0600), "w") as f:
+            with os.fdopen( os.open(auth_file, os.O_WRONLY|os.O_CREAT, 0o600), "w") as f:
                 f.write(AUTH_FORMAT % form_values)
-        except Exception, excp:
-            print >> sys.stderr, "Error in creating authentication file: %s" % excp
+        except Exception as excp:
+            print("Error in creating authentication file: %s" % excp, file=sys.stderr)
             sys.exit(1)
 
     with open(auth_file) as f:
@@ -339,8 +344,8 @@ def check_auth_file(auth_file):
     try:
         global Auth_tokens
         Auth_tokens = json.loads(auth_json)
-    except Exception, excp:
-        print >> sys.stderr, "Syntax error in authentication file %s: %s\n\nExpecting:\n%s" % (auth_file, excp, AUTH_HELP)
+    except Exception as excp:
+        print("Syntax error in authentication file %s: %s\n\nExpecting:\n%s" % (auth_file, excp, AUTH_HELP), file=sys.stderr)
         sys.exit(1)
 
 Default_auth_file = "~/.twitter_auth"

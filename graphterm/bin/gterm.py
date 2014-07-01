@@ -1328,7 +1328,7 @@ def main():
         if received_token != client_token:
             print("gterm: GraphTerm server %s:%s failed to authenticate itself\n  Use --noauth option for no authentication, or check port number and auth code in %s" % (Http_addr, Http_port, auth_file), file=sys.stderr)
             sys.exit(1)
-        ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
+        ##print("**********snonce", server_nonce, client_token, server_token, file=sys.stderr)
 
         if read_code:
             confirm = get_input("Save validated access code? (y/[n]): ").strip()

@@ -5,6 +5,8 @@
 yweather: Display weather using Yahoo Weather API
 """
 
+from __future__ import absolute_import, print_function
+
 import json
 import os
 import random
@@ -15,12 +17,11 @@ import xml.dom.minidom
 
 from optparse import OptionParser
 
-import urllib
 try:
     from urllib.request import urlopen
-    from urllib.parse import urlencode
+    from urllib.parse import quote_plus
 except ImportError:
-    from urllib import urlopen, urlencode
+    from urllib import urlopen, quote_plus
 
 Lterm_cookie = os.getenv("GTERM_COOKIE", "") or os.getenv("LC_GTERM_COOKIE", "")
 Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
@@ -88,19 +89,19 @@ headers["x_gterm_parameters"] = params
 
 if not location:
     if not Lterm_cookie or options.text:
-        print >> sys.stderr, "Please specify location"
+        print("Please specify location", file=sys.stderr)
         sys.exit(1)
     random_id = "1%09d" % random.randrange(0, 10**9)
     form_html = form_template % (random_id, random_id)
     params["display"] = "fullpage"
     params["form_input"] = True
     params["form_command"] = "yweather -f"
-    print wrap(json.dumps(headers)+"\n\n"+form_html)
+    print(wrap(json.dumps(headers)+"\n\n"+form_html))
     sys.exit(1)
     
 def xml2dict(root_elem, schema):
     retval = {}
-    for key, value in schema.iteritems():
+    for key, value in schema.items():
         lst = []
         retval[key] = lst
         for elem in dom.documentElement.getElementsByTagName(key):
@@ -119,7 +120,7 @@ def xml2dict(root_elem, schema):
     return retval
 
 def flatten(nested_dict, prefix="", dct={}):
-    for key, value in nested_dict.iteritems():
+    for key, value in nested_dict.items():
         if isinstance(value, (list, tuple)):
             if not value:
                 continue
@@ -140,25 +141,25 @@ schema = {"title": "",
           "yweather:forecast": [".day", ".date", ".text", ".code", ".low", ".high"],
           }
 
-geoplanet_url = Yahoo_geoplanet_url+'/yql?q=select%20*%20from%20geo.places%20where%20text%3D%22'+urllib.quote_plus(location)+'%22&format=json'
+geoplanet_url = Yahoo_geoplanet_url+'/yql?q=select%20*%20from%20geo.places%20where%20text%3D%22'+quote_plus(location)+'%22&format=json'
 
-location_json = json.loads(urlopen(geoplanet_url).read())
+location_json = json.loads(urlopen(geoplanet_url).read().decode())
 
 try:
     place = location_json["query"]["results"]["place"][0]
     woeid = place["woeid"]
     place_name = place["name"] + ", " + place["admin1"]["content"] + " (" + place["country"]["content"] + ")"
 except Exception:
-    print >> sys.stderr, "Could not locate '" + location + "'"
+    print("Could not locate '" + location + "'", file=sys.stderr)
     sys.exit(1)
 
 weather_url = Yahoo_weather_url+str(woeid)
-weather_xml = urlopen(weather_url).read()
+weather_xml = urlopen(weather_url).read().decode()
 
 try:
     dom = xml.dom.minidom.parseString(weather_xml)
 except Exception:
-    print >> sys.stderr, "Error in accessing Google Weather API. Try again a few more times"
+    print("Error in accessing Yahoo Weather API. Try again a few more times", file=sys.stderr)
     sys.exit(1)
 
 
