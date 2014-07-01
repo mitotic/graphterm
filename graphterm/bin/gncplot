@@ -97,12 +97,13 @@ dim_varname_list.sort()
 
 form_parser = gterm.FormParser(usage=usage, title="Visualize netCDF file: ", command="gncplot -f")
 form_parser.add_argument(default_value=filepath, label="", help="NetCDF file")
-form_parser.add_option("variable", plot_varnames, help="Variable name")
+form_parser.add_option("variable", [""] + plot_varnames, help="Variable name")
 if dim_varname_list:
     form_parser.add_option("scroll", [""] + dim_varname_list, help="Scroll coordinate")
 
 for dname in dim_varname_list:
-    form_parser.add_option(dname.lower(), "", help=dim_varnames[dname]+" value[,value]")
+    cvals = ncfile.variables[dname][:]
+    form_parser.add_option(dname.lower(), "%g,%g" % (min(cvals),max(cvals)), help=dim_varnames[dname]+" value[,value]")
 
 form_parser.add_option("title", "", help="Plot title")
 form_parser.add_option("label", False, help="Label contours")
@@ -117,63 +118,64 @@ form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display"
 errmsg = ""
 
 plotvar = options.variable
-if plotvar not in ncfile.variables:
-    sys.exit("Error: Variable %s not found in file" % plotvar)
-plot_obj = ncfile.variables[plotvar]
+if plotvar:
+    if plotvar not in ncfile.variables:
+        sys.exit("Error: Variable %s not found in file" % plotvar)
+    plot_obj = ncfile.variables[plotvar]
 
-if options.scroll:
-    scroll_var = options.scroll
-    scroll_vals = ncfile.variables[scroll_var][:]
-else:
-    scroll_var = ""
-    scroll_vals = []
-
-title_prefix = plotvar
-slice_obj = []
-kscroll = -1
-plot_dims = []
-plot_slice = []
-plot_lim = []
-for kdim, dname in enumerate(plot_obj.dimensions):
-    cval_str = getattr(options, dname.lower(), "")
-    if not cval_str:
-        slice_obj.append(slice(None))
-        plot_dims.append(dname)
-        plot_slice.append(None)
-        plot_lim.append(None)
+    if options.scroll:
+        scroll_var = options.scroll
+        scroll_vals = ncfile.variables[scroll_var][:]
     else:
-        try:
-            comps = cval_str.replace(" ","").split(",")
-            if len(comps) > 2:
-                errmsg = "Too many coordinate values for %s" % dname
-            else:
-                coords = ncfile.variables[dname][:]
-                cvals = [float(comp) for comp in comps]
-                jvals = [locate_value(coords, cval) for cval in cvals]
-                if len(jvals) == 1 or jvals[0] == jvals[1]:
-                    slice_obj.append(jvals[0])
-                    if dname == scroll_var:
-                        kscroll = kdim
-                    if dname != scroll_var or not options.fullscreen:
-                        title_prefix += " %s=%s" % (dname, coords[jvals[0]])
+        scroll_var = ""
+        scroll_vals = []
+
+    title_prefix = plotvar
+    slice_obj = []
+    kscroll = -1
+    plot_dims = []
+    plot_slice = []
+    plot_lim = []
+    for kdim, dname in enumerate(plot_obj.dimensions):
+        cval_str = getattr(options, dname.lower(), "")
+        if not cval_str:
+            slice_obj.append(slice(None))
+            plot_dims.append(dname)
+            plot_slice.append(None)
+            plot_lim.append(None)
+        else:
+            try:
+                comps = cval_str.replace(" ","").split(",")
+                if len(comps) > 2:
+                    errmsg = "Too many coordinate values for %s" % dname
                 else:
-                    plot_lim.append(cvals)
-                    slc = slice(min(jvals), max(jvals)+1)
-                    slice_obj.append(slc)
-                    plot_slice.append(slc)
-                    plot_dims.append(dname)
-        except Exception as excp:
-            errmsg += "Invalid %s value %s: %s\n" % (dname, cval, excp)
+                    coords = ncfile.variables[dname][:]
+                    cvals = [float(comp) for comp in comps]
+                    jvals = [locate_value(coords, cval) for cval in cvals]
+                    if len(jvals) == 1 or jvals[0] == jvals[1]:
+                        slice_obj.append(jvals[0])
+                        if dname == scroll_var:
+                            kscroll = kdim
+                        if dname != scroll_var or not options.fullscreen:
+                            title_prefix += " %s=%s" % (dname, coords[jvals[0]])
+                    else:
+                        plot_lim.append(cvals)
+                        slc = slice(min(jvals), max(jvals)+1)
+                        slice_obj.append(slc)
+                        plot_slice.append(slc)
+                        plot_dims.append(dname)
+            except Exception as excp:
+                errmsg += "Invalid %s value %s: %s\n" % (dname, cval, excp)
 
-nplotdim = len(plot_dims)
+    nplotdim = len(plot_dims)
 
-if not errmsg and nplotdim > 2:
-    errmsg += "Too many dimensions to plot; slice out %d dimensions" % (nplotdim-2)
+    if not errmsg and nplotdim > 2:
+        errmsg += "Too many dimensions to plot; slice out %d dimensions" % (nplotdim-2)
 
-if options.verbose:
-    print("Slice=%s plot_dims=%s" % (slice_obj, plot_dims), file=sys.stderr)
+    if options.verbose:
+        print("Slice=%s plot_dims=%s" % (slice_obj, plot_dims), file=sys.stderr)
 
-if errmsg or not options.variable or options.form:
+if errmsg or not plotvar or options.form:
     if gterm.Lterm_cookie:
         if errmsg:
             gterm.wrap_write(errmsg, headers={"x_gterm_response": "error_message",

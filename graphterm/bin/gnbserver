@@ -5,6 +5,8 @@
 gnbserver: Run PUBLIC ipython server (with password)
 """
 
+from __future__ import absolute_import, print_function
+
 import os
 import pwd
 import sys
@@ -63,8 +65,8 @@ def main():
     if not os.path.exists(profile_dir):
         cmd_args = ["ipython", "profile", "create", profile_name]
         std_out, std_err = gterm.command_output(cmd_args, timeout=3)
-        print std_out
-        print std_err
+        print(std_out)
+        print(std_err)
         if not os.path.exists(profile_dir):
             sys.exit("Failed to create "+profile_dir)
 
@@ -72,9 +74,9 @@ def main():
     with open(profile_nb_file, "w") as f:
         f.write(NB_PROFILE % (certline, passwd, port))
 
-    print >> sys.stderr, "Running PUBLIC ipython notebook server on port", port
-    print >> sys.stderr, "Password for user", user, "in", auth_file
-    print >> sys.stderr, ""
+    print("Running PUBLIC ipython notebook server on port", port, file=sys.stderr)
+    print("Password for user", user, "in", auth_file, file=sys.stderr)
+    print("", file=sys.stderr)
 
     status = os.system("ipython notebook --profile="+profile_name)
 

@@ -5,6 +5,8 @@
 gvi: graphterm-aware visual editor
 """
 
+from __future__ import absolute_import, print_function
+
 import os
 import sys
 
@@ -22,7 +24,7 @@ parser.add_option("-e", "--editor", dest="editor", default="ace",
 (options, args) = parser.parse_args()
 
 if len(args) != 1:
-    print >> sys.stderr, parser.get_usage()
+    print(parser.get_usage(), file=sys.stderr)
     sys.exit(1)
 
 if gterm.Export_host:

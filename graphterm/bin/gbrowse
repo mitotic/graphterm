@@ -5,6 +5,8 @@
 gbrowse: Open files and file/http URLs in browser
 """
 
+from __future__ import absolute_import, print_function
+
 import mimetypes
 import os
 import random
@@ -33,7 +35,7 @@ if not args:
         content = None
 
     if not content:
-        print >> sys.stderr, "Error in reading from stdin"
+        print("Error in reading from stdin", file=sys.stderr)
         sys.exit(1)
 
     url_list = [ (gterm.create_blob(content, content_type="text/html"), "file" if options.link else "") ]
@@ -52,7 +54,7 @@ else:
                 if filepath.startswith("local/"):
                     filepath = filepath[len("local"):]
                 elif not filepath.startswith("/"):
-                    print >> sys.stderr, "Nonlocal file %s" % arg
+                    print("Nonlocal file %s" % arg, file=sys.stderr)
                     sys.exit(1)
             else:
                 filepath = arg
@@ -79,7 +81,7 @@ else:
                 url = gterm.get_file_url(filepath, relative=direct_display, exists=True, plain=True)
 
             if not url:
-                print >> sys.stderr, "File %s not found" % arg
+                print("File %s not found" % arg, file=sys.stderr)
                 sys.exit(1)
 
         url_list.append( (url, label) )

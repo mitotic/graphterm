@@ -378,7 +378,7 @@ def wrap_encoded_file_or_data(filepath, content=None, headers={}, stderr=False):
         headers.update({"x_gterm_encoding": "base64",
                         "content_length": len(content)
                         })
-        b64_content = base64.b64encode(content)
+        b64_content = base64.b64encode(to_bytes(content))
         if content:
             headers["x_gterm_digest"] = hashlib.md5(b64_content).hexdigest()
         if not isinstance(b64_content, str):
