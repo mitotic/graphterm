@@ -11,7 +11,10 @@ import sys
 
 from optparse import OptionParser
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 usage = "usage: %prog [-f file] [-e js_string] [js_func arg1 ...]"
 parser = OptionParser(usage=usage)

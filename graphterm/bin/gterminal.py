@@ -13,7 +13,10 @@ import urlparse
 
 import tornado.httpclient
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 Http_addr = "localhost"
 Http_port = gterm.DEFAULT_HTTP_PORT

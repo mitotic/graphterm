@@ -18,7 +18,10 @@ import time
 import boto
 import ec2common
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 ssh_dir = os.path.expanduser("~/.ssh")
 key_name = "ec2key"

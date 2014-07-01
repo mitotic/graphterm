@@ -24,7 +24,10 @@ except ImportError:
 import math
 
 import time
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 def write_svg(drawing, overwrite=False):
     """Display SVG drawing as block image

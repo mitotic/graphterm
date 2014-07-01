@@ -12,7 +12,10 @@ import time
 
 from boto.route53.connection import Route53Connection
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 AUTH_FORMAT = """[Credentials]
 aws_access_key_id = %(access_key_id)s

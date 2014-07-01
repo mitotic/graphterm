@@ -7,7 +7,7 @@ gmatplot: Convenience and demo functions for gterm-aware matplotlib usage
 Usage:
 
 $ python
->>> import gmatplot as gm
+>>> import graphterm.bin.gmatplot as gm
 >>> gm.setup()    # Sets up gmatplot and patches pylab/pyplot
 >>> import pylab
 
@@ -34,7 +34,10 @@ Note: If setting up using gm.setup(nopatch=True),
 from __future__ import absolute_import, print_function
 
 import time
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 pyplot_dict = {}
 

@@ -9,7 +9,10 @@ from __future__ import absolute_import, print_function
 
 import os
 import sys
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 from io import BytesIO
 

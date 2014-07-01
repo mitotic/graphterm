@@ -21,7 +21,10 @@ except ImportError:
     from urllib2 import urlopen
     from urllib import urlencode
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 BLOCK_SIZE = 8192
 

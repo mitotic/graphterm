@@ -32,7 +32,10 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 usage = "usage: %prog action [args]"
 parser = gterm.FormParser(usage=usage, title="Administer server: ", command="gadmin")

@@ -12,7 +12,10 @@ import sys
 
 from optparse import OptionParser
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 Work_dir = os.getenv("PWD", "") or os.getcwd()
 

@@ -16,7 +16,10 @@ try:
 except ImportError:
     from urllib import quote
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 def main():
     username = getpass.getuser()

@@ -46,11 +46,24 @@ from __future__ import absolute_import, print_function
 import sys
 
 try:
-    import gmatplot as gm
+    try:
+        import gmatplot as gm
+    except ImportError:
+        import graphterm.bin.gmatplot as gm
+
     gm.setup()    # Sets up gmatplot and patches pylab
     from pylab import *
-    import gterm
-    from gmatplot import display, newfig, resize_newfig, resize_win, _gterm_cell_start_hook, _gterm_cell_end_hook
+
+    try:
+        import gterm
+    except ImportError:
+        import graphterm.bin.gterm as gterm
+
+    try:
+        from gmatplot import display, newfig, resize_newfig, resize_win, _gterm_cell_start_hook, _gterm_cell_end_hook
+    except ImportError:
+        from graphterm.bin.gmatplot import display, newfig, resize_newfig, resize_win, _gterm_cell_start_hook, _gterm_cell_end_hook
+
     import matplotlib
     matplotlib.rcParams.update({'font.size': 8})
 
@@ -76,5 +89,9 @@ except ImportError:
     print("NOTE: Plotting modules not loaded", file=sys.stderr)
 
 if __name__ == "__main__" and sys.flags.interactive:
-    import gterm
+    try:
+        import gterm
+    except ImportError:
+        import graphterm.bin.gterm as gterm
+
     gterm.nb_setup()

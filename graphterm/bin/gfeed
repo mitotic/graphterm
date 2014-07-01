@@ -16,7 +16,10 @@ import sys
 
 from optparse import OptionParser
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 pagelet_html = """<script>
 var GTPageletMaxFeeds = 20;

@@ -37,7 +37,10 @@ except ImportError:
     from urllib import urlopen, urlencode
     import cStringIO as StringIO
     
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 CONFIG_HELP = """Steps to acquire consumer and access tokens:
   1. Register an application with twitter at dev.twitter.com

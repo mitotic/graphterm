@@ -11,13 +11,19 @@ import os
 import pwd
 import sys
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 import IPython.lib.security
 
 from optparse import OptionParser
 
-import gterm
+try:
+    import gterm
+except ImportError:
+    import graphterm.bin.gterm as gterm
 
 NB_PROFILE = """
 c = get_config()

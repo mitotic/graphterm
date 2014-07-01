@@ -133,14 +133,15 @@ format. This must be followed by a single *blank line* and then any
 content data (such as the HTML fragment to be displayed).
 
 
-Python API module
+gterm API module
 -----------------------------------------------------------------------
 
-The Python module ``gterm.py`` contains many convenience functions for
-accessing the textual GraphTerm API. The following Python code will display
-some raw HTML followed by an image::
+The Python module ``$GTERM_DIR/bin/gterm.py`` contains many
+convenience functions for accessing the textual GraphTerm API. The
+following Python code will display some raw HTML followed by an
+image::
 
-  import gterm
+  import grapherm.bin.gterm as gterm
 
   gterm.write_html("<b>Hello Wordl!</b>")
 
@@ -180,7 +181,8 @@ an almost drop-in replacement for standard command line parsing using
 ``optparse.OptionParser``. Here's some example code of this usage
 (modified from ``ec2launch``)::
 
-    import gterm, sys
+    import sys
+    import grapherm.bin.gterm as gterm
 
     # Create FormParser object
     form_parser = gterm.FormParser(usage=usage, title="Create Amazon EC2 instance with hostname: ", command="ec2launch -f")
