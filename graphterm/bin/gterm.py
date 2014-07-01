@@ -132,6 +132,8 @@ Html_escapes = ["\x1b[?1155;%sh" % (Lterm_cookie or 0),
 
 INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
                 "ipython": ("py", "python", ("In ", "   ...: ", "   ....: ", "   .....: ", "   ......: ")), # Works up to 10,000 prompts
+                "python3": ("py", "python", (">>> ", "... ")),
+                "ipython3": ("py", "python", ("In ", "   ...: ", "   ....: ", "   .....: ", "   ......: ")),
                 "idl": ("pro", "idl", ("IDL> ",)),
                 "ncl": ("ncl", "ncl", ("ncl ",)),
                 "node": ("js", "javascript", ("> ", "... ", ".... ", "..... ", "...... ", "....... ", "........ ", "......... ")),

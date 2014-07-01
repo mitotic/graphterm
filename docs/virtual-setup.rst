@@ -283,16 +283,19 @@ Here are the instructions to set up Google Authentication:
       ``http://localhost/_gauth``
     * Note down the web application "Client ID key" and "Client
       secret" values
-    * If possible, create the file ``~/.graphterm/gterm_oauth.json``
-      for the user account running ``gtermserver``. The file should
-      contain the following JSON content:
-      ``{"google_oauth": {"key": "...", "secret": "..."}}``
 
-If your GraphTerm server is running, the above instructions, with the
-correct redirect URI, may be found at
-``http://server_domain_name/_gauth``.  Any time you create or modify
-the ``~/.graphterm/gterm_oauth.json`` file, you will need to restart
-the GraphTerm server.
+If your GraphTerm server is running, the above instructions, along
+with the correct redirect URI, may be accessed at
+``http://server_domain_name/_gauth``.
+
+To support Google Authentication, the GraphTerm server looks for a
+file named ``~/.graphterm/gterm_oauth.json`` in the user account
+running the server. It should contain the following JSON content::
+
+   {"google_oauth": {"key": "...", "secret": "..."}}
+
+Any time you create or modify this file, you will need to restart the
+GraphTerm server.
 
 The email address linked to each user's account is stored in the file
 ``~/.graphterm/gterm_email.txt``, which may created, modified, or
