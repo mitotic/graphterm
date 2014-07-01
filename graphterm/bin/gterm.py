@@ -48,6 +48,11 @@ except ImportError:
     from urllib import quote, unquote
     from urllib2 import urlopen
 
+if sys.version_info[0] >= 3:
+    get_input = input
+else:
+    get_input = raw_input
+
 API_VERSION = "0.55.0"
 API_MIN_VERSION = "0.55"
 
@@ -791,7 +796,7 @@ def read_form_input(form_html, stderr=False):
     saved_settings = termios.tcgetattr(sys.stdin.fileno())
     try:
         tty.setraw(sys.stdin.fileno())
-        form_data = raw_input()
+        form_data = get_input()
         return json.loads(form_data) if form_data.strip() else None
     finally:
         termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, saved_settings)
@@ -1323,7 +1328,7 @@ def main():
         ##print >> sys.stderr, "**********snonce", server_nonce, client_token, server_token
 
         if read_code:
-            confirm = raw_input("Save validated access code? (y/[n]): ").strip()
+            confirm = get_input("Save validated access code? (y/[n]): ").strip()
             if confirm.lower().startswith("y"):
                 write_auth_code(auth_code, user=options.user, server=server_name, port=server_port)
                 print >> sys.stderr, "Access code saved to file", auth_file
