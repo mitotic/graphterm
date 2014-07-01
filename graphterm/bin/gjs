@@ -5,6 +5,8 @@
 gjs: execute arbitrary Javascript in graphterm
 """
 
+from __future__ import absolute_import, print_function
+
 import sys
 
 from optparse import OptionParser
@@ -26,7 +28,7 @@ parser.add_option("-e", "--eval", dest="eval", default="",
 
 if options.file:
     if not args:
-        print >> sys.stderr, "Please provide filename"
+        print("Please provide filename", file=sys.stderr)
         sys.exit(1)
     with open(args[0], "r") as f:
         js = "".join(f.readlines())
@@ -38,11 +40,11 @@ elif args:
     else:
         js = args[0] + "(" + ", ".join(arg if arg.isdigit() else '"'+arg+'"' for arg in args[1:]) + ")"
 else:
-    print >> sys.stderr, parser.get_usage()
+    print(parser.get_usage(), file=sys.stderr)
     sys.exit(1)
     
 if options.verbose:
-    print js
+    print(js)
 
 Headers = {"content_type": "text/plain"}
 Headers["x_gterm_response"] = "eval_js"
@@ -53,7 +55,7 @@ gterm.wrap_write(js, headers=Headers, stderr=True)
 try:
     lines = sys.stdin.readlines()
     if not sys.stdout.isatty():
-        print "".join(lines)
+        print("".join(lines))
 except KeyboardInterrupt:
     pass
 

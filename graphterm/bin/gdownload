@@ -5,6 +5,8 @@
 gdownload: Download files or piped content; if multiple files, download zip archive
 """
 
+from __future__ import absolute_import, print_function
+
 import datetime
 import mimetypes
 import os
@@ -59,7 +61,7 @@ def populate_zipfile(zipbuf, source_files):
                         arcname = os.path.join(relpath, file)
                         zipbuf.write(filename, arcname)
         else:
-            print >> sys.stderr, "Skipping inaccessible file", source_file
+            print("Skipping inaccessible file", source_file, file=sys.stderr)
 
 usage = "usage: %prog [file] [file2|dir2] ..."
 parser = OptionParser(usage=usage)
@@ -79,7 +81,10 @@ if not args:
     download_name = options.name
     content = None
     try:
-        content = sys.stdin.read()
+        if sys.version_info[0] < 3:
+            content = sys.stdin.read()
+        else:
+            content = sys.stdin.buffer.read()
     except (EOFError, KeyboardInterrupt):
         content = None
 
@@ -108,7 +113,7 @@ elif os.path.isdir(args[0]) or len(args) > 1:
             hostname = "download"
         download_name = hostname + "-" + str(datetime.date.today()) + ".zip"
 
-    print >> sys.stderr, "Creating zip archive..."
+    print("Creating zip archive...", file=sys.stderr)
     outbuf = gterm.BlobBytesIO("application/zip", max_bytes=options.max_bytes)
     zipbuf = zipfile.ZipFile(outbuf, "w", zipfile.ZIP_DEFLATED)
     populate_zipfile(zipbuf, args)

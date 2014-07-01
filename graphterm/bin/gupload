@@ -14,6 +14,8 @@ To switch stdout and stderr:
    gupload 3>&1 1>&2 2>&3-
 """
 
+from __future__ import absolute_import, print_function
+
 import base64
 import json
 import os
@@ -50,7 +52,7 @@ parser.add_option("", "--verbose",
 (options, args) = parser.parse_args()
 
 if len(args) > 1:
-    print >> sys.stderr, "To many arguments"
+    print("To many arguments", file=sys.stderr)
     sys.exit(1)
 
 assert sys.stdin.isatty()
@@ -69,17 +71,17 @@ if filepath:
         if os.path.isdir(filepath):
             to_dir = True
         elif not options.write:
-            print >> sys.stderr, "Specify -w option to overwrite file %s" % filepath
+            print("Specify -w option to overwrite file %s" % filepath, file=sys.stderr)
             sys.exit(1)
     else:
         head, tail = os.path.split(filepath)
         if head:
             if os.path.exists(head):
                 if not os.path.isdir(head):
-                    print >> sys.stderr, "Cannot overwrite file %s" % head
+                    print("Cannot overwrite file %s" % head, file=sys.stderr)
                     sys.exit(1)
             else:
-                print >> sys.stderr, "Please create directory %s" % head
+                print("Please create directory %s" % head, file=sys.stderr)
                 sys.exit(1)
 
 if options.loop and not to_dir:
@@ -87,7 +89,7 @@ if options.loop and not to_dir:
 
 while True:
     if not options.quiet and not options.stdout:
-        print >> sys.stderr, "Uploading file..."
+        print("Uploading file...", file=sys.stderr)
 
     params = {"display": "block", "current_directory": Work_dir}
     html_headers = {"x_gterm_response": "upload_file",
@@ -120,7 +122,7 @@ while True:
                 break
 
         if options.verbose:
-            print >> sys.stderr, "header=%s\n" % (header_line,)
+            print("header=%s\n" % (header_line,), file=sys.stderr)
 
         # Process headers
         if not header_line:
@@ -141,13 +143,13 @@ while True:
         filename = headers["x_gterm_filepath"]
         expect_length = headers["x_gterm_length"]
         if options.verbose:
-            print >> sys.stderr, "file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length)
+            print("file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length), file=sys.stderr)
 
         if expect_length:
             count = expect_length
             assert not (count % 4)
             prefix = ""
-            content_list = []
+            content_list = bytearray()
             while count > 0:
                 chunk = sys.stdin.read(min(count, CHUNK_BYTES))
                 assert chunk
@@ -159,10 +161,10 @@ while True:
                     prefix = line[-offset:]
                     line = line[:-offset]
                 if options.verbose:
-                    print >> sys.stderr, "line(%d,%s)=%s" % (len(chunk), count, line,)
-                content_list.append(base64.b64decode(line))
+                    print("line(%d,%s)=%s" % (len(chunk), count, line,), file=sys.stderr)
+                content_list.extend(base64.b64decode(line))
             assert not prefix
-            content = "".join(content_list)
+            content = bytes(content_list)
         else:
             b64_content = ""
             content = ""
@@ -178,10 +180,10 @@ while True:
             tempath = os.path.join(filepath, filename)
         else:
             tempath = filepath
-        with open(tempath, "w") as f:
+        with open(tempath, "wb") as f:
             f.write(content)
         if not options.quiet:
-            print >> sys.stderr, "Uploaded file "+tempath
+            print("Uploaded file "+tempath, file=sys.stderr)
 
         if not options.loop:
             break
@@ -191,6 +193,6 @@ while True:
 
 if Stdout_data is not None:
     if options.stdout:
-        sys.stderr.write(content)
+        os.write(sys.stderr.fileno(), content)
     else:
-        sys.stdout.write(content)
+        os.write(sys.stdout.fileno(), content)

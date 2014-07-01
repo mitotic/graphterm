@@ -7,6 +7,8 @@ greveal: reveal.js in graphterm
 Type "bbb" to exit
 """
 
+from __future__ import absolute_import, print_function
+
 import base64
 import json
 import mimetypes
@@ -200,17 +202,17 @@ if args:
         with open(args[0]) as f:
             lines = f.readlines()
     except Exception:
-        print >> sys.stderr, "Error in reading markdown content from file", args[0]
+        print("Error in reading markdown content from file", args[0], file=sys.stderr)
         sys.exit(1)
 else:
     title = "stdin"
     try:
         lines = sys.stdin.readlines()
     except (EOFError, KeyboardInterrupt):
-        print >> sys.stderr, "Error in reading markdown content from standard input"
+        print("Error in reading markdown content from standard input", file=sys.stderr)
 
 if not lines:
-      print >> sys.stderr, "No content to process"
+      print("No content to process", file=sys.stderr)
       sys.exit(1)
 
 blobs = {}
