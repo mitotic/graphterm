@@ -109,11 +109,13 @@ elif os.path.isdir(args[0]) or len(args) > 1:
         download_name = hostname + "-" + str(datetime.date.today()) + ".zip"
 
     print >> sys.stderr, "Creating zip archive..."
-    outbuf = gterm.BlobStringIO("application/zip", max_bytes=options.max_bytes)
+    outbuf = gterm.BlobBytesIO("application/zip", max_bytes=options.max_bytes)
     zipbuf = zipfile.ZipFile(outbuf, "w", zipfile.ZIP_DEFLATED)
     populate_zipfile(zipbuf, args)
     zipbuf.close()
     download_url = outbuf.close()
+else:
+    sys.exit("Expecting existing file or directory name as argument: "+args[0])
 
 html = '<br><em>Downloadable link</em>: <a class="gterm-link gterm-download" href="%s" download="%s">%s</a><p>\n' % (download_url, download_name, download_name)
 gterm.write_html(html)

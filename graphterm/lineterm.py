@@ -2974,9 +2974,8 @@ class Terminal(object):
             response_params = headers["x_gterm_parameters"]
             screen_buf = self.note_screen_buf if self.note_cells else self.screen_buf
             ##logging.warning("lineterm.Terminal.gterm_append: %s %s", response_type, response_params)
-
             if "no_images" not in self.term_opts and (response_type == "display_blob" or
-                                                      (response_type == "create_blob" and headers["content_type"].startswith("image/")) ):
+                                                      (response_type == "create_blob" and headers.get("content_type","").startswith("image/")) ):
                 # Allow creation and display of image blobs without validation
                 self.gterm_validated = True
 

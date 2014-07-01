@@ -40,6 +40,9 @@ Notes: Use figure(...) to clear current figure
        Use ioff() to disable interactive mode
        Use gterm.nbmode(False) to re-enable default expression printing behaviour
 """
+
+from __future__ import absolute_import
+
 import sys
 
 try:

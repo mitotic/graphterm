@@ -4,6 +4,8 @@
 gterm: API module for GraphTerm-aware programs; also serves as terminal launcher
 """
 
+from __future__ import absolute_import
+
 # The code in this particular file (gterm.py) is
 # released in the public domain, so that it maybe
 # re-used in other projects without any restrictions.
@@ -11,7 +13,6 @@ gterm: API module for GraphTerm-aware programs; also serves as terminal launcher
 #    https://github.com/mitotic/graphterm
 
 import base64
-import StringIO
 import getpass
 import hashlib
 import hmac
@@ -19,7 +20,6 @@ import json
 import logging
 import mimetypes
 import os
-import Queue
 import random
 import re
 import stat
@@ -28,12 +28,25 @@ import sys
 import termios
 import threading
 import tty
-import urllib
-import urllib2
-import urlparse
 import uuid
 
 from optparse import OptionParser
+
+from io import BytesIO
+
+# Python3-friendly imports
+try:
+    import queue
+except ImportError:
+    import Queue as queue
+
+try:
+    from urllib.parse import urlparse, quote, unquote
+    from urllib.request import urlopen
+except ImportError:
+    from urlparse import urlparse
+    from urllib import quote, unquote
+    from urllib2 import urlopen
 
 API_VERSION = "0.55.0"
 API_MIN_VERSION = "0.55"
@@ -99,7 +112,7 @@ Shared_secret = env("SHARED_SECRET", lc=True)
 URL = env("URL", "http://localhost:%d" % DEFAULT_HTTP_PORT)
 Blob_server = env("BLOB_SERVER", "")
 
-Server, _, Server_port = urlparse.urlparse(URL)[1].partition(":")
+Server, _, Server_port = urlparse(URL)[1].partition(":")
 if Server_port:
     Server_port = int(Server_port)
 else:
@@ -175,13 +188,13 @@ def create_app_directory(appdir=App_dir):
     if not os.path.exists(appdir):
         try:
             # Create App directory
-            os.mkdir(appdir, 0700)
+            os.mkdir(appdir, 0o700)
         except OSError, excp:
             print >> sys.stderr, "Error in creating app directory %s: %s" % (appdir, excp)
     
-    if os.path.isdir(appdir) and os.stat(appdir).st_mode != 0700:
+    if os.path.isdir(appdir) and os.stat(appdir).st_mode != 0o700:
         # Protect App directory
-        os.chmod(appdir, 0700)
+        os.chmod(appdir, 0o700)
 
 def is_user(username):
     return os.path.exists(os.path.expanduser("~"+username))
@@ -311,7 +324,7 @@ def parse_gterm_directive(text):
         # Parse options
         opt_comp = opt_comps.pop(0)
         opt_name, sep, opt_value = opt_comp.partition("=")
-        opt_dict[opt_name] = urllib.unquote(opt_value)
+        opt_dict[opt_name] = unquote(opt_value)
 
     return (offset, directive, opt_dict)
 
@@ -360,6 +373,8 @@ def wrap_encoded_file_or_data(filepath, content=None, headers={}, stderr=False):
         b64_content = base64.b64encode(content)
         if content:
             headers["x_gterm_digest"] = hashlib.md5(b64_content).hexdigest()
+        if not isinstance(b64_content, str):
+            b64_content = b64_content.decode()   # str to bytes for Python3
         wrap_write(b64_content, headers=headers, stderr=stderr)
 
 def write_html(html, stderr=False):
@@ -383,13 +398,13 @@ def write_pagelet(html, display="block", overwrite=False, dir="", add_headers={}
     """Write scrollable and overwriteable html pagelet to stdout"""
     params = "scroll=top"
     if display:
-        params += " display=" + urllib.quote(display)
+        params += " display=" + quote(display)
     if overwrite:
         params += " overwrite=yes"
     if dir:
-        params += " current_dir=" + urllib.quote(dir)
+        params += " current_dir=" + quote(dir)
     for header, value in add_headers.iteritems():
-        params += " " + header + "=" + urllib.quote(str(value))
+        params += " " + header + "=" + quote(str(value))
 
     PAGELETFORMAT = '<!--gterm pagelet %s-->'
     prefix = PAGELETFORMAT % (params,)
@@ -447,7 +462,7 @@ def display_blob(blob_id="", overwrite=False, toggle=False, display="block", exi
     """
     params = "display=" + display
     if blob_id:
-        params += " blob=" + urllib.quote(blob_id)
+        params += " blob=" + quote(blob_id)
     if overwrite:
         params += " overwrite=yes"
     if toggle:
@@ -468,7 +483,7 @@ def display_blockimg(url, overwrite=False, toggle=False, alt="", stderr=False):
     if overwrite:
         params += " overwrite=yes"
     if blob_id:
-        params += " blob=" + urllib.quote(blob_id)
+        params += " blob=" + quote(blob_id)
 
     html = ('<!--gterm pagelet %s-->' % params) + blockimg_html(url, toggle=toggle, alt=alt)
         
@@ -686,27 +701,27 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", host=""
     params = dict(blob=blob_id, filepath=filepath)
     headers = {"x_gterm_response": "create_blob",
                "x_gterm_parameters": params,
-               "content_type": content_type}
+               "content_type": content_type or ""}
 
     wrap_encoded_file_or_data(filepath, content=content, headers=headers, stderr=stderr)
     return blob_url
     
-class BlobStringIO(StringIO.StringIO):
+class BlobBytesIO(BytesIO):
     def __init__(self, content_type="text/html", host="", max_bytes=25000000):
         self.blob_content_type = content_type
         self.blob_host = host
         self.blob_max_bytes = max_bytes
         self.blob_id, self.blob_url = make_blob_url(host=host)
-        StringIO.StringIO.__init__(self)
+        BytesIO.__init__(self)
 
     def write(self, s):
         if self.tell()+len(s) > self.blob_max_bytes:
             raise RuntimeError("Blob size exceeds limit of %s bytes" % self.blob_max_bytes)
-        StringIO.StringIO.write(self, s)
+        BytesIO.write(self, s)
 
     def close(self):
         blob_url = create_blob(self.getvalue(), content_type=self.blob_content_type, blob_id=self.blob_id, host=self.blob_host)
-        StringIO.StringIO.close(self)
+        BytesIO.close(self)
         assert blob_url == self.blob_url
         return blob_url
         
@@ -725,49 +740,49 @@ JFILEPATH = 3
 JQUERY = 4
 
 def split_file_url(url, check_host_secret=None):
-	"""Return [protocol://server[:port], hostname, filename, fullpath, query] for file://host/path
-        or http://server:port/_file/host/path, or /_file/host/path URLs.
-	If not file URL, returns []
-        If check_host_secret is specified, and file hmac matches, then hostname is set to the null string.
-	"""
-        if not url:
-		return []
-        server_port = ""
-	if url.startswith(FILE_URI_PREFIX):
-            host_path = url[len(FILE_URI_PREFIX):]
-        elif url.startswith(FILE_PREFIX):
-            host_path = url[len(FILE_PREFIX):]
+    """Return [protocol://server[:port], hostname, filename, fullpath, query] for file://host/path
+    or http://server:port/_file/host/path, or /_file/host/path URLs.
+    If not file URL, returns []
+    If check_host_secret is specified, and file hmac matches, then hostname is set to the null string.
+    """
+    if not url:
+        return []
+    server_port = ""
+    if url.startswith(FILE_URI_PREFIX):
+        host_path = url[len(FILE_URI_PREFIX):]
+    elif url.startswith(FILE_PREFIX):
+        host_path = url[len(FILE_PREFIX):]
+    else:
+        if url.startswith("http://"):
+            protocol = "http"
+        elif url.startswith("https://"):
+            protocol = "https"
         else:
-            if url.startswith("http://"):
-                protocol = "http"
-            elif url.startswith("https://"):
-                protocol = "https"
-            else:
-                return []
-            j = url.find("/", len(protocol)+3)
-            if j < 0:
-                return []
-            server_port = url[:j]
-            url_path = url[j:]
-            if not url_path.startswith(FILE_PREFIX):
-                return []
-            host_path = url_path[len(FILE_PREFIX):]
+            return []
+        j = url.find("/", len(protocol)+3)
+        if j < 0:
+            return []
+        server_port = url[:j]
+        url_path = url[j:]
+        if not url_path.startswith(FILE_PREFIX):
+            return []
+        host_path = url_path[len(FILE_PREFIX):]
 
-	j = host_path.find("?")
-	if j >= 0:
-		query = host_path[j:]
-		host_path = host_path[:j]
-	else:
-		query = ""
-	comps = host_path.split("/")
-        hostname = comps[0]
-        filepath = "/"+"/".join(comps[1:])
-        filename = comps[-1]
-        if check_host_secret:
-            fhmac = "?hmac="+file_hmac(filepath, check_host_secret)
-            if query.lower() == fhmac.lower():
-                hostname = ""
-	return [server_port, hostname, filename, filepath, query]
+    j = host_path.find("?")
+    if j >= 0:
+        query = host_path[j:]
+        host_path = host_path[:j]
+    else:
+        query = ""
+    comps = host_path.split("/")
+    hostname = comps[0]
+    filepath = "/"+"/".join(comps[1:])
+    filename = comps[-1]
+    if check_host_secret:
+        fhmac = "?hmac="+file_hmac(filepath, check_host_secret)
+        if query.lower() == fhmac.lower():
+            hostname = ""
+    return [server_port, hostname, filename, filepath, query]
 
 def read_form_input(form_html, stderr=False):
     write_form(form_html, stderr=stderr)
@@ -951,29 +966,29 @@ class FormParser(object):
 
 
 def command_output(command_args, **kwargs):
-	""" Executes a command and returns the string tuple (stdout, stderr)
-	keyword argument timeout can be specified to time out command (defaults to 1 sec)
-	"""
-	timeout = kwargs.pop("timeout", 1)
-	def command_output_aux():
-            try:
-		proc = subprocess.Popen(command_args, stdout=subprocess.PIPE,
-					stderr=subprocess.PIPE)
-		return proc.communicate()
-            except Exception, excp:
-                return "", str(excp)
-        if not timeout:
-            return command_output_aux()
-
-        exec_queue = Queue.Queue()
-        def execute_in_thread():
-            exec_queue.put(command_output_aux())
-        thrd = threading.Thread(target=execute_in_thread)
-        thrd.start()
+    """ Executes a command and returns the string tuple (stdout, stderr)
+    keyword argument timeout can be specified to time out command (defaults to 1 sec)
+    """
+    timeout = kwargs.pop("timeout", 1)
+    def command_output_aux():
         try:
-            return exec_queue.get(block=True, timeout=timeout)
-        except Queue.Empty:
-            return "", "Timed out after %s seconds" % timeout
+            proc = subprocess.Popen(command_args, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            return proc.communicate()
+        except Exception, excp:
+            return "", str(excp)
+    if not timeout:
+        return command_output_aux()
+
+    exec_queue = queue.Queue()
+    def execute_in_thread():
+        exec_queue.put(command_output_aux())
+    thrd = threading.Thread(target=execute_in_thread)
+    thrd.start()
+    try:
+        return exec_queue.get(block=True, timeout=timeout)
+    except queue.Empty:
+        return "", "Timed out after %s seconds" % timeout
 
 def open_browser(url, browser=""):
     if sys.platform.startswith("linux"):
@@ -1095,7 +1110,7 @@ def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, u
 
     if not client_auth:
         try:
-            response = urllib2.urlopen(url)
+            response = urlopen(url)
             return response.read()
         except Exception, excp:
             print >> sys.stderr, "Error in accessing URL %s: %s" % (url, excp)
@@ -1110,19 +1125,19 @@ def auth_request(http_addr, http_port, nonce, timeout=None, client_auth=False, u
     
     ssl_options = {}
     if client_auth:
-	client_cert = cert_dir+"/"+client_prefix+".crt"
-	client_key = cert_dir+"/"+client_prefix+".key"
-	ssl_options.update(client_cert=client_cert, client_key=client_key)
+        client_cert = cert_dir+"/"+client_prefix+".crt"
+        client_key = cert_dir+"/"+client_prefix+".key"
+        ssl_options.update(client_cert=client_cert, client_key=client_key)
 
     request = tornado.httpclient.HTTPRequest(url, validate_cert=True, ca_certs=ca_certs,
-					     **ssl_options)
+                                             **ssl_options)
     http_client = tornado.httpclient.HTTPClient()
     try:
-	response = http_client.fetch(request)
-	if response.error:
-	    print >> sys.stderr, "HTTPClient ERROR response.error", response.error
-	    return None
-	return response.body
+        response = http_client.fetch(request)
+        if response.error:
+            print >> sys.stderr, "HTTPClient ERROR response.error", response.error
+            return None
+        return response.body
     except tornado.httpclient.HTTPError, excp:
         print >> sys.stderr, "Error in accessing URL %s: %s" % (url, excp)
     return None
@@ -1182,7 +1197,7 @@ def process_args(args=None):
         filepath = my_args[0]
         if filepath.endswith(".md") or filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
             if filepath.startswith("http:") or filepath.startswith("https:"):
-                ##response = urllib2.urlopen(filepath)
+                ##response = urlopen(filepath)
                 ##content = response.read()
                 ##filepath = os.path.basename(filepath)
                 content = None
@@ -1240,7 +1255,7 @@ def main():
                 path = args[0][1:]
         else:
             try:
-                comps = urlparse.urlparse(args[0])
+                comps = urlparse(args[0])
                 url_server, sep, url_port = comps[1].partition(":")
                 if url_port:
                     url_port = int(url_port)

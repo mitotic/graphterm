@@ -31,6 +31,8 @@ Note: If setting up using gm.setup(nopatch=True),
 
 """
 
+from __future__ import absolute_import
+
 import time
 import gterm
 
@@ -133,7 +135,7 @@ def display(fig, overwrite=False, format="png", outfile="", title="", fullscreen
         return
 
     content_type = "application/pdf" if format=="pdf" else "image/"+format
-    outbuf = gterm.BlobStringIO(content_type, host=(gterm.Host or "*"), max_bytes=max_bytes)
+    outbuf = gterm.BlobBytesIO(content_type, host=(gterm.Host or "*"), max_bytes=max_bytes)
     pyplot_dict["drawing"] = True
     try:
         fig.savefig(outbuf, format=format)
