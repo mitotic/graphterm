@@ -3004,7 +3004,7 @@ function gtermPageletClickHandler(event) {
 	    filepath = filepath.substr(0,qindex);
 
 	var prompts = options.command.substr(noffset+CMD_NB.length).split(/\|/);
-	options.command = options.command.substr(0,noffset) + "  # Notebook: "
+	options.command = options.command.substr(0,noffset) + "  # Notebook: "  // Must end in space
 	if (noffset == 0) {
 	    // Shell notebook
 	    GTActivateNotebook(filepath, [])
@@ -5013,6 +5013,7 @@ function GTDropHandler(evt) {
 		}
 	    } else {
 		var text = transfer.getData("text/plain") || "";
+		console.log("graphterm: GTDropHandler: text="+text);
 		var file_url = "";
 		if (text) {
 		    var srcText = makeFileURL(text);
@@ -5022,13 +5023,14 @@ function GTDropHandler(evt) {
 			text = srcComps[JFILENAME];
 			var options = {};
 			var dstComps = splitFileURL(gterm_url);
+			//console.log("graphterm: GTDropHandler: mime="+gterm_mime, "urls="+file_url, gterm_url);
 			if (gterm_mime == "x-graphterm/directory") {
-			    options.command = "gcp";
+			    options.command = "gcp ";   // Must end in space
 			    options.dest_url = gterm_url;
 			    options.enter = true;
 			    gtermClickPaste("", file_url, options);
 			} else if (gterm_mime == "x-graphterm/executable") {
-			    options.command = dstComps[JFILEPATH];
+			    options.command = dstComps[JFILEPATH]+" ";
 			    gtermClickPaste("", file_url, options);
 			} else {
 			    gtermClickPaste(text, file_url, options);

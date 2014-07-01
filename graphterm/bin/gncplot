@@ -247,7 +247,7 @@ Saved_settings = termios.tcgetattr(Stdin_fd)
 first = True
 jsel = slice_obj[kscroll] if kscroll >= 0 else 0
 try:
-    print("Slideshow: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n'p' => pause, 'r' => resume", file=sys.stderr)
+    print("Scroll mode: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n'p' => pause, 'r' => resume", file=sys.stderr)
 
     # Raw tty input without echo
     tty.setraw(Stdin_fd)

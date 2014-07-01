@@ -56,8 +56,8 @@ else:
     def to_bytes(s):
         return s if isinstance(s, bytes) else s.encode()
 
-API_VERSION = "0.55.0"
-API_MIN_VERSION = "0.55"
+API_VERSION = "0.56.0"
+API_MIN_VERSION = "0.56"
 
 HEX_DIGITS = 16          # Digits to be retained for HMAC, auth_code etc
 SIGN_HEXDIGITS = 16      # User-entered keys (should match packetserver setup)

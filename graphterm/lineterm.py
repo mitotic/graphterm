@@ -3292,9 +3292,9 @@ class Terminal(object):
                 dest_paste = create_file_uri(dest_comps)
             else:
                 dest_paste = relative_file_url(dest_url, cwd)
-            if command == "gcp" and not (file_url_comps and file_url_comps[JHOST]) and not remote_dest:
+            if command.rstrip() == "gcp" and not (file_url_comps and file_url_comps[JHOST]) and not remote_dest:
                 # Source and destination on this host; move instead of copying
-                command = "mv"
+                command = "mv "   # Must end in space to append file path
         else:
             dest_paste = ""
 
