@@ -11,6 +11,8 @@ Actions:
  - Edit script buffer
 """
 
+from __future__ import absolute_import, print_function
+
 import mimetypes
 import os
 import sys
@@ -43,7 +45,7 @@ if options.clear:
     options.buffer = True
 
 if not args and not (options.clear or options.edit):
-    print >> sys.stderr, parser.get_usage()
+    print(parser.get_usage(), file=sys.stderr)
     sys.exit(1)
 
 filepath = os.path.abspath(os.path.normpath(args[0])) if args else ""

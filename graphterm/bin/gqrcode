@@ -4,16 +4,19 @@
 """
 gqrcode: Display QR code
 """
+
+from __future__ import absolute_import, print_function
+
 import os
 import sys
 import gterm
 
-import cStringIO as StringIO
+from io import BytesIO
 
 try:
     import qrcode
 except ImportError:
-    print >> sys.stderr, "Please install qrcode (and PIL) packages"
+    print("Please install qrcode (and PIL) packages", file=sys.stderr)
     sys.exit(1)
 
 usage = "usage: %prog [-h ... ] text"
@@ -50,13 +53,13 @@ qr.make(fit=True)
 
 img = qr.make_image()
 
-img_io = StringIO.StringIO()
+img_io = BytesIO()
 img.save(img_io, "png")
 img_io.seek(0)
 img_data = img_io.getvalue()
 
 if options.output:
-    sys.stdout.write(img_data)
+    os.write(sys.stdout.fileno(), img_data)
 else:
     data_uri = "data:image/gif;base64,"+img_data.encode("base64")
     IMGFORMAT = '<div><img class="gterm-fullimg" src="%s"></img><h1><code>%s</code></h1></div>' if options.fullscreen else '<center><img class="gterm-blockimg" src="%s"></img></center><center><h1><code>%s</code></h1></center>' 

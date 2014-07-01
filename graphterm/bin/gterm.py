@@ -382,7 +382,7 @@ def wrap_encoded_file_or_data(filepath, content=None, headers={}, stderr=False):
         if content:
             headers["x_gterm_digest"] = hashlib.md5(b64_content).hexdigest()
         if not isinstance(b64_content, str):
-            b64_content = b64_content.decode()   # str to bytes for Python3
+            b64_content = b64_content.decode()   # bytes to str for Python3
         wrap_write(b64_content, headers=headers, stderr=stderr)
 
 def write_html(html, stderr=False):

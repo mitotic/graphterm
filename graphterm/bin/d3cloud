@@ -5,6 +5,8 @@
 d3cloud: Display words from stdin as a word cloud using d3.js
 """
 
+from __future__ import absolute_import, print_function
+
 import json
 import os
 import re
@@ -77,7 +79,7 @@ if args:
                 word_list += split_words(f.read())
         except Exception:
             raise
-            print >> sys.stderr, "Error in reading words from file", filename
+            print("Error in reading words from file", filename, file=sys.stderr)
             sys.exit(1)
 else:
     try:
@@ -86,7 +88,7 @@ else:
         word_list = []
 
 if not word_list:
-      print >> sys.stderr, "No text to process"
+      print("No text to process", file=sys.stderr)
       sys.exit(1)
 
 sys.stdout.write(cloud_layout % json.dumps(word_list))
