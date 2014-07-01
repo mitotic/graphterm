@@ -15,6 +15,11 @@ echo "<a><img width="200" src=\"$url\"></a>"
 # Suffix escape sequence
 echo "${esc}[?${code}l"
 
+# Display clickable link that executes a command
+echo "${esc}[?${code};${GTERM_COOKIE}h"
+echo '<hr><a class="gterm-link gterm-click" href="" data-gtermmime="" data-gtermcmd="echo " data-gtermconfirm="Execute echo command?">Clickable Command</a><hr>'
+echo "${esc}[?${code}l"
+
 # Pretend we do not have a valid GTERM cookie
 DUMMY_COOKIE=0
 
@@ -23,3 +28,4 @@ echo "${esc}[?${code};${DUMMY_COOKIE}h<!--gterm data blob=75543619-->image/png;b
 
 # Display blob showing red dot
 echo "${esc}[?${code};${DUMMY_COOKIE}h<!--gterm display_blob blob=75543619-->${esc}[?${code}l"
+

@@ -160,14 +160,21 @@ A program can display clickable HTML links that can automatically
 generate a command line and paste it into the terminal. See the
 ``ec2list`` and ``gls`` programs for examples of this usage. Basically
 a clickable HTML ``<a>`` element is identified by the ``class``
-attribute ``gterm-link`` and also contains a special attribute
+attribute ``gterm-click`` and also contains a special attribute
 ``data-gtermcmd`` that represents the command to be executed. If this
 command ends with a space, the displayed text of the element (such as
 a file name) is appended as an argument to the command. (If the
 ``href`` attribute of the ``<a>`` element represents a file URI, then
 the file path is appended instead.) To insert the argument elsewhere
 in the command, the special escape sequence ``%[arg]`` can be used in
-the command string.
+the command string. See the script ``hello_gterm.sh`` or the sample
+Python code below::
+
+  import graphterm.bin.gterm as gterm
+
+  html = '<hr><a class="gterm-link gterm-click" href="" data-gtermmime="" data-gtermcmd="echo %[arg] echoed" data-gtermconfirm="Execute echo command?">Clickable Command</a><hr>'
+
+  gterm.write_html(html)
 
 .. index:: command line parsing
 

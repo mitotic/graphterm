@@ -53,7 +53,7 @@ headers["x_gterm_parameters"] = params
 
 Props_format = "Instance: id=%(id)s, domain=%(public_dns)s, key=%(key)s, tags=%(taglist)s, state=%(state)s"
 
-Row_format = '<tr><td>%(id)s<td>%(taglist)s<td><a class="gterm-link" href="" data-gtermmime="" data-gtermcmd="ec2ssh ubuntu@%%[arg]">%(public_dns)s</a><td>%(state)s<td><a class="gterm-link" href="" data-gtermmime="" data-gtermcmd="ec2list --kill %(id)s" data-gtermconfirm="Terminate instance %(id)s (%(taglist)s)?">%(killstr)s</a>'
+Row_format = '<tr><td>%(id)s<td>%(taglist)s<td><a class="gterm-link gterm-click" href="" data-gtermmime="" data-gtermcmd="ec2ssh ubuntu@%(arg)s">%(public_dns)s</a><td>%(state)s<td><a class="gterm-link gterm-click" href="" data-gtermmime="" data-gtermcmd="ec2list --kill %(id)s" data-gtermconfirm="Terminate instance %(id)s (%(taglist)s)?">%(killstr)s</a>'
 
 Column_headers = ["Id", "Tags", "Connect", "State", "Action"]
 
@@ -77,6 +77,7 @@ if options.kill or options.killall:
 
 for props in props_list:
     pdict = props.copy()
+    pdict["arg"] = gterm.CMD_ARG
     pdict["taglist"] = ",".join(list(props["tags"].keys()))
     pdict["killstr"] = "Kill" if props["state"] == "running" else ""
     if options.text:

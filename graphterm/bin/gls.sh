@@ -61,9 +61,9 @@ for file in $files; do
       fullpath="$HOME"
    fi
 
-   rowimg="${rowimg}<td><a class='gterm-link gterm-imglink' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'><img class='gterm-img' src='$fileicon'></img></a>"
+   rowimg="${rowimg}<td><a class='gterm-link gterm-click gterm-imglink' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'><img class='gterm-img gterm-drag' src='$fileicon'></img></a>"
 
-   rowtxt="${rowtxt}<td><a class='gterm-link' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'>${file}</a>"
+   rowtxt="${rowtxt}<td><a class='gterm-link gterm-click' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'>${file}</a>"
 
 done
 
@@ -91,9 +91,9 @@ for file in *; do
       clickcmd="$gvicmd"
    fi
 
-   rowimg="${rowimg}<td><a class='gterm-link gterm-imglink' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'><img class='gterm-img' src='$fileicon'></img></a>"
+   rowimg="${rowimg}<td><a class='gterm-link gterm-click gterm-imglink' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'><img class='gterm-img gterm-drag' src='$fileicon'></img></a>"
 
-   rowtxt="${rowtxt}<td><a class='gterm-link' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'>${file}</a>"
+   rowtxt="${rowtxt}<td><a class='gterm-link gterm-click' href='file://${fullpath}' data-gtermmime='x-graphterm/${filetype}' data-gtermcmd='${clickcmd}'>${file}</a>"
 
    (( ifile++ ))
 

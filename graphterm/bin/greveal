@@ -22,7 +22,7 @@ except ImportError:
     import graphterm.bin.gterm as gterm
 
 usage = "usage: %prog [markdown_file] ..."
-form_parser = gterm.FormParser(usage=usage, title="Display markdown presentation", command="greveal %(args) | gframe -f -n")
+form_parser = gterm.FormParser(usage=usage, title="Display markdown presentation", command="greveal "+gterm.CMD_ARG+" | gframe -f -n")
 form_parser.add_argument(label="Markdown file: ", help="File containing presentation in markdown format")
 form_parser.add_option("controls", True, short="c", help="Display navigation controls")
 form_parser.add_option("loop", False, short="l", help="Loop the presentation")

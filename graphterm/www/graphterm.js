@@ -54,6 +54,7 @@ var OSH_ECHO = true;
 // Special escape sequences for clickable commands (gls, ec2list)
 CMD_ARG = "%[arg]"           // Argument for command
 CMD_NB = "%[notebook]"       // Notebook activation (optionally followed by prompts)
+CMD_ARG_REP = /%\[arg\]/g;
 
 var ELLIPSIS = "...";
 var HIDDEN_STR = "##Hidden";
@@ -954,8 +955,8 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     if (row_opts.autosize)
 	GTAutosizeIFrame(scrollElem);
 
-    scrollElem.find('td .gterm-link:not(.gterm-download)').bindclick(gtermPageletClickHandler);
-    scrollElem.find('td img').bind("dragstart", function(evt) {evt.preventDefault();});
+    scrollElem.find('.gterm-click').bindclick(gtermPageletClickHandler);
+    scrollElem.find('img.gterm-drag').bind("dragstart", function(evt) {evt.preventDefault();});
     scrollElem.find('.gterm-togglelink').bindclick(gtermLinkClickHandler);
     scrollElem.find('.gterm-iframeclose').bindclick(CloseIFrame);
     scrollElem.find('.gterm-iframedelete').bindclick(CloseIFrame);
@@ -1596,8 +1597,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				if (response_params.autosize)
 				    GTAutosizeIFrame(newElem);
 			    }
-			    $(pageletSelector+' td .gterm-link:not(.gterm-download)').bindclick(gtermPageletClickHandler);
-			    $(pageletSelector+' td img').bind("dragstart", function(evt) {evt.preventDefault();});
+			    $(pageletSelector+' .gterm-click').bindclick(gtermPageletClickHandler);
+			    $(pageletSelector+' img.gterm-drag').bind("dragstart", function(evt) {evt.preventDefault();});
 			    $(pageletSelector+' .gterm-togglelink').bindclick(gtermLinkClickHandler);
 			    $(pageletSelector+' .gterm-iframedelete').bindclick(CloseIFrame);
 			    $(pageletSelector+' .gterm-iframeclose').bindclick(CloseIFrame);
@@ -3100,8 +3101,8 @@ function otraceClickHandler(event) {
     } else {
 	var new_command = $(this).attr("data-gtermcmd");
 	var command_line;
-	if (new_command.indexOf("%[arg]") >= 0)
-	    command_line = new_command.replace(/%\[arg\]/g, filepath);
+	if (new_command.indexOf(CMD_ARG) >= 0)
+	    command_line = new_command.replace(CMD_ARG_REP, filepath);
 	else
 	    command_line = new_command+" "+filepath;
 
@@ -4016,8 +4017,8 @@ function GTFormSubmit(evt) {
     }
     var sendLine;
     if (formCommand) {
-	if (formCommand.indexOf("%(args)") >= 0)
-	    sendLine = formCommand.replace(/%\(args\)/g, optStr+argStr);
+	if (formCommand.indexOf(CMD_ARG) >= 0)
+	    sendLine = formCommand.replace(CMD_ARG_REP, optStr+argStr);
 	else
 	    sendLine = formCommand+optStr+argStr;
     } else {
@@ -4025,6 +4026,7 @@ function GTFormSubmit(evt) {
     }
     console.log("GTFormSubmit", this, formElem, sendLine, evt);
     GTEndForm(sendLine);
+    EndFullpage();
 }
 
 // From http://www.sitepoint.com/html5-full-screen-api
@@ -4848,7 +4850,7 @@ function ExpandIFrame(evt) {
 }
 
 function EndFullpage(frameId) {
-    //console.log("EndFullpage");
+    //console.log("EndFullpage", gFullpageDisplay);
     try {
 	if (RunPrefixMethod(document, "FullScreen") || RunPrefixMethod(document, "IsFullScreen")) {
 	    RunPrefixMethod(document, "CancelFullScreen");

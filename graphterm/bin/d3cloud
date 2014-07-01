@@ -18,7 +18,7 @@ except ImportError:
     import graphterm.bin.gterm as gterm
 
 usage = "usage: %prog [file1] [file2] ..."
-form_parser = gterm.FormParser(usage=usage, title="Files containing words", command="d3cloud %(args) | gframe")
+form_parser = gterm.FormParser(usage=usage, title="Files containing words", command="d3cloud "+gterm.CMD_ARG+" | gframe")
 form_parser.add_argument(help="Provide input text with words")
 
 cloud_layout = """

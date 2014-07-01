@@ -47,9 +47,9 @@ FILE_TYPES = {"directory": ("/_static/images/tango-folder.png", "cd "+gterm.CMD_
               "plainfile": (GENERIC_ICON, gopencmd+" "),
 }
 
-IMGFORMAT = '<td><a id="glsimg%(id)s" class="gterm-link gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img" src="%(fileicon)s"></img></a>'
+IMGFORMAT = '<td><a id="glsimg%(id)s" class="gterm-link gterm-click gterm-imglink %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s"><img class="gterm-img gterm-drag" src="%(fileicon)s"></img></a>'
 
-TXTFORMAT = '<td><a id="glstxt%(id)s" class="gterm-link %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
+TXTFORMAT = '<td><a id="glstxt%(id)s" class="gterm-link gterm-click %(classes)s" href="%(fileurl)s" data-gtermmime="x-graphterm/%(filetype)s" data-gtermcmd="%(filecmd)s">%(filename)s</a>'
 
 DLOADFORMAT = '<td><a id="glstxt%(id)s" class="gterm-link gterm-download %(classes)s" href="%(fileurl)s" download="%(filebase)s">%(filename)s</a>'
 
