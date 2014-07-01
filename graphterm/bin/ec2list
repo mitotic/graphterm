@@ -5,6 +5,8 @@
 ec2list: Launch Amazon AWS EC2 instances
 """
 
+from __future__ import absolute_import, print_function
+
 import boto
 import json
 import os
@@ -35,7 +37,7 @@ parser.add_option("", "--killall", dest="killall", default=False,
 tag_name = args[0] if args else ""
 
 if not os.path.exists(os.path.expanduser("~/.boto")):
-    print >> sys.stderr, config_info
+    print(config_info, file=sys.stderr)
     sys.exit(1)
 
 params = {"display": "block", "scroll": "top", "current_directory": os.getcwd()}
@@ -63,19 +65,19 @@ props_list = ec2common.get_instance_props(name=tag_name)
 
 if options.kill or options.killall:
     if not props_list:
-        print >> sys.stderr, "No instances to kill"
+        print("No instances to kill", file=sys.stderr)
         sys.exit(1)
 
     if len(props_list) > 1 and not options.killall:
-        print >> sys.stderr, "Specify --killall to kill multiple instances"
+        print("Specify --killall to kill multiple instances", file=sys.stderr)
         sys.exit(1)
 
 for props in props_list:
     pdict = props.copy()
-    pdict["taglist"] = ",".join(props["tags"].keys())
+    pdict["taglist"] = ",".join(list(props["tags"].keys()))
     pdict["killstr"] = "Kill" if props["state"] == "running" else ""
     if options.text:
-        print Props_format % pdict
+        print(Props_format % pdict)
     else:
         Table_list.append(Row_format % pdict)
 
@@ -87,7 +89,7 @@ if not options.text:
 if options.kill or options.killall:
     for props in props_list:
         if len(props["tags"]) == 1:
-            instance_tag = props["tags"].keys()[0]
+            instance_tag = list(props["tags"].keys())[0]
             instance_name, sep, domain = instance_tag.partition(".")
             if domain:
                 route53conn = ec2common.Route53Connection()
@@ -100,8 +102,8 @@ if options.kill or options.killall:
                         except Exception:
                             pass
                     except Exception:
-                        print >> sys.stderr, "Failed to remove DNS record for ", instance_tag
+                        print("Failed to remove DNS record for ", instance_tag, file=sys.stderr)
             
     killid_list = [x["id"] for x in props_list]
     ec2common.kill(instance_ids=killid_list)
-    print >> sys.stderr, "Killed", killid_list
+    print("Killed", killid_list, file=sys.stderr)

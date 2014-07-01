@@ -5,6 +5,8 @@
 ec2launch: Launch Amazon AWS EC2 instance
 """
 
+from __future__ import absolute_import, print_function
+
 import collections
 import json
 import os
@@ -63,19 +65,19 @@ if not gterm.Lterm_cookie or not sys.stdout.isatty():
 
 if not args or options.form:
     if options.text:
-        print >> sys.stderr, form_parser.get_usage()
+        print(form_parser.get_usage(), file=sys.stderr)
         sys.exit(1)
     gterm.write_form(form_parser.create_form(prefill=(options, args) if options.form else None), command="ec2launch -f")
     sys.exit(1)
 
 gclient_id, gclient_secret = "", ""
 if options.gmail_addr:
-    print >> sys.stderr, ""
-    print >> sys.stderr, "To use Google Authentication for %s, please enter Project Credentials for web application." % options.gmail_addr
-    print >> sys.stderr, "  You can create a new project and Client ID at "+gdev_url
-    print >> sys.stderr, ""
-    gclient_id = raw_input("  Client ID: ")
-    gclient_secret = raw_input("  Client Secret: ")
+    print("", file=sys.stderr)
+    print("To use Google Authentication for %s, please enter Project Credentials for web application." % options.gmail_addr, file=sys.stderr)
+    print("  You can create a new project and Client ID at "+gdev_url, file=sys.stderr)
+    print("", file=sys.stderr)
+    gclient_id = gterm.get_input("  Client ID: ")
+    gclient_secret = gterm.get_input("  Client Secret: ")
 
 instance_tag = args[0]
 
@@ -87,7 +89,7 @@ instance_name, sep, instance_domain = instance_tag.partition(".")
 key_file = os.path.join(ssh_dir, key_name+".pem")
 
 if not os.path.exists(ssh_dir):
-    print >> sys.stderr, "ec2launch: %s directory not found!" % ssh_dir
+    print("ec2launch: %s directory not found!" % ssh_dir, file=sys.stderr)
     sys.exit(1)
 
 install_file, install_cmd, install_basename, install_baseroot, unarch_cmd = "", "", "", "", ""
@@ -277,7 +279,7 @@ startup_commands += ["EOF",
 startup_script = "\n".join(startup_commands) + "\n"
 
 if options.verbose:
-    print >> sys.stderr, "Startup_commands:\n   "+ "\n   ".join(startup_commands) + "\n\n"
+    print("Startup_commands:\n   "+ "\n   ".join(startup_commands) + "\n\n", file=sys.stderr)
 
 # Connect to EC2
 ec2 = boto.connect_ec2()
@@ -340,9 +342,9 @@ def create_or_update_security_group(ec2conn, group_name, description="", rules=[
                             to_port=rule.to_port,
                             cidr_ip=rule.cidr_ip,
                 src_group=src_group)
-        except Exception, excp:
+        except Exception as excp:
             if options.verbose:
-                print >> sys.stderr, "Rule creation error: "+str(excp)+"\n\n"
+                print("Rule creation error: "+str(excp)+"\n\n", file=sys.stderr)
 
     return group
 
@@ -350,8 +352,8 @@ def create_or_update_security_group(ec2conn, group_name, description="", rules=[
 if not os.path.exists(key_file):
     key_pair = ec2.create_key_pair(key_name)
     key_pair.save(ssh_dir)
-    os.chmod(key_file, 0600)
-    print >> sys.stderr, "Created SSH key file", key_file
+    os.chmod(key_file, 0o600)
+    print("Created SSH key file", key_file, file=sys.stderr)
 
 wait_cmd = "while [ ! -f "+setup_file+" ]; do sleep 1; done; echo "+setup_file+"; cat "+setup_file
 if copy_files and options.install:
@@ -369,12 +371,12 @@ if copy_files and options.install:
     wait_cmd += "; fi"
 
 if options.dry_run:
-    print >> sys.stderr, "run_instances:", dict(image_id=options.ami,
+    print("run_instances:", dict(image_id=options.ami,
                                                 instance_type=options.type,
                                                 key_name=key_name,
-                                                security_groups=security_groups)
-    print >> sys.stderr, "STARTUP_SCRIPT:\n", startup_script
-    print >> sys.stderr, "WAIT_CMD:\n", wait_cmd
+                                                security_groups=security_groups), file=sys.stderr)
+    print("STARTUP_SCRIPT:\n", startup_script, file=sys.stderr)
+    print("WAIT_CMD:\n", wait_cmd, file=sys.stderr)
     sys.exit(1)
 
 # Create security groups as needed
@@ -396,7 +398,7 @@ status = instance.update()
 start_time = time.time()
 
 if options.text:
-    print >> sys.stderr, "Waiting for instance to be created..."
+    print("Waiting for instance to be created...", file=sys.stderr)
     
 while status == "pending":
     timesec = int(time.time() - start_time)
@@ -406,7 +408,7 @@ while status == "pending":
     status = instance.update()
 
 if status != "running":
-    print >> sys.stderr, "ec2launch: ERROR Failed to launch instance: %s" % status
+    print("ec2launch: ERROR Failed to launch instance: %s" % status, file=sys.stderr)
     sys.exit(1)
 
 # Tag instance
@@ -421,7 +423,7 @@ for r in all_instances:
         break
 
 if not instance_obj:
-    print >> sys.stderr, "ec2launch: ERROR Unable to find launched instance: %s" % status
+    print("ec2launch: ERROR Unable to find launched instance: %s" % status, file=sys.stderr)
     sys.exit(1)
 
 public_dns_name = instance_obj.public_dns_name
@@ -435,52 +437,52 @@ if hosted_zone:
     ##if options.wildcard:
     ##    ec2common.cname(route53conn, hosted_zone, "*."+instance_tag, public_dns_name)
 
-print >> sys.stderr, ""
-print >> sys.stderr, "Created EC2 instance %s: id=%s, ip=%s, domain=%s" % (instance_tag, instance_id, public_ip_addr, public_dns_name)
-print >> sys.stderr, "Setup commands are saved in /root/ec2launch.sh and init commands in /etc/init.d/graphterm"
-print >> sys.stderr, "To check setup progress, type:"
-print >> sys.stderr, "   ec2ssh "+gterm_user+"@"+public_dns_name+" sudo tail -f /root/ec2launch.log"
+print("", file=sys.stderr)
+print("Created EC2 instance %s: id=%s, ip=%s, domain=%s" % (instance_tag, instance_id, public_ip_addr, public_dns_name), file=sys.stderr)
+print("Setup commands are saved in /root/ec2launch.sh and init commands in /etc/init.d/graphterm", file=sys.stderr)
+print("To check setup progress, type:", file=sys.stderr)
+print("   ec2ssh "+gterm_user+"@"+public_dns_name+" sudo tail -f /root/ec2launch.log", file=sys.stderr)
 
 if install_gterm:
-    print >> sys.stderr, "On successful instance creation, use the following URL to access server:"
-    print >> sys.stderr, "   "+web_url
+    print("On successful instance creation, use the following URL to access server:", file=sys.stderr)
+    print("   "+web_url, file=sys.stderr)
 
 ssh_cmd_args = ["ssh", "-i", key_file,
                 "-o", "StrictHostKeyChecking=no", gterm_user+"@"+public_dns_name]
 
 if nameservers:
-    print >> sys.stderr, "***NOTE*** Please add the following nameservers for domain "+instance_domain
-    print >> sys.stderr, "           ", nameservers
-    print >> sys.stderr, ""
+    print("***NOTE*** Please add the following nameservers for domain "+instance_domain, file=sys.stderr)
+    print("           ", nameservers, file=sys.stderr)
+    print("", file=sys.stderr)
 
 if options.gmail_addr:
-    print >> sys.stderr, ""
-    print >> sys.stderr, "***NOTE*** For Google Authentication, update following URI settings for your web application at "+gdev_url
-    print >> sys.stderr, "  Authorized Javascript origins: "+web_url
+    print("", file=sys.stderr)
+    print("***NOTE*** For Google Authentication, update following URI settings for your web application at "+gdev_url, file=sys.stderr)
+    print("  Authorized Javascript origins: "+web_url, file=sys.stderr)
 
-    print >> sys.stderr, "  Authorized Redirect URI: "+web_url+"/_gauth"
-    print >> sys.stderr, ""
+    print("  Authorized Redirect URI: "+web_url+"/_gauth", file=sys.stderr)
+    print("", file=sys.stderr)
 
-print >> sys.stderr, "Waiting several minutes for remote setup to complete..."
+print("Waiting several minutes for remote setup to complete...", file=sys.stderr)
 time.sleep(45)
 
 if copy_files:
     scp_cmd_args = ["scp", "-i", key_file, "-o", "StrictHostKeyChecking=no"] + copy_files + [gterm_user+"@"+public_dns_name+":"]
-    print >> sys.stderr, " ".join(scp_cmd_args)
+    print(" ".join(scp_cmd_args), file=sys.stderr)
     out, err = gterm.command_output(scp_cmd_args, timeout=60)
     if out:
-        print out
+        print(out)
     if err:
-        print err
+        print(err)
 
-print >> sys.stderr, " ".join(ssh_cmd_args)
-print >> sys.stderr, wait_cmd
+print(" ".join(ssh_cmd_args), file=sys.stderr)
+print(wait_cmd, file=sys.stderr)
 out, err = gterm.command_output(ssh_cmd_args + [wait_cmd], timeout=600)
 
 if out:
-    print out
+    print(out)
 if err:
-    print >> sys.stderr, err
+    print(err, file=sys.stderr)
 else:
-    print >> sys.stderr, "Remote setup completed."
+    print("Remote setup completed.", file=sys.stderr)
     

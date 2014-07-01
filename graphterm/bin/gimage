@@ -5,6 +5,8 @@
 gimage: graphterm-aware image display
 """
 
+from __future__ import absolute_import, print_function
+
 import mimetypes
 import os
 import sys
@@ -41,7 +43,7 @@ if gterm.Export_host or not gterm.Lterm_cookie:
     options.blobs = True
 
 if options.blobs:
-    print >> sys.stderr, "Loading images ..."
+    print("Loading images ...", file=sys.stderr)
 
 file_list = []
 for filename in args:
@@ -49,7 +51,7 @@ for filename in args:
     filepath = os.path.normcase(os.path.abspath(fullname))
 
     if not os.path.exists(filepath):
-        print >> sys.stderr, "File %s not found" % filepath
+        print("File %s not found" % filepath, file=sys.stderr)
         continue
 
     if not os.path.isfile(filepath):
@@ -63,11 +65,11 @@ for filename in args:
                 with open(filepath) as f:
                     content = f.read()
                     if len(content) > options.max_bytes:
-                        print >> sys.stderr, "Image larger %s than %d bytes; specify --max_bytes=..." % (filepath, options.max_bytes)
+                        print("Image larger %s than %d bytes; specify --max_bytes=..." % (filepath, options.max_bytes), file=sys.stderr)
                     else:
                         file_url = gterm.create_blob(content, content_type=mimetype, host="*")
-            except Exception, excp:
-                print >> sys.stderr, "Error in reading file", filepath, excp
+            except Exception as excp:
+                print("Error in reading file", filepath, excp, file=sys.stderr)
         elif options.blobs:
             file_url = gterm.create_blob(from_file=filepath, content_type=mimetype)
         else:
@@ -83,15 +85,18 @@ if not file_list:
 
 display_opt = "fullscreen" if options.fullscreen else "block"
 
+Overwrite=False
 def display_file(file_url, filepath):
+    global Overwrite
     if options.blobs:
-        gterm.display_blob(gterm.get_blob_id(file_url), display=display_opt)
+        gterm.display_blob(gterm.get_blob_id(file_url), display=display_opt, overwrite=Overwrite)
     else:
-        gterm.write_pagelet(IMGFORMAT % file_url, display=display_opt, dir=Work_dir)
+        gterm.write_pagelet(IMGFORMAT % file_url, display=display_opt, dir=Work_dir, overwrite=Overwrite)
+    Overwrite = True
 
 if not options.fullscreen:
     for file_url, filepath, filename in file_list:
-        print filename
+        print(filename)
         display_file(file_url, filepath)
     sys.exit(0)
 
@@ -100,14 +105,14 @@ Saved_settings = termios.tcgetattr(Stdin_fd)
 
 j = -1
 try:
-    print >> sys.stderr, "Slideshow: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n'p' => pause, 'r' => resume"
+    print("Slideshow: SPC/'f' => forward, BSP/'b' => back, 'q' or ESCAPE => quit\n'p' => pause, 'r' => resume", file=sys.stderr)
 
     # Raw tty input without echo
     tty.setraw(Stdin_fd)
     while True:
         ch = sys.stdin.read(1)
         if ch == "\x03" or ch == "\x04" or ch == "\x1b" or ch == "q": # ^C/^D/ESC/q
-            gterm.display_blob("", display="fullpage", exit_page=True)
+            gterm.display_blob("", display="fullpage", overwrite=True, exit_page=True)
             sys.exit(0)
 
         if ch == "f" or ch == " ":
@@ -117,7 +122,7 @@ try:
         elif ch == "r":
             jnew = j
         elif ch == "p":
-            gterm.display_blob("", display="fullpage")
+            gterm.display_blob("", display="fullpage", overwrite=True)
             continue
         else:
             continue

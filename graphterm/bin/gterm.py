@@ -48,10 +48,13 @@ except ImportError:
     from urllib import quote, unquote
     from urllib2 import urlopen
 
-if sys.version_info[0] >= 3:
-    get_input = input
-else:
+if sys.version_info[0] < 3:
     get_input = raw_input
+    to_bytes = str
+else:
+    get_input = input
+    def to_bytes(s):
+        return s if isinstance(s, bytes) else s.encode()
 
 API_VERSION = "0.55.0"
 API_MIN_VERSION = "0.55"
@@ -187,7 +190,7 @@ def auth_token(secret, connection_id, host, port, client_nonce, server_nonce):
     """Return (client_token, server_token)"""
     SIGN_SEP = "|"
     prefix = SIGN_SEP.join([connection_id, host.lower(), str(port), client_nonce, server_nonce]) + SIGN_SEP
-    return [hmac.new(str(secret), prefix+conn_type, digestmod=hashlib.sha256).hexdigest()[:24] for conn_type in ("client", "server")]
+    return [hmac.new(to_bytes(secret), to_bytes(prefix+conn_type), digestmod=hashlib.sha256).hexdigest()[:24] for conn_type in ("client", "server")]
 
 def create_app_directory(appdir=App_dir):
     if not os.path.exists(appdir):
@@ -293,7 +296,7 @@ def write_prefs(prefs_dict, user=""):
         return prefs_file, "ERROR in saving prefs"
 
 def compute_hmac(key, message, hex_digits=HEX_DIGITS):
-    return hmac.new(str(key), message, digestmod=hashlib.sha256).hexdigest()[:hex_digits]
+    return hmac.new(to_bytes(key), to_bytes(message), digestmod=hashlib.sha256).hexdigest()[:hex_digits]
 
 def user_hmac(key, user, key_version=None):
     # Note: should use the same format as packetserver.RPCLink.sign_token
