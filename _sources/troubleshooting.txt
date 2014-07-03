@@ -185,6 +185,17 @@ How do I get Google Authentication to work?
 Follow the instructions at the URL ``http://server_domain_name/_gauth``
 
 
+.. index:: python3
+
+Does GraphTerm work with Python3?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The GraphTerm server requires Python 2.6+, but the toolchain commands
+in the terminal work with both Python2 and Python3. Therefore, you can
+use the terminal features, including the notebook mode, in a Python3
+environment.
+
+
 .. index:: Windows
  
 Using GraphTerm on Windows

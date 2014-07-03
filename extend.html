@@ -1,0 +1,421 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Extending GraphTerm &mdash; GraphTerm 0.56.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.56.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within GraphTerm 0.56.0 documentation"
+          href="_static/opensearch.xml"/>
+    <link rel="top" title="GraphTerm 0.56.0 documentation" href="index.html" />
+    <link rel="up" title="Advanced topics" href="advanced.html" />
+    <link rel="next" title="Markdown notebook format" href="format.html" />
+    <link rel="prev" title="Advanced topics" href="advanced.html" />
+ 
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
+<script type="text/javascript">
+// Google Analytics setup
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35342722-1']);
+  _gaq.push(['_trackPageview']);
+
+function goApp() {
+   if (window.navigator.standalone) {
+      // Go home
+      location.href = "/";
+   } else {
+      // Go to top level domain
+      var url = location.protocol + "//" + location.hostname.split(".").slice(-2).join(".");
+      if (location.port)
+        url += ":" + location.port;
+      location.href = url;
+   }
+}
+
+// Prevent internal links in iOS standalone web apps from opening in browser
+(function(document,navigator,standalone) {
+            // prevents links from apps from oppening in mobile safari
+            // this javascript must be the first script in your <head>
+            if ((standalone in navigator) && navigator[standalone]) {
+                var curnode, location=document.location, stop=/^(a|html)$/i;
+                document.addEventListener('click', function(e) {
+                    curnode=e.target;
+                    while (!(stop).test(curnode.nodeName)) {
+                        curnode=curnode.parentNode;
+                    }
+                    // Conditions to do this only on links to your own app
+                    if ('href' in curnode) {
+                        e.preventDefault();
+                        location.href = curnode.href;
+                    }
+                },false);
+            }
+        })(document,window.navigator,'standalone');
+
+</script>
+
+  </head>
+  <body>
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<h1>
+<a href="/"> 
+code.mindmeldr.com
+<!--
+<img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
+-->
+</a>/<a href="/graphterm">graphterm</a>
+</h1>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="format.html" title="Markdown notebook format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Advanced topics"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+
+          <li><a href="advanced.html" accesskey="U">Advanced topics</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Extending GraphTerm</a><ul>
+<li><a class="reference internal" href="#graphterm-comment-directive">GraphTerm comment directive</a></li>
+<li><a class="reference internal" href="#graphterm-json-headers">GraphTerm JSON headers</a></li>
+<li><a class="reference internal" href="#gterm-api-module">gterm API module</a></li>
+<li><a class="reference internal" href="#clickable-links-for-generating-commands">Clickable links for generating commands</a></li>
+<li><a class="reference internal" href="#mapping-command-line-arguments-to-html-form-elements">Mapping command line arguments to HTML form elements</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="advanced.html"
+                        title="previous chapter">Advanced topics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="format.html"
+                        title="next chapter">Markdown notebook format</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/extend.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="extending-graphterm">
+<h1><a class="toc-backref" href="#id1">Extending GraphTerm</a><a class="headerlink" href="#extending-graphterm" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#extending-graphterm" id="id1">Extending GraphTerm</a><ul>
+<li><a class="reference internal" href="#graphterm-comment-directive" id="id2">GraphTerm comment directive</a></li>
+<li><a class="reference internal" href="#graphterm-json-headers" id="id3">GraphTerm JSON headers</a></li>
+<li><a class="reference internal" href="#gterm-api-module" id="id4">gterm API module</a></li>
+<li><a class="reference internal" href="#clickable-links-for-generating-commands" id="id5">Clickable links for generating commands</a></li>
+<li><a class="reference internal" href="#mapping-command-line-arguments-to-html-form-elements" id="id6">Mapping command line arguments to HTML form elements</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p id="index-0">The GraphTerm toolchain can be extended by writing additional
+executable commands in any language, much like a <a class="reference external" href="http://en.wikipedia.org/wiki/Common_Gateway_Interface">CGI</a> script.  The
+program <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/hello_gterm.sh">hello_gterm.sh</a>
+is a simple example.  See also the programs <tt class="docutils literal"><span class="pre">gls</span></tt>, <tt class="docutils literal"><span class="pre">gimage</span></tt>,
+<tt class="docutils literal"><span class="pre">gframe</span></tt>, <tt class="docutils literal"><span class="pre">gvi</span></tt>, <tt class="docutils literal"><span class="pre">gfeed</span></tt>, <tt class="docutils literal"><span class="pre">yweather</span></tt>, <tt class="docutils literal"><span class="pre">ec2launch</span></tt> and
+<tt class="docutils literal"><span class="pre">ec2list</span></tt> for examples of GraphTerm API usage. You can use the
+<tt class="docutils literal"><span class="pre">which</span> <span class="pre">gls</span></tt> command to figure out where these programs are located.
+The file <tt class="docutils literal"><span class="pre">gterm.py</span></tt> contains many helper functions for accessing the
+GraphTerm API.</p>
+<p><em>Note:</em> The GraphTerm Application Programming Interface (API) is
+rather poorly documented, because it is still evolving. If you
+develop a non-trivial application using this API, please be aware that
+some of the details may change.</p>
+<div class="section" id="graphterm-comment-directive">
+<h2><a class="toc-backref" href="#id2">GraphTerm comment directive</a><a class="headerlink" href="#graphterm-comment-directive" title="Permalink to this headline">¶</a></h2>
+<p>A <a class="reference external" href="https://github.com/mitotic/graphterm/tree/master/graphterm/bin">graphterm-aware program</a>
+communicates with GraphTerm following the standard protocol for Unix
+programs to communicate with the terminal, i.e., by writing some text
+to the standard output, prefixed and suffixed by special <em>escape</em>
+sequences. The prefix sequence is the string <tt class="docutils literal"><span class="pre">\x1b[?1155;&lt;cookie&gt;h</span></tt>
+and the suffix sequence is <tt class="docutils literal"><span class="pre">\x1b[?1155l</span></tt>, where <tt class="docutils literal"><span class="pre">\x1b</span></tt> denotes the
+Escape character and <tt class="docutils literal"><span class="pre">&lt;cookie&gt;</span></tt> denotes a numeric value stored in the
+environment variable <tt class="docutils literal"><span class="pre">GTERM_COOKIE</span></tt>. This is a security measure that
+prevents malicious files from accessing GraphTerm. Only executable
+scripts and programs will be able generate the special escape
+sequences.</p>
+<p>If the text output by the program (excluding the escape sequences)
+starts with the left-angle bracket (<tt class="docutils literal"><span class="pre">&lt;</span></tt>), it is interpreted as being
+an HTML fragment to be displayed within GraphTerm as output of the
+command. For example, outputting the following string will display the
+text <tt class="docutils literal"><span class="pre">Hello</span> <span class="pre">World</span></tt> in bold face:</p>
+<div class="highlight-python"><div class="highlight"><pre>\x1b[?1155;&lt;cookie&gt;h&lt;b&gt;Hello World!&lt;/b&gt;\x1b[?1155l
+</pre></div>
+</div>
+<p>The output HTML fragment may optionally begin with a special
+<em>Graphterm directive</em> which looks like an HTML comment line:</p>
+<div class="highlight-python"><div class="highlight"><pre>\x1b[?1155;&lt;cookie&gt;h&lt;!--gterm nb_clear all=yes--&gt;\x1b[?1155l
+</pre></div>
+</div>
+<p>The above string, if output by a program, will clear output from all
+cells in a notebook. The GraphTerm always begins with string
+<tt class="docutils literal"><span class="pre">&lt;!--gterm</span></tt> and ends with <tt class="docutils literal"><span class="pre">--&gt;</span></tt>, like an HTML comment line. The
+directive begins with an action (<tt class="docutils literal"><span class="pre">nb_clear</span></tt>) and optional arguments
+of the form <tt class="docutils literal"><span class="pre">name=value</span></tt>.</p>
+<p>The basic actions and optional arguments are:</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">data</span> <span class="pre">blob=...</span></tt>   (create blob with specified random id from data URI content)</p>
+<p><tt class="docutils literal"><span class="pre">display_blob</span> <span class="pre">blob=...</span> <span class="pre">display=block|fullpage|fullwindow</span> <span class="pre">overwrite=yes</span> <span class="pre">exit_page=yes</span></tt>   (display blob image)</p>
+<p><tt class="docutils literal"><span class="pre">pagelet</span> <span class="pre">block=overwrite</span></tt>   (display arbitrary HTML page fragment
+from content)</p>
+</div></blockquote>
+<p>The <tt class="docutils literal"><span class="pre">pagelet</span></tt> action allows arbitrary HTML fragments to be displayed
+inline. The following python command will display inline HTML:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155;&lt;cookie&gt;h&quot;</span><span class="o">+</span><span class="s">&quot;&lt;!--gterm pagelet--&gt;&quot;</span><span class="o">+</span><span class="s">&quot;&lt;b&gt;Hello World!&lt;/b&gt;&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155l&quot;</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">data</span></tt> and <tt class="docutils literal"><span class="pre">display_blob</span></tt> actions are unprivileged, i.e., they
+can be executed even with a dummy cookie value of 0. This allows
+&#8220;blobs&#8221; to be created from <a class="reference external" href="http://en.wikipedia.org/wiki/Data_URI_scheme">data URIs</a> and displayed even
+across SSH logins. For example, the following two python <tt class="docutils literal"><span class="pre">print</span></tt>
+statements will display an inline image from a data URL:</p>
+<div class="highlight-python"><div class="highlight"><pre>print &quot;\x1b[?1155;0h&quot;+&quot;&lt;!--gterm data blob=75543619--&gt;&quot;+&quot;image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==&quot;+&quot;\x1b[?1155l&quot;
+
+print &quot;\x1b[?1155;0h&quot;&lt;!--gterm display_blob blob=75543619--&gt;&quot;+&quot;\x1b[?1155l
+</pre></div>
+</div>
+<p>The sample program <tt class="docutils literal"><span class="pre">hello_world.sh</span></tt> in <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> displays
+the above two strings. Executing the program across an SSH login will
+still display the red dot.</p>
+<p>A displayed inline image can be overwritten. The following two lines
+will overwrite the last displayed image with a new image containing a
+single white pixel:</p>
+<div class="highlight-python"><div class="highlight"><pre>print &quot;\x1b[?1155;0h&quot;+&quot;&lt;!--gterm data blob=84327630--&gt;&quot;+&quot;image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=&quot;+&quot;\x1b[?1155l&quot;
+
+print &quot;\x1b[?1155;0h&quot;&lt;!--gterm display_blob blob=84327630
+overwrite=yes--&gt;&quot;+&quot;\x1b[?1155l
+</pre></div>
+</div>
+<p>Additional actions and optional arguments are:</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">clear_terminal</span></tt>   (<em>gclear</em>: clear the terminal)</p>
+<p><tt class="docutils literal"><span class="pre">error_message</span></tt>    (display content as plain text error message in browser window)</p>
+<p><tt class="docutils literal"><span class="pre">menu_op</span> <span class="pre">target=view_menubar</span> <span class="pre">value=on|off</span></tt> (<em>gmenu</em>: execute menu operation)</p>
+<p><tt class="docutils literal"><span class="pre">nb_clear</span> <span class="pre">all=yes</span></tt> (clear notebook cell output)</p>
+<p><tt class="docutils literal"><span class="pre">open_url</span> <span class="pre">width=400</span> <span class="pre">height=300</span> <span class="pre">target=...</span></tt>    (<em>gopen</em>: open URL)</p>
+</div></blockquote>
+</div>
+<div class="section" id="graphterm-json-headers">
+<h2><a class="toc-backref" href="#id3">GraphTerm JSON headers</a><a class="headerlink" href="#graphterm-json-headers" title="Permalink to this headline">¶</a></h2>
+<p>The HTML comment directive format is the simplest way for programs to
+communicate with GraphTerm, and would suffice for most purposes. An
+alternative JSON header format is also available to handle more
+complex options and data etc.:</p>
+<div class="highlight-python"><div class="highlight"><pre>\x1b[?1155;&lt;cookie&gt;h
+{&quot;content_type&quot;: &quot;text/html&quot;,
+ &quot;x_gterm_response&quot;: &quot;pagelet&quot;}
+
+&lt;div&gt;
+Hello World!
+&lt;/div&gt;
+\x1b[?1155l
+</pre></div>
+</div>
+<p>Note that for the JSON header format, the opening escape sequence is
+followed by a <em>dictionary</em> of header names and values, using JSON
+format. This must be followed by a single <em>blank line</em> and then any
+content data (such as the HTML fragment to be displayed).</p>
+</div>
+<div class="section" id="gterm-api-module">
+<h2><a class="toc-backref" href="#id4">gterm API module</a><a class="headerlink" href="#gterm-api-module" title="Permalink to this headline">¶</a></h2>
+<p>The Python module <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> contains many
+convenience functions for accessing the textual GraphTerm API. The
+following Python code will display some raw HTML followed by an
+image:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">grapherm.bin.gterm</span> <span class="kn">as</span> <span class="nn">gterm</span>
+
+<span class="n">gterm</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="s">&quot;&lt;b&gt;Hello Wordl!&lt;/b&gt;&quot;</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;sample.png&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">blob_url</span> <span class="o">=</span> <span class="n">gterm</span><span class="o">.</span><span class="n">create_blob</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="s">&quot;image/png&quot;</span><span class="p">)</span>
+<span class="n">gterm</span><span class="o">.</span><span class="n">display_blob</span><span class="p">(</span><span class="n">gterm</span><span class="o">.</span><span class="n">get_blob_id</span><span class="p">(</span><span class="n">blob_url</span><span class="p">),</span> <span class="n">display</span><span class="o">=</span><span class="s">&quot;block&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the toolchain programs <tt class="docutils literal"><span class="pre">gimage</span></tt>, <tt class="docutils literal"><span class="pre">gframe</span></tt>, etc. for examples
+of this API usage.</p>
+</div>
+<div class="section" id="clickable-links-for-generating-commands">
+<h2><a class="toc-backref" href="#id5">Clickable links for generating commands</a><a class="headerlink" href="#clickable-links-for-generating-commands" title="Permalink to this headline">¶</a></h2>
+<p>A program can display clickable HTML links that can automatically
+generate a command line and paste it into the terminal. See the
+<tt class="docutils literal"><span class="pre">ec2list</span></tt> and <tt class="docutils literal"><span class="pre">gls</span></tt> programs for examples of this usage. Basically
+a clickable HTML <tt class="docutils literal"><span class="pre">&lt;a&gt;</span></tt> element is identified by the <tt class="docutils literal"><span class="pre">class</span></tt>
+attribute <tt class="docutils literal"><span class="pre">gterm-click</span></tt> and also contains a special attribute
+<tt class="docutils literal"><span class="pre">data-gtermcmd</span></tt> that represents the command to be executed. If this
+command ends with a space, the displayed text of the element (such as
+a file name) is appended as an argument to the command. (If the
+<tt class="docutils literal"><span class="pre">href</span></tt> attribute of the <tt class="docutils literal"><span class="pre">&lt;a&gt;</span></tt> element represents a file URI, then
+the file path is appended instead.) To insert the argument elsewhere
+in the command, the special escape sequence <tt class="docutils literal"><span class="pre">%[arg]</span></tt> can be used in
+the command string. See the script <tt class="docutils literal"><span class="pre">hello_gterm.sh</span></tt> or the sample
+Python code below:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">graphterm.bin.gterm</span> <span class="kn">as</span> <span class="nn">gterm</span>
+
+<span class="n">html</span> <span class="o">=</span> <span class="s">&#39;&lt;hr&gt;&lt;a class=&quot;gterm-link gterm-click&quot; href=&quot;&quot; data-gtermmime=&quot;&quot; data-gtermcmd=&quot;echo %[arg] echoed&quot; data-gtermconfirm=&quot;Execute echo command?&quot;&gt;Clickable Command&lt;/a&gt;&lt;hr&gt;&#39;</span>
+
+<span class="n">gterm</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="mapping-command-line-arguments-to-html-form-elements">
+<span id="index-1"></span><h2><a class="toc-backref" href="#id6">Mapping command line arguments to HTML form elements</a><a class="headerlink" href="#mapping-command-line-arguments-to-html-form-elements" title="Permalink to this headline">¶</a></h2>
+<p>Any Python program that parses command line options and arguments can
+be trivially modified to generate an HTML form to request input. The
+<tt class="docutils literal"><span class="pre">gterm</span></tt> module provides a <tt class="docutils literal"><span class="pre">FormParser</span></tt> object that can be used as
+an almost drop-in replacement for standard command line parsing using
+<tt class="docutils literal"><span class="pre">optparse.OptionParser</span></tt>. Here&#8217;s some example code of this usage
+(modified from <tt class="docutils literal"><span class="pre">ec2launch</span></tt>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">grapherm.bin.gterm</span> <span class="kn">as</span> <span class="nn">gterm</span>
+
+<span class="c"># Create FormParser object</span>
+<span class="n">form_parser</span> <span class="o">=</span> <span class="n">gterm</span><span class="o">.</span><span class="n">FormParser</span><span class="p">(</span><span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&quot;Create Amazon EC2 instance with hostname: &quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="s">&quot;ec2launch -f&quot;</span><span class="p">)</span>
+
+<span class="c"># First argument (required)</span>
+<span class="n">form_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Instance tagname&quot;</span><span class="p">)</span>
+
+<span class="c"># Choice option</span>
+<span class="n">form_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;type&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;m3.medium&quot;</span><span class="p">,</span> <span class="s">&quot;m3.large&quot;</span><span class="p">,</span> <span class="s">&quot;c3.large&quot;</span><span class="p">),</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Instance type&quot;</span><span class="p">)</span>
+
+<span class="c"># String option</span>
+<span class="n">form_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;gmail_addr&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Full gmail address, user@gmail.com&quot;</span><span class="p">)</span>
+
+<span class="c"># Boolean option</span>
+<span class="n">form_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;https&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Use https for security&quot;</span><span class="p">)</span>
+
+<span class="c"># Raw options (not displayed in form)</span>
+<span class="n">form_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;form&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Force form display&quot;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">form_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;fullpage&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">short</span><span class="o">=</span><span class="s">&quot;f&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Fullpage display&quot;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">form_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">short</span><span class="o">=</span><span class="s">&quot;t&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Text only&quot;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">=</span> <span class="n">form_parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">gterm</span><span class="o">.</span><span class="n">Lterm_cookie</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">isatty</span><span class="p">():</span>
+    <span class="c"># Not running within GraphTerm or stdout is piped; text only</span>
+    <span class="n">options</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">True</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">args</span> <span class="ow">or</span> <span class="n">options</span><span class="o">.</span><span class="n">form</span><span class="p">:</span>
+    <span class="c"># Invoked with no arguments or with force form display option</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+        <span class="c"># Display text help and quit</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">form_parser</span><span class="o">.</span><span class="n">get_usage</span><span class="p">())</span>
+    <span class="c"># Display form, prefilling it if need be</span>
+    <span class="n">gterm</span><span class="o">.</span><span class="n">write_form</span><span class="p">(</span><span class="n">form_parser</span><span class="o">.</span><span class="n">create_form</span><span class="p">(</span><span class="n">prefill</span><span class="o">=</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">form</span> <span class="k">else</span> <span class="bp">None</span><span class="p">),</span> <span class="n">command</span><span class="o">=</span><span class="s">&quot;ec2launch -f&quot;</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c"># ... code for processing arguments and options</span>
+</pre></div>
+</div>
+<p>See the source for toolchain commands <tt class="docutils literal"><span class="pre">ec2launch</span></tt>, <tt class="docutils literal"><span class="pre">gadmin</span></tt>,
+<tt class="docutils literal"><span class="pre">gframe</span></tt>, <tt class="docutils literal"><span class="pre">gncplot</span></tt>, <tt class="docutils literal"><span class="pre">greveal</span></tt>, and <tt class="docutils literal"><span class="pre">ystock</span></tt> for more
+examples.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="format.html" title="Markdown notebook format"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Advanced topics"
+             >previous</a> |</li>
+        <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
+        <li><a href="contents.html">Contents</a>
+          &raquo;</li>
+
+          <li><a href="advanced.html" >Advanced topics</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2012-2014 R. Saravanan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+<div class="footer">
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ?
+              'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+  })();
+</script>
+</div>
+
+  </body>
+</html>

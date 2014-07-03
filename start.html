@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting started &mdash; GraphTerm 0.55.0 documentation</title>
+    <title>Getting started &mdash; GraphTerm 0.56.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.55.0',
+        VERSION:     '0.56.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within GraphTerm 0.55.0 documentation"
+          title="Search within GraphTerm 0.56.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.55.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.56.0 documentation" href="index.html" />
     <link rel="next" title="Remote access and SSH" href="remote.html" />
     <link rel="prev" title="README" href="README.html" />
  
@@ -337,19 +337,18 @@ HTML:</p>
 <span id="index-3"></span><span id="id1"></span><h3><a class="toc-backref" href="#id8">Notebook mode</a><a class="headerlink" href="#notebook-mode" title="Permalink to this headline">¶</a></h3>
 <p>GraphTerm supports a notebook mode, where code can be entered in
 multiple cells and executed separately in each cell to display the
-output (see <a class="reference internal" href="screenshots.html#notebook-shot"><em>GraphTerm Notebook mode running Python</em></a>). Cells can also contain comment text
-in <a class="reference external" href="http://daringfireball.net/projects/markdown">Markdown</a> format.
-Currently, the notebook mode can be used with the shell (<tt class="docutils literal"><span class="pre">bash</span></tt>), or
-while running python (<tt class="docutils literal"><span class="pre">python/ipython</span></tt>) and <tt class="docutils literal"><span class="pre">R</span></tt> interpreters (see
-<a class="reference internal" href="R.html"><em>Using GraphTerm with R</em></a>).</p>
-<p>You can create new Python or R notebooks using the <em>notebook/new</em> menu
-option and then selecting the language.  You can alo try using the
-notebook mode with any other shell-like program (such as <tt class="docutils literal"><span class="pre">IDL</span></tt> or
-<tt class="docutils literal"><span class="pre">ncl</span></tt>) which has a unique prompt by typing <em>Shift-Enter</em> after
-starting the program. Type <em>Control-Enter</em> instead, if you wish to
-read a notebook file and/or customize the interpreter prompts.
-Alternatively, you can select <em>notebook/new/default</em> menu option after
-starting the program (this works even with <tt class="docutils literal"><span class="pre">bash</span></tt>!).</p>
+output (see <a class="reference internal" href="screenshots.html#notebook-shot"><em>GraphTerm Notebook mode running Python</em></a>). Currently, the notebook mode can be
+used with the shell (<tt class="docutils literal"><span class="pre">bash</span></tt>), or while running python
+(<tt class="docutils literal"><span class="pre">python/ipython</span></tt>) and <tt class="docutils literal"><span class="pre">R</span></tt> interpreters (see <a class="reference internal" href="R.html"><em>Using GraphTerm with R</em></a>). You can
+create new notebooks using the <em>notebook/new</em> menu option and then
+selecting the language.</p>
+<p>You can try using the notebook mode with any other shell-like
+program (such as <tt class="docutils literal"><span class="pre">IDL</span></tt> or <tt class="docutils literal"><span class="pre">ncl</span></tt>) which has a unique prompt by
+typing <em>Shift-Enter</em> after starting the program. Type <em>Control-Enter</em>
+instead, if you wish to read a notebook file and/or customize the
+interpreter prompts.  Alternatively, you can select
+<em>notebook/new/default</em> menu option after starting the program (this
+works even with the <tt class="docutils literal"><span class="pre">bash</span></tt> shell!).</p>
 <p>To open an existing notebook, use the <tt class="docutils literal"><span class="pre">gls</span></tt> command to list your
 notebooks, e,g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gls *.ipynb
@@ -366,18 +365,22 @@ use the <em>notebook/open</em> menu option.</p>
 <div class="figure align-center" style="width: 85%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" style="width: 90%;" /></a>
 </div>
-<p>Within notebook mode,
-use <em>Shift-Enter</em> to execute a cell and move to the next, or
-<em>Control-Enter</em> for in-place execution.
-Additional keyboard shortcuts are listed
-in the <em>help</em> menu, and are in many cases identical to that used by
-<a class="reference external" href="http://ipython.org/notebook.html">IPython Notebook</a>.</p>
-<p>Notebooks can be saved any time using the IPython Notebook
-(<tt class="docutils literal"><span class="pre">*.ipynb</span></tt>) or Markdown (<tt class="docutils literal"><span class="pre">*.md</span></tt>)
-formats. The filename determines the format.
-You can exit the notebook mode using
-<em>notebook/quit</em> in the top menu bar, or by typing <em>Control-C</em>,
-to return to the terminal mode.</p>
+<p>Within notebook mode, type either <em>Control-Enter</em> to execute code
+in-place, or <em>Shift-Enter</em> to execute and move to the next cell
+(creating a new cell, if necessary). You can also use the <em>run</em> button
+on the top menu, which behaves like <em>Shift-Enter</em> but does not create
+new cells. Other notebook operations can be carried out using the
+<em>notebook</em> menu or the keyboard shortcuts listed under <em>help/notebook
+shortcuts</em>.</p>
+<p>Notebook cells can also contain descriptive text in <a class="reference external" href="http://daringfireball.net/projects/markdown">Markdown</a> format. The
+<em>notebook/markdown</em> menu option can be used to toggle a cell between
+code and Markdown mode and <em>double-clicking</em> on the rendered text
+displays the editable Markdown cell.</p>
+<p>The <em>notebook/save</em> menu option can be used to save notebooks either
+in the IPython Notebook format (<tt class="docutils literal"><span class="pre">*.ipynb</span></tt>) or in the <a class="reference internal" href="format.html"><em>Markdown notebook format</em></a>
+(<tt class="docutils literal"><span class="pre">*.py.gnb.md</span></tt>). The filename determines which format is used.  You
+can exit the notebook mode using <em>notebook/quit</em> in the top menu bar,
+or by typing <em>Control-C</em>, to return to the terminal mode.</p>
 </div>
 </div>
 <div class="section" id="sharing-and-security">
@@ -421,8 +424,8 @@ command validates the server and handles authentication before
 opening a new terminal. On a single user computer, such as a laptop,
 the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option, with no access code, can be used
 instead.</p>
-<p>Although GraphTerm can be run as a public server, this feature should
-be used ony for teaching and demonstration purposes. In this case, the
+<p>Although GraphTerm can be run as a public server, this feature is best
+used for teaching and demonstration purposes. In this case, the
 <tt class="docutils literal"><span class="pre">--auth_type=name</span></tt> option can be used, if all users can share an
 account, with no access code. The <tt class="docutils literal"><span class="pre">--auth_type=multiuser</span></tt> option,
 which requires the server to run with root privileges, is suitable for

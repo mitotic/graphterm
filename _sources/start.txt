@@ -176,7 +176,7 @@ HTML::
    :width: 90%
    :figwidth: 85%
 
-.. index:: notebook
+.. index:: notebook mode
 
 .. _notebook_mode:
  
@@ -185,20 +185,19 @@ Notebook mode
 
 GraphTerm supports a notebook mode, where code can be entered in
 multiple cells and executed separately in each cell to display the
-output (see :ref:`notebook_shot`). Cells can also contain comment text
-in `Markdown <http://daringfireball.net/projects/markdown>`_ format.
-Currently, the notebook mode can be used with the shell (``bash``), or
-while running python (``python/ipython``) and ``R`` interpreters (see
-:doc:`R`).
+output (see :ref:`notebook_shot`). Currently, the notebook mode can be
+used with the shell (``bash``), or while running python
+(``python/ipython``) and ``R`` interpreters (see :doc:`R`). You can
+create new notebooks using the *notebook/new* menu option and then
+selecting the language.
 
-You can create new Python or R notebooks using the *notebook/new* menu
-option and then selecting the language.  You can alo try using the
-notebook mode with any other shell-like program (such as ``IDL`` or
-``ncl``) which has a unique prompt by typing *Shift-Enter* after
-starting the program. Type *Control-Enter* instead, if you wish to
-read a notebook file and/or customize the interpreter prompts.
-Alternatively, you can select *notebook/new/default* menu option after
-starting the program (this works even with ``bash``!).
+You can try using the notebook mode with any other shell-like
+program (such as ``IDL`` or ``ncl``) which has a unique prompt by
+typing *Shift-Enter* after starting the program. Type *Control-Enter*
+instead, if you wish to read a notebook file and/or customize the
+interpreter prompts.  Alternatively, you can select
+*notebook/new/default* menu option after starting the program (this
+works even with the ``bash`` shell!).
 
 To open an existing notebook, use the ``gls`` command to list your
 notebooks, e,g.::
@@ -219,19 +218,25 @@ use the *notebook/open* menu option.
    :width: 90%
    :figwidth: 85%
 
-Within notebook mode,
-use *Shift-Enter* to execute a cell and move to the next, or
-*Control-Enter* for in-place execution.
-Additional keyboard shortcuts are listed
-in the *help* menu, and are in many cases identical to that used by
-`IPython Notebook <http://ipython.org/notebook.html>`_.
+Within notebook mode, type either *Control-Enter* to execute code
+in-place, or *Shift-Enter* to execute and move to the next cell
+(creating a new cell, if necessary). You can also use the *run* button
+on the top menu, which behaves like *Shift-Enter* but does not create
+new cells. Other notebook operations can be carried out using the
+*notebook* menu or the keyboard shortcuts listed under *help/notebook
+shortcuts*.
 
-Notebooks can be saved any time using the IPython Notebook
-(``*.ipynb``) or Markdown (``*.md``)
-formats. The filename determines the format.
-You can exit the notebook mode using
-*notebook/quit* in the top menu bar, or by typing *Control-C*,
-to return to the terminal mode.
+Notebook cells can also contain descriptive text in `Markdown
+<http://daringfireball.net/projects/markdown>`_ format. The
+*notebook/markdown* menu option can be used to toggle a cell between
+code and Markdown mode and *double-clicking* on the rendered text
+displays the editable Markdown cell.
+
+The *notebook/save* menu option can be used to save notebooks either
+in the IPython Notebook format (``*.ipynb``) or in the :doc:`format`
+(``*.py.gnb.md``). The filename determines which format is used.  You
+can exit the notebook mode using *notebook/quit* in the top menu bar,
+or by typing *Control-C*, to return to the terminal mode.
 
  
 Sharing and security
@@ -291,8 +296,8 @@ opening a new terminal. On a single user computer, such as a laptop,
 the ``--auth_type=none`` option, with no access code, can be used
 instead.
 
-Although GraphTerm can be run as a public server, this feature should
-be used ony for teaching and demonstration purposes. In this case, the
+Although GraphTerm can be run as a public server, this feature is best
+used for teaching and demonstration purposes. In this case, the
 ``--auth_type=name`` option can be used, if all users can share an
 account, with no access code. The ``--auth_type=multiuser`` option,
 which requires the server to run with root privileges, is suitable for

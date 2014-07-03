@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using GraphTerm with R &mdash; GraphTerm 0.56.0 documentation</title>
+    <title>Markdown notebook format &mdash; GraphTerm 0.56.0 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -27,8 +27,9 @@
           title="Search within GraphTerm 0.56.0 documentation"
           href="_static/opensearch.xml"/>
     <link rel="top" title="GraphTerm 0.56.0 documentation" href="index.html" />
-    <link rel="next" title="GraphTerm toolchain and features" href="features.html" />
-    <link rel="prev" title="Progressively fillable notebooks" href="progressive.html" />
+    <link rel="up" title="Advanced topics" href="advanced.html" />
+    <link rel="next" title="Using GraphTerm with OTrace" href="tracing.html" />
+    <link rel="prev" title="Extending GraphTerm" href="extend.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -96,28 +97,29 @@ code.mindmeldr.com
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="features.html" title="GraphTerm toolchain and features"
+          <a href="tracing.html" title="Using GraphTerm with OTrace"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="progressive.html" title="Progressively fillable notebooks"
+          <a href="extend.html" title="Extending GraphTerm"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
- 
+
+          <li><a href="advanced.html" accesskey="U">Advanced topics</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="progressive.html"
-                        title="previous chapter">Progressively fillable notebooks</a></p>
+  <p class="topless"><a href="extend.html"
+                        title="previous chapter">Extending GraphTerm</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="features.html"
-                        title="next chapter">GraphTerm toolchain and features</a></p>
+  <p class="topless"><a href="tracing.html"
+                        title="next chapter">Using GraphTerm with OTrace</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/R.txt"
+    <li><a href="_sources/format.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -141,42 +143,109 @@ code.mindmeldr.com
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="using-graphterm-with-r">
-<h1>Using GraphTerm with R<a class="headerlink" href="#using-graphterm-with-r" title="Permalink to this headline">¶</a></h1>
-<p id="index-0">GraphTerm supports basic inline graphics display and the notebook
-interface using R. The file <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/gterm.R">$GTERM_DIR/bin/gterm.R</a>
-includes helper functions for using the GraphTerm API to display
-inline graphics.  The following <tt class="docutils literal"><span class="pre">R</span></tt> packages need to be installed:
-<tt class="docutils literal"><span class="pre">RCurl</span></tt>, <tt class="docutils literal"><span class="pre">Cairo</span></tt>, and <tt class="docutils literal"><span class="pre">png</span></tt>.  On Linux, the following additional
-libraries, or their equivalents, may need to be installed:
-<tt class="docutils literal"><span class="pre">libcurl4-openssl-dev</span> <span class="pre">libcairo2-dev</span> <span class="pre">libxt-dev</span></tt>. Here&#8217;s a plotting
-example:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ R -q
-install.packages(c(&quot;RCurl&quot;, &quot;Cairo&quot;, &quot;png&quot;))  # The first time
-gterm &lt;- paste(Sys.getenv(&quot;GTERM_DIR&quot;),&quot;/bin/gterm.R&quot;, sep=&quot;&quot;)
-source(gterm)          # Load GraphTerm API helper functions
-g &lt;- gcairo()          # Initialize Cairo device for GraphTerm output
-x &lt;- rnorm(100,0,1)
-hist(x, col=&quot;blue&quot;)
-g$frame()              # Display plot as inline image
-hist(x, col=&quot;red&quot;)
-g$frame(TRUE)          # Overwrite previous plot
-hist(x, col=&quot;green&quot;)
-g$frame()              # New plot
+  <div class="section" id="markdown-notebook-format">
+<span id="format"></span><h1><a class="toc-backref" href="#id1">Markdown notebook format</a><a class="headerlink" href="#markdown-notebook-format" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#markdown-notebook-format" id="id1">Markdown notebook format</a></li>
+</ul>
+</div>
+<p id="index-0">Although GraphTerm can read and write notebooks in the IPython
+(<tt class="docutils literal"><span class="pre">.ipynb</span></tt>) format, it natively saves notebooks using basic <a class="reference external" href="http://daringfireball.net/projects/markdown">Markdown</a> syntax, with support
+for the GitHub-style <a class="reference external" href="https://help.github.com/articles/github-flavored-markdown">fenced code extension</a>. The
+notebook filenames have the extension <tt class="docutils literal"><span class="pre">.py.gnb.md</span></tt> for Python,
+<tt class="docutils literal"><span class="pre">.R.gnb.md</span></tt> for R and so on. The Markdown sequential text format has
+some advantages over the JSON format used for <tt class="docutils literal"><span class="pre">.ipynb</span></tt> files:</p>
+<ul class="simple">
+<li>Notebooks may be easily viewed using standard Markup rendering
+software and will automatically render on GitHub
+(<a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Progressive-demo.py.gnb.md">example</a>).</li>
+<li>Notebooks can be easily modified using standard text editors,
+moving around blocks of code and markup.</li>
+<li>Notebooks can be split and concatenated at block boundaries, like
+text files (e.g. <tt class="docutils literal"><span class="pre">cat</span> <span class="pre">a.py.gnb.md</span> <span class="pre">b.py.gnb.md</span> <span class="pre">&gt;</span> <span class="pre">c.py.gnb.md</span></tt>)</li>
+</ul>
+<p>Markup cells are simply saved as Markdown text in the notebook file.
+This can include raw HTML, figures, or program statements. Triple
+dashes (<tt class="docutils literal"><span class="pre">---</span></tt>) can be used as page breaks to denote section/slide
+boundaries. Program statements occurring within a markup cell must be
+indented by at least four spaces. The data URIs for all figures are
+saved at the end of the file, making it easier to view the notebook
+cell content.</p>
+<p>Code cells are saved as fenced code blocks in the notebook file, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>```python
+print &quot;Hello World&quot;
+```
 </pre></div>
 </div>
-<div class="figure align-center" style="width: 85%">
-<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r.png" style="width: 90%;" /></a>
+<p>Output text resulting from running the code is saved in fenced code
+blocks of type <tt class="docutils literal"><span class="pre">output</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>```output
+Hello
+```
+</pre></div>
 </div>
-<p>The notebook mode of GraphTerm will also work with <tt class="docutils literal"><span class="pre">R</span></tt>, without any
-additional software. GraphTerm can open Markdown files (in a format
-very similar to <em>R-markdown</em>) as a notebook, and also saves notebooks
-using the same format. The file <tt class="docutils literal"><span class="pre">$GTERM_DIR/notebooks/R-histogram.R.md</span></tt>
-contains a sample notebook displaying inline graphics (see <a class="reference internal" href="screenshots.html#r-shot"><em>Inline plotting with R</em></a>).  To open the
-notebook, click on it in the <tt class="docutils literal"><span class="pre">gls</span></tt> output, or use the
-<em>notebook/open</em> menu option after starting <tt class="docutils literal"><span class="pre">R</span></tt>.</p>
-<div class="figure align-center" style="width: 85%">
-<a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-r-nb.png" style="width: 90%;" /></a>
+<p>Figures resulting from code execution are distinguished by the prefix <tt class="docutils literal"><span class="pre">output-</span></tt>
+in their name, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>![image][output-fig1-test.py]
+</pre></div>
+</div>
+<p>Multiple <tt class="docutils literal"><span class="pre">output</span></tt> text blocks and output figures, separated by blank
+lines, are considered as representing the cumulative output from
+executing the previous code block. To create a progressively fillable
+notebook, <tt class="docutils literal"><span class="pre">output</span></tt> blocks and figures are converted to <tt class="docutils literal"><span class="pre">expect</span></tt>
+blocks and figures. Here&#8217;s an example notebook file:</p>
+<div class="highlight-python"><div class="highlight"><pre># A sample GraphTerm notebook file in Markdown format
+
+---
+
+## Part I
+
+Write a function ``abs_add`` that returns the sum of the absolute values of two numbers. Test the function.
+
+
+```python
+# Part 1: Define the function abs_add
+def abs_add(a, b):
+    return abs(a) + abs(b)
+
+# Testing function abs_add
+print abs_add(3, -4)
+```
+
+```output
+
+7
+```
+
+---
+
+## Part II
+
+Write some code to create a simple line plot with a title using the ``pylab`` module.
+
+
+```python
+x = [1, 2, 3, 4]
+y = [1, 4, 9, 16]
+title = &quot;Plot of y = x-squared&quot;
+
+import pylab
+# Part 2: Plotting code
+pylab.plot(x, y)
+pylab.title(title)
+
+```
+
+```output
+
+```
+
+![image][output-fig1-Progressive-demo.py]
+
+[output-fig1-Progressive-demo.py]: data:image/png;base64,iVBORw0KGgo...
+</pre></div>
 </div>
 </div>
 
@@ -193,15 +262,16 @@ notebook, click on it in the <tt class="docutils literal"><span class="pre">gls<
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="features.html" title="GraphTerm toolchain and features"
+          <a href="tracing.html" title="Using GraphTerm with OTrace"
              >next</a> |</li>
         <li class="right" >
-          <a href="progressive.html" title="Progressively fillable notebooks"
+          <a href="extend.html" title="Extending GraphTerm"
              >previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
- 
+
+          <li><a href="advanced.html" >Advanced topics</a> &raquo;</li> 
       </ul>
     </div>
 
