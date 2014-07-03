@@ -173,14 +173,19 @@ at their own pace and then submit their filled notebook at the end:
 Sample fillable notebooks
 -----------------------------------------------
 
-The Python notebook file ``$GTERM_DIR/notebooks/Progressive-demo.py.gnb.md``
-was opened, executed, and saved as a sample fillable notebook with the
-name ``Progressive-fill.py.gnb.md``. You may open this file to test
-the fillable features. You may also copy this file as
-``Progressive-share.py.gnb.md`` to share it, or copy it as
-``Progressive-assign.py.gnb.md`` to create an assignment.
+The Python notebook file
+`$GTERM_DIR/notebooks/Progressive-demo.py.gnb.md
+<https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Progressive
+-demo.py.gnb.md>`_ was opened, executed, and saved as a sample
+fillable notebook with the name `Progressive-fill.py.gnb.md
+<https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Progressive
+-fill.py.gnb.md>`_. You may open this file to test the fillable
+features. You may also copy this file as
+``Progressive-share.py.gnb.md`` to share it synchronously from your
+terminal session, or copy it as ``Progressive-assign.py.gnb.md`` to
+create an assignment.
 
 There is also a fillable Bash notebook
-``$GTERM_DIR/notebooks/Shell-fill.sh.gnb.md``, that you can open using
+`$GTERM_DIR/notebooks/Bash-fill.sh.gnb.md <https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Bash-fill.py.gnb.md>`_, that you can open using
 the *notebook/open* menu option or by clicking on the output of the
 ``gls`` command.

@@ -185,6 +185,7 @@ body.ipadscreen  {
     color: red;
 }
 
+#terminal.gterm-share .sf-menu #menubar-sessionlabel-container,
 #terminal.gterm-webcast .sf-menu #menubar-sessionlabel-container,
 #terminal.gterm-webcast .sf-menu #gterm-menu-users-count {
     background: #ff5555;

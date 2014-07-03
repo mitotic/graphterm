@@ -3,7 +3,7 @@ Release Notes
 .. contents::
 
 
-0.56.0 (July 1, 2014)
+0.56.1 (July 3, 2014)
 ---------------------------------------------------------------------------------
 
  - Toolchain now works both Python2 and Python3; many fixes

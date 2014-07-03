@@ -425,12 +425,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
+            valid_webcast_req = self._auth_type <= self.SINGLE_AUTH and self.req_path in self._webcast_paths
+            
             new_user_code = ""
             if not self.authorized:
                 if self._auth_type == self.NULL_AUTH:
                     # No authorization code needed
                     self.authorized = self.add_state("", self.NULL_AUTH)
                 else:
+                    # Authenticate user
                     user = get_first_arg(query_data, "user").lower()
                     code = get_first_arg(query_data, "code")
                     eauth = get_first_arg(query_data, "eauth")
@@ -466,7 +469,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         break
 
                     if not user:
-                        if not code and self.req_path in self._webcast_paths:
+                        if not code and valid_webcast_req:
+                            # Single user webcast auth
                             pass
                         elif self._auth_type == self.SINGLE_AUTH:
                             if code == gterm.compute_hmac(self._auth_code, cauth):
@@ -560,7 +564,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             auth_message = "Validation code required for user "+cgi_escape(user)
 
             if not self.authorized:
-                if self.req_path in self._webcast_paths:
+                # User not authorized
+                if valid_webcast_req:
+                    # Single user webcast auth
                     self.authorized = self.add_state(user, self.WEBCAST_AUTH)
                 else:
                     need_user = "_" if (self._auth_type == self.NAME_AUTH or self._auth_type >= self.MULTI_AUTH) else ""
@@ -588,14 +594,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 # Invalid query auth; clear any form data (always cleared for webcasts and when user is first authorized)
                 query_data = {}
 
-            if not Server_settings["no_formcheck"] and not query_data and self.req_path not in self._webcast_paths:
-                # Confirm path, if no form data and not webcasting
+            if not Server_settings["no_formcheck"] and not query_data and not valid_webcast_req:
+                # Re-confirm path, if no form data and not webcasting
                 if self.req_path:
                     logging.info("GTSocket.open: Confirm path %s", self.req_path)
                     self.write_json([["confirm_path", self.authorized["state_id"], "/"+self.req_path]])
                     self.close()
                     return
                 else:
+                    # Forget path
                     path_comps = []
             else:
                 path_comps = self.req_path.split("/")
@@ -603,8 +610,10 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             is_super_user = self.is_super(user) or self.is_single()
 
             if len(path_comps) < 1 or not path_comps[0]:
+                # Display list of hosts
                 tem_email = get_first_arg(query_data, "save_email").lower()
                 if gterm.EMAIL_RE.match(tem_email) and user and user != gterm.LOCAL_HOST:
+                    # Save email info
                     try:
                         TerminalConnection.send_to_connection(user, "request", "", user, [["set_email", tem_email]])
                         TerminalConnection.set_host_param(user, "host_email", tem_email)
@@ -634,18 +643,19 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 self.close()
                 return
 
+            local_broadcast = False
             if self._auth_type >= self.MULTI_AUTH and not is_super_user:
-                # Host access control
+                # Host access control for non super user
                 if host == gterm.LOCAL_HOST:
-                    self.write_json([["abort", "Local host access not allowed for user %s" % user]])
-                    self.close()
-                    return
-                if host != user and self._auth_type == self.LOGIN_AUTH:
-                    self.write_json([["abort", "Inaccesible host %s" % host]])
-                    self.close()
-                    return
-                if host != user and self._auth_type == self.MULTI_AUTH and not same_group(host, user) and not Server_settings["allow_share"]:
-                    self.write_json([["abort", "Inaccesible host %s" % host]])
+                    if self.req_path in self._terminal_params and not self._terminal_params[self.req_path]["share_private"]:
+                        # Super user has made local host terminal public for sharing
+                        local_broadcast = True
+                    else:
+                        self.write_json([["abort", "Local host access not allowed for user %s" % user]])
+                        self.close()
+                        return
+                elif host != user and not same_group(host, user) and not Server_settings["allow_share"]:
+                    self.write_json([["abort", "Inaccessible host %s" % host]])
                     self.close()
                     return
 
@@ -676,6 +686,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                 session_names = [k for k in host_connect.term_dict if k != gtermhost.OSHELL_NAME or is_super_user]
                 if len(path_comps) < 2 or not path_comps[1]:
+                    # Display list of terminals
                     term_list = []
                     for tem_name in session_names:
                         path = host + "/" + tem_name
@@ -710,6 +721,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     return
 
                 if term_name == "new" or not qauth:
+                    # Redirect for form auth
                     term_name = host_connect.remote_terminal_update(parent=option) if term_name == "new" else term_name
                     redir_url = "/"+host+"/"+term_name+"/"
                     if self.request_query and qauth:
@@ -724,9 +736,17 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             path = host + "/" + term_name
 
+            if self._auth_type >= self.MULTI_AUTH and not is_super_user and (term_name == gtermhost.OSHELL_NAME or (host == gterm.LOCAL_HOST and not local_broadcast)):
+                # Failsafe
+                self.write_json([["abort", "Invalid terminal path: %s" % path]])
+                self.close()
+                return
+
+            local_or_osh = (host == gterm.LOCAL_HOST or term_name == gtermhost.OSHELL_NAME)
+
             if self.authorized["state_id"] in self._watch_dict[path].values():
                 if not option and self.is_creator(user, path) and self._control_set.get(path):
-                    # Prepare to get sole control
+                    # Prepare to get sole control of own terminal, if no explicit watch option is specified
                     self.broadcast(path, ["update_menu", "share_control", False], controller=True)
                     self._control_set[path] = set()
 
@@ -737,23 +757,30 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
             if path not in self._terminal_params:
                 # Initialize parameters for new terminal
-                if host != gterm.LOCAL_HOST and term_name != gtermhost.OSHELL_NAME:
-                    # Super/group user can create/view terminals for other users, but does not own them
-                    term_owner = host
-                else:
-                    term_owner = user
+                allow_host_access = False
                 if is_super_user: 
                     allow_host_access = True
+                elif self.authorized["auth_type"] > self.WEBCAST_AUTH and self._auth_type <= self.SINGLE_AUTH:
+                    allow_host_access = True
                 else:
-                    allow_host_access = (self.authorized["auth_type"] > self.WEBCAST_AUTH) and (self._auth_type <= self.SINGLE_AUTH or host == user or (same_group(host, user) and host_connect and term_name in host_connect.term_dict) )
-                    if not allow_host_access:
-                        self.write_json([["abort", "Unable to create terminal on host %s" % host]])
-                        self.close()
-                        return
-                # Note: Multiuser without allow_share implies super user has default read access
-                start_private =  Server_settings["allow_share"]
+                    # Allow host access to same group terminal, even if no websocket connection is currently active
+                    allow_host_access = (host == user or (same_group(host, user) and host_connect and term_name in host_connect.term_dict))
+
+                if not allow_host_access:
+                    self.write_json([["abort", "Unable to create terminal on host %s" % host]])
+                    self.close()
+                    return
+
+                if local_or_osh:
+                    # Special host/terminal names
+                    term_owner = user
+                else:
+                    # Host always owns terminal, even though super/group user can create/view terminals for other users
+                    term_owner = host
+
                 terminal_params = {"share_locked": self._auth_type > self.SINGLE_AUTH,
-                                   "share_private": start_private, "share_tandem": False,
+                                   "share_private": True,
+                                   "share_tandem": False,
                                    "alert_status": False, "widget_token": "", "last_active": time.time(),
                                    "nb_name": "", "nb_file": "", "nb_mod_offset": 0,
                                    "nb_form": "", "nb_submit": "", "nb_content": "", "nb_master": "", "nb_hosts": {},
@@ -765,7 +792,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 # Existing terminal
                 terminal_params = self._terminal_params[path]
                 is_owner = self.is_creator(user, path)
-                if terminal_params["share_private"] and not is_owner:
+                if terminal_params["share_private"] and not is_owner and not is_super_user:
                     # No sharing
                     self.write_json([["abort", "Invalid terminal path: %s" % path]])
                     self.close()
@@ -798,9 +825,12 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             assert self.websocket_id not in self._watch_dict[path]
 
             controller = False
-            if self.authorized["auth_type"] == self.WEBCAST_AUTH:
+            if self.authorized["auth_type"] == self.WEBCAST_AUTH or local_broadcast:
+                controller = False
+            elif host == gterm.LOCAL_HOST and not is_super_user and self._auth_type >= self.MULTI_AUTH:
                 controller = False
             elif self._auth_type >= self.MULTI_AUTH and not is_super_user and not is_owner:
+                # May obtain control later, if allow_share or same group
                 controller = False
             elif self.wildcard:
                 controller = True
@@ -844,7 +874,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 state_values["view_"+k] = v
             state_values.pop("state_id", None)
             state_values["share_webcast"] = bool(path in self._webcast_paths)
-            state_values["allow_webcast"] = bool(self._auth_type <= self.SINGLE_AUTH or is_super_user or Server_settings["allow_share"])
+            state_values["allow_webcast"] = bool(self._auth_type <= self.SINGLE_AUTH)
             users = [get_user(self.get_websocket(ws_id)) for ws_id in self._watch_dict[self.remote_path]]
             self.write_json([["setup", {"user": user, "host": host, "term": term_name, "oshell": self.oshell,
                                         "host_secret": host_secret, "normalized_host": normalized_host,
@@ -853,7 +883,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "state_values": state_values, "watchers": users,
                                         "nb_server": Server_settings["nb_server"], "nb_autosave": Server_settings["nb_autosave"],
                                         "mathjax": Server_settings["mathjax"],
-                                        "controller": controller, "super_user": is_super_user, "parent_term": parent_term,
+                                        "auth_type": self.authorized["auth_type"], "controller": controller,
+                                        "super_user": is_super_user, "parent_term": parent_term,
                                         "wildcard": bool(self.wildcard), "display_splash": display_splash,
                                         "apps_url": APPS_URL, "chat": term_chat, "update_opts": {},
                                         "state_id": self.authorized["state_id"], "websocket_id": self.websocket_id}]])
@@ -924,6 +955,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             return
 
         remote_host, term_name = self.remote_path.split("/")
+        local_or_osh = (remote_host == gterm.LOCAL_HOST or term_name == gtermhost.OSHELL_NAME)
 
         terminal_params = self._terminal_params[self.remote_path]
 
@@ -947,6 +979,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 allow_chat_only = True
 
         allow_control_request = not terminal_params["share_locked"] and not terminal_params["share_private"] and not self._webcast_paths.get(self.remote_path)
+
+        if self._auth_type >= self.MULTI_AUTH and not is_super_user and local_or_osh:
+            # Failsafe
+            allow_control_request = False
+            
         if is_owner or controller or allow_chat_only or allow_control_request:
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
@@ -1010,21 +1047,32 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if not value:
                             # Give up control
                             self._control_set[self.remote_path].discard(self.websocket_id)
-                        elif is_super_user or is_owner or (not terminal_params["share_locked"] and
-                                                           (self._auth_type <= self.SINGLE_AUTH or
-                                                            same_group(from_user, terminal_params["owner"])  or
-                                                            (Server_settings["allow_share"] and
-                                                             not self.is_super(terminal_params["owner"])))):
-                            # Gain control
-                            if terminal_params["share_tandem"]:
-                                # Shared control
-                                self._control_set[self.remote_path].add(self.websocket_id)
-                            else:
-                                # Sole control
-                                self.broadcast(self.remote_path, ["update_menu", key, False], controller=True)
-                                self._control_set[self.remote_path] = set([self.websocket_id])
                         else:
-                            raise Exception("Failed to acquire control of terminal")
+                            # Gain control (IMPORTANT; CHECK THE CONDITIONS)
+                            allow_control = False
+                            if self._auth_type >= self.MULTI_AUTH and not is_super_user and local_or_osh:
+                                # Failsafe
+                                allow_control = False
+                            elif is_super_user or is_owner:
+                                allow_control = True
+                            elif not terminal_params["share_private"] and not terminal_params["share_locked"]:
+                                # Terminal public and unlocked
+                                if self._auth_type <= self.SINGLE_AUTH:
+                                    # Single user
+                                    allow_control = True
+                                elif not local_or_osh:
+                                    # Not local host or osh
+                                    allow_control = same_group(from_user, terminal_params["owner"]) or Server_settings["allow_share"]
+                            if allow_control:
+                                if terminal_params["share_tandem"]:
+                                    # Shared control
+                                    self._control_set[self.remote_path].add(self.websocket_id)
+                                else:
+                                    # Sole control
+                                    self.broadcast(self.remote_path, ["update_menu", key, False], controller=True)
+                                    self._control_set[self.remote_path] = set([self.websocket_id])
+                            else:
+                                raise Exception("Failed to acquire control of terminal")
                     elif key == "share_tandem":
                         terminal_params["share_tandem"] = value
                         if not value:
@@ -1039,9 +1087,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if len(self._webcast_paths) > MAX_WEBCASTS:
                                 self._webcast_paths.popitem(last=False)
                             if value:
-                                # Initiate webcast
-                                if self._auth_type <= self.SINGLE_AUTH or (Server_settings["allow_share"] or
-                                                                          is_super_user):
+                                # Initiate webcast (but not for multiuser auth)
+                                if self._auth_type <= self.SINGLE_AUTH:
                                     self._webcast_paths[self.remote_path] = time.time()
                             else:
                                 # Cancel webcast

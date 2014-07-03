@@ -41,6 +41,13 @@ var MAX_COMMAND_BUFFER = 100;
 var REPEAT_MILLISEC = 500;
 var POLL_SEC = 1.0;
 
+var WEBCAST_AUTH = 0;
+var NULL_AUTH = 1;
+var NAME_AUTH = 2;
+var SINGLE_AUTH = 3;
+var MULTI_AUTH = 4;
+var LOGIN_AUTH = 5;
+
 var RELEASE_NOTES_URL = "http://code.mindmeldr.com/graphterm/release-notes.html";
 var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
 var PYPI_JSON_URL = PYPI_URL + "/json?callback=?";
