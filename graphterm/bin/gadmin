@@ -19,6 +19,8 @@ Usage:
         # Create new notebook from menu
 """
 
+from __future__ import absolute_import, print_function
+
 import base64
 import json
 import os
@@ -40,7 +42,7 @@ except ImportError:
 usage = "usage: %prog action [args]"
 parser = gterm.FormParser(usage=usage, title="Administer server: ", command="gadmin")
 parser.add_argument(label="Argument 1: ", help="Argument 1")
-parser.add_option("action", ("", "sessions", "mail"), short="a", help="Action")
+parser.add_option("action", ("", "sessions", "mail"), short="a", help="Action (sessions|mail)")
 parser.add_option("body", "", help="Body for mail message, with formatting for keywords: user, group, code, to, members")
 parser.add_option("js", "", short="j", help="Javascript expression to be evaluated")
 parser.add_option("execute", "", short="e", help="Shell command to be executed")
@@ -69,10 +71,10 @@ home_root = "/home"
 norm_users = []
 if os.path.exists(home_root):
     for user in os.listdir(home_root):
-	if not user[0].isalpha() or user in super_users:
-	    continue
-	if os.path.exists( os.path.join(home_root, user, gterm.APP_DIRNAME) ):
-	    norm_users.append(user)
+        if not user[0].isalpha() or user in super_users:
+            continue
+        if os.path.exists( os.path.join(home_root, user, gterm.APP_DIRNAME) ):
+            norm_users.append(user)
 
 norm_users.sort()
 
@@ -80,62 +82,62 @@ user_props = OrderedDict()
 for user in norm_users:
     gt_dir = os.path.join(home_root, user, gterm.APP_DIRNAME)
     try:
-	with open(os.path.join(gt_dir, gterm.APP_AUTH_FILENAME, user)) as f:
-	    code = f.read().strip()
+        with open(os.path.join(gt_dir, gterm.APP_AUTH_FILENAME, user)) as f:
+            code = f.read().strip()
     except Exception:
-	code = ""
+        code = ""
     try:
-	with open(os.path.join(gt_dir, gterm.APP_EMAIL_FILENAME)) as f:
-	    email = f.read().strip()
+        with open(os.path.join(gt_dir, gterm.APP_EMAIL_FILENAME)) as f:
+            email = f.read().strip()
     except Exception:
-	email = ""
+        email = ""
     user_props[user] = {"code": code, "email": email}
 
 if action == "mail":
+    assert super_users, "No super user!"
     groups, membership = gterm.read_groups(super_users[0])
     mail_dict = OrderedDict()
     if options.group:
-	group_names = groups.keys()
-	group_names.sort()
-	for group_name in group_names:
-	    members = groups[group_name]
-	    addrs = [user_props[user]["email"] for user in members if user_props.get(user) and user_props[user].get("email")]
-	    mail_dict[group_name] = {"user": "", "group": group_name, "to": ",".join(addrs),
-				     "code": "", "members": ",".join(members)}
+        group_names = groups.keys()
+        group_names.sort()
+        for group_name in group_names:
+            members = groups[group_name]
+            addrs = [user_props[user]["email"] for user in members if user_props.get(user) and user_props[user].get("email")]
+            mail_dict[group_name] = {"user": "", "group": group_name, "to": ",".join(addrs),
+                                     "code": "", "members": ",".join(members)}
     else:
-	for user in norm_users:
-	    mail_dict[user] = {"user": user, "group": membership.get(user,""), "to": user_props[user]["email"],
-			       "code": user_props[user]["code"], "members": ""}
+        for user in norm_users:
+            mail_dict[user] = {"user": user, "group": membership.get(user,""), "to": user_props[user]["email"],
+                               "code": user_props[user]["code"], "members": ""}
     for key, val in mail_dict.iteritems():
-	mail_body = options.body.replace("\\n","\n") % val
+        mail_body = options.body.replace("\\n","\n") % val
         if gterm.Lterm_cookie:
-	    mail_url = 'mailto:'+val["to"]+'?subject='+urllib.quote(options.subject)+'&body='+urllib.quote(mail_body)
+            mail_url = 'mailto:'+val["to"]+'?subject='+urllib.quote(options.subject)+'&body='+urllib.quote(mail_body)
             gterm.wrap_write('<p>Click <a href="'+mail_url+'">here</a> to email to '+key)
         else:
-	    print "\n" + key + ": " + options.subject
-	    print "\n" + mail_body + "\n"
+            print("\n" + key + ": " + options.subject)
+            print("\n" + mail_body + "\n")
 else:
     Headers = {"content_type": "text/plain"}
     Headers["x_gterm_response"] = "admin_command"
     Headers["x_gterm_parameters"] = {"action": options.action, "text_only": options.text, "long": options.long,
-				     "exec": options.execute,
-				     "js": options.js,
-				     "autosave": options.autosave,
-				     "args": args[0:]}
+                                     "exec": options.execute,
+                                     "js": options.js,
+                                     "autosave": options.autosave,
+                                     "args": args[0:]}
 
     gterm.wrap_write("", headers=Headers)
-
     (errmsg, headers, content) = gterm.receive_data()
 
     if not errmsg:
-	errmsg = headers.get("x_gterm_error", "")
+        errmsg = headers.get("x_gterm_error", "")
 
     if errmsg:
-	sys.exit(errmsg)
+        sys.exit(errmsg)
 
     content_type = headers.get("content_type", "")
     if content_type == "text/html":
-	gterm.wrap_write(content)
+        gterm.wrap_write(content)
     else:
-	sys.stdout.write(content)
+        sys.stdout.write(content)
     

@@ -60,8 +60,8 @@ if args:
             elif not arg.startswith("/"):
                 print("Invalid terminal path %s; must begin with /" % arg, file=sys.stderr)
                 sys.exit(1)
-            arg += "/&" if "?" in arg else "/?"
-            arg += "qauth=%(qauth)"
+            arg += "&" if "?" in arg else "/?"
+            arg += "qauth=%[qauth]"
             iframe_urls.append(arg)
         else:
             if gterm.Export_host:

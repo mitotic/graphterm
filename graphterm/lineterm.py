@@ -3358,7 +3358,7 @@ class Terminal(object):
             text = shell_quote(text)
             if expect_arg:
                 # Expecting argument (maybe)
-                if command:
+                if command_prefix:
                     # Specified command
                     if command_prefix.find(gterm.CMD_ARG) >= 0:
                         # Substitute argument

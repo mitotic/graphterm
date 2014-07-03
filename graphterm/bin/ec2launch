@@ -76,11 +76,19 @@ if not args or options.form:
 gclient_id, gclient_secret = "", ""
 if options.gmail_addr:
     print("", file=sys.stderr)
-    print("To use Google Authentication for %s, please enter Project Credentials for web application." % options.gmail_addr, file=sys.stderr)
-    print("  You can create a new project and Client ID at "+gdev_url, file=sys.stderr)
+    oauth_creds = gterm.read_oauth()
+    if oauth_creds and "google_oauth" in oauth_creds:
+        ack = gterm.get_input("Use Google OAuth credentials from ~/.graphterm/%s? (y/n): " % gterm.APP_OAUTH_FILENAME)
+        if ack.strip().lower().startswith("y"):
+            gclient_id = oauth_creds["google_oauth"]["key"]
+            gclient_secret = oauth_creds["google_oauth"]["secret"]
+        
+    if not gclient_id or not gclient_secret:
+        print("To use Google Authentication for %s, please enter Project Credentials for web application (or blank for delayed setup)." % options.gmail_addr, file=sys.stderr)
+        print("  You can create a new project and Client ID at "+gdev_url, file=sys.stderr)
+        gclient_id = gterm.get_input("  Client ID: ")
+        gclient_secret = gterm.get_input("  Client Secret: ")
     print("", file=sys.stderr)
-    gclient_id = gterm.get_input("  Client ID: ")
-    gclient_secret = gterm.get_input("  Client Secret: ")
 
 instance_tag = args[0]
 
@@ -240,12 +248,12 @@ else:
     init_commands = [ ("" if install_gterm else "#")+command_line ]
 
 startup_commands += ["chmod go-rwx ~"+gterm_user,
-                     'echo set -o ignoreeof >> /etc/bash.bashrc' ]
+                     "echo set -o ignoreeof >> /etc/bash.bashrc",
+                     "sudo -u "+gterm_user+" -i mkdir -p "+gterm_dir,
+                     "sudo -u "+gterm_user+" -i chmod go-rwx "+gterm_dir]
 
 if options.gmail_addr:
     gauth_json = '{"google_oauth": {"key": "%s", "secret": "%s"}}' % (gclient_id, gclient_secret)
-    startup_commands += ["sudo -u "+gterm_user+" -i mkdir -p "+gterm_dir]
-    startup_commands += ["sudo -u "+gterm_user+" -i chmod go-rwx "+gterm_dir]
     startup_commands += ["sudo -u "+gterm_user+" -i touch "+gterm_dir+"/gterm_email.txt"]
     startup_commands += ["sudo -u "+gterm_user+" -i touch "+gterm_dir+"/gterm_oauth.json"]
     startup_commands += ["sudo -u "+gterm_user+" -i echo "+options.gmail_addr+" > "+gterm_dir+"/gterm_email.txt"]

@@ -162,8 +162,10 @@ SETUP_USER_CMD = os.path.join(Bin_dir, "gterm_user_setup")
 
 APP_DIRNAME = ".graphterm"
 APP_AUTH_FILENAME = "_gterm_auth.txt"
+APP_BANNER_FILENAME = "gterm_banner.html"
 APP_EMAIL_FILENAME = "gterm_email.txt"
 APP_GROUPCODE_FILENAME = "gterm_gcode.txt"
+APP_OAUTH_FILENAME = "gterm_oauth.json"
 APP_GROUPS_FILENAME = "gterm_groups.json"
 APP_PREFS_FILENAME = "gterm_prefs.json"
 APP_SECRET_FILENAME = "gterm_secret"
@@ -185,8 +187,10 @@ def dashify(s, n=4):
     s = undashify(s)
     return "-".join(s[j:j+n] for j in range(0, len(s), n))
 
+SPACE_RE = re.compile(r'\s+')
+
 def undashify(s):
-    return s.replace("-", "")
+    return re.sub(SPACE_RE, "", s.replace("-", ""))
 
 def auth_token(secret, connection_id, host, port, client_nonce, server_nonce):
     """Return (client_token, server_token)"""
@@ -209,50 +213,69 @@ def create_app_directory(appdir=App_dir):
 def is_user(username):
     return os.path.exists(os.path.expanduser("~"+username))
 
-def read_email(appdir=App_dir):
-    email_file = os.path.join(appdir, APP_EMAIL_FILENAME)
-    if not os.path.exists(email_file):
-        return ""
-    try:
-        with open(email_file) as f:
-            return f.read().strip().lower()
-    except Exception as excp:
-        logging.warning("Error in reading email from %s: %s", email_file, excp)
-        return ""
-
-def write_email(addr, appdir=App_dir):
-    email_file = os.path.join(appdir, APP_EMAIL_FILENAME)
-    try:
-        with open(email_file, "w") as f:
-            f.write(addr+"\n")
-            return email_file
-    except Exception as excp:
-        logging.error("Error in writing email to %s: %s", email_file, excp)
-        return ""
-
-def get_auth_filename(appdir=App_dir, user="", server=""):
+def get_param_filepath(filename, appdir=App_dir, user="", server=""):
     prefix = user or ""
     if server and server != "localhost":
         prefix += "@" + server
-    return os.path.join(appdir, prefix+APP_AUTH_FILENAME)
+    return os.path.join(appdir, prefix+filename)
+
+def read_param_file(filename, appdir=App_dir, user="", server="", required=False):
+    """Read parameter text/dict and return it.
+    Return None on error, or ""/{} if file not required and does not exist.
+    For filenames ending in .json, JSON conversion is applied
+    """
+    filepath = get_param_filepath(filename, appdir=appdir, user=user, server=server)
+    if not required and not os.path.exists(filepath):
+        return {} if filename.endswith(".json") else ""
+    try:
+        with open(filepath) as f:
+            text = f.read()
+            return json.loads(text) if filename.endswith(".json") else text
+    except Exception as excp:
+        logging.error("Error in reading file %s: %s", filepath, excp)
+        return None
+
+def write_param_file(content, filename, appdir=App_dir, user="", server=""):
+    """Write parameter text/dict and return filepath on success or None on failure.
+    For filenames ending in .json, JSON conversion is applied
+    """
+    filepath = get_param_filepath(filename, appdir=appdir, user=user, server=server)
+    try:
+        with open(filepath, "w") as f:
+            f.write(json.dumps(content)+"\n" if filename.endswith(".json") else content)
+            return filepath
+    except Exception as excp:
+        logging.error("Error in writing file %s: %s", filepath, excp)
+        return None
+
+def read_email(appdir=App_dir):
+    return (read_param_file(APP_EMAIL_FILENAME, appdir=appdir) or "").strip().lower()
+
+def write_email(addr, appdir=App_dir):
+    return write_param_file(addr+"\n", APP_EMAIL_FILENAME, appdir=appdir)
+
+def get_auth_filename(appdir=App_dir, user="", server=""):
+    return get_param_filepath(APP_AUTH_FILENAME, appdir=appdir, user=user, server=server)
 
 def read_auth_code(appdir=App_dir, user="", server=""):
-    auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
-    with open(auth_file) as f:
-        comps = f.read().strip().split()
+    auth_text = read_param_file(APP_AUTH_FILENAME, appdir=appdir, user=user, server=server, required=True)
+    assert auth_text, "Null authentication code"
+    try:
+        comps = auth_text.strip().split()
         auth_code = undashify(comps[0])
         port = int(comps[1]) if len(comps) > 1 else None
-        assert auth_code, "Null authentication code in file "+auth_file
         return auth_code, port
+    except Exception as excp:
+        sys.exit("Error parsing auth code (%s): %s", auth_text, excp)
 
 def write_auth_code(code, appdir=App_dir, user="", server="", port=None):
-    auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
-    with open(auth_file, "w") as f:
-        f.write(dashify(code))
-        if port and port != DEFAULT_HOST_PORT:
-            f.write(" "+str(port))
-        f.write("\n")
-    os.chmod(auth_file, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+    text = dashify(code)
+    if port and port != DEFAULT_HOST_PORT:
+        text += " "+str(port)
+    auth_file = write_param_file(text+"\n", APP_AUTH_FILENAME, appdir=appdir, user=user, server=server)
+    if auth_file:
+        os.chmod(auth_file, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+    return auth_file
 
 def clear_auth_code(appdir=App_dir, user="", server=""):
     auth_file = get_auth_filename(appdir=appdir, user=user, server=server)
@@ -262,40 +285,31 @@ def clear_auth_code(appdir=App_dir, user="", server=""):
         pass
 
 def read_groups(user=""):
-    group_file = os.path.join(get_app_dir(user), APP_GROUPS_FILENAME)
-    groups = {}
+    groups = read_param_file(APP_GROUPS_FILENAME, appdir=get_app_dir(user))
+    if groups is None:
+        sys.exit("Error in reading group information from file")
+
     membership = {}
-    if os.path.exists(group_file):
-        with open(group_file) as f:
-            try:
-                groups = json.loads(f.read())
-                for group, members in groups.items():
-                    for member in members:
-                        membership[member] = group
-            except Exception as excp:
-                sys.exit("Error in reading group from %s: %s" % (group_file, excp))
+    for group, members in groups.items():
+        for member in members:
+            membership[member] = group
     return groups, membership
 
+def read_oauth(user=""):
+    oauth_creds = read_param_file(APP_OAUTH_FILENAME, appdir=get_app_dir(user))
+    if oauth_creds is None:
+        sys.exit("Error in reading OAuth info from file")
+    return oauth_creds
+
 def read_prefs(user=""):
-    prefs_file = os.path.join(get_app_dir(user), APP_PREFS_FILENAME)
-    prefs = {}
-    if os.path.exists(prefs_file):
-        with open(prefs_file) as f:
-            try:
-                prefs = json.loads(f.read())
-            except Exception as excp:
-                logging.error("Error in reading prefs from %s: %s" % (prefs_file, excp))
+    prefs = read_param_file(APP_PREFS_FILENAME, appdir=get_app_dir(user))
+    if prefs is None:
+        sys.exit("Error in reading preferences file")
     return prefs
 
 def write_prefs(prefs_dict, user=""):
-    prefs_file = os.path.join(get_app_dir(user), APP_PREFS_FILENAME)
-    try:
-        with open(prefs_file, "w") as f:
-            f.write(json.dumps(prefs_dict)+"\n")
-        return prefs_file, "Saved preferences"
-    except Exception as excp:
-        logging.error("Error in writing prefs to %s: %s", prefs_file, excp)
-        return prefs_file, "ERROR in saving prefs"
+    prefs_file = write_param_file(prefs_dict, APP_PREFS_FILENAME, appdir=get_app_dir(user))
+    return prefs_file, "Saved preferences" if prefs_file else "ERROR in saving prefs"
 
 def compute_hmac(key, message, hex_digits=HEX_DIGITS):
     return hmac.new(to_bytes(key), to_bytes(message), digestmod=hashlib.sha256).hexdigest()[:hex_digits]
@@ -1013,7 +1027,7 @@ def open_browser(url, browser=""):
     return command_output(command_args, timeout=5)
 
 CHUNK_BYTES = 4096
-def receive_data(stderr=False, verbose=False):
+def receive_data(stderr=False, binary=False, verbose=False):
     """Receive from client via stdin, returning (errmsg, headers, content)"""
     saved_stdin = sys.stdin.fileno()
     saved_settings = termios.tcgetattr(saved_stdin)
@@ -1071,7 +1085,7 @@ def receive_data(stderr=False, verbose=False):
         count = expect_length
         assert not (count % 4)
         prefix = ""
-        content_list = []
+        content_list = bytearray()
         digest_buf = hashlib.md5()
         while count > 0:
             chunk = sys.stdin.read(min(count, CHUNK_BYTES))
@@ -1085,13 +1099,17 @@ def receive_data(stderr=False, verbose=False):
                 line = line[:-offset]
             if verbose and not stderr:
                 print("line(%d,%s)=%s" % (len(chunk), count, line,), file=sys.stderr)
-            digest_buf.update(line)
-            content_list.append(base64.b64decode(line))
+            line_bytes = line.encode()
+            digest_buf.update(line_bytes)
+            content_list.extend(base64.b64decode(line_bytes))
         assert not prefix
         if digest_buf.hexdigest() != md5_digest:
             return ("MD5 digest mismatch", headers, None)
         else:
-            return ("", headers, "".join(content_list))
+            content = bytes(content_list)
+            if not binary and not isinstance(content, str):
+                content = content.decode()
+            return ("", headers, content)
     except Exception as excp:
         if verbose and not stderr:
             print("receive_data: ERROR %s" % excp, file=sys.stderr)

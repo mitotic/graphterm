@@ -861,6 +861,7 @@ function GTUpdateController() {
 	window.name = gParams.host+"/"+gParams.term;
     else
 	window.name = "";
+
     GTMenuUpdateToggle("share_control", gParams.controller);
     $("#terminal").toggleClass("gterm-controller", gParams.controller);
     $("#terminal").toggleClass("gterm-superuser", gParams.super_user);
@@ -907,7 +908,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
 	    EndFullpage();
     }
     // Use query authentication
-    markup = markup.replace(/qauth=%\(qauth\)/g, "qauth="+getAuth());
+    markup = markup.replace(/qauth=%\[qauth\]/g, "qauth="+getAuth());
     if (row_opts.iframe) {
 	markup = gFrameDispatcher.createFrame(row_opts, markup, row_opts.url, "gterm-iframe"+pagelet_id);
     }
@@ -3744,7 +3745,7 @@ function ReconnectHost() {
 function StealSession() {
     if (!window.confirm("Steal control of "+gParams.host+"/"+gParams.term+"?"))
 	return;
-    var steal_url = window.location.protocol+"/"+"/_steal/"+window.location.host+"/"+gParams.host+"/"+gParams.term+'/?qauth='+getAuth()+'&websocket='+gParams.websocket_id; // Split the double slash to avoid confusing the JS minifier
+    var steal_url = window.location.protocol+"/"+"/_steal/"+window.location.host+"/"+gParams.host+"/"+gParams.term+'/?qauth='+getAuth(); // Split the double slash to avoid confusing the JS minifier
     console.log("StealSession: ", steal_url);
     window.location = steal_url;
 }

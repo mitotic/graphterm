@@ -337,6 +337,20 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         return state_value
 
     @classmethod
+    def get_request_state(cls, request):
+        if COOKIE_NAME not in request.cookies:
+            return None
+        cookie_value = request.cookies[COOKIE_NAME].value
+        state_value = cls.get_state(cookie_value)
+        if not state_value:
+            return None
+        if state_value["auth_type"] == cls._auth_type:
+            return state_value
+        # Note: webcast auth will always be dropped
+        cls.drop_state(cookie_value)
+        return None
+
+    @classmethod
     def drop_state(cls, state_id):
         cls._cookie_states.pop(state_id, None)
 
@@ -379,18 +393,14 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         code = ""
         auth_email = ""
         new_user_email = ""
+        auth_message = "Please authenticate"
         try:
-            auth_message = "Please authenticate"
-            if COOKIE_NAME in self.request.cookies:
-                state_value = self.get_state(self.request.cookies[COOKIE_NAME].value)
-                if state_value:
-                    if state_value["auth_type"] == self._auth_type:
-                        self.authorized = state_value
-                        user = self.authorized["user"]
-                    else:
-                        # Note: webcast auth will always be dropped
-                        self.drop_state(self.request.cookies[COOKIE_NAME].value)
-                        auth_message = "Authentication expired"
+            state_value = self.get_request_state(self.request)
+            if state_value:
+                self.authorized = state_value
+                user = self.authorized["user"]
+            else:
+                auth_message = "Authentication expired"
 
             query_data = {}
             if self.request_query:
@@ -428,7 +438,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
                     if user and (user == gterm.LOCAL_HOST or not gtermhost.USER_RE.match(user)):
                         # Username "local" is not allowed to prevent localhost access
-                        self.write_json([["abort", "Invalid username '%s'; must start with letter and include only letters/digits/hyphen" % user]])
+                        self.write_json([["abort", "Invalid username '%s'; must start with letter and include only letters/digits" % user]])
                         self.close()
                         return
 
@@ -464,7 +474,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             else:
                                 auth_message = "<h3>GraphTerm Login</h3><p>Enter authentication code (found in %s), or use 'gterm' command." % gterm.get_auth_filename(server=Server_settings["external_host"])
                         else:
-                            auth_message = "<h3>GraphTerm Login</h3><p>Please specify username (letters/digits/hyphens, starting with letter)."
+                            auth_message = "<h3>GraphTerm Login</h3><p>Please specify username (letters/digits, starting with letter)."
                             if Server_settings["user_setup"] == "auto" and os.path.exists(Auto_add_file):
                                 auth_message += "<br><em>If new user, enter your group code to create account.</em>"
                     elif self._auth_type == self.NAME_AUTH:
@@ -503,7 +513,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             if user in self._auth_users:
                                 validated = (code == gterm.compute_hmac(self._auth_users[user], cauth))
                         else:
-                            group_secret = gterm.user_hmac(self._auth_code, "", key_version="grp")
+                            group_secret = Server_settings["group_secret"]
+                            assert group_secret, "Null group secret"
                             key_version = "1"
 
                             if gterm.is_user(user):
@@ -560,6 +571,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         if need_code:
                             need_code = code or need_code
 
+                    banner = gterm.read_param_file(gterm.APP_BANNER_FILENAME) or ""
+                    if banner:
+                        auth_message = banner + "<p>" + auth_message
                     auth_params = {"need_user": need_user, "need_code": need_code,
                                    "hmac_auth": self._auth_type != self.LOGIN_AUTH,
                                    "goog_auth": self._auth_type == self.MULTI_AUTH and not Server_settings["nogoog_auth"],
@@ -711,14 +725,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             path = host + "/" + term_name
 
             if self.authorized["state_id"] in self._watch_dict[path].values():
-                ##if not option:
-                ##    self.write_json([["abort", "Already connected to this terminal from different window"]])
-                ##    self.close()
-                ##    return
                 if not option and self.is_creator(user, path) and self._control_set.get(path):
-                    self.write_json([["abort", "Use 'steal' option to control this terminal"]])
-                    self.close()
-                    return
+                    # Prepare to get sole control
+                    self.broadcast(path, ["update_menu", "share_control", False], controller=True)
+                    self._control_set[path] = set()
+
                 if self._watch_dict[path].values().count(self.authorized["state_id"]) > MAX_RECURSION:
                     self.write_json([["body", "Max recursion level exceeded!"]])
                     self.close()
@@ -803,7 +814,6 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             elif not self._control_set.get(path) and option != "watch" and (is_owner or self._auth_type == self.SINGLE_AUTH or (is_super_user and self.authorized["state_id"] == terminal_params["state_id"])):
                 controller = True
                 self._control_set[path] = set([self.websocket_id])
-                
 
             self.remote_path = path
             self._all_websockets[self.websocket_id] = self
@@ -1452,7 +1462,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                             term_label = lpath if action_params["long"] else tpath
                                         else:
                                             qauth = get_qauth(terminal_params["state_id"])
-                                            term_label = '<a href="/'+tpath+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(lpath).replace(" ", "&nbsp;")+'</a><br>'
+                                            term_label = '<a href="/_watch/'+tpath+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(lpath).replace(" ", "&nbsp;")+'</a><br>'
                                         term_list.append(tpath)
                                         label_list.append(term_label)
                                     term_list.sort()
@@ -1758,12 +1768,10 @@ def run_server(options, args):
             qauth = self.get_argument("qauth", "")
             cauth = self.get_argument("cauth", "")
             if not cauth and qauth:
-                ws_id = self.get_argument("websocket", "")
-                if ws_id:
-                    ws = GTSocket.get_websocket(ws_id)
-                    if ws and qauth == get_qauth(ws.authorized["state_id"]):
-                        # Validated form fields
-                        cauth = GTSocket.get_connect_cookie()
+                state_value = GTSocket.get_request_state(self.request)
+                if state_value and qauth == get_qauth(state_value["state_id"]):
+                    # Validated form fields; get temporary connect cookie
+                    cauth = GTSocket.get_connect_cookie()
             if cauth:
                 new_path += "?" + urllib.urlencode({"cauth": cauth})
                 if qauth:
@@ -1992,6 +2000,7 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
 
     current_user = getpass.getuser()
     auth_file = ""
+    new_auth = False
     if options.auth_type in ("none", "name"):
         # No auth code
         auth_code = ""
@@ -2006,6 +2015,7 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
                 sys.exit(1)
         else:
             # Generate and write random auth code
+            new_auth = True
             auth_code = GTSocket.get_auth_code()
             try:
                 gterm.write_auth_code(auth_code, server=external_host, port=external_port)
@@ -2054,15 +2064,12 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
                 ]
 
     settings = {"log_function": lambda x:None}
+
     oauth_file = os.path.join(gterm.App_dir, "gterm_oauth.json")
-    if os.path.isfile(oauth_file):
-        try:
-            with open(oauth_file) as f:
-                oauth_creds = json.loads(f.read())
-                settings["google_oauth"] = oauth_creds["google_oauth"]
-            print >> sys.stderr, "Read Google OAuth info from", oauth_file
-        except Exception, excp:
-            print >> sys.stderr, "Error in reading Google OAuth info from %s: %s" % (oauth_file, excp)
+    oauth_creds = gterm.read_oauth()
+    if oauth_creds and "google_oauth" in oauth_creds:
+        settings["google_oauth"] = oauth_creds["google_oauth"]
+        print >> sys.stderr, "***** Read Google OAuth info from ~/.graphterm/"+gterm.APP_OAUTH_FILENAME
 
     application = tornado.web.Application(handlers, **settings)
 
@@ -2152,22 +2159,32 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
 
     Http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_options)
     Http_server.listen(http_port, address=http_host)
-    if auth_file:
-        print >> sys.stderr, "\nAuthentication code in file " + auth_file + "\nDelete authentication file and restart for new code."
-        if options.auth_type == "multiuser":
-            gcode = gterm.dashify(str(gterm.user_hmac(auth_code, "", key_version="grp")))
-            print >> sys.stderr, "Group Code: "+gcode
-            gcode_file = os.path.join(gterm.App_dir, gterm.APP_GROUPCODE_FILENAME)
-            try:
-                with open(gcode_file, "w") as f:
-                    f.write(gcode+"\n")
-                print >> sys.stderr, "Group Code also saved to file "+gcode_file
-            except Exception, excp:
-                pass
-        elif options.auth_type == "login":
-            print >> sys.stderr, "\nLogin authentication required"
-    else:
+
+    group_secret = None
+    if not auth_file:
         print >> sys.stderr, "\n**WARNING** No authentication required"
+    else:
+        print >> sys.stderr, "\nAuthentication code in file " + auth_file + "\nDelete authentication file and restart for new code."
+        if options.auth_type == "login":
+            print >> sys.stderr, "\nLogin authentication required"
+        elif options.auth_type == "multiuser":
+            group_code = gterm.read_param_file(gterm.APP_GROUPCODE_FILENAME)
+            if new_auth or not group_code:
+                group_code = gterm.dashify(str(gterm.user_hmac(auth_code, "", key_version="grp")))
+                gfile = gterm.write_param_file(group_code+"\n", gterm.APP_GROUPCODE_FILENAME)
+                if gfile:
+                    print >> sys.stderr, "Group code saved to file", gfile
+                else:
+                    sys.exit("Error in saving group code file")
+
+            print >> sys.stderr, "Group Code: "+group_code
+            group_secret = gterm.undashify(group_code)
+            if len(group_secret) > gterm.SIGN_HEXDIGITS:
+                sys.exit("Group code too long "+str(len(group_secret)))
+            elif len(group_secret) < 8:
+                sys.exit("Group code too short")
+
+    Server_settings["group_secret"] =  group_secret # Dashes/spaces are stripped
 
     if options.auth_type == "multiuser" and options.user_setup:
         action = "activate" if options.no_reset or options.daemon == "activate" else "restart"

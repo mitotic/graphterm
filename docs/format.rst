@@ -45,7 +45,6 @@ Code cells are saved as fenced code blocks in the notebook file, e.g.::
 Output text resulting from running the code is saved in fenced code
 blocks of type ``output``::
 
-
     ```output
     Hello
     ```
@@ -59,4 +58,55 @@ Multiple ``output`` text blocks and output figures, separated by blank
 lines, are considered as representing the cumulative output from
 executing the previous code block. To create a progressively fillable
 notebook, ``output`` blocks and figures are converted to ``expect``
-blocks and figures.
+blocks and figures. Here's an example notebook file::
+
+
+    # A sample GraphTerm notebook file in Markdown format
+
+    ---
+
+    ## Part I
+
+    Write a function ``abs_add`` that returns the sum of the absolute values of two numbers. Test the function.
+
+
+    ```python
+    # Part 1: Define the function abs_add
+    def abs_add(a, b):
+        return abs(a) + abs(b)
+
+    # Testing function abs_add
+    print abs_add(3, -4)
+    ```
+
+    ```output
+
+    7
+    ```
+
+    ---
+
+    ## Part II
+
+    Write some code to create a simple line plot with a title using the ``pylab`` module.
+
+
+    ```python
+    x = [1, 2, 3, 4]
+    y = [1, 4, 9, 16]
+    title = "Plot of y = x-squared"
+
+    import pylab
+    # Part 2: Plotting code
+    pylab.plot(x, y)
+    pylab.title(title)
+
+    ```
+
+    ```output
+
+    ```
+
+    ![image][output-fig1-Progressive-demo.py]
+
+    [output-fig1-Progressive-demo.py]: data:image/png;base64,iVBORw0KGgo...

@@ -100,85 +100,19 @@ while True:
                     }
     gterm.wrap_write("", headers=html_headers, stderr=not options.stdout)
 
-    Stdin_fd = sys.stdin.fileno()
-    Saved_settings = termios.tcgetattr(Stdin_fd)
-    Stdout_data = None
-
     try:
-        # Raw tty input without echo
-        tty.setraw(Stdin_fd)
-        line = ""
-        header_line = ""
-        while True:
-            ch = sys.stdin.read(1)
-            if ch == "\x03" or ch == "\x04": # ^C/^D
-                gterm.write_blank(stderr=not options.stdout)
-                sys.exit(1)
-            if ch != "\n":
-                line += ch
-                continue
-            if line:
-                header_line = line
-                line = ""
-            else:
-                # Terminal null line
-                break
-
-        if options.verbose:
-            print("header=%s\n" % (header_line,), file=sys.stderr)
-
-        # Process headers
-        if not header_line:
+        errmsg, headers, content = gterm.receive_data(stderr=not options.stdout, binary=True, verbose=options.verbose)
+        if errmsg or "x_gterm_filepath" not in headers:
             gterm.write_blank(stderr=not options.stdout)
-            sys.exit(1)
-
-        headers = json.loads(header_line)
-
-        if "x_gterm_filepath" not in headers:
-            gterm.write_blank(stderr=not options.stdout)
-            sys.exit(1)
-
-        content_type = headers["content_type"]
-        if content_type.startswith("none/"):
-            gterm.write_blank(stderr=not options.stdout)
-            sys.exit(1)
-
+            sys.exit(errmsg or 1)
         filename = headers["x_gterm_filepath"]
-        expect_length = headers["x_gterm_length"]
-        if options.verbose:
-            print("file=%s, type=%s, expect_len=%s\n" % (filename, content_type, expect_length), file=sys.stderr)
-
-        if expect_length:
-            count = expect_length
-            assert not (count % 4)
-            prefix = ""
-            content_list = bytearray()
-            while count > 0:
-                chunk = sys.stdin.read(min(count, CHUNK_BYTES))
-                assert chunk
-                count = count - len(chunk)
-                line = prefix + chunk
-                prefix = ""
-                offset = len(line) % 4
-                if offset:
-                    prefix = line[-offset:]
-                    line = line[:-offset]
-                if options.verbose:
-                    print("line(%d,%s)=%s" % (len(chunk), count, line,), file=sys.stderr)
-                content_list.extend(base64.b64decode(line))
-            assert not prefix
-            content = bytes(content_list)
-        else:
-            b64_content = ""
-            content = ""
     except KeyboardInterrupt:
         sys.exit(1)
-    finally:
-        termios.tcsetattr(Stdin_fd, termios.TCSADRAIN, Saved_settings)
 
     gterm.write_blank(stderr=not options.stdout)
 
     if filepath:
+        Stdout_data = None
         if to_dir:
             tempath = os.path.join(filepath, filename)
         else:

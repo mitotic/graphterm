@@ -226,12 +226,12 @@ versions in the "cloud". )
    :figwidth: 85%
 .. 
 
- 7. Run the following command in the server graphterm window to display the group access code which should be entered by new users:
+ 7. Run the following command in the server graphterm window to
+    display the group access code which should be entered by new users:
 
     ``cat ~/.graphterm/gterm_gcode.txt``
 
-    Distribute this code and a printed copy of :doc:`virtual-lab` to
-    all lab users.
+    Distribute this code and a printed copy of :doc:`virtual-lab` to all lab users.
 
  8. If using AWS, run the following command on your local graphterm
     window to list, connect to, or kill your instances:
@@ -254,6 +254,11 @@ To restart the GraphTerm server, use the commands::
   gtermserver --daemon=stop
 
   gtermserver --daemon=start ... (arguments)
+
+
+To generate a new master access code, simply delete the file
+``~/.graphterm/@server_domain_name_gterm_auth.txt`` and restart the
+server. This will also make all user access codes obsolete.
 
 
 .. index:: Google authentication, GMail
@@ -330,6 +335,14 @@ http://pixeldust.wikidot.com/linode-setup%3adropbox
 
 Optional steps
 ===========================================================================
+
+ - If you wish, you may change the group access code to a more
+   user-friendly value (not exceeding 16 characters) in
+   ``~/.graphterm/gterm_gcode.txt`` and restart the server.
+
+ - You may enter an HTML banner message in the file
+   ``~/.graphterm/gterm_banner.html`` which will be displayed during
+   login.
 
  - You can use the command ``gls --download $GTERM_DIR/bin/gterm.py``
    to download the executable script ``gterm.py`` to your local
