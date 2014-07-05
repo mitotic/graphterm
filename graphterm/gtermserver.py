@@ -1462,6 +1462,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     errmsg = ""
                     content = ""
                     if not is_super_user:
+                        # Failsafe
                         errmsg = "User not authorized for administration\n"
                     else:
                         try: 

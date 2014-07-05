@@ -1194,7 +1194,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		window.location = "/";
 
             } else if (action == "alert") {
-		alert(command[1]);
+		GTPopAlert(command[1], !gParams.controller);
 
             } else if (action == "authenticate") {
 		if (getCookie("GRAPHTERM_AUTH"))
@@ -1385,10 +1385,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		var cmd_type = command[1];
 		var cmd_arg = command[2];
 		if (cmd_type == "alert") {
-		    alert(cmd_arg[0]);
+		    GTPopAlert(cmd_arg[0], !gParams.controller);
 
 		} else if (cmd_type == "errmsg") {
-		    GTPopAlert("ERROR: "+cmd_arg[0]);
+		    GTPopAlert("ERROR: "+cmd_arg[0], !gParams.controller);
 
 		} else if (cmd_type == "save_status") {
 		    if (gNotebook && cmd_arg[1]) {
@@ -1399,7 +1399,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    nb_label += " (no autosave)";
 			$("#menubar-notelabel").text(nb_label)
 		    }
-		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[2] || "saved"));
+		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[2] || "saved"), !gParams.controller);
 
  		} else if (cmd_type == "frame_msg") {
 		    try {
@@ -1429,6 +1429,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    console.log("ERROR in pagelet_json:", err, content);
 			}
 		    } else if (!response_type || response_type == "pagelet") {
+			// Pagelet
 			var widget_opacity = response_params.opacity || "1.0";
 			var widget_html = (content_type == "text/html") ? '<div id="session-widget" class="widget" style="opacity: '+widget_opacity+';">'+content+'</div>\n' : '<pre class="plaintext">'+content+'</pre>\n';
 
@@ -1453,7 +1454,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			classes += " " + response_params.classes;
 		    //console.log("graphterm_output: params: ", params);
 		    if (response_type == "error_message") {
-			GTPopAlert(content);
+			GTPopAlert(content, !gParams.controller);
 		    } else if (response_type == "clear_terminal") {
 			GTClearTerminal();
 		    } else if (response_type == "open_terminal") {
@@ -1626,7 +1627,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			if (nb_params.submit && nb_params.form && (nb_params.form == "shared" || nb_params.form == "assigned") )
 			    $("#terminal").addClass("gterm-notebook-submit");
 			if (cmd_arg[1])
-			    alert(cmd_arg[1]);
+			    GTPopAlert(cmd_arg[1], !gParams.controller);
 		    }
 
 		} else if (cmd_type == "note_close") {
@@ -1933,7 +1934,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 		GTStartEdit(editParams, content);
 
             } else if (action == "errmsg") {
-		GTPopAlert(command[1]);
+		GTPopAlert(command[1], !gParams.controller);
 
 	    } else {
 		console.log("GTWebSocket.onmessage: Invalid message type: "+action);
@@ -2814,13 +2815,15 @@ function gtermMenuClickHandler(event) {
     return false;
 }
 
-function GTPopAlert(text, is_html) {
+function GTPopAlert(text, auto_close, is_html) {
     if (!is_html) {
 	text = '<div class="gterm-alert gterm-prewrap">'+GTPreserveLinebreaks(GTEscape(text))+'</div>';
     }
     $("#gterm-alertarea-content").html(text);
 
     popupShow("#gterm-alertarea", null, null, "alert");
+    if (auto_close)
+	popupDelayClose();
 }
 
 function GTPasteSpecialBegin(event) {
@@ -3734,9 +3737,9 @@ function load(path) {
 function CheckUpdates() {
     $.getJSON(PYPI_JSON_URL, function(data) {
 	if (gParams.about_version == data.info.version) {
-	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').<p> There is  now a <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.', true);
+	    GTPopAlert('GraphTerm is up-to-date (version: '+gParams.about_version+').<p> There is  now a <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.', false, true);
 	} else {
-	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<br>See <a href="'+RELEASE_NOTES_URL+'" target="_blank">Release Notes</a> for details.<br> There is also a <em>new</em> <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.<p>Upgrade using <b>sudo pip install --upgrade graphterm</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', true);
+	    GTPopAlert('A new release of GraphTerm ('+data.info.version+') is available!<br>See <a href="'+RELEASE_NOTES_URL+'" target="_blank">Release Notes</a> for details.<br> There is also a <em>new</em> <a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> for GraphTerm.<p>Upgrade using <b>sudo pip install --upgrade graphterm</b><br> OR download from the <a href="'+PYPI_URL+'" target="_blank">Python Package Index</a>', false, true);
 	}
     });
     gWebSocket.write([["check_updates"]]);
@@ -3789,6 +3792,11 @@ function popupSetup() {
   $(".gterm-popupmask, .gterm-popupclose").bindclick(popupClose);
 }
 
+function popupDelayClose(msec) {
+    if (gPopupActive)
+      setTimeout(popupClose, msec || 3000);
+}
+
 function popupClose(confirm) {
   // Hide mask and popup window
   if (confirm && gPopupConfirmClose) {
@@ -3816,6 +3824,8 @@ function popupShow(elementSelector, popupCallback, popupConfirmClose, popupType,
   // Display element as modal popup window
   var maskSelector = "#gterm-popupmask";
 
+  if (gPopupActive)
+      popupClose();
   gPopupActive = true;
   gPopupCallback = popupCallback || null;
   gPopupConfirmClose = popupConfirmClose || null;
@@ -5177,7 +5187,7 @@ function GTermHelp() {
 '<p>\n&nbsp;&nbsp;<a href="/_static/docs/html/virtual-lab.html" target="_blank">Virtual computer lab</a>'+
 '<p>\n&nbsp;&nbsp;<a href="/_static/docs/html/troubleshooting.html" target="_blank">Troubleshooting</a>'+
 '<p>\n&nbsp;&nbsp;<a href="https://groups.google.com/group/graphterm" target="_blank">Mailing list</a> (<b>NEW</b>)',
-               true);
+               false, true);
 }
 
 function GTermLogoClick() {
@@ -5193,7 +5203,7 @@ function GTermLogoClick() {
 
 function GTermAbout() {
     if (gNotebook || gMobileBrowser)
-	GTPopAlert(GTAboutText(), true);
+	GTPopAlert(GTAboutText(), false, true);
     else
 	GTShowSplash(true, true, true);
 }

@@ -8,6 +8,8 @@ Example:
   gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET
 """
 
+from __future__ import absolute_import, print_function
+
 import csv
 import json
 import logging
@@ -41,7 +43,9 @@ function GTPageletJSON(pageletElem, feed) {
 <style>
 .gterm-pagelet-gfeeds-container ul {
    list-style: none;
+   background-color: rgba(255,255,255,0.8);
    color: red;
+   border-radius: 10px;
 }
 </style>
 <div class="gterm-pagelet-gfeeds-container">
@@ -89,6 +93,13 @@ while True:
         feed_html = '<b>%s</b>:%s' % (prefix, suffix)
     else:
         feed_html = line
-    gterm.wrap_write(json.dumps(feed_html), headers=Json_headers)
 
-gterm.write_blank()
+    try:
+        gterm.wrap_write(json.dumps(feed_html), headers=Json_headers)
+    except IOError:
+        break
+    
+try:
+    gterm.write_blank()
+except IOError:
+    pass

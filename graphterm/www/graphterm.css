@@ -804,7 +804,7 @@ span.gterm-iframedelete {
 
 /* Popup styles */
 .gterm-popupmask {
-    position: absolute;
+    position: fixed;
     z-index: 9000;
     top: 0;
     left: 0;
@@ -812,7 +812,7 @@ span.gterm-iframedelete {
 }
 
 .gterm-popup {
-    position: absolute;
+    position: fixed;
     width: 90%;
     z-index: 9900;
     padding: 20px;

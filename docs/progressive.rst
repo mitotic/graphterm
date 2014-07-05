@@ -186,6 +186,6 @@ terminal session, or copy it as ``Progressive-assign.py.gnb.md`` to
 create an assignment.
 
 There is also a fillable Bash notebook
-`$GTERM_DIR/notebooks/Bash-fill.sh.gnb.md <https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Bash-fill.py.gnb.md>`_, that you can open using
+`$GTERM_DIR/notebooks/Bash-fill.sh.gnb.md <https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Bash-fill.sh.gnb.md>`_, that you can open using
 the *notebook/open* menu option or by clicking on the output of the
 ``gls`` command.

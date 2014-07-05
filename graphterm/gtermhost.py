@@ -326,9 +326,9 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                     if self.lineterm:
                         response_id = cmd[0]
                         self.lineterm.reconnect(term_name, response_id)
-                        widget_pagelet = WidgetStream.get_widget_pagelet(lterm_cookie)
-                        if widget_pagelet:
-                            self.send_request_threadsafe("response", term_name, response_id, [["terminal", "graphterm_widget", widget_pagelet]])
+                        widget_pagelet_args = WidgetStream.get_pagelet_args(lterm_cookie)
+                        if widget_pagelet_args:
+                            self.send_request_threadsafe("response", term_name, response_id, [["terminal", "graphterm_widget", widget_pagelet_args]])
 
                 elif action == "set_email":
                     gterm.write_email(cmd[0])
@@ -650,8 +650,8 @@ else:
 
 class WidgetStream(object):
     _all_widgets = []
-    _term_pagelets = {}
     _chat_widgets = {}
+    _pagelet_widgets = {}
 
     startseq = "\x1b[?1155;"
     startdelim = "h"
@@ -663,6 +663,7 @@ class WidgetStream(object):
         self.packet_cookie = ""
         self.chat_cookie = ""
         self.widget_token = ""
+        self.last_pagelet_args = None
         self._all_widgets.append(self)
         self.stream.set_close_callback(self.on_close)
 
@@ -672,9 +673,18 @@ class WidgetStream(object):
         return cls._chat_widgets.get(lterm_cookie)
 
     @classmethod
-    def get_widget_pagelet(cls, lterm_cookie):
-        """Return widget pagelet associated with terminal"""
-        return cls._term_pagelets.get(lterm_cookie)
+    def get_pagelet_widget(cls, lterm_cookie):
+        """Return pagelet WidgetStream instance"""
+        return cls._pagelet_widgets.get(lterm_cookie)
+
+    @classmethod
+    def get_pagelet_args(cls, lterm_cookie):
+        """Return widget pagelet args associated with terminal"""
+        pwidget = cls._pagelet_widgets.get(lterm_cookie)
+        if pwidget:
+            return pwidget.last_pagelet_args
+        else:
+            return None
 
     @classmethod
     def shutdown_all(cls):
@@ -684,9 +694,19 @@ class WidgetStream(object):
     def on_close(self):
         try:
             if self.chat_cookie:
+                # Chat widget
                 self.set_chat_status(False)
                 self._chat_widgets.pop(self.chat_cookie, None)
                 self.chat_cookie = ""
+
+            if self.last_pagelet_args:
+                # Pagelet widget
+                headers = {"content_type": "text/html"}
+                headers["x_gterm_response"] = "pagelet"
+                headers["x_gterm_parameters"] = {}
+                # Send blank pagelet to erase widget
+                self.send_widget_content({"validated": True, "headers": headers}, "")
+                self._pagelet_widgets.pop(self.packet_cookie, None)
             self._all_widgets.remove(self)
             self.stream = None
         except Exception:
@@ -731,7 +751,6 @@ class WidgetStream(object):
         term_info = TerminalClient.all_cookies.get(self.packet_cookie)
         if not term_info:
             return self.shutdown()
-
         host_connection, term_name = term_info
 
         headers, content = lineterm.parse_headers(data)
@@ -764,11 +783,24 @@ class WidgetStream(object):
         else:
             params = {"validated": True, "headers": headers}
             args = [params, base64.b64encode(content) if content else ""]
-            if resp_type == "pagelet":
-                self._term_pagelets[self.packet_cookie] = args
-            host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_widget", args]])
+            if not resp_type or resp_type == "pagelet":
+                # HTML pagelet widget
+                prev_widget = self.get_pagelet_widget(self.packet_cookie)
+                if prev_widget and prev_widget is not self:
+                    # Only one active pagelet widget per terminal at a time
+                    prev_widget.shutdown()
+                self._pagelet_widgets[self.packet_cookie] = self
+                self.last_pagelet_args = args
+            self.send_widget_content(*args)
+
         self.packet_cookie = ""
         self.next_packet()
+
+    def send_widget_content(self, params, content):
+        term_info = TerminalClient.all_cookies.get(self.packet_cookie)
+        if term_info:
+            host_connection, term_name = term_info
+            host_connection.send_request_threadsafe("response", term_name, "", [["terminal", "graphterm_widget", [params, content] ]])
 
     def send_packet(self, data):
         if self.stream:

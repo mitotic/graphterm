@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Capture chat and send it to stdout
-
-# Usage: gchat 2> $GTERM_SOCKET 0<&2
+# Typical usage: gchat 2> $GTERM_SOCKET 0<&2 | gfeed > $GTERM_SOCKET &
 # The stderr is piped to the graphterm socket and stdin is also read from the socket.
 # stdout displays the captured chat, and can be piped to gfeed.
 
