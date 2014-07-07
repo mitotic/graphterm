@@ -75,7 +75,8 @@ REMOTE_FILE_COMMANDS = set(["gbrowse", "gcp"])
 COMMAND_DELIMITERS = "<>;"
 
 MD_BLOB_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\(("+gterm.BLOB_PREFIX+"[^\)]+)\)")
-MD_IMAGE_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
+MD_IMAGELINK_RE = re.compile(r"^\s*!\[([^\]]*)\]\s*\(([^\)\s]+)([^\)]*)\)")
+MD_IMAGEREF_RE =  re.compile(r"^\s*!\[([^\]]*)\]\s*\[([^\]]+)\]")
 MD_REF_RE = re.compile(r"^\s*\[([^\]]+)\]:\s*data:")
 
 MD_FENCE_RE = re.compile(r"^\s*{(\S+)(\s.*)?}")
@@ -633,7 +634,7 @@ class ScreenBuf(object):
     def add_blob(self, blob_id, content_type, content_b64):
         self.blobs[blob_id] = (str(content_type), content_b64)
 
-    def get_blob_uri(self, blob_id):
+    def get_blob_data_uri(self, blob_id):
         if blob_id not in self.blobs:
             return ""
         return "data:%s;base64,%s" % self.blobs[blob_id]
@@ -1287,6 +1288,7 @@ class Terminal(object):
             return False
         alt_save = params.get("alt_save", False)
         auto_save = params.get("auto_save", False)
+        bundle = params.get("bundle", "")
         format = params.get("format", "")
         submit = params.get("submit", "")
 
@@ -1346,17 +1348,76 @@ class Terminal(object):
 
         fprefix = os.path.splitext(fname)[0]
         save_form = fprefix.endswith("-fill") or fprefix.endswith("-share") or fprefix.endswith("-assign")
-        fig_suffix = safe_filename(fname)
+        fname_safe = safe_filename(fname)
         curly_fence = fname.endswith(".R") or self.note_params["command"] == "R"
+
+        Ref_blobs = OrderedDict()
+        Bundled_image_ref = {}
+        Embed_fig_count = [0]       # Pseudo-global variable
+
+        def embed_figure(data_uri, prefix, suffix, alt="image"):
+            Embed_fig_count[0] += 1
+            ref_id = "%s-fig%d-%s" % (prefix, Embed_fig_count[0], suffix)
+            Ref_blobs[ref_id] = data_uri
+            return "![%s][%s]" % (alt, ref_id)
+
+        def match_blob_image(line, prefix):
+            match = MD_BLOB_RE.match(line)
+            alt = match.group(1).strip() or "image"
+            ref_id = match.group(2).strip()
+            blob_id = gterm.get_blob_id(ref_id)
+            if blob_id:
+                data_uri = self.note_screen_buf.get_blob_data_uri(blob_id)
+                if data_uri:
+                    return embed_figure(data_uri, "embed", fname_safe)
+            return None
+
+        def match_image_link(line, prefix):
+            match = MD_IMAGELINK_RE.match(line)
+            alt = match.group(1).strip() or ""
+            link_url = match.group(2).strip()
+            ref_id = None
+            if link_url in Bundled_image_ref:
+                # Substitute previously encountered image URL with bundle reference
+                return Bundled_image_ref[link_url] # may be None for inaccessible URL
+            # Image URL not previously encountered
+            data_uri = None
+            basename, extension = os.path.splitext(link_url)
+            ftype = extension[1:].lower() if extension else ""
+            if ftype == "jpg":
+                ftype = "jpeg"
+            if ftype.lower() not in ("gif", "jpeg", "png"):
+                return None
+
+            # Image URL
+            if link_url.startswith("http:") or link_url.startswith("https://"):
+                # HTTP URL (not yet implemented)
+                pass
+            elif not link_url.startswith("/") and ".." not in link_url and "?" not in link_url and "#" not in link_url:
+                # Assume local file path
+                fpath = os.path.abspath(self.note_params["dir"]+"/"+link_url) if self.note_params["dir"] else link_url
+                try:
+                    with open(fpath) as f:
+                            data_uri = "data:image/%s;base64,%s" % (ftype, base64.b64encode(f.read()))
+                except Exception, excp:
+                    logging.error("save_notebook: Error in reading image content file %s", fpath)
+            if data_uri:
+                # Substitute image URL with bundle reference
+                norm_name = link_url.replace("/","-").replace(" ","_")
+                embed_line = embed_figure(data_uri, prefix, norm_name, alt=alt)
+                Bundled_image_ref[link_url] = embed_line
+                return embed_line
+            else:
+                Bundled_image_ref[link_url] = None  # Inaccessible inline URL
+                return None
+
         md_lines = []
         if format == "ipynb":
-            md_lines += [IPYNB_JSON_HEADER % dict(name=fig_suffix, version_major=3, version_minor=0)]
+            md_lines += [IPYNB_JSON_HEADER % dict(name=fname_safe, version_major=3, version_minor=0)]
         elif self.note_params["command"]:
             md_lines.append('<!--gterm notebook command=%s-->' % safe_filename(self.note_params["command"]))
-        ref_blobs = OrderedDict()
         prompt_num = 0
         in_prompt = 0
-        embed_fig_count = 0
         prev_markup = False
         for j, cell_index in enumerate(self.note_cells["cellIndices"]):
             cell = self.note_cells["cells"][cell_index]
@@ -1369,29 +1430,24 @@ class Terminal(object):
                     md_lines[-1] += ","
                 if markup_cell:
                     # Markup cell
-                    cell_blobs = OrderedDict()
                     cell_lines = []
                     for line in cell["cellInput"]:
+                        embed_line = None
                         if MD_BLOB_RE.match(line):
                             # Inline blob reference
-                            match = MD_BLOB_RE.match(line)
-                            alt = match.group(1).strip() or "image"
-                            ref_id = match.group(2).strip()
-                            blob_id = gterm.get_blob_id(ref_id)
-                            if blob_id:
-                                data_uri = self.note_screen_buf.get_blob_uri(blob_id)
-                                if data_uri:
-                                    fig_prefix = "embed"
-                                    embed_fig_count += 1
-                                    ref_id = "%s-fig%d-%s" % (fig_prefix, embed_fig_count, fig_suffix)
-                                    cell_blobs[ref_id] = data_uri
-                                    line = "![image][%s]" % ref_id
+                            embed_line = match_blob_image(line, "embed")
+                        elif bundle and MD_IMAGELINK_RE.match(line):
+                            # Bundle image links
+                            embed_line = match_image_link(line, "bundle")
+
+                        if embed_line:
+                            line = embed_line
                         cell_lines.append(line)
 
-                    if cell_blobs:
-                        # Data URIs for inline images
-                        for ref_id, cell_blob in cell_blobs.iteritems():
-                            cell_lines.append("[%s]: %s" % (ref_id, cell_blob))
+                    # Data URIs for inline images; dump and clear for each cell
+                    while Ref_blobs:
+                        ref_id, ref_blob = Ref_blobs.popitem(last=False)
+                        cell_lines.append("[%s]: %s" % (ref_id, ref_blob))
 
                     md_lines += [IPYNB_JSON_MARKDOWN % dict(source=nb_json(cell_lines, ipy_raw))]
                 else:
@@ -1407,19 +1463,16 @@ class Terminal(object):
                 if markup_cell:
                     # Markup cell
                     for line in cell["cellInput"]:
+                        embed_line = None
                         if MD_BLOB_RE.match(line):
                             # Inline blob
-                            match = MD_BLOB_RE.match(line)
-                            alt = match.group(1).strip() or "image"
-                            ref_id = match.group(2).strip()
-                            blob_id = gterm.get_blob_id(ref_id)
-                            if blob_id:
-                                data_uri = self.note_screen_buf.get_blob_uri(blob_id)
-                                if data_uri:
-                                    fig_prefix = "markup"
-                                    ref_id = "%s-fig%d-%s" % (fig_prefix, len(ref_blobs)+1, fig_suffix)
-                                    ref_blobs[ref_id] = data_uri
-                                    line = "![image][%s]" % ref_id
+                            embed_line = match_blob_image(line, "markup")
+                        elif bundle and MD_IMAGELINK_RE.match(line):
+                            # Bundle image links
+                            embed_line = match_image_link(line, "bundle")
+
+                        if embed_line:
+                            line = embed_line
                         md_lines.append(line)
                 else:
                     # Code cell
@@ -1456,7 +1509,7 @@ class Terminal(object):
                                 md_lines += ["```output"] + out_lines + ["```"] + [""]
                             cell_out = True
                             out_lines = []
-                        data_uri = self.note_screen_buf.get_blob_uri(blob_id)
+                        data_uri = self.note_screen_buf.get_blob_data_uri(blob_id)
                         if data_uri:
                             if format == "ipynb":
                                 if cell_out:
@@ -1467,9 +1520,7 @@ class Terminal(object):
                                 cell_out = True
                             else:
                                 fig_prefix = "expect" if save_form else "output"
-                                ref_id = "%s-fig%d-%s" % (fig_prefix, len(ref_blobs)+1, fig_suffix)
-                                ref_blobs[ref_id] = data_uri
-                                md_lines.append("![image][%s]" % ref_id)
+                                md_lines.append( embed_figure(data_uri, fig_prefix, fname_safe) )
                                 md_lines.append ("")
                 if out_lines:
                     if format == "ipynb":
@@ -1494,9 +1545,10 @@ class Terminal(object):
 
             prev_markup = markup_cell
 
-        if ref_blobs:
-            for ref_id, ref_blob in ref_blobs.iteritems():
-                md_lines.append("[%s]: %s" % (ref_id, ref_blob))
+        # Dump references
+        while Ref_blobs:
+            ref_id, ref_blob = Ref_blobs.popitem(last=False)
+            md_lines.append("[%s]: %s" % (ref_id, ref_blob))
 
         if format == "ipynb":
             md_lines += [IPYNB_JSON_FOOTER]
@@ -1641,9 +1693,9 @@ class Terminal(object):
                         # Within code block
                         code_lines.append(line)
 
-                elif MD_IMAGE_RE.match(line):
-                    # Inline image
-                    match = MD_IMAGE_RE.match(line)
+                elif MD_IMAGEREF_RE.match(line):
+                    # Image reference
+                    match = MD_IMAGEREF_RE.match(line)
                     alt = match.group(1).strip() or "image"
                     ref_id = match.group(2).strip()
                     blob_id = blob_ids.get(ref_id, "") or str(uuid.uuid4())

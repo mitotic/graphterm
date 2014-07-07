@@ -59,9 +59,10 @@ var DEBUG_LOG = function (str) {console.log(str)};
 var OSH_ECHO = true;
 
 // Special escape sequences for clickable commands (gls, ec2list)
-CMD_ARG = "%[arg]"           // Argument for command
-CMD_NB = "%[notebook]"       // Notebook activation (optionally followed by prompts)
-CMD_ARG_REP = /%\[arg\]/g;
+var CMD_ARG = "%[arg]"           // Argument for command
+var CMD_NB = "%[notebook]"       // Notebook activation (optionally followed by prompts)
+var CMD_ARG_REP = /%\[arg\]/g;
+var MD_IMAGELINK_RE = /^\s*!\[([^\]]*)\]\s*\(([^\)\s]+)([^\)]*)\)/;
 
 var ELLIPSIS = "...";
 var HIDDEN_STR = "##Hidden";
@@ -248,8 +249,33 @@ function md2html(mdText, safe, firstLine) {
     var new_lines = [];
     for (var j=0; j<lines.length; j++) {
 	// Strip out lines with !python pygments directive
-	if (!lines[j].match(/^\s*!python\s*$/))
-	    new_lines.push(lines[j]);
+	if (!lines[j].match(/^\s*!python\s*$/)) {
+	    var mod_line = lines[j];
+	    var matched = MD_IMAGELINK_RE.exec(mod_line);
+	    if (matched) {
+		try {
+		    var link_url = matched[2];
+		    if (gNotebook && gNotebook.note_params.dir && link_url &&
+			!_.str.startsWith(link_url, "http:") &&
+			!_.str.startsWith(link_url, "https:") &&
+			!_.str.startsWith(link_url, "/") &&
+			(link_url.indexOf("..") < 0) &&
+			(link_url.indexOf("?") < 0) &&
+			(link_url.indexOf("#") < 0) &&
+			(link_url.indexOf(".") > 0)) {
+			// Assume local file path
+			var comps = link_url.split(".");
+			var extn = comps[comps.length-1].toLowerCase();
+			if (extn == "gif" || extn == "jpeg" || extn == "jpg" || extn == "png") {
+			    // Image file
+			    var file_url = GTGetLocalFileURL(link_url, gNotebook.note_params.dir, false);
+			    mod_line = mod_line.replace(link_url, file_url);
+			}
+		    }
+		} catch(ex) {}
+	    }
+	    new_lines.push(mod_line);
+	}
     }
     var html = converter.makeHtml(new_lines.join("\n")+"\n");
     if (html.substr(0,3) == "<p>" && html.substr(html.length-4) == "</p>") {
@@ -1007,13 +1033,24 @@ function GTBufferScript(content) {
     }
 }
 
-function GTGetLocalFile(filepath, current_dir, callback) {
-    if (!filepath)
-	return;
-    if (filepath.charAt(0) != "/")
+function GTGetLocalFileURL(filepath, current_dir, allow_absolute) {
+    if (!filepath || filepath.indexOf("..") >= 0)  // No access to parent directory
+	return "";
+    if (filepath.charAt(0) == "/") {
+	if (!allow_absolute)
+	    return "";
+    } else {
 	filepath = current_dir + "/" + filepath;
-    var url =  window.location.protocol+"/"+"/"+window.location.host + FILE_PREFIX + "local" + filepath;
+    }
+    var url=  window.location.protocol+"/"+"/"+window.location.host + FILE_PREFIX + "local" + filepath;
     url += "?hmac="+compute_hmac(getCookie("GRAPHTERM_HOST_LOCAL"), filepath);
+    return url;
+}
+
+function GTGetLocalFile(filepath, current_dir, callback) {
+    var url = GTGetLocalFileURL(filepath, current_dir, true);
+    if (!url)
+	return;
     $.get(url, function(data, textStatus, jqXHR) {
 	           callback(""+data) })
         .error(function(jqXHR, textStatus, errorThrown) {
@@ -1399,7 +1436,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    nb_label += " (no autosave)";
 			$("#menubar-notelabel").text(nb_label)
 		    }
-		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[2] || "saved"), !gParams.controller);
+		    GTPopAlert("File "+cmd_arg[0]+": "+(cmd_arg[2] || "saved"), true);
 
  		} else if (cmd_type == "frame_msg") {
 		    try {
@@ -3636,6 +3673,8 @@ function GTTerminalInput(chr, type_ahead) {
 	    // Close notebook
 	    if (window.confirm("Exit notebook mode without saving and display output in terminal mode?"))
 		GTCloseNotebook();
+	    else if (gNotebook.slide_mode)
+		gNotebook.handleCommand("page_slide", !gNotebook.slide_mode)
 	    return false;
 	}
     }
@@ -4399,10 +4438,29 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
     } else if (command == "quit_discard") {
 	if (window.confirm("Exit notebook mode and discard all data?"))
 	    GTCloseNotebook(true);
-    } else if (command == "save") {
-	var filepath = $.trim(window.prompt("Save as: ", this.note_params.file));
+    } else if (_.str.startsWith(command, "save_")) {
+	var filepath = this.note_params.file;
+	if (command == "save_ipynb" && _.str.endsWith(filepath, ".py.gnb.md"))
+	    filepath = filepath.replace(".py.gnb.md", ".ipynb");
+	if ((command == "save_markdown" || command == "save_fillable") && _.str.endsWith(filepath, ".ipynb"))
+	    filepath = filepath.replace(".ipynb", ".py.gnb.md");
+	if (command == "save_fillable" && _.str.endsWith(filepath, ".gnb.md")) {
+	    filepath = filepath.replace(".gnb.md", "");
+	    var comps = filepath.split(".");
+	    if (comps.length > 1) {
+		comps = comps.slice(0,comps.length-2).concat([comps[comps.length-2]+"-fill", comps[comps.length-1], "gnb", "md"]);
+		filepath = comps.join(".");
+	    } else {
+		filepath = filepath + "-fill.gnb.md";
+	    } 
+	}
+	var save_params = {popstatus: "alert"};
+	if (command == "save_bundle")
+	    save_params["bundle"] = true;
+	if (command == "save_rename")
+	    filepath = $.trim(window.prompt("Save as: ", filepath));
 	if (filepath) {
-	    this.saveNotebook(filepath, {popstatus: "alert"}); 
+	    this.saveNotebook(filepath, save_params); 
 	}
     } else if (command == "submit") {
 	if (window.confirm("Submit notebook?")) {

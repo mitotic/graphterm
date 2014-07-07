@@ -107,6 +107,27 @@ body.ipadscreen  {
     font-size: 14px;
 }
 
+body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notecell-text,
+ body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notecell-scroll,
+ body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown,
+ body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notecell-screen pre {
+    font-size: 18px;
+}
+
+body.gterm-fsize-small .pagelet-notebook .gterm-notecell-container .gterm-notecell-text,
+ body.gterm-fsize-small .pagelet-notebook .gterm-notecell-container .gterm-notecell-scroll,
+ body.gterm-fsize-small .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown,
+ body.gterm-fsize-small .pagelet-notebook .gterm-notecell-container .gterm-notecell-screen pre {
+    font-size: 12px;
+}
+
+body.gterm-fsize-xsmall .pagelet-notebook .gterm-notecell-container .gterm-notecell-text,
+ body.gterm-fsize-xsmall .pagelet-notebook .gterm-notecell-container .gterm-notecell-scroll,
+ body.gterm-fsize-xsmall .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown,
+ body.gterm-fsize-xsmall .pagelet-notebook .gterm-notecell-container .gterm-notecell-screen pre {
+    font-size: 11px;
+}
+
 .pagelet-notebook {
     margin-left: 2.5em;
 }
