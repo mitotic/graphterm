@@ -3,6 +3,8 @@
 
 """
 gnbserver: Run PUBLIC ipython server (with password)
+
+To force local server, use "gnbserver -c '' "
 """
 
 from __future__ import absolute_import, print_function
@@ -45,46 +47,76 @@ def main():
     parser = OptionParser(usage=usage)
     parser.add_option("-c", "--certfile", dest="certfile", default="/var/graphterm/localhost.pem",
                   help="Path to SSL certificate file (default: /var/graphterm/localhost.pem)")
+    parser.add_option("-p", "--port", dest="port", default=0, type="int",
+                  help="Listen on port number")
+    parser.add_option("", "--pylab", dest="pylab", default=False,
+                  action="store_true", help="Import pylab")
     parser.add_option("-s", "--server", dest="server", default="*",
                   help="External server name/IP address to listen on (default: '*')")
 
     (options, args) = parser.parse_args()
+    if options.port >= gterm.NB_BASE_PORT:
+        sys.exit("Port value %d may conflict with pre-assigned public ports >= %d" % (options.port, gterm.NB_BASE_PORT))
 
-    uid = os.getuid()
-    user = pwd.getpwuid(uid).pw_name
-    auth_server = gterm.Server if options.server == "*" else options.server
+    public = options.certfile and os.path.exists(options.certfile)
 
-    certline = ""
-    if options.certfile:
-        if not os.path.exists(options.certfile):
-            sys.exit("ERROR: SSL cert file "+options.certfile+" not found!")
+    cmd_line = "ipython notebook"
+    if not public:
+        nb_port = options.port if options.port else 8888
+        cmd_line += " --port=%s --port-retries=0" % nb_port
+        if options.certfile:
+            print("Certificate file", options.certfile, "not found!", file=sys.stderr)
+        nb_url = "http://localhost:%s" % nb_port
+        print("Running ipython notebook server", nb_url, file=sys.stderr)
+    else:
         certline = "c.NotebookApp.certfile = '%s'" % options.certfile
+        uid = os.getuid()
+        user = pwd.getpwuid(uid).pw_name
+        auth_server = gterm.Server if options.server == "*" else options.server
 
-    auth_file = gterm.get_auth_filename(user=user, server=auth_server)
-    auth_code, port = gterm.read_auth_code(user=user, server=auth_server)
-    passwd = IPython.lib.security.passwd(gterm.dashify(auth_code))
+        nb_port = options.port if options.port else uid+gterm.NB_BASE_PORT
 
-    profile_name = "gipynbserver"
-    port = uid + gterm.NB_BASE_PORT
+        auth_file = gterm.get_auth_filename(user=user, server=auth_server)
+        auth_code, auth_port = gterm.read_auth_code(user=user, server=auth_server)
+        passwd = IPython.lib.security.passwd(gterm.dashify(auth_code))
 
-    profile_dir = os.path.expanduser("~/.ipython/profile_"+profile_name)
-    if not os.path.exists(profile_dir):
-        cmd_args = ["ipython", "profile", "create", profile_name]
-        std_out, std_err = gterm.command_output(cmd_args, timeout=3)
-        print(std_out)
-        print(std_err)
+        profile_name = "gipynbserver"
+        cmd_line += " --profile="+profile_name
+        profile_dir = os.path.expanduser("~/.ipython/profile_"+profile_name)
         if not os.path.exists(profile_dir):
-            sys.exit("Failed to create "+profile_dir)
+            cmd_args = ["ipython", "profile", "create", profile_name]
+            std_out, std_err = gterm.command_output(cmd_args, timeout=3)
+            print(std_out)
+            print(std_err)
+            if not os.path.exists(profile_dir):
+                sys.exit("Failed to create "+profile_dir)
 
-    profile_nb_file = os.path.join(profile_dir, "ipython_notebook_config.py")
-    with open(profile_nb_file, "w") as f:
-        f.write(NB_PROFILE % (certline, passwd, port))
+        profile_nb_file = os.path.join(profile_dir, "ipython_notebook_config.py")
+        with open(profile_nb_file, "w") as f:
+            f.write(NB_PROFILE % (certline, passwd, nb_port))
 
-    print("Running PUBLIC ipython notebook server on port", port, file=sys.stderr)
-    print("Password for user", user, "in", auth_file, file=sys.stderr)
+        url_proto, sep, tail = gterm.URL.partition(":")
+        url_phost, sep, tail = tail.partition(":")
+        nb_url = "%s:%s:%s" % (url_proto, url_phost, nb_port)
+
+        print("Running PUBLIC ipython notebook server", nb_url, file=sys.stderr)
+        print("Password for user", user, "in", auth_file, file=sys.stderr)
+
+    ipynb_parfile = gterm.get_param_filepath(gterm.APP_IPYNB_FILENAME)
+    try:
+        with open(ipynb_parfile, "w") as f:
+
+            f.write(nb_url+"#"+os.getcwd()+"\n")
+        print("  Server parameters saved to", ipynb_parfile, file=sys.stderr)
+    except Exception as excp:
+        sys.exit("ERROR: Unable to write server parameters to %s: %s" % (ipynb_parfile, excp))
+
+    cmd_line += " --no-browser"
+    if options.pylab:
+        cmd_line += " --pylab inline"
     print("", file=sys.stderr)
-
-    status = os.system("ipython notebook --profile="+profile_name)
+    print(cmd_line, file=sys.stderr)
+    status = os.system(cmd_line)
 
 if __name__ == "__main__":
     main()

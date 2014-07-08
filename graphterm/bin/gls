@@ -85,7 +85,11 @@ def file2html(filepath, filename, filemode=0):
             if ext != ".ipynb":
                 prefix, ext = os.path.splitext(prefix)
             if ext == ".ipynb":
-                filecmd = NB2CMD["ipynb"]
+                ipynb_parfile = gterm.get_param_filepath(gterm.APP_IPYNB_FILENAME)
+                if os.path.isfile(ipynb_parfile):
+                    filecmd = "gopen "
+                else:
+                    filecmd = NB2CMD["ipynb"]
                 filetype = "ipynb"
         elif ext in (".gnb", ".md") or (ext == ".txt" and prefix.endswith(".gnb")):
             if ext != ".gnb":

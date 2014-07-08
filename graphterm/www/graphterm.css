@@ -53,6 +53,11 @@ body.gterm-fsize-large pre,
 body.gterm-fsize-large .gterm-prewrap {
     font-size: 18px;
 }
+body.gterm-fsize-xlarge,
+body.gterm-fsize-xlarge pre,
+body.gterm-fsize-xlarge .gterm-prewrap {
+    font-size: 18px;
+}
 
 body.ipadscreen  {
     /* font-weight: bold; */
@@ -111,6 +116,15 @@ body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notece
  body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notecell-scroll,
  body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown,
  body.gterm-fsize-large .pagelet-notebook .gterm-notecell-container .gterm-notecell-screen pre {
+    font-size: 18px;
+}
+
+body.gterm-fsize-xlarge .pagelet-notebook .gterm-notecell-container .gterm-notecell-markdown {
+    font-size: 24px;
+}
+body.gterm-fsize-xlarge .pagelet-notebook .gterm-notecell-container .gterm-notecell-text,
+ body.gterm-fsize-xlarge .pagelet-notebook .gterm-notecell-container .gterm-notecell-scroll,
+ body.gterm-fsize-xlarge .pagelet-notebook .gterm-notecell-container .gterm-notecell-screen pre {
     font-size: 18px;
 }
 
@@ -645,6 +659,10 @@ input.gterm-input-arg[type=text] {
 
 .gterm-notecell-container {
     margin-top: 5px;
+}
+
+.gterm-notecell-output img {
+    max-width: 100%;
 }
 
 textarea.gterm-notecell-text {

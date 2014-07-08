@@ -8,14 +8,14 @@ For multiplexed display use:
    gframe -r 300 -l 50 -c 4 -b -t -p tty a b c d '[abcd]'
 
 To recursively display terminal /local/tty1, use:
-   gframe -r 300 -b -n -t /local/tty1/watch
+   gframe -r 300 -b --noheader -t /local/tty1/watch
 """
 
 from __future__ import absolute_import, print_function
 
 import math
 import mimetypes
-import os
+import os, os.path
 import random
 import sys
 import termios
@@ -42,8 +42,9 @@ form_parser.add_option("rowheight", "", short="r", help="Frame row height")
 form_parser.add_option("lastheight", "", short="l", help="Last row height")
 form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display")
 form_parser.add_option("border", False, short="b", help="Include border")
-form_parser.add_option("noheader", False, short="n", help="Suppress header")
+form_parser.add_option("noheader", False, help="Suppress header")
 form_parser.add_option("echo", False, short="e", help="Do not suppress terminal echo")
+form_parser.add_option("notebook", False, short="n", help="Interpret all arguments as IPython notebooks")
 form_parser.add_option("terminal", False, short="t", help="Interpret all arguments as terminal URLs")
 
 (options, args) = form_parser.parse_args()
@@ -58,10 +59,23 @@ if args:
             if "/" not in arg:
                 arg = "/" + gterm.env("PATH").split("/")[1] + "/" + arg
             elif not arg.startswith("/"):
-                print("Invalid terminal path %s; must begin with /" % arg, file=sys.stderr)
-                sys.exit(1)
+                sys.exit("Invalid terminal path %s; must begin with /" % arg)
             arg += "&" if "?" in arg else "/?"
             arg += "qauth=%[qauth]"
+            iframe_urls.append(arg)
+        elif options.notebook:
+            ipynb_parfile = gterm.get_param_filepath(gterm.APP_IPYNB_FILENAME)
+            nb_dir, nb_url = "", ""
+            try:
+                with open(ipynb_parfile) as f:
+                    nb_url, sep, nb_dir = f.read().strip().partition("#")
+            except Exception as excp:
+                sys.exit("Error in reading 'notebook-directory:port' info from %s: %s" % (ipynb_parfile, excp))
+
+            relpath = os.path.relpath(os.path.abspath(arg), os.path.abspath(nb_dir))
+            if relpath.startswith("/") or ".." in relpath:
+                sys.exit("Notebook path %s not within server notebook directory %s" % (relpath, nb_dir))
+            arg = "%s/notebooks/%s" % (nb_url, relpath)
             iframe_urls.append(arg)
         else:
             if gterm.Export_host:

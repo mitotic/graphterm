@@ -1288,7 +1288,7 @@ class Terminal(object):
             return False
         alt_save = params.get("alt_save", False)
         auto_save = params.get("auto_save", False)
-        bundle = params.get("bundle", "")
+        embed = params.get("embed", "")
         format = params.get("format", "")
         submit = params.get("submit", "")
 
@@ -1404,9 +1404,9 @@ class Terminal(object):
             if data_uri:
                 # Substitute image URL with bundle reference
                 norm_name = link_url.replace("/","-").replace(" ","_")
-                embed_line = embed_figure(data_uri, prefix, norm_name, alt=alt)
-                Bundled_image_ref[link_url] = embed_line
-                return embed_line
+                fig_line = embed_figure(data_uri, prefix, norm_name, alt=alt)
+                Bundled_image_ref[link_url] = fig_line
+                return fig_line
             else:
                 Bundled_image_ref[link_url] = None  # Inaccessible inline URL
                 return None
@@ -1432,16 +1432,16 @@ class Terminal(object):
                     # Markup cell
                     cell_lines = []
                     for line in cell["cellInput"]:
-                        embed_line = None
+                        fig_line = None
                         if MD_BLOB_RE.match(line):
                             # Inline blob reference
-                            embed_line = match_blob_image(line, "embed")
-                        elif bundle and MD_IMAGELINK_RE.match(line):
-                            # Bundle image links
-                            embed_line = match_image_link(line, "bundle")
+                            fig_line = match_blob_image(line, "embed")
+                        elif embed and MD_IMAGELINK_RE.match(line):
+                            # Embed image links
+                            fig_line = match_image_link(line, "link")
 
-                        if embed_line:
-                            line = embed_line
+                        if fig_line:
+                            line = fig_line
                         cell_lines.append(line)
 
                     # Data URIs for inline images; dump and clear for each cell
@@ -1463,16 +1463,16 @@ class Terminal(object):
                 if markup_cell:
                     # Markup cell
                     for line in cell["cellInput"]:
-                        embed_line = None
+                        fig_line = None
                         if MD_BLOB_RE.match(line):
                             # Inline blob
-                            embed_line = match_blob_image(line, "markup")
-                        elif bundle and MD_IMAGELINK_RE.match(line):
-                            # Bundle image links
-                            embed_line = match_image_link(line, "bundle")
+                            fig_line = match_blob_image(line, "markup")
+                        elif embed and MD_IMAGELINK_RE.match(line):
+                            # Embed image links
+                            fig_line = match_image_link(line, "link")
 
-                        if embed_line:
-                            line = embed_line
+                        if fig_line:
+                            line = fig_line
                         md_lines.append(line)
                 else:
                     # Code cell

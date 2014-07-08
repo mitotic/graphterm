@@ -1933,6 +1933,8 @@ GTWebSocket.prototype.onmessage = function(evt) {
 				    GTApplyMathJax(cellId);
 			    } else {
 				var row_escaped = (markup == null) ? GTEscape(update_scroll[j][JLINE], update_opts.pre_offset, prompt_offset, prompt_id) : markup;
+				if (!row_escaped)
+				    row_escaped = "\n";
 				row_html = '<pre '+id_attr+' class="row entry '+entry_class+' '+add_class+'">'+row_escaped+"\n</pre>";
 				$(row_html).appendTo("#session-bufscreen");
 			    }
@@ -2710,7 +2712,7 @@ function GTMenuCommand(selectKey, newValue, force) {
 	if (!gParams.nb_server) {
 	    alert("nb_server option not enabled")
 	} else {
-	    cmd = "gnbserver";
+	    cmd = "gnbserver --pylab";
 	}
 	break;
     case "python":
@@ -4444,19 +4446,25 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    filepath = filepath.replace(".py.gnb.md", ".ipynb");
 	if ((command == "save_markdown" || command == "save_fillable") && _.str.endsWith(filepath, ".ipynb"))
 	    filepath = filepath.replace(".ipynb", ".py.gnb.md");
-	if (command == "save_fillable" && _.str.endsWith(filepath, ".gnb.md")) {
-	    filepath = filepath.replace(".gnb.md", "");
+	if (command == "save_embed" || (command == "save_fillable" && _.str.endsWith(filepath, ".gnb.md"))) {
+	    var fext = (command == "save_embed") ? "-embedded" : "-fill";
+	    var ftail = "";
+	    if (_.str.endsWith(filepath, ".gnb.md")) {
+		filepath = filepath.replace(".gnb.md", "");
+		ftail = ".gnb.md";
+	    }
 	    var comps = filepath.split(".");
 	    if (comps.length > 1) {
-		comps = comps.slice(0,comps.length-2).concat([comps[comps.length-2]+"-fill", comps[comps.length-1], "gnb", "md"]);
+		comps = comps.slice(0,comps.length-2).concat([comps[comps.length-2]+fext, comps[comps.length-1]]);
 		filepath = comps.join(".");
 	    } else {
-		filepath = filepath + "-fill.gnb.md";
-	    } 
+		filepath = filepath + fext;
+	    }
+	    filepath += ftail;
 	}
 	var save_params = {popstatus: "alert"};
-	if (command == "save_bundle")
-	    save_params["bundle"] = true;
+	if (command == "save_embed")
+	    save_params["embed"] = true;
 	if (command == "save_rename")
 	    filepath = $.trim(window.prompt("Save as: ", filepath));
 	if (filepath) {

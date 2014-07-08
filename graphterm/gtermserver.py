@@ -693,7 +693,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                         tparams = self.get_terminal_params(path)
                         if tparams:
                             term_owner = self.is_creator(user, path)
-                            if not tparams["share_private"] or term_owner:
+                            if not tparams["share_private"] or term_owner or is_super_user:
                                 connectable = not self._control_set.get(path) and (term_owner or self._auth_type == self.SINGLE_AUTH)
                                 stealable = not connectable and (is_super_user or term_owner or not tparams["share_locked"])
                                 idle_min = long(time.time() - tparams["last_active"]) // 60
@@ -779,7 +779,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                     term_owner = host
 
                 terminal_params = {"share_locked": self._auth_type > self.SINGLE_AUTH,
-                                   "share_private": True,
+                                   "share_private": self._auth_type > self.SINGLE_AUTH,
                                    "share_tandem": False,
                                    "alert_status": False, "widget_token": "", "last_active": time.time(),
                                    "nb_name": "", "nb_file": "", "nb_mod_offset": 0,
@@ -881,7 +881,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                                         "about_version": about.version, "about_authors": about.authors,
                                         "about_url": about.url, "about_description": about.description,
                                         "state_values": state_values, "watchers": users,
-                                        "nb_server": Server_settings["nb_server"], "nb_autosave": Server_settings["nb_autosave"],
+                                        "nb_server": Server_settings["nb_server"] or (self._auth_type <= self.SINGLE_AUTH),
+                                        "nb_autosave": Server_settings["nb_autosave"],
                                         "mathjax": Server_settings["mathjax"],
                                         "auth_type": self.authorized["auth_type"], "controller": controller,
                                         "super_user": is_super_user, "parent_term": parent_term,
@@ -2393,7 +2394,7 @@ def main():
     parser.add_option("nb_autosave", default=300,
                       help="Notebook autosave interval (default: 300)", opt_type="int")
     parser.add_option("nb_server", default=False, opt_type="flag",
-                      help="Enable PUBLIC ipython notebook server")
+                      help="Enable PUBLIC ipython notebook server for multiuser case")
     parser.add_option("allow_embed", default=False, opt_type="flag",
                       help="Allow iframe embedding of terminal on other domains (possibly insecure)")
     parser.add_option("allow_share", default=False, opt_type="flag",
