@@ -4776,6 +4776,8 @@ GTNotebook.prototype.update_text = function(execute, openNext, createNew) {
 }
 
 GTNotebook.prototype.poll = function(force) {
+    if (!gWebSocket || !gParams.controller)
+	return
     var cur_time = epoch_time();
     if (!force && (cur_time - this.lastPollTime) < 0.5*POLL_SEC)
 	return;

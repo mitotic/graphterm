@@ -65,9 +65,9 @@ def main():
         nb_port = options.port if options.port else 8888
         cmd_line += " --port=%s --port-retries=0" % nb_port
         if options.certfile:
-            print("Certificate file", options.certfile, "not found!", file=sys.stderr)
+            print("gnbserver: Certificate file", options.certfile, "not found!", file=sys.stderr)
         nb_url = "http://localhost:%s" % nb_port
-        print("Running ipython notebook server", nb_url, file=sys.stderr)
+        print("gnbserver: Running ipython notebook server", nb_url, file=sys.stderr)
     else:
         certline = "c.NotebookApp.certfile = '%s'" % options.certfile
         uid = os.getuid()
@@ -99,15 +99,15 @@ def main():
         url_phost, sep, tail = tail.partition(":")
         nb_url = "%s:%s:%s" % (url_proto, url_phost, nb_port)
 
-        print("Running PUBLIC ipython notebook server", nb_url, file=sys.stderr)
-        print("Password for user", user, "in", auth_file, file=sys.stderr)
+        print("gnbserver: Running PUBLIC ipython notebook server", nb_url, file=sys.stderr)
+        print("gnbserver: Password for user", user, "in", auth_file, file=sys.stderr)
 
     ipynb_parfile = gterm.get_param_filepath(gterm.APP_IPYNB_FILENAME)
     try:
         with open(ipynb_parfile, "w") as f:
 
             f.write(nb_url+"#"+os.getcwd()+"\n")
-        print("  Server parameters saved to", ipynb_parfile, file=sys.stderr)
+        print("gnbserver: Server parameters saved to", ipynb_parfile, file=sys.stderr)
     except Exception as excp:
         sys.exit("ERROR: Unable to write server parameters to %s: %s" % (ipynb_parfile, excp))
 
@@ -116,7 +116,12 @@ def main():
         cmd_line += " --pylab inline"
     print("", file=sys.stderr)
     print(cmd_line, file=sys.stderr)
-    status = os.system(cmd_line)
+
+    try:
+        status = os.system(cmd_line)
+    finally:
+        os.remove(ipynb_parfile)
+        print("gnbserver: Exited server and removed", ipynb_parfile, file=sys.stderr)
 
 if __name__ == "__main__":
     main()

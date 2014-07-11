@@ -43,6 +43,7 @@ form_parser.add_option("lastheight", "", short="l", help="Last row height")
 form_parser.add_option("fullscreen", False, short="f", help="Fullscreen display")
 form_parser.add_option("border", False, short="b", help="Include border")
 form_parser.add_option("noheader", False, help="Suppress header")
+form_parser.add_option("find_html", False, help="Skip input characters until '<DOCTYPE' or '<html'")
 form_parser.add_option("echo", False, short="e", help="Do not suppress terminal echo")
 form_parser.add_option("notebook", False, short="n", help="Interpret all arguments as IPython notebooks")
 form_parser.add_option("terminal", False, short="t", help="Interpret all arguments as terminal URLs")
@@ -89,6 +90,13 @@ if args:
 else:
     try:
         content = sys.stdin.read()
+        if options.find_html:
+            offset = content.find("<!DOCTYPE")
+            if offset < 0:
+                offset = content.find("<html")
+            if offset >= 0:
+                content = content[offset:]
+                
     except (EOFError, KeyboardInterrupt):
         content = None
 

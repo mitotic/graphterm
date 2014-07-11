@@ -1511,7 +1511,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                             term_label = lpath if action_params["long"] else tpath
                                         else:
                                             qauth = get_qauth(terminal_params["state_id"])
-                                            term_label = '<a href="/_watch/'+tpath+'/?qauth='+qauth+'" target="_blank">'+cgi_escape(lpath).replace(" ", "&nbsp;")+'</a><br>'
+                                            term_label = '<a href="/_watch/'+tpath+'/?qauth=%[qauth]" target="_blank">'+cgi_escape(lpath).replace(" ", "&nbsp;")+'</a><br>'
                                         term_list.append(tpath)
                                         label_list.append(term_label)
                                     term_list.sort()
@@ -1828,8 +1828,8 @@ def run_server(options, args):
                 if GTSocket.update_connect_cookie(cauth, args):
                     self.redirect(new_path)
                     return
-            logging.error("GET error: %s", self.request.uri)
-            self.write("Internal error in GET: %s" % self.request.uri)
+            logging.error("Unauthenticated URI: %s", self.request.uri)
+            self.write("Unauthenticated URI error: %s" % self.request.uri)
 
     class FormHandler(tornado.web.RequestHandler):
         def post(self):

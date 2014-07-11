@@ -12,7 +12,7 @@ if [[ "$1" == *.py.gnb.md ]]; then
 
 elif [[ "$1" == *.ipynb ]]; then
     if [[ -f ~/.graphterm/gterm_ipynb.txt ]]; then
-	gframe -f --notebook $1
+	gframe --full --notebook $1
     else
 	python -i $GTERM_DIR/bin/gpylab.py $1
     fi

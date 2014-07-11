@@ -1477,16 +1477,20 @@ class Terminal(object):
                 else:
                     # Code cell
                     if save_form and not prev_markup:
-                        # Prepend dummy markup cell
+                        # Prepend dummy markup cell for forms (temp fix)
                         md_lines += ["", "--", ""]
+                    elif md_lines and md_lines[-1]:
+                        # Prepend separating blank line
+                        md_lines += [""]
+
                     if curly_fence or cell["cellTypeExtra"] is not None:
                         md_lines.append("```{"+cell["cellType"]+(cell["cellTypeExtra"] or "")+"}")
                     else:
                         md_lines.append("```"+cell["cellType"])
                     md_lines += self.get_cell_input(cell_index)
                     md_lines.append("```")
-
-                md_lines.append ("")
+                    # Append separating blank line
+                    md_lines.append("")
 
             if cell["cellOutput"] and not markup_cell:
                 out_lines = []
@@ -1615,6 +1619,7 @@ class Terminal(object):
         code_lines = None
         raw_lines = []
         expect_lines = []
+        skipped_blanks = 0
         leaving_block = None
         prev_cell = None
         blob_ids = {}
@@ -1626,6 +1631,7 @@ class Terminal(object):
                     if state is None:
                         # Entering fenced block
                         state = lang
+                        skipped_blanks = 0
                         if raw_lines and code_cell:
                             # Leaving code block
                             self.update()
@@ -1741,11 +1747,6 @@ class Terminal(object):
                     # gterm comment directive (currently just ignored)
                     offset, directive, opt_dict = gterm.parse_gterm_directive(line)
 
-                elif not line and leaving_block is None and raw_lines:
-                    # Append blank line only if other raw lines are already appended
-                    # (Ignore blank lines immediately following fenced block or output image)
-                    raw_lines.append(line)
-
                 elif line:
                     # Non-blank line outside fenced block
                     if raw_lines and leaving_block is not None:
@@ -1759,6 +1760,13 @@ class Terminal(object):
                         self.update()
                         code_cell = None
 
+                    if skipped_blanks:
+                        if raw_lines:
+                            raw_lines += [""] * skipped_blanks
+                        else:
+                            raw_lines += [""] # Keep only single leading blank
+                    skipped_blanks = 0
+
                     if line.rstrip() == gterm.PAGE_BREAK:
                         # Page break
                         if raw_lines:
@@ -1769,6 +1777,15 @@ class Terminal(object):
                     else:
                         # Append non-blank line to markdown block
                         raw_lines.append(line)
+
+                else:
+                    # Blank line outside fenced block
+                    if leaving_block is None and raw_lines and raw_lines[-1]:
+                        # Append blank line only if other raw non-blank lines are already appended
+                        # (Ignore blank lines immediately following fenced block or output image)
+                        raw_lines.append(line)
+                    else:
+                        skipped_blanks += 1
 
             if raw_lines:
                 # Add raw cell
@@ -2101,7 +2118,7 @@ class Terminal(object):
         cur_index = self.note_cells["curIndex"]
         if not cur_index:
             return
-        assert cell_index == cur_index
+        assert cell_index == cur_index   ## ABC assert error on quick sequence of Ctrl-m n???
         cur_loc = self.note_cells["cellIndices"].index(cur_index)
         cur_cell = self.note_cells["cells"][cur_index]
 
