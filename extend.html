@@ -27,9 +27,8 @@
           title="Search within GraphTerm 0.56.2 documentation"
           href="_static/opensearch.xml"/>
     <link rel="top" title="GraphTerm 0.56.2 documentation" href="index.html" />
-    <link rel="up" title="Advanced topics" href="advanced.html" />
-    <link rel="next" title="Markdown notebook format" href="format.html" />
-    <link rel="prev" title="Advanced topics" href="advanced.html" />
+    <link rel="next" title="Troubleshooting FAQ" href="troubleshooting.html" />
+    <link rel="prev" title="GraphTerm toolchain and features" href="features.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -97,16 +96,15 @@ code.mindmeldr.com
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="format.html" title="Markdown notebook format"
+          <a href="troubleshooting.html" title="Troubleshooting FAQ"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="advanced.html" title="Advanced topics"
+          <a href="features.html" title="GraphTerm toolchain and features"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
-
-          <li><a href="advanced.html" accesskey="U">Advanced topics</a> &raquo;</li> 
+ 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -124,11 +122,11 @@ code.mindmeldr.com
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="advanced.html"
-                        title="previous chapter">Advanced topics</a></p>
+  <p class="topless"><a href="features.html"
+                        title="previous chapter">GraphTerm toolchain and features</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="format.html"
-                        title="next chapter">Markdown notebook format</a></p>
+  <p class="topless"><a href="troubleshooting.html"
+                        title="next chapter">Troubleshooting FAQ</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/extend.txt"
@@ -196,6 +194,12 @@ environment variable <tt class="docutils literal"><span class="pre">GTERM_COOKIE
 prevents malicious files from accessing GraphTerm. Only executable
 scripts and programs will be able generate the special escape
 sequences.</p>
+<p><em>Note</em>: On a remote machine accessed via SSH, the cookie value will
+not be available. In that case, the dummy value <tt class="docutils literal"><span class="pre">0</span></tt> may be used to
+access basic GraphTerm features like displaying images and HTML within
+a frame. (For security reasons, advanced features of GraphTerm, such
+as command execution, cannot be accessed using the dummy cookie value
+of zero.)</p>
 <p>If the text output by the program (excluding the escape sequences)
 starts with the left-angle bracket (<tt class="docutils literal"><span class="pre">&lt;</span></tt>), it is interpreted as being
 an HTML fragment to be displayed within GraphTerm as output of the
@@ -206,49 +210,50 @@ text <tt class="docutils literal"><span class="pre">Hello</span> <span class="pr
 </div>
 <p>The output HTML fragment may optionally begin with a special
 <em>Graphterm directive</em> which looks like an HTML comment line:</p>
-<div class="highlight-python"><div class="highlight"><pre>\x1b[?1155;&lt;cookie&gt;h&lt;!--gterm nb_clear all=yes--&gt;\x1b[?1155l
+<div class="highlight-python"><div class="highlight"><pre>\x1b[?1155;&lt;cookie&gt;h&lt;!--gterm clear_terminal--&gt;\x1b[?1155l
 </pre></div>
 </div>
-<p>The above string, if output by a program, will clear output from all
-cells in a notebook. The GraphTerm always begins with string
+<p>The above string, if output by a program, will clear output from
+the terminal. The GraphTerm always begins with string
 <tt class="docutils literal"><span class="pre">&lt;!--gterm</span></tt> and ends with <tt class="docutils literal"><span class="pre">--&gt;</span></tt>, like an HTML comment line. The
-directive begins with an action (<tt class="docutils literal"><span class="pre">nb_clear</span></tt>) and optional arguments
-of the form <tt class="docutils literal"><span class="pre">name=value</span></tt>.</p>
+directive begins with an action (<tt class="docutils literal"><span class="pre">clear_terminal</span></tt>) and may be
+followed by optional arguments of the form <tt class="docutils literal"><span class="pre">name=value</span></tt>.</p>
 <p>The basic actions and optional arguments are:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">data</span> <span class="pre">blob=...</span></tt>   (create blob with specified random id from data URI content)</p>
-<p><tt class="docutils literal"><span class="pre">display_blob</span> <span class="pre">blob=...</span> <span class="pre">display=block|fullpage|fullwindow</span> <span class="pre">overwrite=yes</span> <span class="pre">exit_page=yes</span></tt>   (display blob image)</p>
-<p><tt class="docutils literal"><span class="pre">pagelet</span> <span class="pre">block=overwrite</span></tt>   (display arbitrary HTML page fragment
-from content)</p>
+<div><p><tt class="docutils literal"><span class="pre">data</span> <span class="pre">display=block|fullwindow</span> <span class="pre">autoerase=yes</span> <span class="pre">overwrite=yes</span> <span class="pre">exit_page=yes</span></tt>   (display data URI content; typically used for images)</p>
+<p><tt class="docutils literal"><span class="pre">pagelet</span> <span class="pre">display=block</span> <span class="pre">overwrite=yes</span></tt>   (display arbitrary HTML page fragment
+from content following the directive)</p>
 </div></blockquote>
-<p>The <tt class="docutils literal"><span class="pre">pagelet</span></tt> action allows arbitrary HTML fragments to be displayed
+<p>The <tt class="docutils literal"><span class="pre">overwrite</span></tt> option allows previously displayed content to be
+overwritten, enabling simple animations etc. The <tt class="docutils literal"><span class="pre">autoerase</span></tt> option
+automatically erases the content when the command ends.
+The <tt class="docutils literal"><span class="pre">data</span></tt> action allows
+<a class="reference external" href="http://en.wikipedia.org/wiki/Data_URI_scheme">data URIs</a> to be
+displayed (even across SSH logins).
+The <tt class="docutils literal"><span class="pre">pagelet</span></tt> action allows arbitrary HTML fragments to be displayed
 inline. The following python command will display inline HTML:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155;&lt;cookie&gt;h&quot;</span><span class="o">+</span><span class="s">&quot;&lt;!--gterm pagelet--&gt;&quot;</span><span class="o">+</span><span class="s">&quot;&lt;b&gt;Hello World!&lt;/b&gt;&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155l&quot;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155;&lt;cookie&gt;h&quot;</span><span class="o">+</span><span class="s">&quot;&lt;!--gterm pagelet display=block--&gt;&quot;</span><span class="o">+</span><span class="s">&quot;&lt;b&gt;Hello World!&lt;/b&gt;&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155l&quot;</span>
 </pre></div>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">data</span></tt> and <tt class="docutils literal"><span class="pre">display_blob</span></tt> actions are unprivileged, i.e., they
-can be executed even with a dummy cookie value of 0. This allows
-&#8220;blobs&#8221; to be created from <a class="reference external" href="http://en.wikipedia.org/wiki/Data_URI_scheme">data URIs</a> and displayed even
-across SSH logins. For example, the following two python <tt class="docutils literal"><span class="pre">print</span></tt>
-statements will display an inline image from a data URL:</p>
-<div class="highlight-python"><div class="highlight"><pre>print &quot;\x1b[?1155;0h&quot;+&quot;&lt;!--gterm data blob=75543619--&gt;&quot;+&quot;image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==&quot;+&quot;\x1b[?1155l&quot;
-
-print &quot;\x1b[?1155;0h&quot;&lt;!--gterm display_blob blob=75543619--&gt;&quot;+&quot;\x1b[?1155l
+<p>The <tt class="docutils literal"><span class="pre">data</span></tt> and <tt class="docutils literal"><span class="pre">pagelet</span></tt> actions are unprivileged, i.e., they can
+be executed even with a dummy cookie value of 0. However, pagelets without a valid
+cookie value are treated specially, because they are untrusted. They
+are always displayed in the full window mode, using a separate &#8220;web
+origin&#8221; for security. For example, the following Python <tt class="docutils literal"><span class="pre">print</span></tt>
+statement will display an inline image from a data URL:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155;0h&quot;</span><span class="o">+</span><span class="s">&quot;&lt;!--gterm data --&gt;&quot;</span><span class="o">+</span><span class="s">&quot;image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155l&quot;</span>
 </pre></div>
 </div>
 <p>The sample program <tt class="docutils literal"><span class="pre">hello_world.sh</span></tt> in <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> displays
-the above two strings. Executing the program across an SSH login will
+the above string. Executing the program across an SSH login will
 still display the red dot.</p>
-<p>A displayed inline image can be overwritten. The following two lines
+<p>A displayed inline image can be overwritten. The following line
 will overwrite the last displayed image with a new image containing a
 single white pixel:</p>
-<div class="highlight-python"><div class="highlight"><pre>print &quot;\x1b[?1155;0h&quot;+&quot;&lt;!--gterm data blob=84327630--&gt;&quot;+&quot;image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=&quot;+&quot;\x1b[?1155l&quot;
-
-print &quot;\x1b[?1155;0h&quot;&lt;!--gterm display_blob blob=84327630
-overwrite=yes--&gt;&quot;+&quot;\x1b[?1155l
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155;0h&quot;</span><span class="o">+</span><span class="s">&quot;&lt;!--gterm data overwrite=yes--&gt;&quot;</span><span class="o">+</span><span class="s">&quot;image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155l&quot;</span>
 </pre></div>
 </div>
-<p>Additional actions and optional arguments are:</p>
+<p>Other useful actions are:</p>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">clear_terminal</span></tt>   (<em>gclear</em>: clear the terminal)</p>
 <p><tt class="docutils literal"><span class="pre">error_message</span></tt>    (display content as plain text error message in browser window)</p>
@@ -262,15 +267,21 @@ overwrite=yes--&gt;&quot;+&quot;\x1b[?1155l
 <p>The HTML comment directive format is the simplest way for programs to
 communicate with GraphTerm, and would suffice for most purposes. An
 alternative JSON header format is also available to handle more
-complex options and data etc.:</p>
+complex options, data etc.:</p>
 <div class="highlight-python"><div class="highlight"><pre>\x1b[?1155;&lt;cookie&gt;h
 {&quot;content_type&quot;: &quot;text/html&quot;,
- &quot;x_gterm_response&quot;: &quot;pagelet&quot;}
+ &quot;x_gterm_response&quot;: &quot;pagelet&quot;,
+ &quot;x_gterm_parameters&quot;: {&quot;display&quot;: &quot;fullwindow&quot;}
+}
 
 &lt;div&gt;
 Hello World!
 &lt;/div&gt;
 \x1b[?1155l
+</pre></div>
+</div>
+<p>This is equivalent to the HTML comment directive:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;!--gterm pagelet display=fullwindow--&gt;&lt;div&gt;Hello World!&lt;/div&gt;
 </pre></div>
 </div>
 <p>Note that for the JSON header format, the opening escape sequence is
@@ -290,12 +301,13 @@ image:</p>
 
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;sample.png&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<span class="n">blob_url</span> <span class="o">=</span> <span class="n">gterm</span><span class="o">.</span><span class="n">create_blob</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="s">&quot;image/png&quot;</span><span class="p">)</span>
-<span class="n">gterm</span><span class="o">.</span><span class="n">display_blob</span><span class="p">(</span><span class="n">gterm</span><span class="o">.</span><span class="n">get_blob_id</span><span class="p">(</span><span class="n">blob_url</span><span class="p">),</span> <span class="n">display</span><span class="o">=</span><span class="s">&quot;block&quot;</span><span class="p">)</span>
+<span class="n">gterm</span><span class="o">.</span><span class="n">display_data</span><span class="p">(</span><span class="s">&quot;image/png&quot;</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">display</span><span class="o">=</span><span class="s">&quot;block&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>See the toolchain programs <tt class="docutils literal"><span class="pre">gimage</span></tt>, <tt class="docutils literal"><span class="pre">gframe</span></tt>, etc. for examples
 of this API usage.</p>
+<p>The file <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.R</span></tt> provides convenience wrapper
+functions for <tt class="docutils literal"><span class="pre">R</span></tt>.</p>
 </div>
 <div class="section" id="clickable-links-for-generating-commands">
 <h2><a class="toc-backref" href="#id5">Clickable links for generating commands</a><a class="headerlink" href="#clickable-links-for-generating-commands" title="Permalink to this headline">¶</a></h2>
@@ -388,16 +400,15 @@ examples.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="format.html" title="Markdown notebook format"
+          <a href="troubleshooting.html" title="Troubleshooting FAQ"
              >next</a> |</li>
         <li class="right" >
-          <a href="advanced.html" title="Advanced topics"
+          <a href="features.html" title="GraphTerm toolchain and features"
              >previous</a> |</li>
         <li><a href="index.html">Docs Home</a>&nbsp;|&nbsp;</li>
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
-
-          <li><a href="advanced.html" >Advanced topics</a> &raquo;</li> 
+ 
       </ul>
     </div>
 

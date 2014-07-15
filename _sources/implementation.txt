@@ -25,7 +25,7 @@ can also connect to the GraphTerm server, on a different port (8899),
 to make them accessible as hosts for connection from the browser.
 
 A pseudo-tty (``pty``) is opened on the host for each terminal
-session. By setting the ``PROMP_COMMAND`` environment variable, GraphTerm
+session. By setting the ``PROMPT_COMMAND`` environment variable, GraphTerm
 determines when the ``stdout`` of the previous command ends, and the
 ``prompt`` for the new command begins.
 

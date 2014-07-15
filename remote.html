@@ -181,7 +181,7 @@ remote$ python -i $GTERM_DIR/bin/gpylab.py
 </pre></div>
 </div>
 <p>assuming the requisite files (see below) are present in the remote
-<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory. You don&#8217;t need to start a server on the
+<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory. You do not need to start a server on the
 remote computer because all communication occurs via the standard
 input/output of the remote python interpreter. In addition to
 displaying inline graphics, you can switch to notebook mode simply by
@@ -195,25 +195,26 @@ current local directory, not on the remote system.)</p>
 <div class="section" id="remote-installation">
 <h2><a class="toc-backref" href="#id3">Remote installation</a><a class="headerlink" href="#remote-installation" title="Permalink to this headline">¶</a></h2>
 <p>A minimalist remote installation of the GraphTerm environment requires
-copying six files from the local <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory to the
+copying seven files from the local <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory to the
 directory <tt class="docutils literal"><span class="pre">~/graphterm/bin</span></tt> on the remote computer:</p>
 <div class="highlight-python"><div class="highlight"><pre>cd $GTERM_DIR/bin
 ssh user@remote_server mkdir -p graphterm/bin
-scp gterm.py gmatplot.py gpylab.py gimage galiases gprofile user@remote_server:graphterm/bin
+scp gterm.py gmatplot.py gpylab.py gpython gipython gframe gprofile user@remote_server:graphterm/bin
 </pre></div>
 </div>
-<p>If you will be using R, also copy the file <tt class="docutils literal"><span class="pre">gterm.R</span></tt>. Then, append the
-following line to your remote <tt class="docutils literal"><span class="pre">~/.profile</span></tt> or <tt class="docutils literal"><span class="pre">~/.bash_profile</span></tt> setup:</p>
+<p>Then, append the following line to your remote <tt class="docutils literal"><span class="pre">~/.profile</span></tt> or
+<tt class="docutils literal"><span class="pre">~/.bash_profile</span></tt> setup:</p>
 <div class="highlight-python"><div class="highlight"><pre>source ~/graphterm/bin/gprofile
 </pre></div>
 </div>
-<p>and the following line to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre>source ~/graphterm/bin/galiases
+<p>This adds <tt class="docutils literal"><span class="pre">~/graphterm/bin</span></tt> to your PATH variable, so that you can
+use commands like <tt class="docutils literal"><span class="pre">gpython</span></tt> for inline graphics display or
+<tt class="docutils literal"><span class="pre">gframe</span></tt> to display images or HTML pages, for example:</p>
+<div class="highlight-python"><div class="highlight"><pre>d3cloud file | gframe -f
 </pre></div>
 </div>
-<p>These scripts define convenient aliases like <tt class="docutils literal"><span class="pre">gpython</span></tt> and add
-<tt class="docutils literal"><span class="pre">~/graphterm/bin</span></tt> to your PATH variable, so that you can use the
-<tt class="docutils literal"><span class="pre">gimage</span></tt> command to display inline images.</p>
+<p>If you will be using R, you only need to copy the file <tt class="docutils literal"><span class="pre">gterm.R</span></tt> to
+the remote computer.</p>
 <p>For a more complete configuration, you can install GraphTerm in your
 home directory on the remote system, even if you never plan to run the
 server. Download the <tt class="docutils literal"><span class="pre">graphterm-version.tar.gz</span></tt> source tarball from
@@ -248,8 +249,8 @@ the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p
 <span id="index-2"></span><h2><a class="toc-backref" href="#id5">Reverse port forwarding</a><a class="headerlink" href="#reverse-port-forwarding" title="Permalink to this headline">¶</a></h2>
 <p>A completely different approach is to use reverse forwarding.
 <em>Warning: If the remote computer is insecure, reverse forwarding
-should be used caution, and preferably with multiuser authentication
-(without the user_setup option).</em> Install GraphTerm on the remote
+should be used caution, and preferably with multiuser authentication.</em>
+Install GraphTerm on the remote
 computer and run the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> program remotely to allow it to
 connect to the <tt class="docutils literal"><span class="pre">gtermserver</span></tt> running on your local computer using
 SSH reverse port forwarding, e.g.:</p>

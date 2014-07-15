@@ -39,6 +39,13 @@ prevents malicious files from accessing GraphTerm. Only executable
 scripts and programs will be able generate the special escape
 sequences.
 
+*Note*: On a remote machine accessed via SSH, the cookie value will
+not be available. In that case, the dummy value ``0`` may be used to
+access basic GraphTerm features like displaying images and HTML within
+a frame. (For security reasons, advanced features of GraphTerm, such
+as command execution, cannot be accessed using the dummy cookie value
+of zero.)
+
 If the text output by the program (excluding the escape sequences)
 starts with the left-angle bracket (``<``), it is interpreted as being
 an HTML fragment to be displayed within GraphTerm as output of the
@@ -50,54 +57,53 @@ text ``Hello World`` in bold face::
 The output HTML fragment may optionally begin with a special
 *Graphterm directive* which looks like an HTML comment line::
 
-  \x1b[?1155;<cookie>h<!--gterm nb_clear all=yes-->\x1b[?1155l
+  \x1b[?1155;<cookie>h<!--gterm clear_terminal-->\x1b[?1155l
 
-The above string, if output by a program, will clear output from all
-cells in a notebook. The GraphTerm always begins with string
+The above string, if output by a program, will clear output from
+the terminal. The GraphTerm always begins with string
 ``<!--gterm`` and ends with ``-->``, like an HTML comment line. The
-directive begins with an action (``nb_clear``) and optional arguments
-of the form ``name=value``.
+directive begins with an action (``clear_terminal``) and may be
+followed by optional arguments of the form ``name=value``.
 
 The basic actions and optional arguments are:
 
-  ``data blob=...``   (create blob with specified random id from data URI content) 
+  ``data display=block|fullwindow autoerase=yes overwrite=yes exit_page=yes``   (display data URI content; typically used for images) 
 
-  ``display_blob blob=... display=block|fullpage|fullwindow overwrite=yes exit_page=yes``   (display blob image) 
+  ``pagelet display=block overwrite=yes``   (display arbitrary HTML page fragment
+  from content following the directive)
 
-  ``pagelet block=overwrite``   (display arbitrary HTML page fragment
-  from content)
-
+The ``overwrite`` option allows previously displayed content to be
+overwritten, enabling simple animations etc. The ``autoerase`` option
+automatically erases the content when the command ends.
+The ``data`` action allows
+`data URIs <http://en.wikipedia.org/wiki/Data_URI_scheme>`_ to be
+displayed (even across SSH logins).
 The ``pagelet`` action allows arbitrary HTML fragments to be displayed
 inline. The following python command will display inline HTML::
 
-  print "\x1b[?1155;<cookie>h"+"<!--gterm pagelet-->"+"<b>Hello World!</b>"+"\x1b[?1155l"
+  print "\x1b[?1155;<cookie>h"+"<!--gterm pagelet display=block-->"+"<b>Hello World!</b>"+"\x1b[?1155l"
 
-The ``data`` and ``display_blob`` actions are unprivileged, i.e., they
-can be executed even with a dummy cookie value of 0. This allows
-"blobs" to be created from `data URIs
-<http://en.wikipedia.org/wiki/Data_URI_scheme>`_ and displayed even
-across SSH logins. For example, the following two python ``print``
-statements will display an inline image from a data URL::
+The ``data`` and ``pagelet`` actions are unprivileged, i.e., they can
+be executed even with a dummy cookie value of 0. However, pagelets without a valid
+cookie value are treated specially, because they are untrusted. They
+are always displayed in the full window mode, using a separate "web
+origin" for security. For example, the following Python ``print``
+statement will display an inline image from a data URL::
 
-  print "\x1b[?1155;0h"+"<!--gterm data blob=75543619-->"+"image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="+"\x1b[?1155l"
-
-  print "\x1b[?1155;0h"<!--gterm display_blob blob=75543619-->"+"\x1b[?1155l
+  print "\x1b[?1155;0h"+"<!--gterm data -->"+"image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="+"\x1b[?1155l"
 
 The sample program ``hello_world.sh`` in ``$GTERM_DIR/bin`` displays
-the above two strings. Executing the program across an SSH login will
+the above string. Executing the program across an SSH login will
 still display the red dot.
 
-A displayed inline image can be overwritten. The following two lines
+A displayed inline image can be overwritten. The following line
 will overwrite the last displayed image with a new image containing a
 single white pixel::
 
-  print "\x1b[?1155;0h"+"<!--gterm data blob=84327630-->"+"image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs="+"\x1b[?1155l"
-
-  print "\x1b[?1155;0h"<!--gterm display_blob blob=84327630
-  overwrite=yes-->"+"\x1b[?1155l
+  print "\x1b[?1155;0h"+"<!--gterm data overwrite=yes-->"+"image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs="+"\x1b[?1155l"
 
 
-Additional actions and optional arguments are:
+Other useful actions are:
 
   ``clear_terminal``   (*gclear*: clear the terminal) 
 
@@ -116,16 +122,22 @@ GraphTerm JSON headers
 The HTML comment directive format is the simplest way for programs to
 communicate with GraphTerm, and would suffice for most purposes. An
 alternative JSON header format is also available to handle more
-complex options and data etc.::
+complex options, data etc.::
 
   \x1b[?1155;<cookie>h
   {"content_type": "text/html",
-   "x_gterm_response": "pagelet"}
+   "x_gterm_response": "pagelet",
+   "x_gterm_parameters": {"display": "fullwindow"}
+  }
 
   <div>
   Hello World!
   </div>
   \x1b[?1155l
+
+This is equivalent to the HTML comment directive::
+
+  <!--gterm pagelet display=fullwindow--><div>Hello World!</div>
 
 Note that for the JSON header format, the opening escape sequence is
 followed by a *dictionary* of header names and values, using JSON
@@ -147,11 +159,14 @@ image::
 
   with open("sample.png") as f:
       content = f.read()
-  blob_url = gterm.create_blob(content, content_type="image/png")
-  gterm.display_blob(gterm.get_blob_id(blob_url), display="block")
+  gterm.display_data("image/png", content, display="block")
 
 See the toolchain programs ``gimage``, ``gframe``, etc. for examples
 of this API usage.
+
+The file ``$GTERM_DIR/bin/gterm.R`` provides convenience wrapper
+functions for ``R``.
+
 
 Clickable links for generating commands
 -----------------------------------------------------------------------

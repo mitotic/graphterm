@@ -25,7 +25,7 @@ practical applications are:
    access, it also serves as a detachable terminal, like
    ``tmux`` or ``screen``.)
 
- - a **virtual computer lab** for teaching and demonstrations. The
+ - a `virtual computer lab <http://code.mindmeldr.com/graphterm/virtual-setup.html>`_ for teaching and demonstrations. The
    GraphTerm server can be set up in the cloud and accessed by
    multiple users using their laptop/mobile browsers, with Google
    Authentication. The lab instructor can
@@ -196,7 +196,9 @@ Documentation and Support
 
 Usage info and other documentation can be found on the project home page,
 `code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_.
-See the `Tutorials and Talks <http://code.mindmeldr.com/graphterm/tutorials.html>`_
+See the `Contents <http://code.mindmeldr.com/graphterm/contents.html>`_
+page for an overview of the documentation and the
+`Talks and Turorials <http://code.mindmeldr.com/graphterm/talks.html>`_
 page for more advanced usage examples.
 
 You can also use the following command::
@@ -204,7 +206,7 @@ You can also use the following command::
   greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
 
 to view a slideshow about GraphTerm within GraphTerm.
-Type ``b`` three times in quick succession to exit the slideshow.
+Click on the red X in the top right corner to exit the slideshow.
 
 There is a `Google Groups mailing list <https://groups.google.com/group/graphterm>`_
 for announcements of new releases, posting questions related to
@@ -217,7 +219,12 @@ Caveats and Limitations
 
  - *Reliability:*  This software has not been subject to extensive testing. Use at your own risk.
 
- - *Platforms:*  The ``GraphTerm`` client should work on most recent browsers that support Websockets, such as Google Chrome, Firefox, and Safari. The ``GraphTerm`` server is pure-python, but with some OS-specific calls for file,  shell, and  terminal-related operations. It has been tested only on Linux and  Mac OS X so far.
+ - *Platforms:* The ``GraphTerm`` client should work on most recent
+    browsers that support Websockets, such as Google Chrome, Firefox,
+    and Safari. (Google Chrome usually works best.) The ``GraphTerm``
+    server is pure-python, but with some OS-specific calls for file,
+    shell, and terminal-related operations. It has been tested only on
+    Linux and Mac OS X so far.
 
  - *Current limitations:*
           * Support for ``xterm`` escape sequences is incomplete.

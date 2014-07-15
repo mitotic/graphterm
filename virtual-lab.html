@@ -345,7 +345,14 @@ enabled this option</em>). You can then access it using your local browser,
 with an URL of the form <tt class="docutils literal"><span class="pre">https://hostname.domain:port</span></tt>, where
 <tt class="docutils literal"><span class="pre">port</span></tt> is the port number output by the <tt class="docutils literal"><span class="pre">gnbserver</span></tt> command. The
 notebook password is the same as the access code for your user
-account.</p>
+account. (Note: Run the <tt class="docutils literal"><span class="pre">gnbserver</span></tt> command in a separate terminal window.)</p>
+<p>Once the server is running, individual notebook files can be opened in
+the IPython Notebook server using the <tt class="docutils literal"><span class="pre">gipynb</span></tt> command:</p>
+<div class="highlight-python"><div class="highlight"><pre>gipynb notebook.ipynb
+</pre></div>
+</div>
+<p>or by simply clicking on the <tt class="docutils literal"><span class="pre">.ipynb</span></tt> file in the <tt class="docutils literal"><span class="pre">gls</span></tt> output
+listing.</p>
 <p><em>Note:</em> If each user is running their own copy of the IPython Notebook
 server, it can degrade performance on a shared computer. Please
 consider shutting down the server when you are not using it.</p>
@@ -359,11 +366,20 @@ notebooks, e,g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gls *.ipynb
 </pre></div>
 </div>
-<p>Then click on the notebook that you wish to open.
-Alternatively, you can use the <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gopen</span></tt> commands:</p>
+<p>Then click on the notebook that you wish to open. This will open the
+notebook using the IPython Notebook server, if it is running, or using
+the GraphTerm notebook mode otherwise. Alternatively, you can also use
+the <tt class="docutils literal"><span class="pre">gopen</span></tt> command:</p>
+<div class="highlight-python"><div class="highlight"><pre>gopen notebook.ipynb
+</pre></div>
+</div>
+<p>To open notebook files using the built-in GraphTerm notebook mode, you
+can use the <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gipython</span></tt> command:</p>
 <div class="highlight-python"><div class="highlight"><pre>gpython notebook.ipynb
 </pre></div>
 </div>
+<p>or simply run the standard <tt class="docutils literal"><span class="pre">python</span></tt> command and type <em>Shift-Enter</em> to enter
+the notebook mode as needed.</p>
 <div class="figure align-center" style="width: 85%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" style="width: 90%;" /></a>
 </div>
@@ -378,10 +394,12 @@ shortcuts</em>.</p>
 </div>
 <div class="section" id="saving-and-exiting-python-notebooks">
 <h2><a class="toc-backref" href="#id10">Saving and exiting python notebooks</a><a class="headerlink" href="#saving-and-exiting-python-notebooks" title="Permalink to this headline">¶</a></h2>
-<p>To save the notebook, use the menu command <em>notebook/save</em></p>
-<p>To exit the notebook mode, you can simply type <em>Control-C</em> or use the
-<em>notebook/quit</em> menu option. This returns you to the python command
-line, with the chevron (&gt;&gt;&gt;) prompt.</p>
+<p>IPython Notebook server has a menu option to save notebooks. To exit
+the notebook, click the red X in the top left corner.</p>
+<p>To save a GraphTerm mode notebook, use the menu command
+<em>notebook/save</em>. To exit the GraphTerm notebook mode, you can simply
+type <em>Control-C</em> or use the <em>notebook/quit</em> menu option. This returns
+you to the python command line, with the chevron (&gt;&gt;&gt;) prompt.</p>
 <p>To exit the python command line, type <em>Control-D</em> or the following
 command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">exit</span><span class="p">()</span>
