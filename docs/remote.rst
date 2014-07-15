@@ -22,7 +22,7 @@ python as follows::
     >>> plot([1,2])
 
 assuming the requisite files (see below) are present in the remote
-``$GTERM_DIR/bin`` directory. You don't need to start a server on the
+``$GTERM_DIR/bin`` directory. You do not need to start a server on the
 remote computer because all communication occurs via the standard
 input/output of the remote python interpreter. In addition to
 displaying inline graphics, you can switch to notebook mode simply by
@@ -40,26 +40,27 @@ Remote installation
 --------------------------------------------------------------------------------------------
 
 A minimalist remote installation of the GraphTerm environment requires
-copying six files from the local ``$GTERM_DIR/bin`` directory to the
+copying seven files from the local ``$GTERM_DIR/bin`` directory to the
 directory ``~/graphterm/bin`` on the remote computer::
 
     cd $GTERM_DIR/bin
     ssh user@remote_server mkdir -p graphterm/bin
-    scp gterm.py gmatplot.py gpylab.py gimage galiases gprofile user@remote_server:graphterm/bin
+    scp gterm.py gmatplot.py gpylab.py gpython gipython gframe gprofile user@remote_server:graphterm/bin
 
-If you will be using R, also copy the file ``gterm.R``. Then, append the
-following line to your remote ``~/.profile`` or ``~/.bash_profile`` setup::
+Then, append the following line to your remote ``~/.profile`` or
+``~/.bash_profile`` setup::
 
     source ~/graphterm/bin/gprofile
 
-and the following line to ``~/.bashrc``::
+This adds ``~/graphterm/bin`` to your PATH variable, so that you can
+use commands like ``gpython`` for inline graphics display or
+``gframe`` to display images or HTML pages, for example::
 
-    source ~/graphterm/bin/galiases
+    d3cloud file | gframe -f
 
-These scripts define convenient aliases like ``gpython`` and add
-``~/graphterm/bin`` to your PATH variable, so that you can use the
-``gimage`` command to display inline images.
-
+If you will be using R, you only need to copy the file ``gterm.R`` to
+the remote computer.
+ 
 For a more complete configuration, you can install GraphTerm in your
 home directory on the remote system, even if you never plan to run the
 server. Download the ``graphterm-version.tar.gz`` source tarball from
@@ -101,8 +102,8 @@ Reverse port forwarding
 
 A completely different approach is to use reverse forwarding.
 *Warning: If the remote computer is insecure, reverse forwarding
-should be used caution, and preferably with multiuser authentication
-(without the user_setup option).* Install GraphTerm on the remote
+should be used caution, and preferably with multiuser authentication.*
+Install GraphTerm on the remote
 computer and run the ``gtermhost`` program remotely to allow it to
 connect to the ``gtermserver`` running on your local computer using
 SSH reverse port forwarding, e.g.::

@@ -90,24 +90,16 @@ gsave <- function(pngdata, overwrite=FALSE, test=False) {
   # Displays PNG image data within a GraphTerm pagelet
   image64 <- base64(pngdata)
 
-  # Create image blob
-  blobid = paste(sample(1:1000000,1), sample(1:1000000,1), sep="")
-  imagepfx <- paste('<!--gterm data blob=', blobid, '-->image/png;base64,', sep='')
-  gwrite(paste(imagepfx, image64, sep=""))
-
   if (overwrite) {
-    overs = ' overwrite=yes'
+    params = ' overwrite=yes'
   } else {
-    overs = ''
+    params = ''
   }
-
-  # Display blob
-  pagelet <- paste('<!--gterm display_blob blob=', blobid, overs, '-->', sep='')
-  if (test) {
-    cat(pagelet, " page=", page, sep="")
-  } else {
-    gwrite(pagelet)
-  }
+  
+  # Display image
+  blobid = paste(sample(1:1000000,1), sample(1:1000000,1), sep="")
+  imagepfx <- paste('<!--gterm data ', params, '-->image/png;base64,', sep='')
+  gwrite(paste(imagepfx, image64, sep=""))
 }
   
 gshow <- function(overwrite=FALSE) {

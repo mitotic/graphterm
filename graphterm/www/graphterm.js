@@ -910,12 +910,20 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     //console.log("GTAppendPagelet:", row_params);
     var row_opts = row_params[JOPTS];
     var overwrite = !!row_opts.overwrite;
+    var autoerase = !!row_opts.autoerase;
+    var untrusted = !!row_opts.untrusted;
     var pagelet_id = row_opts.pagelet_id || "";
     var scroll = row_opts.scroll || "";
     var current_dir = row_opts.current_dir|| "";
     var pagelet_display = row_opts.display || "";
     var scrollElemId = "gterm-scroll"+pagelet_id;
     var attrs = ' id="'+scrollElemId+'" data-gtermcurrentdir="'+current_dir+'" data-gtermpromptindex="'+gPromptIndex+'" ';
+
+    if (autoerase)
+	classes += " gterm-autoerase";
+
+    if (untrusted)
+	classes += " gterm-untrusted";
 
     if (pagelet_display.substr(0,4) == "full") {
 	// Hide previous entries
@@ -941,6 +949,7 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
 	    EndFullpage();
     }
     // Use query authentication
+    markup = markup || "";
     markup = markup.replace(/qauth=%\[qauth\]/g, "qauth="+getAuth());
     if (row_opts.iframe) {
 	markup = gFrameDispatcher.createFrame(row_opts, markup, row_opts.url, "gterm-iframe"+pagelet_id);
@@ -952,6 +961,11 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
     var scrollElem = $("#"+scrollElemId);
     if (scrollElem.length) {
 	// Found element with same id; overwrite
+	if (autoerase)
+	    scrollElem.addClass("gterm-autoerase");
+	if (untrusted)
+	    scrollElem.addClass("gterm-untrusted");
+
 	if (scrollElem.find(".gterm-blockimg").length == 1 && innerBlockElem.length == 1 && innerBlockElem.find(".gterm-blockimg").length == 1) {
 	    // Replace IMG src attribute of block element and return
 	    scrollElem.find(".gterm-blockimg").attr("src", innerBlockElem.find(".gterm-blockimg").attr("src"));
@@ -975,7 +989,8 @@ function GTAppendPagelet(parentElem, row_params, entry_class, classes, markup) {
 		prevBlockElem.replaceWith(innerBlockElem);
 	    }
 	} else {
-	    // Append new element (closing any previous elements)
+	    // Append new element (closing any previous elements and autoerasing)
+	    AutoErasePagelets();
 	    prevBlockElem.addClass("gterm-blockclosed");
 	    scrollElem = rowElem.appendTo(parentElem);
 	}
@@ -1067,6 +1082,7 @@ function GTWebSocket(auth_user, auth_code, connect_cookie) {
     connect_cookie = connect_cookie || "";
 
     this.icons = false;
+    this.colors = false;
     this.terminal = false;
 
     this.webcast = false;
@@ -1583,6 +1599,7 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			}
 
 		    } else if (!response_type || response_type == "pagelet" || response_type == "iframe") {
+			// NOT USED ANYMORE? LOST ON PAGE REFRESH
 			var pagelet_display = response_params.display || "block";
 			var pageletSelector = "#session-bufscreen .pagelet."+entry_class;
 			if (pagelet_display.substr(0,4) == "full") {
@@ -1920,6 +1937,9 @@ GTWebSocket.prototype.onmessage = function(evt) {
 			    var add_class = row_params[JOPTS].add_class;
 			    var markup = update_scroll[j][JMARKUP];
 			    var row_html;
+			    if (row_params[JTYPE] != "pagelet")  // Pagelets handle autoerase separately
+				AutoErasePagelets();
+
 			    if (row_params[JTYPE] == "pagelet") {
 				GTAppendPagelet($("#session-bufscreen"), row_params, entry_class, "pagelet entry "+entry_class+' '+add_class, markup);
 				delayed_scroll = true;
@@ -2263,7 +2283,7 @@ function GTJoin(user, joining, setup) {
     $('#gterm-menu-users-container').toggleClass("menu-disabled", !$('#gterm-menu-users-list li').length);
 }
 
-var gMenuState = {view: {menubar: true, footer: gMobileBrowser, icons: false, fontsize: "", theme: ""},
+var gMenuState = {view: {menubar: true, footer: gMobileBrowser, icons: false, colors: true, fontsize: "", theme: ""},
 		  command: {advanced: false},
                   share: {control: true, private: true, locked: false, tandem: false, webcast: false},
                   notebook: {markdown: false, page: {slide: false}} };
@@ -2284,7 +2304,7 @@ function GTMenuStateUpdate(stateValues, prefix) {
 	if (_.isObject(val)) {
 	    GTMenuStateUpdate(val, prefix+key+"_");
 	} else {
-	    if (key == "view_fontsize" || key == "view_theme"|| key == "view_icons") {
+	    if (key == "view_fontsize" || key == "view_theme" || key == "view_icons") {
 		var selval = key.substr(5);
 		GTMenuView(selval+"_"+val, val);
 		gMenuState.view[selval] = val;
@@ -2310,6 +2330,8 @@ function GTMenuRefresh() {
     var curFontsize = gMenuState.view.fontsize;
     if (curFontsize)
 	GTMenuRefreshToggle($('ul.sf-menu a[gterm-state="view_fontsize_'+curFontsize+'"]'))
+
+    $("#terminal").toggleClass("gterm-colors", gMenuState.view.colors);
 }
 
 function GTMenuRefreshToggle(target, update, newValue) {
@@ -2500,6 +2522,11 @@ function GTMenuView(selectKey, newValue, force) {
 	$("#terminal").toggleClass("showicons", gWebSocket.icons);
 	break;
 
+    case "colors":
+	gWebSocket.colors = !!newValue;
+	$("#terminal").toggleClass("gterm-colors", gWebSocket.colors);
+	break;
+
     case "fontsize":
 	// Select fontsize
 	if (gWebSocket.fontsize != comps[1]) {
@@ -2541,7 +2568,7 @@ function GTMenuView(selectKey, newValue, force) {
 
     case "save":
 	if (gWebSocket && gWebSocket.terminal)
-	    gWebSocket.write([["save_prefs", {view: {icons: gMenuState.view.icons, fontsize: gMenuState.view.fontsize, theme: gMenuState.view.theme} }]]);
+	    gWebSocket.write([["save_prefs", {view: {icons: gMenuState.view.icons, colors: gMenuState.view.colors, fontsize: gMenuState.view.fontsize, theme: gMenuState.view.theme} }]]);
 	break;
     }
 }
@@ -4446,6 +4473,18 @@ GTNotebook.prototype.handleCommand = function(command, newValue) {
 	    filepath = filepath.replace(".py.gnb.md", ".ipynb");
 	if ((command == "save_markdown" || command == "save_fillable") && _.str.endsWith(filepath, ".ipynb"))
 	    filepath = filepath.replace(".ipynb", ".py.gnb.md");
+	if (command == "save_code") {
+	    if (_.str.endsWith(filepath, ".py.gnb.md"))
+		filepath = filepath.replace(".py.gnb.md", ".py");
+	    if (_.str.endsWith(filepath, ".ipynb"))
+		filepath = filepath.replace(".ipynb", ".py");
+	    if (_.str.endsWith(filepath, ".R.gnb.md"))
+		filepath = filepath.replace(".R.gnb.md", ".R");
+	    if (_.str.endsWith(filepath, ".R.md"))
+		filepath = filepath.replace(".R.md", ".R");
+	    if (_.str.endsWith(filepath, ".sh.gnb.md"))
+		filepath = filepath.replace(".sh.gnb.md", ".sh");
+	}
 	if (command == "save_embed" || (command == "save_fillable" && _.str.endsWith(filepath, ".gnb.md"))) {
 	    var fext = (command == "save_embed") ? "-embedded" : "-fill";
 	    var ftail = "";
@@ -4917,6 +4956,7 @@ GTNotebook.prototype.receive = function(fromUser, toUser, cellIndex, msg) {
 }
 
 function CloseIFrame(evt) {
+    AutoErasePagelets();
     if (gFullpageDisplay) {
 	EndFullpage();
 	ScrollTop(null);
@@ -4933,6 +4973,10 @@ function ExpandIFrame(evt) {
 	window.location = $("#"+containerId+" iframe").attr("src");
     else
 	load("full");
+}
+
+function AutoErasePagelets() {
+    $("#session-bufscreen .gterm-autoerase").remove();
 }
 
 function EndFullpage(frameId) {

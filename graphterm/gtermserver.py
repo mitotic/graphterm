@@ -1800,7 +1800,7 @@ def same_group(user1, user2):
     return Server_settings["user_groups"] and Server_settings["user_groups"].get(user1) and Server_settings["user_groups"].get(user1) == Server_settings["user_groups"].get(user2)
 
 def run_server(options, args):
-    global IO_loop, Http_server, TCP_server, Local_client, Host_secret, Host_settings, Server_settings, Term_settings, Trace_shell
+    global IO_loop, Http_server, Alt_server, TCP_server, Local_client, Host_secret, Host_settings, Server_settings, Term_settings, Trace_shell
     import signal
 
     class ActionHandler(tornado.web.RequestHandler):
@@ -2107,10 +2107,14 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
                 (r"/_watch/.*", ActionHandler),
                 (r"/_websocket/.*", GTSocket),
                 (gterm.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
-                (gterm.BLOB_PREFIX+r"(.*)", ProxyFileHandler, {}),
+                (gterm.BLOB_PREFIX+r"([\w\-]+/"+gterm.TRUSTED_PREFIX+r".*)", ProxyFileHandler, {}),
                 (gterm.FILE_PREFIX+r"(.*)", ProxyFileHandler, {}),
                 (r"/().*", tornado.web.StaticFileHandler, {"path": Doc_rootdir, "default_filename": "index.html"}),
                 ]
+
+    alt_handlers = [(gterm.STATIC_PREFIX+r"(.*)", tornado.web.StaticFileHandler, {"path": Doc_rootdir}),
+                    (gterm.BLOB_PREFIX+r"([\w\-]+/"+gterm.UNTRUSTED_PREFIX+r".*)", ProxyFileHandler, {}),
+                    (gterm.FILE_PREFIX+r"(.*)", ProxyFileHandler, {})]
 
     settings = {"log_function": lambda x:None}
 
@@ -2121,6 +2125,7 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
         print >> sys.stderr, "***** Read Google OAuth info from ~/.graphterm/"+gterm.APP_OAUTH_FILENAME
 
     application = tornado.web.Application(handlers, **settings)
+    alt_application = tornado.web.Application(alt_handlers, **settings)
 
     ##logging.warning("DocRoot: "+Doc_rootdir);
 
@@ -2208,6 +2213,11 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
 
     Http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_options)
     Http_server.listen(http_port, address=http_host)
+    if options.blob_host or "no_untrusted" in options.term_opts:
+        Alt_server = None
+    else:
+        Alt_server = tornado.httpserver.HTTPServer(alt_application, ssl_options=ssl_options)
+        Alt_server.listen(http_port+1, address=http_host)
 
     group_secret = None
     if not auth_file:
@@ -2271,7 +2281,7 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
         raise Exception("TEST EXCEPTION")
 
     def stop_server():
-        global Http_server, TCP_server
+        global Http_server, Alt_server, TCP_server
         print >> sys.stderr, "\nStopping server"
         gtermhost.gterm_shutdown(Trace_shell)
         if TCP_server:
@@ -2288,6 +2298,9 @@ If you have not set up the GraphTerm web app for Google authentication, here is 
         if Http_server:
             Http_server.stop()
             Http_server = None
+        if Alt_server:
+            Alt_server.stop()
+            Alt_server = None
         def stop_server_aux():
             IO_loop.stop()
 
@@ -2414,7 +2427,7 @@ def main():
     parser.add_option("term_encoding", default="utf-8",
                       help="Terminal character encoding (utf-8/latin-1/...)")
     parser.add_option("term_opts", default="",
-                      help="Terminal options: no_colors,no_images,no_pyindent,...")
+                      help="Terminal options: no_colors,no_pyindent,no_untrusted,...")
     parser.add_option("term_settings", default="{}",
                       help="Terminal settings (JSON)")
     parser.add_option("max_terminals", default=10,

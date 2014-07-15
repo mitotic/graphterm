@@ -100,7 +100,7 @@ reveal_format = """
 
         // initialize
         var gPresenter = null;
-        var gDebug = false;
+        var gDebug = true;
         function GTermPresenter(frameDispatcher) {
             this.frameDispatcher = frameDispatcher;
             this.frameName = "presenter";

@@ -15,10 +15,10 @@ Documentation contents
    progressive
    R
    features
+   extend
    troubleshooting
    screenshots
    talks
-   implementation
    advanced
    release-notes
    PyPI Package Index (for downloading and installing) <http://pypi.python.org/pypi/graphterm>

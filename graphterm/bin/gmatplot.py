@@ -138,22 +138,25 @@ def display(fig, overwrite=False, format="png", outfile="", title="", fullscreen
         return
 
     content_type = "application/pdf" if format=="pdf" else "image/"+format
-    outbuf = gterm.BlobBytesIO(content_type, host=(gterm.Host or "*"), max_bytes=max_bytes)
+    outbuf = gterm.BlobBytesIO(max_bytes=max_bytes)
     pyplot_dict["drawing"] = True
     try:
         fig.savefig(outbuf, format=format)
     finally:
         pyplot_dict["drawing"] = False
 
-    blob_url = outbuf.close()
+    fig_data = outbuf.close()
     ##gterm.display_blockimg_old(blob_url, overwrite=overwrite, alt=title)
     if pyplot_dict["new_cell"]:
         pyplot_dict["new_cell"] = False
         pyplot_dict["new_plot"] = True
     else:
         #gterm.display_blockimg(blob_url, overwrite=overwrite, alt=title, toggle=True)
-        gterm.display_blob(gterm.get_blob_id(blob_url), overwrite=overwrite, toggle=True,
+        #gterm.display_blob(gterm.get_blob_id(blob_url), overwrite=overwrite, toggle=True,
+        #                   display="fullscreen" if fullscreen else "block")
+        gterm.display_data(content_type, fig_data, overwrite=overwrite, toggle=True,
                            display="fullscreen" if fullscreen else "block")
+
 
 def resize_win(dimensions=""):
     """Resize matplotlib default window for terminal"""

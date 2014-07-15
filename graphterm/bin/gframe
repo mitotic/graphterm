@@ -47,16 +47,21 @@ form_parser.add_option("find_html", False, help="Skip input characters until '<D
 form_parser.add_option("echo", False, short="e", help="Do not suppress terminal echo")
 form_parser.add_option("notebook", False, short="n", help="Interpret all arguments as IPython notebooks")
 form_parser.add_option("terminal", False, short="t", help="Interpret all arguments as terminal URLs")
+form_parser.add_option("trusted", False, help="Trust the frame content to execute commands")
 
 (options, args) = form_parser.parse_args()
 
+trusted_content = options.trusted
 if args:
     iframe_urls = []
+    trust_list = []
     for arg in args:
         arg = options.prefix + arg + options.suffix
         if arg.startswith("http:") or arg.startswith("https:"):
+            trust_list.append(False)
             iframe_urls.append(arg)
         elif options.terminal:
+            trust_list.append(True)
             if "/" not in arg:
                 arg = "/" + gterm.env("PATH").split("/")[1] + "/" + arg
             elif not arg.startswith("/"):
@@ -65,6 +70,7 @@ if args:
             arg += "qauth=%[qauth]"
             iframe_urls.append(arg)
         elif options.notebook:
+            trust_list.append(True)  # Notebook server will determine trust
             ipynb_parfile = gterm.get_param_filepath(gterm.APP_IPYNB_FILENAME)
             nb_dir, nb_url = "", ""
             try:
@@ -79,14 +85,19 @@ if args:
             arg = "%s/notebooks/%s" % (nb_url, relpath)
             iframe_urls.append(arg)
         else:
-            if gterm.Export_host:
-                iframe_urls.append(gterm.create_blob(from_file=arg))
+            trust_list.append(False)
+            if not gterm.Export_host and options.trusted:
+                iframe_urls.append(gterm.get_file_url(arg, relative=True, exists=True, untrusted=not options.trusted))
             else:
-                iframe_urls.append(gterm.get_file_url(arg, relative=True, exists=True))
+                iframe_urls.append(gterm.create_blob(from_file=arg, untrusted=not options.trusted))
 
             if not iframe_urls[-1]:
                 print("File %s not found" % arg, file=sys.stderr)
                 sys.exit(1)
+
+        if all(trust_list):
+            # All terminals/notebooks
+            trusted_content = True
 else:
     try:
         content = sys.stdin.read()
@@ -104,11 +115,20 @@ else:
         print("Error in reading from stdin", file=sys.stderr)
         sys.exit(1)
 
-    iframe_urls = [gterm.create_blob(content, content_type="text/html")]
+    iframe_urls = [gterm.create_blob(content, content_type="text/html", untrusted=not trusted_content)]
+
+if not trusted_content:             # Untrusted content must display full screen
+    options.fullscreen = True
 
 headers = {"opacity": options.opacity}
 if not options.fullscreen and not options.rowheight:
     headers["autosize"] = True
+
+if options.fullscreen or not trusted_content:
+    headers["autoerase"] = True
+
+if not trusted_content:
+    headers["untrusted"] = True
 
 add_class = "gterm-noheader" if options.noheader else ""
 if options.border:
@@ -161,7 +181,10 @@ if not options.noheader:
 
 # TODO: Wrap iframe in div box with close X header for non fullscreen mode
 
-gterm.write_pagelet(iframe_html, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
+if trusted_content:
+    gterm.write_pagelet(iframe_html, display=("fullscreen" if options.fullscreen else "block"), add_headers=headers)
+else:
+    gterm.untrusted_wrap_write(iframe_html)
 
 if options.fullscreen:
     if options.echo or not sys.stdout.isatty():

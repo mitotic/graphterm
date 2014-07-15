@@ -54,7 +54,7 @@ OSHELL_NAME = "osh"
 HTML_ESCAPES = ["\x1b[?1155;", "h",
                 "\x1b[?1155l"]
 
-USER_RE    = re.compile(r"^[a-z][a-z0-9\-]*$")                # Allowed user names
+USER_RE    = re.compile(r"^[a-z][a-z0-9]*$")                  # Allowed user names
 HOST_RE    = re.compile(r"^[a-z][a-z0-9\-\*\?\[\]]*$")        # Allowed host names
 SESSION_RE = re.compile(r"^[a-zA-Z\*\?\[\]][\w\*\?\[\]]*$")   # Allowed session names
 

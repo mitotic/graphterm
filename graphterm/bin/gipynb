@@ -1,0 +1,15 @@
+#!/bin/bash
+# gipynb: Open notebook file using IPython server within GraphTerm
+# Usage: gipynb <filename>.ipynb
+
+if [ $# -eq 0 ]; then
+   echo "Usage: gipython_nb <filename>.ipynb"
+   exit 1
+fi
+
+if [[ -f ~/.graphterm/gterm_ipynb.txt ]]; then
+   gframe --full --notebook $1
+else
+    echo "File ~/.graphterm/gterm_ipynb.txt not found; start server with 'gnbserver' command"
+    exit 1
+fi

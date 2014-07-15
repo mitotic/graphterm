@@ -151,6 +151,7 @@ SecurityGroups = [
         GroupRule("tcp", "8888", "8888", "0.0.0.0/0", None),
         GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if allow_host_connect else host_group),
         GroupRule("tcp", "8900", "8900", "0.0.0.0/0", None),
+        GroupRule("tcp", "8901", "8901", "0.0.0.0/0", None),
         ]),
     (nb_server_group, "GraphTerm notebook server group", [
         GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
@@ -158,6 +159,7 @@ SecurityGroups = [
         GroupRule("tcp", "443", "443", "0.0.0.0/0", None),
         GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if allow_host_connect else host_group),
         GroupRule("tcp", "8900", "8900", "0.0.0.0/0", None),
+        GroupRule("tcp", "8901", "8901", "0.0.0.0/0", None),
         GroupRule("tcp", "10000", "12000", "0.0.0.0/0", None),
         ]),
     ]
@@ -223,6 +225,7 @@ if options.oshell:
 
 init_commands = []
 fwall_commands = []
+
 if options.connect_to_gterm:
     security_groups = [host_group]
     server_name, sep, server_domain = options.connect_to_gterm.partition(".")
@@ -237,8 +240,9 @@ else:
     external_port = 443 if options.https else 80
     public_host = instance_tag if instance_domain else "${AWS_PUBLIC_HOST}"
     local_ip = "${AWS_LOCAL_IP}"
-    fwall_commands = ["iptables -t nat -A PREROUTING -p tcp --dport %d -j REDIRECT --to %d" % (external_port, gterm.DEFAULT_HTTP_PORT),
-                      "iptables -t nat -A OUTPUT --dst %s -p tcp --dport %d -j DNAT --to-destination %s:%d" % (local_ip, external_port, local_ip, gterm.DEFAULT_HTTP_PORT)]
+    for j in (0,1):
+        fwall_commands += ["iptables -t nat -A PREROUTING -p tcp --dport %d -j REDIRECT --to %d" % (external_port+j, gterm.DEFAULT_HTTP_PORT+j),
+                           "iptables -t nat -A OUTPUT --dst %s -p tcp --dport %d -j DNAT --to-destination %s:%d" % (local_ip, external_port+j, local_ip, gterm.DEFAULT_HTTP_PORT+j)]
     command_line += " --auth_type="+options.auth_type
     if auth_type == "multiuser":
         command_line += " --user_setup=auto --super_users="+gterm_user

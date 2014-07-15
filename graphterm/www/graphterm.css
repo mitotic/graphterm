@@ -64,41 +64,41 @@ body.ipadscreen  {
 }
 
 /* Terminal colors */
-.fgcolor1, span.fgcolor1, pre.fgcolor1 {
+#terminal.gterm-colors .fgcolor1, #terminal.gterm-colors span.fgcolor1, #terminal.gterm-colors pre.fgcolor1 {
     color: #bb0000;
 }
-.fgcolor2, span.fgcolor2, pre.fgcolor2 {
+#terminal.gterm-colors .fgcolor2, #terminal.gterm-colors span.fgcolor2, #terminal.gterm-colors pre.fgcolor2 {
     color: green;
 }
-.fgcolor3, span.fgcolor3, pre.fgcolor3 {
+#terminal.gterm-colors .fgcolor3, #terminal.gterm-colors span.fgcolor3, #terminal.gterm-colors pre.fgcolor3 {
     color: goldenrod;
 }
-.fgcolor4, span.fgcolor4, pre.fgcolor4 {
+#terminal.gterm-colors .fgcolor4, #terminal.gterm-colors span.fgcolor4, #terminal.gterm-colors pre.fgcolor4 {
     color: royalblue;
 }
-.fgcolor5, span.fgcolor5, pre.fgcolor5 {
+#terminal.gterm-colors .fgcolor5, #terminal.gterm-colors span.fgcolor5, #terminal.gterm-colors pre.fgcolor5 {
     color: #dd00dd;
 }
-.fgcolor6, span.fgcolor6, pre.fgcolor6 {
+#terminal.gterm-colors .fgcolor6, #terminal.gterm-colors span.fgcolor6, #terminal.gterm-colors pre.fgcolor6 {
     color: darkcyan;
 }
 
-.bgcolor1, span.bgcolor1, pre.bgcolor1 {
+#terminal.gterm-colors .bgcolor1, #terminal.gterm-colors span.bgcolor1, #terminal.gterm-colors pre.bgcolor1 {
     background-color: #bb0000;
 }
-.bgcolor2, span.bgcolor2, pre.bgcolor2 {
+#terminal.gterm-colors .bgcolor2, #terminal.gterm-colors span.bgcolor2, #terminal.gterm-colors pre.bgcolor2 {
     background-color: green;
 }
-.bgcolor3, span.bgcolor3, pre.bgcolor3 {
+#terminal.gterm-colors .bgcolor3, #terminal.gterm-colors span.bgcolor3, #terminal.gterm-colors pre.bgcolor3 {
     background-color: goldenrod;
 }
-.bgcolor4, span.bgcolor4, pre.bgcolor4 {
+#terminal.gterm-colors .bgcolor4, #terminal.gterm-colors span.bgcolor4, #terminal.gterm-colors pre.bgcolor4 {
     background-color: royalblue;
 }
-.bgcolor5, span.bgcolor5, pre.bgcolor5 {
+#terminal.gterm-colors .bgcolor5, #terminal.gterm-colors span.bgcolor5, #terminal.gterm-colors pre.bgcolor5 {
     background-color: #dd00dd;
 }
-.bgcolor6, span.bgcolor6, pre.bgcolor6 {
+#terminal.gterm-colors .bgcolor6, #terminal.gterm-colors span.bgcolor6, #terminal.gterm-colors pre.bgcolor6 {
     background-color: darkcyan;
 }
 
@@ -651,6 +651,11 @@ input.gterm-input-arg[type=text] {
     border: 2px solid gray;
 }
 
+.gterm-untrusted,
+.gterm-iframe.gterm-border.gterm-untrusted {
+    border: 2px dashed lightgray;
+}
+
 #terminal:not(.showicons) .pagelet .gterm-rowimg {
     display: none;
 }
@@ -795,7 +800,7 @@ span.gterm-iframeexpand {
 span.gterm-iframeclose, span.gterm-popupclose, span.gterm-pastedirectclose {
     position: absolute;
     top: 0px;
-    right: 8px;
+    right: 16px;
     padding: 2px;
     font-size: 1.3em;
     font-weight: bold;

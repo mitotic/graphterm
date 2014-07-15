@@ -7,7 +7,7 @@ pro gshow, command, v, invert=invert, overwrite=overwrite, xsize=xsize, ysize=ys
   gterm_code = 1155
   cookie = getenv("GTERM_COOKIE")
   if (cookie eq "") then cookie = getenv("LC_GTERM_COOKIE")
-  if (cookie eq "") then message, "No graphterm cookie"
+  if (cookie eq "") then cookie = '0'
 
   esc_prefix = esc+'[?'+strtrim(gterm_code,2)+';'+strtrim(cookie,2)+'h'
   esc_suffix = esc+'[?'+strtrim(gterm_code,2)+'l'
@@ -61,12 +61,9 @@ pro gshow, command, v, invert=invert, overwrite=overwrite, xsize=xsize, ysize=ys
   png_b64 = idl_base64(png_data)
   png_size = size(png_data)
   content_type = 'image/png'
-  content = '<!--gterm data blob=' +strtrim(blob_id,2)+'-->'+content_type+';base64,'+png_b64
-  print, esc_prefix, content, esc_suffix, format='(a,a,a,$)'
-
   params = ""
   if (overwrite) then params = "overwrite=yes"
-  img_html = '<!--gterm pagelet display=block blob='+strtrim(blob_id,2)+' '+params+'--><div class="gterm-blockhtml"><img class="gterm-blockimg" src="/_blob/local/'+strtrim(blob_id,2)+'"></div>'
+  content = '<!--gterm data ' +params+'-->'+content_type+';base64,'+png_b64
+  print, esc_prefix, content, esc_suffix, format='(a,a,a,$)'
 
-  print, esc_prefix, img_html, esc_suffix, format='(a,a,a,$)'
 end

@@ -120,15 +120,20 @@ Shared_secret = env("SHARED_SECRET", lc=True)
 URL = env("URL", "http://localhost:%d" % DEFAULT_HTTP_PORT)
 Blob_server = env("BLOB_SERVER", "")
 
-Server, _, Server_port = urlparse(URL)[1].partition(":")
+Server_protocol, netloc, path, params, query, fragment = urlparse(URL)
+Server, _, Server_port = netloc.partition(":")
 if Server_port:
     Server_port = int(Server_port)
 else:
-    Server_port = 443 if URL.startswith("https:") else 80
+    Server_port = 443 if Server_protocol == "https" else 80
 
-_, Host, Session = Path.split("/") if Path else ("", "", "") 
-Html_escapes = ["\x1b[?1155;%sh" % (Lterm_cookie or 0),
-                "\x1b[?1155l"]
+Untrusted_URL = "%s://%s:%s" % (Server_protocol, Server, Server_port+1)
+
+_, Host, Session = Path.split("/") if Path else ("", "", "")
+
+Esc_prefix = "\x1b[?1155"
+Html_escapes = [Esc_prefix+";%sh" % (Lterm_cookie or 0),
+                Esc_prefix+"l"]
 
 INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
                 "ipython": ("py", "python", ("In ", "   ...: ", "   ....: ", "   .....: ", "   ......: ")), # Works up to 10,000 prompts
@@ -146,6 +151,9 @@ LANGUAGES    = dict((prog, values[1]) for prog, values in list(INTERPRETERS.item
 PROMPTS_LIST = dict((prog, values[2]) for prog, values in list(INTERPRETERS.items()) if values[2])
 EXTN2LANG    = dict((values[0], values[1]) for prog, values in list(INTERPRETERS.items()))
 EXTN2PROG    = dict((values[0], prog) for prog, values in list(INTERPRETERS.items()) if prog != "ipython")
+
+# Comment prefix for language-format output
+CMT_PREFIX = "# "
 
 PAGE_BREAK = "---"
 
@@ -369,6 +377,9 @@ def write(data, stderr=False):
         sys.stdout.write(data)
         sys.stdout.flush()
 
+def untrusted_wrap_write(html, stderr=False):
+    write(Esc_prefix+";0h"+html+Esc_prefix+"l", stderr=stderr)
+
 def raw_wrap_write(html, stderr=False):
     """Wrap and write html, without headers, between escape sequences"""
     write(Html_escapes[0]+html+Html_escapes[1], stderr=stderr)
@@ -419,13 +430,15 @@ def write_pagelet_old(html, display="block", dir="", add_headers={}, stderr=Fals
                     }
     wrap_write(html, headers=html_headers, stderr=stderr)
 
-def write_pagelet(html, display="block", overwrite=False, dir="", add_headers={}, stderr=False):
+def write_pagelet(html, display="block", overwrite=False, autoerase=False, dir="", add_headers={}, stderr=False):
     """Write scrollable and overwriteable html pagelet to stdout"""
     params = "scroll=top"
     if display:
         params += " display=" + quote(display)
     if overwrite:
         params += " overwrite=yes"
+    if autoerase:
+        params += " autoerase=yes"
     if dir:
         params += " current_dir=" + quote(dir)
     for header, value in add_headers.items():
@@ -481,6 +494,23 @@ def blockimg_html(url, toggle=False, alt=""):
     BLOCKIMGFORMAT = '<div class="gterm-blockhtml '+toggleblock_class+'">'+togglespan+'<img class="gterm-blockimg '+togglelink_class+'" src="%s"'+alt_attr+'></div>'
     return BLOCKIMGFORMAT % url
 
+def display_data(content_type, content, overwrite=False, toggle=False, display="block", exit_page=False, stderr=False):
+    """Display data of specified content type. May be untrusted images.
+    toggle allows images to be hidden by clicking.
+    """
+
+    params = "display=" + display
+    if overwrite:
+        params += " overwrite=yes"
+    if toggle:
+        params += " toggle=yes"
+    if exit_page:
+        params += " exit_page=yes"
+
+    html = '<!--gterm data %s-->%s;base64,%s' % (params, content_type, base64.b64encode(content))
+        
+    raw_wrap_write(html, stderr=stderr)
+
 def display_blob(blob_id="", overwrite=False, toggle=False, display="block", exit_page=False, stderr=False):
     """Display blob image, overwriting previous image, if desired.
     toggle allows images to be hidden by clicking.
@@ -515,9 +545,9 @@ def display_blockimg(url, overwrite=False, toggle=False, alt="", stderr=False):
     raw_wrap_write(html, stderr=stderr)
 
 IFRAMEFORMAT = '<iframe id="%s" class="gterm-iframe %s" src="%s" %s %s></iframe>'
-def iframe_html(src_url="", html="", add_classes="", width=None, height=None, header=False, fullscreen=False):
+def iframe_html(src_url="", html="", add_classes="", width=None, height=None, header=False, fullscreen=False, host="", untrusted=False):
     if not src_url:
-        src_url = create_blob(html, content_type="text/html")
+        src_url = create_blob(html, content_type="text/html", host=host, untrusted=untrusted)
     max_percent = 95.0 if header else 100.0
     width_str = (' width="%s"' % width) if width else ' width="100%"'
     height_str = (' height="%s"' % height) if height else (' height="%d%%"' % max_percent if fullscreen else '')
@@ -659,7 +689,7 @@ def menu_op(target, value=None, stderr=False):
                }
     wrap_write("", headers=headers, stderr=stderr)
 
-def get_file_url(filepath, relative=False, exists=False, plain=False):
+def get_file_url(filepath, relative=False, exists=False, plain=False, untrusted=False):
     """Construct file URL by expanding/normalizing filepath, with hmac cookie suffix.
     If relative, return '/_file/host/path'
     """
@@ -674,12 +704,28 @@ def get_file_url(filepath, relative=False, exists=False, plain=False):
 
     filehmac = "?hmac="+file_hmac(filepath, Shared_secret)
     if relative:
-        return FILE_PREFIX + Host + filepath + filehmac
+        rel_path = FILE_PREFIX + Host + filepath + filehmac
+        return Untrusted_URL + rel_path if untrusted else rel_path
     else:
         return "file://" + ("" if Host == LOCAL_HOST else Host) + filepath + filehmac
 
-def make_blob_url(blob_id="", host=""):
-    blob_id = blob_id or str(uuid.uuid4())
+TRUSTED_PREFIX = "t-"
+UNTRUSTED_PREFIX = "u-"
+
+def create_blob_id(blob_id="", untrusted=False):
+    if blob_id:
+        if untrusted:
+            if not blob_id.startswith(UNTRUSTED_PREFIX):
+                blob_id = UNTRUSTED_PREFIX+blob_id
+        else:
+            if not blob_id.startswith(TRUSTED_PREFIX):
+                blob_id = TRUSTED_PREFIX+blob_id
+    else:
+        blob_id = (UNTRUSTED_PREFIX if untrusted else TRUSTED_PREFIX) + str(uuid.uuid4())
+    return blob_id
+
+def make_blob_url(blob_id="", host="", untrusted=False):
+    blob_id = create_blob_id(blob_id=blob_id, untrusted=untrusted)
     return blob_id, get_blob_url(blob_id, host=host)
 
 def get_blob_id(blob_url):
@@ -687,8 +733,9 @@ def get_blob_id(blob_url):
         path = blob_url
     else:
         try:
-            scheme, netloc, path, query, fragment = urlparse.urlsplit(import_url)
+            scheme, netloc, path, params, query, fragment = urlparse(blob_url)
         except Exception as excp:
+            logging.error("Error in get_blob_id: %s", excp)
             return ""
 
     if path.startswith(BLOB_PREFIX):
@@ -699,13 +746,19 @@ def get_blob_id(blob_url):
 def get_blob_url(blob_id, host=""):
     host = host or Host
     assert host, "Null host for blob url"
-    if "*" in Blob_server:
-        subdomain = "blob-"+hmac.new("wildcard", blob_id, digestmod=hashlib.md5).hexdigest()[:12]
-        return Blob_server.replace("*", subdomain)+BLOB_PREFIX+host+"/"+blob_id
-    else:
-        return Blob_server+BLOB_PREFIX+host+"/"+blob_id
+    path = BLOB_PREFIX+host+"/"+blob_id
 
-def create_blob(content=None, from_file="", content_type="", blob_id="", host="", stderr=False):
+    if blob_id.startswith(TRUSTED_PREFIX):
+        return path
+    elif Blob_server:
+        # Transient domain for blob isolation
+        subdomain = "blob-"+hmac.new("wildcard", blob_id, digestmod=hashlib.md5).hexdigest()[:12]
+        return Blob_server.replace("*", subdomain)+path
+    else:
+        # Use different port number to isolate blob
+        return Untrusted_URL+path
+
+def create_blob(content=None, from_file="", content_type="", blob_id="", host="", untrusted=False, stderr=False):
     """Create blob and returns URL to blob"""
     filepath = ""
     if from_file:
@@ -722,7 +775,7 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", host=""
     if not content_type and filepath:
         content_type, encoding = mimetypes.guess_type(filepath)
 
-    blob_id, blob_url = make_blob_url(blob_id, host=host)
+    blob_id, blob_url = make_blob_url(blob_id, host=host, untrusted=untrusted)
     params = dict(blob=blob_id, filepath=filepath)
     headers = {"x_gterm_response": "create_blob",
                "x_gterm_parameters": params,
@@ -732,11 +785,8 @@ def create_blob(content=None, from_file="", content_type="", blob_id="", host=""
     return blob_url
     
 class BlobBytesIO(BytesIO):
-    def __init__(self, content_type="text/html", host="", max_bytes=25000000):
-        self.blob_content_type = content_type
-        self.blob_host = host
+    def __init__(self, max_bytes=25000000):
         self.blob_max_bytes = max_bytes
-        self.blob_id, self.blob_url = make_blob_url(host=host)
         BytesIO.__init__(self)
 
     def write(self, s):
@@ -745,10 +795,9 @@ class BlobBytesIO(BytesIO):
         BytesIO.write(self, s)
 
     def close(self):
-        blob_url = create_blob(self.getvalue(), content_type=self.blob_content_type, blob_id=self.blob_id, host=self.blob_host)
+        data = self.getvalue()
         BytesIO.close(self)
-        assert blob_url == self.blob_url
-        return blob_url
+        return data
         
 def preload_images(urls, stderr=False):
     params = {"urls": urls}

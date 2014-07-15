@@ -2,7 +2,9 @@
 #
 
 """
-d3cloud: Display words from stdin as a word cloud using d3.js
+d3cloud: Display words from file (or stdin) as a word cloud using d3.js
+
+Usage: d3cloud text_file | gframe -f
 """
 
 from __future__ import absolute_import, print_function

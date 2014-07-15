@@ -200,7 +200,15 @@ enabled this option*). You can then access it using your local browser,
 with an URL of the form ``https://hostname.domain:port``, where
 ``port`` is the port number output by the ``gnbserver`` command. The
 notebook password is the same as the access code for your user
-account.
+account. (Note: Run the ``gnbserver`` command in a separate terminal window.)
+
+Once the server is running, individual notebook files can be opened in
+the IPython Notebook server using the ``gipynb`` command::
+
+  gipynb notebook.ipynb
+
+or by simply clicking on the ``.ipynb`` file in the ``gls`` output
+listing.
 
 *Note:* If each user is running their own copy of the IPython Notebook
 server, it can degrade performance on a shared computer. Please
@@ -218,10 +226,20 @@ notebooks, e,g.::
 
     gls *.ipynb
 
-Then click on the notebook that you wish to open.
-Alternatively, you can use the ``gpython`` or ``gopen`` commands::
+Then click on the notebook that you wish to open. This will open the
+notebook using the IPython Notebook server, if it is running, or using
+the GraphTerm notebook mode otherwise. Alternatively, you can also use
+the ``gopen`` command::
+
+    gopen notebook.ipynb
+
+To open notebook files using the built-in GraphTerm notebook mode, you
+can use the ``gpython`` or ``gipython`` command::
 
     gpython notebook.ipynb
+
+or simply run the standard ``python`` command and type *Shift-Enter* to enter
+the notebook mode as needed.
 
 
 .. figure:: https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png
@@ -243,11 +261,13 @@ shortcuts*.
 Saving and exiting python notebooks
 --------------------------------------------------------------------------------------------
 
-To save the notebook, use the menu command *notebook/save*
+IPython Notebook server has a menu option to save notebooks. To exit
+the notebook, click the red X in the top left corner.
 
-To exit the notebook mode, you can simply type *Control-C* or use the
-*notebook/quit* menu option. This returns you to the python command
-line, with the chevron (>>>) prompt.
+To save a GraphTerm mode notebook, use the menu command
+*notebook/save*. To exit the GraphTerm notebook mode, you can simply
+type *Control-C* or use the *notebook/quit* menu option. This returns
+you to the python command line, with the chevron (>>>) prompt.
 
 To exit the python command line, type *Control-D* or the following
 command::

@@ -1,7 +1,7 @@
 .. _virtual-setup:
 
 *********************************************************************************
- Setting up a Virtual Computer Lab
+Setting up a Virtual Computer Lab
 *********************************************************************************
 .. contents::
 
@@ -559,7 +559,7 @@ Running a public IPython Notebook server
 --------------------------------------------------------------------------------------------
 
 Specifying the ``--nb_server`` when starting up the GraphTerm server
-enables a menu option allowing each user to run to run the the
+enables a menu option allowing each user to run the
 ``gnbserver`` command which starts up a public IPython Notebook server
 listening on a unique port number that is tied to the user's Unix user
 ID. (A similar option for ``ec2launch`` opens up these ports for

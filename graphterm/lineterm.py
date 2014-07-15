@@ -375,7 +375,7 @@ def parse_headers(text):
             content = text[offset:]
             headers["x_gterm_parameters"] = opt_dict
             if directive == "data":
-                headers["x_gterm_response"] = "create_blob"
+                headers["x_gterm_response"] = "display_data"
                 content_type, sep, tail = content.partition(";")
                 encoding, sep2, content = tail.partition(",")
                 headers["content_type"] = content_type
@@ -686,6 +686,14 @@ class ScreenBuf(object):
         row_params = [row_params[JTYPE], dict(row_params[JOPTS])]
         current_dir = ""
         overwrite = False
+
+        if row_params[JOPTS].get("blob") and not row_params[JOPTS]["blob"].startswith(gterm.TRUSTED_PREFIX):
+            # Untrusted blob content must be displayed fullwindow with autoerase
+            row_params[JOPTS]["untrusted"] = True
+            row_params[JOPTS]["overwrite"] = True
+            row_params[JOPTS]["autoerase"] = True
+            row_params[JOPTS]["display"] = "fullwindow"
+            
         new_blob_id = ""
         if offset:
             # Prompt line (i.e., command line)
@@ -711,6 +719,7 @@ class ScreenBuf(object):
 
         row_params[JOPTS]["add_class"] = add_class
         ##logging.warning("ABCscroll_buf_up2: type=%s, line='%s', overwrite=%s, opts=%s, id=%s", row_params[JTYPE], line, overwrite, prev_pagelet_opts, cur_pagelet_id)
+
         if overwrite and prev_pagelet_opts and prev_pagelet_opts["pagelet_id"] == cur_pagelet_id:
             # Overwrite previous pagelet entry
             row_params[JOPTS]["pagelet_id"] = cur_pagelet_id
@@ -724,6 +733,17 @@ class ScreenBuf(object):
             # New scroll entry
             if prev_edit_file or prev_pagelet_opts.get("form_input"):
                 self.blank_last_entry()
+
+            if prev_pagelet_opts and prev_pagelet_opts.get("autoerase"):
+                # Auto erase previous pagelet entry
+                self.scroll_lines[-1][JPARAMS] = ["", {}]
+                self.scroll_lines[-1][JLINE] = ""
+                self.scroll_lines[-1][JMARKUP] = None
+                if self.last_blob_id and self.last_blob_id != new_blob_id:
+                    # Delete previous blob
+                    self.delete_blob(self.last_blob_id)
+                    self.last_blob_id = ""
+
             self.current_scroll_count += 1
             row_params[JOPTS]["pagelet_id"] = "%d-%d" % (self.cur_note, self.current_scroll_count)
             self.scroll_lines.append([self.entry_index, offset, current_dir, row_params, line, markup])
@@ -733,6 +753,7 @@ class ScreenBuf(object):
                 while self.scroll_lines and self.scroll_lines[0][JINDEX] == old_entry_index:
                     tem_entry_index, tem_offset, tem_dir, tem_params, tem_line, tem_markup = self.scroll_lines.pop(0)
                     self.delete_blob(tem_params[JOPTS].get("blob"))
+
 
     def append_scroll(self, scroll_lines):
         tem_lines = scroll_lines[:]
@@ -1307,6 +1328,7 @@ class Terminal(object):
         fullpath = fullname if fullname.startswith("/") else self.note_params["dir"]+"/"+fullname
         fname, fext = os.path.splitext(os.path.basename(fullpath))
 
+        lang_format = ""
         ipy_raw = False
         if fext in (".ipynb", ".json"):
             if fext == ".ipynb":
@@ -1323,6 +1345,9 @@ class Terminal(object):
         elif not fext:
             fullpath += ".gnb.md"
             fext = ".md"
+        elif fext[1:] in gterm.EXTN2LANG:
+            lang_format = gterm.EXTN2LANG[fext[1:]]
+
         if os.path.exists(fullpath):
             writable = os.access(fullpath, os.W_OK)
         else:
@@ -1398,7 +1423,7 @@ class Terminal(object):
                 fpath = os.path.abspath(self.note_params["dir"]+"/"+link_url) if self.note_params["dir"] else link_url
                 try:
                     with open(fpath) as f:
-                            data_uri = "data:image/%s;base64,%s" % (ftype, base64.b64encode(f.read()))
+                            data_uri = "data:image/%s;base64,%s" % (ftype, base64encode(f.read()))
                 except Exception, excp:
                     logging.error("save_notebook: Error in reading image content file %s", fpath)
             if data_uri:
@@ -1412,10 +1437,11 @@ class Terminal(object):
                 return None
 
         md_lines = []
-        if format == "ipynb":
-            md_lines += [IPYNB_JSON_HEADER % dict(name=fname_safe, version_major=3, version_minor=0)]
-        elif self.note_params["command"]:
-            md_lines.append('<!--gterm notebook command=%s-->' % safe_filename(self.note_params["command"]))
+        if not lang_format:
+            if format == "ipynb":
+                md_lines += [IPYNB_JSON_HEADER % dict(name=fname_safe, version_major=3, version_minor=0)]
+            elif self.note_params["command"]:
+                md_lines.append('<!--gterm notebook command=%s-->' % safe_filename(self.note_params["command"]))
         prompt_num = 0
         in_prompt = 0
         prev_markup = False
@@ -1473,6 +1499,8 @@ class Terminal(object):
 
                         if fig_line:
                             line = fig_line
+                        elif lang_format:
+                            line = gterm.CMT_PREFIX+line
                         md_lines.append(line)
                 else:
                     # Code cell
@@ -1483,14 +1511,25 @@ class Terminal(object):
                         # Prepend separating blank line
                         md_lines += [""]
 
-                    if curly_fence or cell["cellTypeExtra"] is not None:
-                        md_lines.append("```{"+cell["cellType"]+(cell["cellTypeExtra"] or "")+"}")
+                    if lang_format:
+                        if lang_format.lower() == cell["cellType"].lower() or lang_format.lower() == "{"+cell["cellType"].lower()+"}":
+                            md_lines += self.get_cell_input(cell_index)
+                        else:
+                            # Other "language"; indent as code
+                            md_lines += [gterm.CMT_PREFIX+"    "+line for line in self.get_cell_input(cell_index)]
                     else:
-                        md_lines.append("```"+cell["cellType"])
-                    md_lines += self.get_cell_input(cell_index)
-                    md_lines.append("```")
+                        if curly_fence or cell["cellTypeExtra"] is not None:
+                            md_lines.append("```{"+cell["cellType"]+(cell["cellTypeExtra"] or "")+"}")
+                        else:
+                            md_lines.append("```"+cell["cellType"])
+                        md_lines += self.get_cell_input(cell_index)
+                        md_lines.append("```")
                     # Append separating blank line
                     md_lines.append("")
+
+            if lang_format:
+                # Ignore output
+                continue
 
             if cell["cellOutput"] and not markup_cell:
                 out_lines = []
@@ -1549,10 +1588,11 @@ class Terminal(object):
 
             prev_markup = markup_cell
 
-        # Dump references
-        while Ref_blobs:
-            ref_id, ref_blob = Ref_blobs.popitem(last=False)
-            md_lines.append("[%s]: %s" % (ref_id, ref_blob))
+        if not lang_format:
+            # Dump references
+            while Ref_blobs:
+                ref_id, ref_blob = Ref_blobs.popitem(last=False)
+                md_lines.append("[%s]: %s" % (ref_id, ref_blob))
 
         if format == "ipynb":
             md_lines += [IPYNB_JSON_FOOTER]
@@ -1602,9 +1642,8 @@ class Terminal(object):
                                     line = line[:-1]
                                 self.note_screen_buf.scroll_buf_up(line, None)
                         elif output["output_type"] == "display_data":
-                            blob_id = str(uuid.uuid4())
-                            data_uri = "data:image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
-                            self.create_blob(blob_id, data_uri[len("data:"):])
+                            data_uri_tail = "image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
+                            blob_id = self.create_blob(data_uri_tail)
                             markup = BLOCKIMGFORMAT % (blob_id, gterm.get_blob_url(blob_id, host=self.host), "image")
                             self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                                row_params=["pagelet", {"blob": blob_id}])
@@ -1704,7 +1743,7 @@ class Terminal(object):
                     match = MD_IMAGEREF_RE.match(line)
                     alt = match.group(1).strip() or "image"
                     ref_id = match.group(2).strip()
-                    blob_id = blob_ids.get(ref_id, "") or str(uuid.uuid4())
+                    blob_id = blob_ids.get(ref_id, "") or gterm.create_blob_id()
                     blob_ids[ref_id] = blob_id
                     blob_url = gterm.get_blob_url(blob_id, host=self.host)
                     fig_prefix, sep, _ = ref_id.partition("-")
@@ -1741,7 +1780,7 @@ class Terminal(object):
                     match = MD_REF_RE.match(line)
                     ref_id = match.group(1).strip()
                     if ref_id in blob_ids:
-                        self.create_blob(blob_ids[ref_id], line[len(match.group(0)):])
+                        self.create_blob(line[len(match.group(0)):], blob_ids[ref_id])
 
                 elif gterm.GTERM_DIRECTIVE_RE.match(line):
                     # gterm comment directive (currently just ignored)
@@ -3043,13 +3082,30 @@ class Terminal(object):
             response_params = headers["x_gterm_parameters"]
             screen_buf = self.note_screen_buf if self.note_cells else self.screen_buf
             ##logging.warning("lineterm.Terminal.gterm_append: %s %s", response_type, response_params)
-            if "no_images" not in self.term_opts and (response_type == "display_blob" or
-                                                      (response_type == "create_blob" and headers.get("content_type","").startswith("image/")) ):
-                # Allow creation and display of image blobs without validation
-                self.gterm_validated = True
 
-            if not self.gterm_validated:
+            handled_untrusted_content = False
+            if not self.gterm_validated and "no_untrusted" not in self.term_opts:
+                if (response_type == "display_data" and headers.get("content_type","").startswith("image/")):
+                    # Allow display of image data without validation with restricted parameters
+                    handled_untrusted_content = True
+                    new_params = {"display": response_params.get("display",""),
+                                  "overwrite": response_params.get("overwrite", False)}
+                    for key in ("autoerase", "exit_page"):
+                        new_params[key] = response_params.get(key, False)
+                    headers["x_gterm_parameters"] = new_params
+                    response_params = new_params
+                    self.blob_data(headers, content)  # Trust unvalidated images only
+                elif not response_type or response_type == "pagelet":
+                    # Raw HTML displayed as untrusted blob (via untrusted iframe)
+                    handled_untrusted_content = True
+                    self.blob_data({"content_type": "text/html"}, content, untrusted=True)
+
+            if handled_untrusted_content:
+                # Already handled
+                pass
+            elif not self.gterm_validated:
                 # Unvalidated markup; plain-text or escaped HTML content for security
+                content = response_type+";"+headers.get("content_type","")+";"+content
                 try:
                     import lxml.html
                     content = cgi.escape(lxml.html.fromstring(content).text_content())
@@ -3066,30 +3122,29 @@ class Terminal(object):
                 else:
                     content_lines = split_lines(content)
                     screen_buf.scroll_buf_up(content_lines[0]+"...", None)
-            elif response_type == "auto_print":
+            elif self.gterm_validated and response_type == "auto_print":
                 # Validated auto print
                 if self.note_cells and len(self.note_input) > 1:
                     # Ignore auto print output within notebook cell (except for last)
                     pass
                 else:
                     retval = content + retval
-            else:
+            elif self.gterm_validated:
                 # Validated data
                 if response_type in ("create_blob", "edit_file", "open_notebook"):
                     try:
                         filepath = response_params.get("filepath", "")
                         if "content_length" in headers:
                             # Remote content provided
-                            encoding = headers.get("x_gterm_encoding", "")
-                            md5_digest = headers.get("x_gterm_digest", "")
-                            if md5_digest and md5_digest != hashlib.md5(content).hexdigest():
-                                raise Exception("File digest mismatch for %s: %s" % (response_type, filepath))
+                            if response_type != "create_blob":
+                                # Check it (except for create_blob, which checks itself)
+                                md5_digest = headers.get("x_gterm_digest", "")  # Hash of encoded data
+                                if md5_digest and md5_digest != hashlib.md5(content).hexdigest():
+                                    raise Exception("File digest mismatch for %s: %s" % (response_type, filepath))
 
-                            if response_type == "create_blob":
-                                assert not content or encoding == "base64", "Invalid blob encoding"
-                            else:
+                                # Only create blob content needs to remain encoded as Base64
+                                encoding = headers.get("x_gterm_encoding", "")
                                 if encoding == "base64":
-                                    # Only create blob content needs to remain encoded as Base64
                                     headers.pop("x_gterm_encoding", None)
                                     headers.pop("x_gterm_digest", None)
                                     content = base64.b64decode(content)
@@ -3112,10 +3167,6 @@ class Terminal(object):
                             else:
                                 content = ""
                             headers["content_length"] = len(content)
-                            if response_type == "create_blob":
-                                # Encode create blob content to Base64
-                                headers["x_gterm_encoding"] = "base64"
-                                content = base64encode(content)
 
                         # TODO: use content to determine MIME type
                         basename, extension = os.path.splitext(filepath)
@@ -3140,35 +3191,17 @@ class Terminal(object):
                     row_params = ["pagelet", headers["x_gterm_parameters"] or {}]
                     screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
                     ##offset, directive, opt_dict = gterm.parse_gterm_directive(content) # Does nothing?
+                elif response_type == "display_data":
+                    self.blob_data(headers, content, untrusted=not self.gterm_validated)
                 elif response_type == "display_blob":
                     # Display blob as pagelet image
-                    # Stricty control parameters, as unvalidated images may be displayed
-                    params = {"display": response_params.get("display", ""),
-                              "overwrite": response_params.get("overwrite", ""),
-                              "exit_page": response_params.get("exit_page", "")}
+                    self.blob_data(headers, untrusted=not self.gterm_validated)
+                elif response_type == "create_blob":
                     blob_id = response_params.get("blob")
                     if blob_id:
-                        blob_url = gterm.get_blob_url(blob_id, host=self.host)
-                        content = gterm.blockimg_html(blob_url, toggle=response_params.get("toggle"), alt="blob")
-                        params["blob"] = urllib.quote(blob_id)
+                        self.create_blob(content, blob_id, headers=headers, untrusted=not self.gterm_validated)
                     else:
-                        # Display blank pagelet
-                        content = ""
-                    row_params = ["pagelet", params]
-                    screen_buf.scroll_buf_up("", None, markup=content, row_params=row_params)
-                elif response_type == "create_blob":
-                    # Note: blob content should be Base64 encoded
-                    # Stricty control parameters, as unvalidated images can be present
-                    del headers["x_gterm_response"]
-                    del headers["x_gterm_parameters"]
-                    blob_id = response_params.get("blob")
-                    if not blob_id:
-                        logging.warning("No blob_id for blob data")
-                    elif "content_length" not in headers:
-                        logging.warning("No content_length specified for create_blob")
-                    else:
-                        # Note: blob content should be Base64 encoded
-                        self.create_blob(blob_id, content, headers=headers)
+                        logging.error("No blob_id for create blob")
                 elif response_type == "frame_msg":
                     self.screen_callback(self.term_name, "", "frame_msg",
                      [response_params.get("user",""), response_params.get("frame",""), content])
@@ -3194,7 +3227,8 @@ class Terminal(object):
                 elif response_type == "nb_clear":
                     if self.note_cells:
                         self.erase_output( bool(response_params.get("all")) )
-                else:
+                elif self.gterm_validated:
+                    # Pass thru other response type, if validated (for now)
                     headers["content_length"] = len(content)
                     params = {"validated": self.gterm_validated, "headers": headers}
                     self.graphterm_output(params, content)
@@ -3205,30 +3239,96 @@ class Terminal(object):
         self.gterm_entry_index = None
         return retval
 
-    def create_blob(self, blob_id, content, headers=None):
-        """ If headers, content should be base64 encoded.
+    def blob_data(self, headers, content=None, untrusted=False):
+        """ Display image blobs and untrusted HTML blobs in fullwindow iframes
+            If blob_id is not provided, it will be generated.
+            Blob_id is returned on successful return, or ""
+            Create blob as needed and display in scroll buffer as needed.
+        """
+        content_type = headers.get("content_type", "")
+        response_type = headers.get("x_gterm_response", "display_data")
+        response_params = headers.get("x_gterm_parameters", {})
+        blob_id = response_params.get("blob", "")
+        if not blob_id:
+            assert content is not None, "No blob content for "+response_type
+            blob_id = self.create_blob(content, blob_id, headers=headers, untrusted=untrusted)
+
+        if blob_id and response_type in ("display_data", "display_blob"):
+            screen_buf = self.note_screen_buf if self.note_cells else self.screen_buf
+            if untrusted and blob_id.startswith(gterm.TRUSTED_PREFIX):
+                logging.warning("Not allowed to display trusted blob data")
+                screen_buf.scroll_buf_up("Unable to display blob", None, row_params=["", {}])
+            else:
+                blob_url = gterm.get_blob_url(blob_id, host=self.host)
+                if response_type == "display_blob" or content_type.startswith("image/"):
+                    html = gterm.blockimg_html(blob_url, toggle=response_params.get("toggle"), alt="blob")
+                    params = {"display": response_params.get("display", ""), "blob": urllib.quote(blob_id),
+                              "overwrite": response_params.get("overwrite", False)}
+                    for key in ("autoerase", "exit_page"):
+                        params[key] = response_params.get(key, False)
+                else:
+                    iframe_html = gterm.iframe_html(src_url=blob_url, width="95%", height="90%")
+                    html = gterm.iframe_header_html(iframe_html, fullscreen=True)
+                    params = {"display": "fullwindow", "blob": urllib.quote(blob_id),
+                              "autoerase": True, "overwrite": True, "untrusted": True}
+
+                row_params = ["pagelet", params]
+                screen_buf.scroll_buf_up("", None, markup=html, row_params=row_params)
+
+        return blob_id
+
+
+    def create_blob(self, content, blob_id="", headers=None, untrusted=False):
+        """ If headers, content should be provided and maybe base64 encoded.
             Else, content should be of the data URI form: "image/png;base64,<base64>"
+            Return blob_id, creating one if need be. Null string on error.
+            Within notebook, image blobs are appended to special buffer.
         """
         if headers:
             content_type = headers.get("content_type", "")
+            encoding = headers.get("x_gterm_encoding", "")
+            response_params = headers.get("x_gterm_parameters", {})
+            filepath = response_params.get("filepath", "")
+            md5_digest = headers.get("x_gterm_digest", "")  # Hash of encoded data
+            if md5_digest and md5_digest != hashlib.md5(content).hexdigest():
+                logging.error("File digest mismatch for %s: %s", content_type, filepath)
+                return ""
         else:
+            filepath = ""
             content_type, sep, tail = content.partition(";")
             encoding, sep2, content = tail.partition(",")
-            if encoding != "base64":
-                logging.warning("Invalid encoding for data URI: %s", encoding)
-                return ""
             content_type = content_type.strip()
             headers = {"content_type": content_type}
 
-        if "content_length" not in headers:
-            headers["content_length"] = len(base64.b64decode(content))
+        if encoding and encoding != "base64":
+            logging.error("Invalid encoding %s for blob: %s", encoding, filepath)
+            return ""
 
+        if not content_type or (untrusted and (not content_type.startswith("image/") and content_type != "text/html")):
+            logging.error("Invalid content type '%s", content_type)
+            return ""
+
+        len_content = len(base64.b64decode(content)) if encoding else len(content)
+        if "content_length" in headers:
+            if len_content  != headers["content_length"]:
+                logging.error("Content length mismatch (%d!=%d) for %s: %s" % (len_content, headers["content_length"], content_type, filepath))
+                return ""
+        else:
+            headers["content_length"] = len_content
+
+        if not blob_id:
+            blob_id = gterm.create_blob_id(untrusted=untrusted)
+        elif untrusted and blob_id.startswith(gterm.TRUSTED_PREFIX):
+            logging.error("Not allowed to create trusted blob")
+            return ""
+
+        blob_content = content if encoding else base64encode(content)
         if self.note_cells and content_type.startswith("image/"):
-            self.note_screen_buf.add_blob(blob_id, content_type, content)
+            self.note_screen_buf.add_blob(blob_id, content_type, blob_content)
 
         self.screen_callback(self.term_name, "", "create_blob",
-                             [blob_id, headers, content])
-        return content_type
+                             [blob_id, headers, blob_content])
+        return blob_id
 
     def graphterm_output(self, params={}, content="", response_id="", from_buffer=False):
         if not from_buffer:
