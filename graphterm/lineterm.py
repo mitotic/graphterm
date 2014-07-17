@@ -1212,8 +1212,12 @@ class Terminal(object):
         if content:
             if filepath.endswith(".ipynb") or filepath.endswith(".ipynb.json"):
                 self.read_ipynb(content)
-            else:
+            elif filepath.endswith(".md"):
                 self.read_md(content)
+            elif self.note_params["lang"]:
+                self.read_code(content)
+            else:
+                raise Exception("Unrecognized file extension for notebook: "+filepath)
 
         if not self.note_cells["curIndex"]:
             self.add_cell("")
@@ -1835,6 +1839,38 @@ class Terminal(object):
                 raw_lines = []
         except Exception, excp:
             logging.warning("read_md: %s", excp)
+
+        self.update()
+
+    def read_code(self, content):
+        """Read code file, interpreting comments as Markdown"""
+        code_lines = []
+        raw_lines = []
+        code_type = "{r}" if self.note_params["lang"].lower() == "r" else self.note_params["lang"]
+        try:
+            for line in split_lines(content, chomp=True):
+                if line.startswith(gterm.CMT_PREFIX):
+                    if code_lines:
+                        self.add_cell(code_type, init_text="\n".join(code_lines))
+                        code_lines = []
+                    raw_lines.append(line[len(gterm.CMT_PREFIX):])
+                elif line or code_lines:
+                    # Non-blank code line or blank line following non-blank code line
+                    if raw_lines:
+                        self.add_cell("markdown", init_text="\n".join(raw_lines))
+                        raw_lines = []
+                    code_lines.append(line)
+
+            if code_lines:
+                # Add code cell
+                self.add_cell(code_type, init_text="\n".join(code_lines))
+                code_lines = []
+            if raw_lines:
+                # Add raw cell
+                prev_cell = self.add_cell("markdown", init_text="\n".join(raw_lines))
+                raw_lines = []
+        except Exception, excp:
+            logging.warning("read_code: %s", excp)
 
         self.update()
 
@@ -3346,6 +3382,14 @@ class Terminal(object):
         filepath = params.get("x_gterm_filepath", "")
         update_name = params.get("x_gterm_updatename", "")
         encoded = params.get("x_gterm_encoding") == "base64"
+        content_length = params.get("content_length")
+
+        if content_length is not None and content_length != len(filedata):
+            errmsg = "Content length mismatch for %s: %s != %s" % (filepath, content_length, len(filedata))
+            print >> sys.stderr, "lineterm: Error in writing to %s (%s)" % (self.term_name, errmsg)
+            self.screen_callback(self.term_name, "", "save_status", [filepath, update_name, errmsg])
+            return
+
         if location != "remote":
             filepath = os.path.expanduser(filepath)
             if not filepath.startswith("/"):
@@ -3761,6 +3805,7 @@ class Multiplex(object):
                 os.execvpe(cmd[0], cmd, env)
             else:
                 global Exec_errmsg
+                ##fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd,fcntl.F_GETFL)|os.O_NONBLOCK)
                 fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
                 self.proc[term_name] = Terminal(term_name, fd, pid, self.screen_callback,
                                                 height=height, width=width,

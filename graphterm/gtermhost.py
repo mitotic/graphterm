@@ -271,10 +271,10 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
             Widget_server.listen(self.widget_port, address="localhost")
             logging.warning("GraphTerm widgets listening on %s:%s", "localhost", self.widget_port)
 
-    def remote_response(self, term_name, websocket_id, message_list):
-        self.send_request_threadsafe("response", term_name, websocket_id, message_list)
+    def remote_response(self, term_name, websocket_id, message_list, _content=None):
+        self.send_request_threadsafe("response", term_name, websocket_id, message_list, _content=_content)
 
-    def remote_request(self, term_name, from_user, req_list):
+    def remote_request(self, term_name, from_user, req_list, _content=None):
         """
         Setup commands:
           reconnect <response_id> <host_settings>
@@ -286,7 +286,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
           click_paste <text> <file_url> {command:, clear_last:, normalize:, enter:}
           paste_command <text>
           get_finder <kind> <directory>
-          save_data <save_params> <filedata>
+          save_data <save_params> <filedata>|None
           open_notebook <filepath> <share> <prompts> <content>
           close_notebook <discard>
           save_notebook <filepath> <input_data> <params>
@@ -313,7 +313,7 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
         try:
             lterm_cookie, blobs = self.terms.get(term_name, [None, None])
             resp_list = []
-            for cmd in req_list:
+            for j, cmd in enumerate(req_list):
                 action = cmd.pop(0)
                 if action == "shutdown":
                     if cmd:
@@ -360,9 +360,14 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                         chat_widget.send_packet(msg.encode(self.host_settings["term_encoding"], "ignore"))
 
                 elif action == "save_data":
-                    # save_data <save_params> <filedata>
+                    # save_data <save_params> <filedata>|None
                     if self.lineterm:
-                        self.lineterm.save_data(term_name, cmd[0], cmd[1])
+                        if cmd[1] is None:
+                            assert j == len(req_list)-1, "save_data with content must be the last request"
+                            data = _content
+                        else:
+                            data = cmd[1]
+                        self.lineterm.save_data(term_name, cmd[0], data)
 
                 elif action == "save_prefs":
                     # save_prefs <prefs_dict>
@@ -597,13 +602,18 @@ class TerminalClient(packetserver.RPCLink, packetserver.PacketClient):
                                       dict(status=status, last_modified=last_modified,
                                            etag=etag,
                                            content_type=content_type, content_length=content_length,
-                                           content_b64=content_b64)])
+                                           content_b64=None if content_b64 else "")])
+                    if content_b64:
+                        # Send response with file content right away
+                        self.remote_response(term_name, "", resp_list, _content=content_b64)
+                        resp_list = []
 
                 elif action == "errmsg":
                     logging.warning("remote_request: ERROR %s", cmd[0])
                 else:
                     raise Exception("Invalid action: "+action)
-            self.remote_response(term_name, "", resp_list);
+            if resp_list:
+                self.remote_response(term_name, "", resp_list)
         except Exception, excp:
             if isinstance(excp, gterm.MsgException):
                 errmsg = str(excp)

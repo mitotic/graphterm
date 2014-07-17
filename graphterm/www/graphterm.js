@@ -1106,9 +1106,11 @@ function GTWebSocket(auth_user, auth_code, connect_cookie) {
 	this.ws_url += (location.search ? "&" : "?") + $.param(add_params);
     console.log("GTWebSocket url: "+this.ws_url);
     this.ws = new WebSocket(this.ws_url);
+    this.ws.binaryType = "arraybuffer";
     this.ws.onopen = bind_method(this, this.onopen);
     this.ws.onmessage = bind_method(this, this.onmessage);
     this.ws.onclose = bind_method(this, this.onclose);
+    this.await_binary_data = null;
     console.log("GTWebSocket.__init__: ");
 }
 
@@ -1149,7 +1151,7 @@ GTWebSocket.prototype.write = function(msg) {
     try {
 	if (this.ws.readyState > WebSocket.OPEN)
 	    throw "Websocket closed";
-	this.ws.send(JSON.stringify(msg));
+	this.ws.send( (msg instanceof ArrayBuffer) ? msg : JSON.stringify(msg) );
     } catch(err) {
 	if (window.confirm("Error in websocket ("+err+"). Reload page?")) {
 	    window.location.reload();
@@ -1214,20 +1216,39 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	return;
 
     var payload = evt.data;
-    if (gDebugMessages)
-	console.log("GTWebSocket.onmessage: "+payload);
 
     if (!this.opened) {
 	// Validate
 	this.opened = true;
     }
     try {
-	var payload_obj = JSON.parse(payload);
+	var payload_obj, payload_raw;
+	if (payload instanceof ArrayBuffer) {
+	    if (gDebugMessages)
+		console.log("GTWebSocket.onmessage: ArrayBuffer: "+payload.byteLength);
+	    if (!this.await_binary_data)
+		return;
+	    payload_obj = [ this.await_binary_data ];
+	    this.await_binary_data = null;
+	} else {
+	    if (gDebugMessages)
+		console.log("GTWebSocket.onmessage: "+payload);
+	    payload_obj = JSON.parse(payload);
+	}
 	for (var j=0; j<payload_obj.length; j++) {
 	    var command = payload_obj[j];
 	    var action = command[0];
 
-            if (action == "osh_stdin") {
+            if (action == "raw_data") {
+		// Example command for receiving raw data from server
+		if (payload instanceof ArrayBuffer) {
+		    console.log("GTWebSocket.onmessage: Received raw data "+payload.byteLength);
+		} else {
+		    if (j != payload_obj.length-1)
+			console.log("GTWebSocket.onmessage: ERROR raw_data must be last command");
+		    this.await_binary_data = command;
+		}
+            } else if (action == "osh_stdin") {
 		// Execute JS "command" from otrace console
 		if (command[1] == "repeat") {
 		    this.repeatCommand();
@@ -5208,14 +5229,12 @@ function GTFileDropHandler(target) {
     var file = this.files[0];
     var reader = new FileReader();
     reader.onload = function(evt) {
-	var dataUri = evt.target.result;
-	var offset = dataUri.indexOf("base64,");
-	var b64_data = dataUri.substr(offset+"base64,".length);
+	var arr_buffer = evt.target.result;
 	if (gExpectUpload) {
 	    gExpectUpload = null;
-	    GTTransmitFile(file.name, file.type, b64_data);
+	    GTTransmitFile(file.name, file.type, arr_buffer);
 	} else {
-	    gUploadFile = [file.name, file.type, b64_data];
+	    gUploadFile = [file.name, file.type, arr_buffer];
 	}
     };
 
@@ -5223,17 +5242,20 @@ function GTFileDropHandler(target) {
 	alert("Failed to read file "+file.name+" (code="+evt.target.error.code+")");
     };
 
-    reader.readAsDataURL(file);
+    reader.readAsArrayBuffer(file);
 }
 
-function GTTransmitFile(filename, mimetype, b64_data) {
+function GTTransmitFile(filename, mimetype, arr_buffer) {
     gExpectUpload = null;
     gUploadFile = null;
     $("#session-bufscreen .gterm-upload").remove();
-    console.log("GTTransmitFile:", filename, mimetype, b64_data.length);
+    console.log("GTTransmitFile:", filename, mimetype, arr_buffer.byteLength);
     if (gWebSocket && gParams.controller) {
-	gWebSocket.write([["save_data", {x_gterm_filepath: filename, content_type: mimetype,
-					 x_gterm_location: "remote", x_gterm_encoding: "base64"}, b64_data]]);
+	gWebSocket.write([["save_data", {x_gterm_filepath: filename,
+					 content_type: mimetype,
+					 content_length: arr_buffer.byteLength,
+					 x_gterm_location: "remote"}, null]]);
+	gWebSocket.write(arr_buffer);
     }
 }
 

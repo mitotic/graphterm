@@ -1076,6 +1076,19 @@ def open_browser(url, browser=""):
 
     return command_output(command_args, timeout=5)
 
+def set_tty_speed(fd, baudrate=termios.B230400):
+    tem_settings = termios.tcgetattr(fd)
+    tem_settings[4:6] = (baudrate, baudrate)
+    termios.tcsetattr(fd, termios.TCSADRAIN, tem_settings)
+
+def set_tty_echo(fd, enabled):
+    tem_settings = termios.tcgetattr(fd)
+    if enabled:
+        tem_settings[3] |= termios.ECHO
+    else:
+        tem_settings[3] &= ~termios.ECHO
+    termios.tcsetattr(fd, termios.TCSADRAIN, tem_settings)
+
 CHUNK_BYTES = 4096
 def receive_data(stderr=False, binary=False, verbose=False):
     """Receive from client via stdin, returning (errmsg, headers, content)"""

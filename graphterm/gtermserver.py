@@ -323,6 +323,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         self.oshell = None
         self.last_output = None
 
+        self.gterm_await_binary = None
+
     def allow_draft76(self):
         return True
 
@@ -925,11 +927,21 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if self.remote_path in self._all_paths:
             self._all_paths[self.remote_path].discard(self.websocket_id)
 
-    def write_json(self, data):
+    def write_json(self, obj):
         try:
-            self.write_message(json.dumps(data))
+            self.write_raw(json.dumps(obj))
         except Exception, excp:
             logging.error("write_json: ERROR %s", excp)
+
+    def write_raw(self, data, binary=False):
+        try:
+            self.write_message(data, binary=binary)
+        except Exception, excp:
+            logging.error("write_raw: ERROR %s", excp)
+            closed_excp = getattr(tornado.websocket, "WebSocketClosedError", None)
+            if not closed_excp or not isinstance(excp, closed_excp):
+                import traceback
+                logging.info("Error in websocket: %s\n%s", excp, traceback.format_exc())
             try:
                 # Close websocket on write error
                 self.close()
@@ -951,7 +963,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                 ws.close()
 
     def on_message(self, message):
-        ##logging.error("GTSocket.on_message: %s - %s", self.remote_path, message)
+        ##logging.error("GTSocket.on_message: %s - (%s) %s", self.remote_path, type(message), len(message) if isinstance(message, bytes) else message[:250])
         if not self.remote_path:
             return
 
@@ -984,8 +996,20 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if self._auth_type >= self.MULTI_AUTH and not is_super_user and local_or_osh:
             # Failsafe
             allow_control_request = False
-            
-        if is_owner or controller or allow_chat_only or allow_control_request:
+
+        send_content = None
+        if isinstance(message, bytes):
+            # Binary message (treat as content for last text message)
+            if not self.gterm_await_binary:
+                return
+            send_content = message
+            req_list = [self.gterm_await_binary]
+            self.gterm_await_binary = None
+            msg_list = []
+
+        elif is_owner or controller or allow_chat_only or allow_control_request:
+            # Text message
+            req_list = []
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
                 if allow_chat_only:
@@ -1001,9 +1025,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             return
 
         kill_term = False
-        req_list = []
         try:
-            for msg in msg_list:
+            for j, msg in enumerate(msg_list):
                 if msg[0] == "osh_stdout":
                     TraceInterface.receive_output("stdout", msg[1], from_user or self.websocket_id, msg[2])
 
@@ -1123,16 +1146,13 @@ class GTSocket(tornado.websocket.WebSocketHandler):
                             continue
                         ws_user = ws.authorized["user"] if ws.authorized else ""
                         if (not to_user and controller) or to_user == "*" or to_user == ws_user:
-                            try:
-                                # Change command and add from_user
-                                ws.write_message(json.dumps([["receive_msg", from_user] + msg[1:]]))
-                            except Exception, excp:
-                                logging.error("send_msg: ERROR %s", excp)
-                                try:
-                                    # Close websocket on write error
-                                    ws.close()
-                                except Exception:
-                                    pass
+                            # Change command and add from_user
+                            ws.write_json([["receive_msg", from_user] + msg[1:]])
+
+                elif msg[0] == "save_data" and msg[2] is None:
+                    # Await binary data
+                    assert j == len(msg_list)-1, "save_data with binary content must occur as last message in list"
+                    self.gterm_await_binary = msg
 
                 elif not kill_term:
                     if msg[0] == "open_notebook" and msg[1].startswith("/") and msg[1].count("/") == 2:
@@ -1170,7 +1190,8 @@ class GTSocket(tornado.websocket.WebSocketHandler):
             for matchpath in matchpaths:
                 matchhost, matchterm = matchpath.split("/")
                 if req_list:
-                    TerminalConnection.send_to_connection(matchhost, "request", matchterm, from_user, req_list)
+                    TerminalConnection.send_to_connection(matchhost, "request", matchterm, from_user, req_list,
+                                                          _content=send_content)
                 if kill_term:
                     kill_remote(matchpath, from_user)
 
@@ -1223,8 +1244,7 @@ class TraceInterface(object):
             return
 
         # Schedules callback in event loop
-        tornado.ioloop.IOLoop.instance().add_callback(functools.partial(websocket.write_message,
-                                                                        json.dumps([["osh_stdin", command]])))
+        tornado.ioloop.IOLoop.instance().add_callback(functools.partial(websocket.write_json,[["osh_stdin", command]]))
 
     @classmethod
     def receive_output(cls, channel, repeat, username, message):
@@ -1344,7 +1364,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
             self.term_dict.pop(term_name, None)
         return term_name
 
-    def remote_response(self, term_name, websocket_id, msg_list):
+    def remote_response(self, term_name, websocket_id, msg_list, _content=None):
         fwd_list = []
         owners_only_list = []
         term_path = self.connection_id + "/" + term_name
@@ -1354,7 +1374,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
             is_super_user = GTSocket.is_super_or_single(terminal_params["owner"], GTSocket._auth_type)
         else:
             is_super_user = False
-        for msg in msg_list:
+        for j, msg in enumerate(msg_list):
             if msg[0] == "term_params":
                 client_version = msg[1]["version"]
                 min_client_version = msg[1]["min_version"]
@@ -1376,7 +1396,11 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 self.term_prefs[msg[1]["normalized_host"]] = msg[1]["term_prefs"]
                 self.term_dict = dict((key, "") for key in msg[1]["term_names"])
             elif msg[0] == "file_response":
-                ProxyFileHandler.complete_request(msg[1], **gtermhost.dict2kwargs(msg[2]))
+                kwargs = gtermhost.dict2kwargs(msg[2])
+                if kwargs.get("content_b64") is None and _content is not None:
+                    assert j == len(msg_list)-1, "file_response with content must occur as last message in list"
+                    kwargs["content_b64"] = _content
+                ProxyFileHandler.complete_request(msg[1], **kwargs)
             elif  msg[0] == "terminal" and msg[1] in ("note_open", "note_close", "note_mod_offset"):
                 args = msg[2]
                 if msg[1] == "note_mod_offset":
@@ -1568,6 +1592,20 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     owners_only_list.append(msg)  # Handled out-of-sequence
                 else:
                     fwd_list.append(msg)
+            elif  msg[0] == "raw_data" and msg[2] is None:
+                assert _content is not None, "No content for raw data"
+                headers = msg[1]
+                owners_only = bool(headers.get("x_gterm_parameters",{}).get("owners_only"))
+                if owners_only:
+                    owners_only_list.append(msg)  # Handled out-of-sequence
+                else:
+                    fwd_list.append(msg)
+
+                # Send commands right away
+                self.forward_to_ws(term_path, fwd_list, owners_only_list=owners_only_list, websocket_id=websocket_id)
+                self.binary_to_ws(term_path, _content, owners_only=owners_only, websocket_id=websocket_id)
+                fwd_list = []
+                owners_only_list = []
             else:
                 fwd_list.append(msg)
                 if msg[0] == "terminal" and msg[1] == "graphterm_chat":
@@ -1576,6 +1614,9 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                     else:
                         self.allow_chat.pop(term_name, None)
 
+        self.forward_to_ws(term_path, fwd_list, owners_only_list=owners_only_list, websocket_id=websocket_id)
+
+    def forward_to_ws(self, term_path, fwd_list, owners_only_list=[], websocket_id=""):
         if websocket_id:
             ws_set = set([websocket_id])
         else:
@@ -1602,22 +1643,26 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                                     multi_fwd_list.append([fwd[0], prefix+'</pre>\n'+fwd[1]]+fwd[2:])
                         
                         if multi_fwd_list:
-                            ws.write_message(json.dumps(multi_fwd_list))
+                            ws.write_json(multi_fwd_list)
                     else:
-                        ws.write_message(json.dumps(fwd_list))
+                        ws.write_json(fwd_list)
                         if owners_only_list and ws_id in ws.get_terminal_control_set(ws.remote_path):
-                            ws.write_message(json.dumps(owners_only_list))
+                            ws.write_json(owners_only_list)
                 except Exception, excp:
-                    logging.error("remote_response: write ERROR %s", excp)
-                    closed_excp = getattr(tornado.websocket, "WebSocketClosedError", None)
-                    if not closed_excp or not isinstance(excp, closed_excp):
-                        import traceback
-                        logging.info("Error in websocket: %s\n%s", excp, traceback.format_exc())
-                    try:
-                        # Close websocket on write error
-                        ws.close()
-                    except Exception:
-                        pass
+                    logging.error("forward_to_ws: write ERROR %s", excp)
+
+    def binary_to_ws(self, term_path, content, owners_only=False, websocket_id=""):
+        """Binary data is not sent to wildcard terminals"""
+        if websocket_id:
+            ws_set = set([websocket_id])
+        else:
+            ws_set = set(GTSocket.get_terminal_watchers(term_path).keys())
+
+        for ws_id in ws_set:
+            ws = GTSocket.get_websocket(ws_id)
+            if ws:
+                if not owners_only or ws_id in ws.get_terminal_control_set(ws.remote_path):
+                    ws.write_raw(content, binary=True)
 
 Proxy_cache = gtermhost.BlobCache()
 

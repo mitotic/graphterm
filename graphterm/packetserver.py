@@ -82,6 +82,8 @@ class PacketConnector(object):
     a new connection is created. (Any previous connection with the same id is closed).
     """
     _all_connections = None   # Must be re-defined to {} in final derived class
+    CONTENT_DELIM = "\r\n\r\n"
+
     def __init__(self, client=False, server_type="", delimiter=None,
                  framelen_format=None, single_request=False, ssl_options={}, max_packet_buf=0):
         if not delimiter and not framelen_format:
@@ -209,22 +211,30 @@ class PacketConnector(object):
             else:
                 self.stream.read_until(self.delimiter, self.receive_packet)
 
-    def send_json(self, obj, finish=False, buffer=False, nobuffer=False):
+    def send_json(self, obj, _content=None, finish=False, buffer=False, nobuffer=False):
+        """Keyword argument named _content with bytes data is treated specially, and transmitted without JSON encoding
+        """
         if not self.closed:
             try:
-                json_obj = json.dumps(obj)
-                self.send_packet(json_obj, finish=finish, utf8=True, buffer=buffer, nobuffer=nobuffer)
+                raw_data = self.make_packet(json.dumps(obj), _content=_content, utf8=True)
+                self.send_raw_packet(raw_data, finish=finish, buffer=buffer, nobuffer=nobuffer)
             except Exception, excp:
                 logging.warning("PacketConnector.send_json: ERROR: %s", excp)
                 raise
 
-    def make_packet(self, data, utf8=False):
-        if utf8:
-            data = escape.utf8(data)
+    def make_packet(self, text, _content=None, utf8=False):
+        """ _content is binary data to be appended to text, separated by a delimiter
+        """
+        data = escape.utf8(text) if utf8 else text
 
         if self.framelen_format:
+            if _content is not None:
+                assert self.CONTENT_DELIM not in data, "Content delimiter not allowed in text"
+                data += self.CONTENT_DELIM + _content
+
             packet = struct.pack(self.framelen_format, len(data)) + data
         else:
+            assert _content is None, "Binary content not allowed in delimited packets"
             if self.delimiter in data:
                 raise Exception("Delimiter not allowed in message")
             packet = data + self.delimiter
@@ -235,8 +245,8 @@ class PacketConnector(object):
             self.packet_buf.pop(0)
 
     def resend_buffered_packets(self):
-        for packet_id, data, finish, utf8 in self.packet_buf:
-            self.send_packet(data, finish=finish, utf8=utf8, nobuffer=True)
+        for packet_id, data, finish in self.packet_buf:
+            self.send_raw_packet(data, finish=finish, nobuffer=True)
 
     def is_connected(self):
         return self.connected
@@ -249,11 +259,18 @@ class PacketConnector(object):
         If buffer, packet is not actually sent, just buffered.
         If nobuffer, self.packet_id is not incremented.
         """
+        return self.send_raw_packet(self.make_packet(data,utf8=utf8), finish=finish, buffer=buffer, nobuffer=nobuffer)
+
+    def send_raw_packet(self, data, finish=False, buffer=False, nobuffer=False):
+        """
+        If buffer, packet is not actually sent, just buffered.
+        If nobuffer, self.packet_id is not incremented.
+        """
         if self.closed:
             return
 
         if thread.get_ident() != ioloop.IOLoop.instance()._thread_ident:
-            raise Exception("PacketConnector.send_packet invoked from non-ioloop thread")
+            raise Exception("PacketConnector.send_raw_packet invoked from non-ioloop thread")
             
         self.last_active_time = time.time()
         if not nobuffer:
@@ -264,7 +281,7 @@ class PacketConnector(object):
                         self.on_close()
                         return
                     self.packet_buf.pop(0)
-                self.packet_buf.append( (self.packet_id, data, finish, utf8) )
+                self.packet_buf.append( (self.packet_id, data, finish) )
             self.packet_id = (self.packet_id + 1) % 0x40000000
 
         if finish or self.single_request:
@@ -274,7 +291,7 @@ class PacketConnector(object):
 
         if self.stream and not buffer:
             try:
-                self.stream.write(self.make_packet(data, utf8=utf8), callback)
+                self.stream.write(data, callback)
             except Exception, excp:
                 logging.warning("PacketConnector.send_packet: ERROR: %s", excp)
                 self.on_close()
@@ -684,7 +701,14 @@ class RPCLink(object):
         ioloop.IOLoop.instance().add_callback(functools.partial(self.send_request, method, *args, **kwargs))
 
     def send_request(self, method, *args, **kwargs):
-        self.send_json([self.packet_id, [method, args, kwargs]], buffer=(not self.rpc_ready))
+        """Keyword argument named _content with bytes data is treated specially, and transmitted without JSON encoding
+        """
+        if isinstance(kwargs.get("_content"), bytes):
+            kwargs = kwargs.copy()
+            _content = kwargs.pop("_content")
+        else:
+            _content = None
+        self.send_json([self.packet_id, [method, args, kwargs]], _content=_content, buffer=(not self.rpc_ready))
 
     @classmethod
     def send_to_connection(cls, connection_id, method, *args, **kwargs):
@@ -702,8 +726,14 @@ class RPCLink(object):
             conn.shutdown()
 
     def process_packet(self, data):
+        """Keyword argument named _content with bytes data is treated specially, and received without JSON encoding
+        """
         try:
-            packet_id, msg_obj = json.loads(data)
+            if data and PacketConnector.CONTENT_DELIM in data:
+                json_msg, sep, _content = data.partition(PacketConnector.CONTENT_DELIM)
+            else:
+                json_msg, _content = data, None
+            packet_id, msg_obj = json.loads(json_msg)
             if (packet_id and self.rpc_expect) or (not packet_id and msg_obj[0] != self.rpc_expect and msg_obj[0] != "shutdown"):
                 # Drop packet
                 logging.info("RPCLink.process_packet: Dropped packet %s", msg_obj[0])
@@ -749,6 +779,8 @@ class RPCLink(object):
             try:
                 args = msg_obj[1] if len(msg_obj) > 1 else []
                 kwargs = dict2kwargs(msg_obj[2]) if len(msg_obj) > 2 else {}
+                if _content is not None:
+                    kwargs["_content"] = _content
                 bound_method = getattr(self, "remote_"+msg_obj[0], None)
                 if bound_method:
                     retval = bound_method(*args, **kwargs)
