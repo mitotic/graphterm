@@ -390,7 +390,26 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
         return False
 
+    def check_origin(self):
+        if "Origin" in self.request.headers:
+            origin = self.request.headers.get("Origin")
+        else:
+            origin = self.request.headers.get("Sec-Websocket-Origin", None)
+
+        if not origin:
+            return False
+
+        host = self.request.headers.get("Host").lower()
+        ws_host = urlparse.urlparse(origin).netloc.lower()
+        if host == ws_host:
+            return True
+        else:
+            logging.error("gtermserver.check_origin: ERROR %s != %s", host, ws_host)
+            return False
+
     def open(self):
+        if not self.check_origin():
+            raise tornado.web.HTTPError(404, "Websocket origin mismatch")
         user = ""
         code = ""
         auth_email = ""
