@@ -628,7 +628,6 @@ class ScreenBuf(object):
     def clear_buf(self):
         self.last_scroll_count = self.current_scroll_count
         self.scroll_lines = []
-        self.last_blob_id = ""
         self.full_update = True
 
     def add_blob(self, blob_id, content_type, content_b64):
@@ -706,15 +705,12 @@ class ScreenBuf(object):
         elif row_params[JTYPE]:
             # Non-plain text scrolling
             overwrite = bool(row_params[JOPTS].get("overwrite"))
-            new_blob_id = row_params[JOPTS].get("blob") or ""
-            if overwrite and self.last_blob_id:
-                # Delete previous blob
-                self.delete_blob(self.last_blob_id)
-            self.last_blob_id = new_blob_id
+            new_blob_id = row_params[JOPTS].get("blob", "")
             ##logging.warning("ABCscroll_buf_up: overwrite=%s, %s", overwrite, markup)
 
         cur_pagelet_id = "%d-%d" % (self.cur_note, self.current_scroll_count)
         prev_pagelet_opts = self.scroll_lines[-1][JPARAMS][JOPTS] if self.scroll_lines and self.scroll_lines[-1][JPARAMS][JTYPE] == "pagelet" else {}
+        prev_blob_id = prev_pagelet_opts.get("blob", "")
         prev_edit_file = self.scroll_lines and self.scroll_lines[-1][JPARAMS][JTYPE] == "edit_file"
 
         row_params[JOPTS]["add_class"] = add_class
@@ -727,6 +723,8 @@ class ScreenBuf(object):
             self.scroll_lines[-1][JPARAMS] = row_params
             self.scroll_lines[-1][JLINE] = line
             self.scroll_lines[-1][JMARKUP] = markup
+            if prev_blob_id and prev_blob_id != new_blob_id:
+                self.delete_blob(prev_blob_id)
             if self.current_scroll_count > 0 and self.last_scroll_count >= self.current_scroll_count:
                 self.last_scroll_count = self.current_scroll_count - 1
         else:
@@ -739,10 +737,8 @@ class ScreenBuf(object):
                 self.scroll_lines[-1][JPARAMS] = ["", {}]
                 self.scroll_lines[-1][JLINE] = ""
                 self.scroll_lines[-1][JMARKUP] = None
-                if self.last_blob_id and self.last_blob_id != new_blob_id:
-                    # Delete previous blob
-                    self.delete_blob(self.last_blob_id)
-                    self.last_blob_id = ""
+                if prev_blob_id and prev_blob_id != new_blob_id:
+                    self.delete_blob(prev_blob_id)
 
             self.current_scroll_count += 1
             row_params[JOPTS]["pagelet_id"] = "%d-%d" % (self.cur_note, self.current_scroll_count)

@@ -254,7 +254,7 @@ try:
     while True:
         ch = sys.stdin.read(1)
         if ch == "\x03" or ch == "\x04" or ch == "\x1b" or ch == "q": # ^C/^D/ESC/q
-            gterm.display_blob("", display="fullpage", exit_page=True)
+            gterm.write_blank(display="fullpage", exit_page=True)
             sys.exit(0)
 
         if ch == "f" or ch == " ":
@@ -264,7 +264,7 @@ try:
         elif ch == "r":
             jnew = jsel
         elif ch == "p":
-            gterm.display_blob("", display="fullpage")
+            gterm.write_blank(display="fullpage", exit_page=True)
             continue
         else:
             continue
