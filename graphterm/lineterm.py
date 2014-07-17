@@ -3805,8 +3805,7 @@ class Multiplex(object):
                 os.execvpe(cmd[0], cmd, env)
             else:
                 global Exec_errmsg
-                ##fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd,fcntl.F_GETFL)|os.O_NONBLOCK)
-                fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
+                fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd,fcntl.F_GETFL)|os.O_NONBLOCK)
                 self.proc[term_name] = Terminal(term_name, fd, pid, self.screen_callback,
                                                 height=height, width=width,
                                                 winheight=winheight, winwidth=winwidth,
