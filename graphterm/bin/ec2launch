@@ -147,7 +147,9 @@ SecurityGroups = [
     (server_group, "GraphTerm server group", [
         GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
         GroupRule("tcp", "80", "80", "0.0.0.0/0", None),
+        GroupRule("tcp", "81", "81", "0.0.0.0/0", None),
         GroupRule("tcp", "443", "443", "0.0.0.0/0", None),
+        GroupRule("tcp", "444", "444", "0.0.0.0/0", None),
         GroupRule("tcp", "8888", "8888", "0.0.0.0/0", None),
         GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if allow_host_connect else host_group),
         GroupRule("tcp", "8900", "8900", "0.0.0.0/0", None),
@@ -156,7 +158,9 @@ SecurityGroups = [
     (nb_server_group, "GraphTerm notebook server group", [
         GroupRule("tcp", "22", "22", "0.0.0.0/0", None),
         GroupRule("tcp", "80", "80", "0.0.0.0/0", None),
+        GroupRule("tcp", "81", "81", "0.0.0.0/0", None),
         GroupRule("tcp", "443", "443", "0.0.0.0/0", None),
+        GroupRule("tcp", "444", "444", "0.0.0.0/0", None),
         GroupRule("tcp", "8899", "8899", "0.0.0.0/0", None if allow_host_connect else host_group),
         GroupRule("tcp", "8900", "8900", "0.0.0.0/0", None),
         GroupRule("tcp", "8901", "8901", "0.0.0.0/0", None),

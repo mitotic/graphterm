@@ -51,6 +51,7 @@ form_parser.add_option("trusted", False, help="Trust the frame content to execut
 
 (options, args) = form_parser.parse_args()
 
+frame_content = None
 trusted_content = options.trusted
 if args:
     iframe_urls = []
@@ -85,14 +86,29 @@ if args:
             arg = "%s/notebooks/%s" % (nb_url, relpath)
             iframe_urls.append(arg)
         else:
-            trust_list.append(False)
+            filepath = arg
+            if not gterm.Lterm_cookie:
+                # Display untrusted file in full window
+                content_type, encoding = mimetypes.guess_type(filepath)
+                try:
+                    with open(filepath) as f:
+                        frame_content = f.read()
+                    if content_type.startswith("image/"):
+                        gterm.display_data(content_type, frame_content, display="fullwindow" if options.fullscreen else "block")
+                    else:
+                        gterm.write_pagelet(frame_content, display="fullwindow")
+                    sys.exit(0)
+                except Exception as excp:
+                    sys.exit("Error in reading file %s: %s" % (filepath, excp))
+            # Display file
+            trust_list.append(options.trusted)
             if not gterm.Export_host and options.trusted:
-                iframe_urls.append(gterm.get_file_url(arg, relative=True, exists=True, untrusted=not options.trusted))
+                iframe_urls.append(gterm.get_file_url(filepath, relative=True, exists=True, untrusted=not options.trusted))
             else:
-                iframe_urls.append(gterm.create_blob(from_file=arg, untrusted=not options.trusted))
+                iframe_urls.append(gterm.create_blob(from_file=filepath, untrusted=not options.trusted))
 
             if not iframe_urls[-1]:
-                print("File %s not found" % arg, file=sys.stderr)
+                print("File %s not found" % filepath, file=sys.stderr)
                 sys.exit(1)
 
         if all(trust_list):
@@ -100,22 +116,27 @@ if args:
             trusted_content = True
 else:
     try:
-        content = sys.stdin.read()
+        frame_content = sys.stdin.read()
         if options.find_html:
-            offset = content.find("<!DOCTYPE")
+            offset = frame_content.find("<!DOCTYPE")
             if offset < 0:
-                offset = content.find("<html")
+                offset = frame_content.find("<html")
             if offset >= 0:
-                content = content[offset:]
+                frame_content = frame_content[offset:]
                 
     except (EOFError, KeyboardInterrupt):
-        content = None
+        frame_content = None
 
-    if not content:
+    if not frame_content:
         print("Error in reading from stdin", file=sys.stderr)
         sys.exit(1)
 
-    iframe_urls = [gterm.create_blob(content, content_type="text/html", untrusted=not trusted_content)]
+    if not gterm.Lterm_cookie:
+        # Display untrusted HTML content in full window
+        gterm.write_pagelet(frame_content, display="fullwindow")
+        sys.exit(0)
+
+    iframe_urls = [gterm.create_blob(frame_content, content_type="text/html", untrusted=not trusted_content)]
 
 if not trusted_content:             # Untrusted content must display full screen
     options.fullscreen = True

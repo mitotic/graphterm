@@ -127,9 +127,24 @@ if Server_port:
 else:
     Server_port = 443 if Server_protocol == "https" else 80
 
-Untrusted_URL = "%s://%s:%s" % (Server_protocol, Server, Server_port+1)
-
 _, Host, Session = Path.split("/") if Path else ("", "", "")
+
+def get_untrusted_url(server_url=""):
+    base_url = server_url or URL
+    if base_url.count(":") == 2:
+        sprefix, _, sport = base_url.rpartition(":")
+    else:
+        sprefix, sport = base_url, ""
+
+    if sport.isdigit():
+        uport = int(sport)+1
+    elif sprefix.startswith("http:"):
+        uport = 81
+    elif sprefix.startswith("https:"):
+        uport = 444
+    else:
+        raise Exception("Invalid server URL: " + sprefix)
+    return "%s:%s" % (sprefix, uport)
 
 Esc_prefix = "\x1b[?1155"
 Html_escapes = [Esc_prefix+";%sh" % (Lterm_cookie or 0),
@@ -689,7 +704,7 @@ def menu_op(target, value=None, stderr=False):
                }
     wrap_write("", headers=headers, stderr=stderr)
 
-def get_file_url(filepath, relative=False, exists=False, plain=False, untrusted=False):
+def get_file_url(filepath, relative=False, exists=False, plain=False, server_url="", untrusted=False):
     """Construct file URL by expanding/normalizing filepath, with hmac cookie suffix.
     If relative, return '/_file/host/path'
     """
@@ -705,7 +720,7 @@ def get_file_url(filepath, relative=False, exists=False, plain=False, untrusted=
     filehmac = "?hmac="+file_hmac(filepath, Shared_secret)
     if relative:
         rel_path = FILE_PREFIX + Host + filepath + filehmac
-        return Untrusted_URL + rel_path if untrusted else rel_path
+        return get_untrusted_url(server_url=server_url)+rel_path if untrusted else rel_path
     else:
         return "file://" + ("" if Host == LOCAL_HOST else Host) + filepath + filehmac
 
@@ -743,7 +758,7 @@ def get_blob_id(blob_url):
     else:
         return ""
 
-def get_blob_url(blob_id, host=""):
+def get_blob_url(blob_id, host="", server_url=""):
     host = host or Host
     assert host, "Null host for blob url"
     path = BLOB_PREFIX+host+"/"+blob_id
@@ -756,7 +771,7 @@ def get_blob_url(blob_id, host=""):
         return Blob_server.replace("*", subdomain)+path
     else:
         # Use different port number to isolate blob
-        return Untrusted_URL+path
+        return get_untrusted_url(server_url=server_url)+path
 
 def create_blob(content=None, from_file="", content_type="", blob_id="", host="", untrusted=False, stderr=False):
     """Create blob and returns URL to blob"""

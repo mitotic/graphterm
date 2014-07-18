@@ -888,7 +888,7 @@ class Screen(object):
 
 class Terminal(object):
     def __init__(self, term_name, fd, pid, screen_callback, height=25, width=80, winheight=0, winwidth=0,
-                 cookie=0, shared_secret="", host="", pdelim=[], term_params={}, logfile=""):
+                 cookie=0, shared_secret="", host="", server_url="", pdelim=[], term_params={}, logfile=""):
         self.term_name = term_name
         self.fd = fd
         self.pid = pid
@@ -900,6 +900,7 @@ class Terminal(object):
         self.cookie = cookie
         self.shared_secret = shared_secret
         self.host = host
+        self.server_url = server_url
         self.pdelim = pdelim
         self.term_params = term_params
         tem_str = term_params.get("term_opts","").strip()
@@ -1644,7 +1645,7 @@ class Terminal(object):
                         elif output["output_type"] == "display_data":
                             data_uri_tail = "image/%s;base64,%s" % ("png", output["png"].replace("\n",""))
                             blob_id = self.create_blob(data_uri_tail)
-                            markup = BLOCKIMGFORMAT % (blob_id, gterm.get_blob_url(blob_id, host=self.host), "image")
+                            markup = BLOCKIMGFORMAT % (blob_id, gterm.get_blob_url(blob_id, host=self.host, server_url=self.server_url), "image")
                             self.note_screen_buf.scroll_buf_up("", None, markup=markup,
                                                                row_params=["pagelet", {"blob": blob_id}])
                 self.update()
@@ -1745,7 +1746,7 @@ class Terminal(object):
                     ref_id = match.group(2).strip()
                     blob_id = blob_ids.get(ref_id, "") or gterm.create_blob_id()
                     blob_ids[ref_id] = blob_id
-                    blob_url = gterm.get_blob_url(blob_id, host=self.host)
+                    blob_url = gterm.get_blob_url(blob_id, host=self.host, server_url=self.server_url)
                     fig_prefix, sep, _ = ref_id.partition("-")
                     if code_cell and fig_prefix == "output":
                         # Output image
@@ -2244,7 +2245,7 @@ class Terminal(object):
                             opts = scroll_line[JPARAMS][JOPTS]
                             blob_id = opts.get("blob")
                             if blob_id:
-                                blob_url = gterm.get_blob_url(blob_id, host=self.host)
+                                blob_url = gterm.get_blob_url(blob_id, host=self.host, server_url=self.server_url)
                                 if blob_url:
                                     prev_cell["cellInput"].append( "![%s](%s)" % ("image", blob_url) )
                             else:
@@ -3291,7 +3292,7 @@ class Terminal(object):
                 logging.warning("Not allowed to display trusted blob data")
                 screen_buf.scroll_buf_up("Unable to display blob", None, row_params=["", {}])
             else:
-                blob_url = gterm.get_blob_url(blob_id, host=self.host)
+                blob_url = gterm.get_blob_url(blob_id, host=self.host, server_url=self.server_url)
                 if response_type == "display_blob" or content_type.startswith("image/"):
                     html = gterm.blockimg_html(blob_url, toggle=response_params.get("toggle"), alt="blob")
                     params = {"display": response_params.get("display", ""), "blob": urllib.quote(blob_id),
@@ -3806,6 +3807,7 @@ class Multiplex(object):
                                                 height=height, width=width,
                                                 winheight=winheight, winwidth=winwidth,
                                                 cookie=cookie, host=self.host,
+                                                server_url=self.server_url,
                                                 shared_secret=self.shared_secret,
                                                 pdelim=self.pdelim, term_params=self.term_params,
                                                 logfile=self.logfile)
