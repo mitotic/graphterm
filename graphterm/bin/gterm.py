@@ -104,17 +104,17 @@ Version_str, sep, Min_version_str = env("API").partition("/")
 
 # The Dimensions parameter will be defined on both local and remote systems in a GraphTerm window (if LC_* is passed)
 #
-# On the local system, by default, Lterm_cookie will be defined, and Export_host will be undefined
-# On a remote machine, by default, Lterm_cookie will be undefined, and Export_host will be defined (if LC_* is passed)
+# On the local system, by default, Cookie will be defined, and Export_host will be undefined
+# On a remote machine, by default, Cookie will be undefined, and Export_host will be defined (if LC_* is passed)
 #
-# If creating blobs or displaying inline images, must use Lterm_cookie value of zero in Escape sequence
+# If creating blobs or displaying inline images, must use Cookie value of zero in Escape sequence
 # instead of the null string
 #
 Dimensions = env("DIMENSIONS", lc=True) # colsxrows[;widthxheight]
 Export_host = env("EXPORT") or (not env("COOKIE") and Pack_env.get(GT_PREFIX+"EXPORT", ""))
 
 # These variables are typically not passed to remote systems
-Lterm_cookie = env("COOKIE", lc=True)
+Cookie = env("COOKIE", lc=True)
 Path = env("PATH", lc=True)
 Shared_secret = env("SHARED_SECRET", lc=True)
 URL = env("URL", "http://localhost:%d" % DEFAULT_HTTP_PORT)
@@ -147,7 +147,7 @@ def get_untrusted_url(server_url=""):
     return "%s:%s" % (sprefix, uport)
 
 Esc_prefix = "\x1b[?1155"
-Html_escapes = [Esc_prefix+";%sh" % (Lterm_cookie or 0),
+Html_escapes = [Esc_prefix+";%sh" % (Cookie or 0),
                 Esc_prefix+"l"]
 
 INTERPRETERS = {"python": ("py", "python", (">>> ", "... ")),
@@ -1034,7 +1034,7 @@ class FormParser(object):
     def parse_args(self, args=None, stderr=False):
         if sys.stdin.isatty() and args is None and (len(sys.argv) < 2 or (len(sys.argv) == 2 and sys.argv[1] == "-g")):
             stdfile = sys.stderr if stderr else sys.stdout
-            if stdfile.isatty() and Lterm_cookie:
+            if stdfile.isatty() and Cookie:
                 assert self.command
                 write_form(self.create_form(), command=self.command, stderr=stderr)
             elif not stderr:
@@ -1372,7 +1372,7 @@ def main():
             if not url_port:
                 url_port = 443 if protocol == "https" else 80
 
-    if not server_name and not url_server and Lterm_cookie:
+    if not server_name and not url_server and Cookie:
         # Open new terminal window from within graphterm window
         path = path or (Host + "/" + "new")
         url = URL + "/" + path

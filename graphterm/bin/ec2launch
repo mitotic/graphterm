@@ -63,7 +63,7 @@ form_parser.add_option("text", False, short="t", help="Text only", raw=True)
 
 (options, args) = form_parser.parse_args()
 
-if not gterm.Lterm_cookie or not sys.stdout.isatty():
+if not gterm.Cookie or not sys.stdout.isatty():
     options.text = True
 
 if not args or options.form:

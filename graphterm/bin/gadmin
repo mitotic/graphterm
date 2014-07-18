@@ -56,7 +56,7 @@ parser.add_option("text", False, short="t", help="Text only")
 
 (options, args) = parser.parse_args()
 
-if not gterm.Lterm_cookie or not sys.stdout.isatty():
+if not gterm.Cookie or not sys.stdout.isatty():
     options.text = True
 
 super_users = options.super_users.split(",") if options.super_users else []
@@ -111,7 +111,7 @@ if action == "mail":
                                "code": user_props[user]["code"], "members": ""}
     for key, val in mail_dict.iteritems():
         mail_body = options.body.replace("\\n","\n") % val
-        if gterm.Lterm_cookie:
+        if gterm.Cookie:
             mail_url = 'mailto:'+val["to"]+'?subject='+urllib.quote(options.subject)+'&body='+urllib.quote(mail_body)
             gterm.wrap_write('<p>Click <a href="'+mail_url+'">here</a> to email to '+key)
         else:

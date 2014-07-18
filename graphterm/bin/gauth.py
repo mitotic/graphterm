@@ -73,7 +73,7 @@ def main():
                 pass
         mail_body += "\n"+options.tail+"\n" if options.tail else ""
         mail_url = 'mailto:'+email_addr+'?subject='+quote(options.subject)+'&body='+quote(mail_body)
-        if gterm.Lterm_cookie:
+        if gterm.Cookie:
             gterm.wrap_write(mail_body.replace("\n","<br>")+'<p>Click <a href="'+mail_url+'">here</a> to email it')
         else:
             print(mail_body)

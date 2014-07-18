@@ -36,7 +36,7 @@ symbol = args[0]
 
 data = get_data_yahoo(symbol, start=options.start or None, end=options.end or None)[['Close', 'Volume']]
 
-if not gterm.Lterm_cookie or options.text:
+if not gterm.Cookie or options.text:
     sys.stdout.write(repr(data)+"\n")
 elif options.raw:
     gterm.auto_display(data)

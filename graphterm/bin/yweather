@@ -23,8 +23,8 @@ try:
 except ImportError:
     from urllib import urlopen, quote_plus
 
-Lterm_cookie = os.getenv("GTERM_COOKIE", "") or os.getenv("LC_GTERM_COOKIE", "")
-Html_escapes = ["\x1b[?1155;%sh" % Lterm_cookie,
+Cookie = os.getenv("GTERM_COOKIE", "") or os.getenv("LC_GTERM_COOKIE", "")
+Html_escapes = ["\x1b[?1155;%sh" % Cookie,
                 "\x1b[?1155l"]
 
 def wrap(html):
@@ -88,7 +88,7 @@ headers["x_gterm_response"] = "pagelet"
 headers["x_gterm_parameters"] = params
 
 if not location:
-    if not Lterm_cookie or options.text:
+    if not Cookie or options.text:
         print("Please specify location", file=sys.stderr)
         sys.exit(1)
     random_id = "1%09d" % random.randrange(0, 10**9)
@@ -176,7 +176,7 @@ for fcst in weather_dict["yweather:forecast"]:
 html += "<br>\n"
 
 prefix = '<!--gterm pagelet display=%s scroll=top-->' % (params["display"],)
-if not Lterm_cookie or options.text:
+if not Cookie or options.text:
     sys.stdout.write("".join(weather_dict["description"]))
 else:
     sys.stdout.write(wrap(prefix+html))

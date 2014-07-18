@@ -179,7 +179,7 @@ if plotvar:
         print("Slice=%s plot_dims=%s" % (slice_obj, plot_dims), file=sys.stderr)
 
 if errmsg or not plotvar or options.form:
-    if gterm.Lterm_cookie:
+    if gterm.Cookie:
         if errmsg:
             gterm.wrap_write(errmsg, headers={"x_gterm_response": "error_message",
                                               "x_gterm_parameters": {}

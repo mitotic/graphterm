@@ -109,7 +109,7 @@ def main():
                 port = 443 if protocol == "https" else 80
             path = comps[2][1:]
 
-    if not server and gterm.Lterm_cookie:
+    if not server and gterm.Cookie:
         # Open new terminal window from within graphterm window
         path = path or (gterm.Host + "/" + "new")
         url = gterm.URL + "/" + path

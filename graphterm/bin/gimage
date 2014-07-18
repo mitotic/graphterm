@@ -42,7 +42,7 @@ if not args:
     args = [x for x in args if not x.startswith(".")]
     args.sort()
 
-if gterm.Export_host or not gterm.Lterm_cookie:
+if gterm.Export_host or not gterm.Cookie:
     options.blobs = True
 
 if options.blobs:
@@ -63,7 +63,7 @@ for filename in args:
     mimetype, encoding = mimetypes.guess_type(filepath)
     if mimetype and mimetype.startswith("image/"):
         file_url = ""
-        if not gterm.Lterm_cookie:
+        if not gterm.Cookie:
             try:
                 with open(filepath) as f:
                     content = f.read()
@@ -80,7 +80,7 @@ for filename in args:
         if file_url:
             file_list.append((file_url, filepath, filename))
 
-if file_list and gterm.Lterm_cookie:
+if file_list and gterm.Cookie:
     gterm.preload_images([x[0] for x in file_list])
 
 if not file_list:

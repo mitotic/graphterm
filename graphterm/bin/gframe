@@ -87,7 +87,7 @@ if args:
             iframe_urls.append(arg)
         else:
             filepath = arg
-            if not gterm.Lterm_cookie:
+            if not gterm.Cookie:
                 # Display untrusted file in full window
                 content_type, encoding = mimetypes.guess_type(filepath)
                 try:
@@ -131,7 +131,7 @@ else:
         print("Error in reading from stdin", file=sys.stderr)
         sys.exit(1)
 
-    if not gterm.Lterm_cookie:
+    if not gterm.Cookie:
         # Display untrusted HTML content in full window
         gterm.write_pagelet(frame_content, display="fullwindow")
         sys.exit(0)

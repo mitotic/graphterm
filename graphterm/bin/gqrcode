@@ -34,10 +34,10 @@ form_parser.add_option("terminal", False, short="t", help="Display URL for this 
 
 (options, args) = form_parser.parse_args()
 
-if not gterm.Lterm_cookie or not sys.stdout.isatty():
+if not gterm.Cookie or not sys.stdout.isatty():
     options.output = True
 
-if options.terminal and gterm.Lterm_cookie:
+if options.terminal and gterm.Cookie:
     text = gterm.env("URL", "")
 else:
     if not args or not args[0]:

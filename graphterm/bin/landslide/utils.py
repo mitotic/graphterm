@@ -22,14 +22,14 @@ import base64
 import mimetypes
 
 try:
-    from graphterm.bin import gtermapi
+    from graphterm.bin import gterm
 except ImportError:
     _parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     sys.path.insert(0, _parent_dir)
     try:
-        import gtermapi
+        import gterm
     except ImportError:
-        gtermapi = None
+        gterm = None
     
 def get_abs_path_url(path, blob=False):
     """ Returns the absolute url for a given local path.
@@ -37,14 +37,14 @@ def get_abs_path_url(path, blob=False):
     if path.startswith("http://") or path.startswith("https://"):
         return path
     
-    if not gtermapi or not gtermapi.Lterm_cookie:
+    if not gterm or not gterm.Cookie:
         return "file://%s" % os.path.abspath(path)
 
     if blob:
-        file_url = gtermapi.create_blob(from_file=path)
+        file_url = gterm.create_blob(from_file=path)
     else:
-        file_url = gtermapi.get_file_url(path, relative=True)
-    return gtermapi.URL + file_url
+        file_url = gterm.get_file_url(path, relative=True)
+    return gterm.URL + file_url
 
 
 def get_path_url(abs_path, relative=False):
