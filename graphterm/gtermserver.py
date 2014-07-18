@@ -390,7 +390,7 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         logging.error("ERROR in %s: %s\n'%s'", " ".join(cmd_args), std_out, std_err)
         return False
 
-    def check_origin(self):
+    def gterm_origin_check(self):
         if "Origin" in self.request.headers:
             origin = self.request.headers.get("Origin")
         else:
@@ -404,11 +404,11 @@ class GTSocket(tornado.websocket.WebSocketHandler):
         if host == ws_host:
             return True
         else:
-            logging.error("gtermserver.check_origin: ERROR %s != %s", host, ws_host)
+            logging.error("gtermserver.gterm_origin_check: ERROR %s != %s", host, ws_host)
             return False
 
     def open(self):
-        if not self.check_origin():
+        if not self.gterm_origin_check():
             raise tornado.web.HTTPError(404, "Websocket origin mismatch")
         user = ""
         code = ""
@@ -948,15 +948,15 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
     def write_json(self, obj):
         try:
-            self.write_raw(json.dumps(obj))
+            self.gterm_write(json.dumps(obj))
         except Exception, excp:
             logging.error("write_json: ERROR %s", excp)
 
-    def write_raw(self, data, binary=False):
+    def gterm_write(self, data, binary=False):
         try:
             self.write_message(data, binary=binary)
         except Exception, excp:
-            logging.error("write_raw: ERROR %s", excp)
+            logging.error("gterm_write: ERROR %s", excp)
             closed_excp = getattr(tornado.websocket, "WebSocketClosedError", None)
             if not closed_excp or not isinstance(excp, closed_excp):
                 import traceback
@@ -1028,6 +1028,9 @@ class GTSocket(tornado.websocket.WebSocketHandler):
 
         elif is_owner or controller or allow_chat_only or allow_control_request:
             # Text message
+            if self.gterm_await_binary:
+                logging.error("ERROR Awaiting binary data for command %s", self.gterm_await_binary[0])
+                self.gterm_await_binary = None
             req_list = []
             try:
                 msg_list = json.loads(message if isinstance(message,str) else message.encode("UTF-8", "replace"))
@@ -1615,16 +1618,18 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                 assert _content is not None, "No content for raw data"
                 headers = msg[1]
                 owners_only = bool(headers.get("x_gterm_parameters",{}).get("owners_only"))
+                # Send commands right away
                 if owners_only:
                     owners_only_list.append(msg)  # Handled out-of-sequence
+                    self.forward_to_ws(term_path, [], owners_only_list=owners_only_list, websocket_id=websocket_id)
+                    owners_only_list = []
                 else:
                     fwd_list.append(msg)
+                    self.forward_to_ws(term_path, fwd_list, websocket_id=websocket_id)
+                    fwd_list = []
 
-                # Send commands right away
-                self.forward_to_ws(term_path, fwd_list, owners_only_list=owners_only_list, websocket_id=websocket_id)
+                # Send binary data immediately following command
                 self.binary_to_ws(term_path, _content, owners_only=owners_only, websocket_id=websocket_id)
-                fwd_list = []
-                owners_only_list = []
             else:
                 fwd_list.append(msg)
                 if msg[0] == "terminal" and msg[1] == "graphterm_chat":
@@ -1664,7 +1669,8 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
                         if multi_fwd_list:
                             ws.write_json(multi_fwd_list)
                     else:
-                        ws.write_json(fwd_list)
+                        if fwd_list:
+                            ws.write_json(fwd_list)
                         if owners_only_list and ws_id in ws.get_terminal_control_set(ws.remote_path):
                             ws.write_json(owners_only_list)
                 except Exception, excp:
@@ -1681,7 +1687,7 @@ class TerminalConnection(packetserver.RPCLink, packetserver.PacketConnection):
             ws = GTSocket.get_websocket(ws_id)
             if ws:
                 if not owners_only or ws_id in ws.get_terminal_control_set(ws.remote_path):
-                    ws.write_raw(content, binary=True)
+                    ws.gterm_write(content, binary=True)
 
 Proxy_cache = gtermhost.BlobCache()
 
@@ -1935,33 +1941,6 @@ def run_server(options, args):
 
             self.set_header("Content-Type", "text/plain")
             self.write(server_nonce+":"+client_token)
-
-    class GoogleAuthHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
-        @tornado.web.asynchronous
-        def get(self):
-            if self.get_argument("openid.mode", None):
-                self.get_authenticated_user(self.async_callback(self._on_auth))
-                return
-            self.authenticate_redirect()
-
-        def _on_auth(self, user_info):
-            gterm_cauth = self.get_argument("gterm_cauth", "")
-            gterm_code = self.get_argument("gterm_code", "")
-            gterm_user = self.get_argument("gterm_user", "")
-            if not user_info:
-                logging.error("GoogleAuthHandler: No user info %s", gterm_user)
-                self.send_error(500)
-                return
-            gterm_email = user_info.get("email", "").lower()
-            if not gterm_email:
-                logging.error("GoogleAuthHandler: No email in user info %s", gterm_user)
-                self.send_error(500)
-                return
-            query = {"cauth": gterm_cauth, "code": gterm_code,  "user": gterm_user, "email": gterm_email, "name": user_info.get("name","")}
-            query["eauth"] = gterm.compute_hmac(gterm.user_hmac(GTSocket._auth_code, gterm_email, key_version="email"), gterm_cauth)
-            url = "/?"+urllib.urlencode(query)
-            logging.info("GoogleAuthHandler: u=%s, url=%s, %s", gterm_user, url, user_info)
-            self.redirect(url)
 
     class GoogleOAuth2LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
         @tornado.gen.coroutine

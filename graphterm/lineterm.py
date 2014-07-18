@@ -1365,7 +1365,7 @@ class Terminal(object):
             self.note_save_time = mod_time or time.time()
 
         update_filename = False
-        if self.note_params["name"] != fname:
+        if self.note_params["name"] != fname and not lang_format:
             self.note_params["name"] = fname
             self.note_params["file"] = fullpath
             self.note_params["autosave"] = writable  # NOTE: Not updated in browser

@@ -2,7 +2,7 @@
 <p>&nbsp;
 
 <center>
-#Creating a browser-based virtual computer lab for classroom instruction</center>
+#Creating a browser-based virtual computer lab for classroom instruction
 </center>
 
 <center>
@@ -19,6 +19,26 @@
 ## View on GitHub: http://goo.gl/OJOkJr
 </center>
 
+
+---
+
+## To view this Markdown Notebook as a slideshow
+
+* Open it within GraphTerm
+
+    * ``gpython $GTERM_DIR/notebooks/SciPy2014.py.gnb.md``
+
+* Select the slide view mode (*notebook/page/slide mode*)
+
+* Increase fontsize (*view/fontsize/xlarge*)
+
+* Hide the terminal menubar (*view/menubar*)
+
+* Select presentation mode of browser
+
+* Use *Ctl-Mn* to advance and *Ctl-Mp* to go back
+
+* Use *Ctl-C* or *Ctl-Jnqd* to quit
 
 ---
 

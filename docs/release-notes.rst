@@ -3,6 +3,19 @@ Release Notes
 .. contents::
 
 
+0.57.0 (July 18, 2014)
+---------------------------------------------------------------------------------
+
+ - Display images and untrusted HTML across SSH boundary
+
+ - Full screen and separate web origin for untrusted HTML
+
+ - gipynb command to open IPython Notebook window inline
+
+ - Disable terminal colors using pref
+
+ - Bypass JSON protocol for transmitting large files
+
 0.56.2 (July 8, 2014)
 ---------------------------------------------------------------------------------
 

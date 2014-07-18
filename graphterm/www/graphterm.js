@@ -1231,6 +1231,10 @@ GTWebSocket.prototype.onmessage = function(evt) {
 	    payload_obj = [ this.await_binary_data ];
 	    this.await_binary_data = null;
 	} else {
+	    if (this.await_binary_data) {
+		console.log("GTWebSocket.onmessage: ERROR awaiting binary data for command "+this.await_binary_data[0]);
+		this.await_binary_data = null;
+	    }
 	    if (gDebugMessages)
 		console.log("GTWebSocket.onmessage: "+payload);
 	    payload_obj = JSON.parse(payload);
