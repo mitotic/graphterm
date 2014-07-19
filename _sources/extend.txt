@@ -228,7 +228,7 @@ an almost drop-in replacement for standard command line parsing using
 
     (options, args) = form_parser.parse_args()
 
-    if not gterm.Lterm_cookie or not sys.stdout.isatty():
+    if not gterm.Cookie or not sys.stdout.isatty():
         # Not running within GraphTerm or stdout is piped; text only
         options.text = True
 
