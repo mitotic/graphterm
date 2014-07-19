@@ -603,8 +603,8 @@ class ScreenBuf(object):
         self.fg_color = fg_color
         self.bg_color = bg_color
         self.colors = colors
-        self.default_style = (bg_color << STYLE4) | fg_color
-        self.inverse_style = (fg_color << STYLE4) | bg_color
+        self.default_style = ((bg_color ^ 0x7) << STYLE4) | fg_color  # Bg color is XOR'ed
+        self.inverse_style = ((fg_color ^ 0x7) << STYLE4) | bg_color
         self.bold_style = 0x08
 
         self.default_nul = self.default_style << UNI24
@@ -856,10 +856,10 @@ class ScreenBuf(object):
                     style_list.append("inverse")
                 if self.colors:
                     fg_color = span_style & 0x7
-                    bg_color = (span_style >> STYLE4) & 0x7
-                    if fg_color > 0 and fg_color < 7:
+                    bg_color = ((span_style >> STYLE4) & 0x7) ^ 0x7 # Bg color is XOR'ed
+                    if fg_color > 0 and fg_color <= 7:
                         style_list.append("fgcolor%d" % fg_color)
-                    if bg_color > 0 and bg_color < 7:
+                    if bg_color >= 0 and bg_color < 7:
                         style_list.append("bgcolor%d" % bg_color)
             span += unichr(ucode)
         cspan = uclean(span, trim=trim, encoded=True)
@@ -2605,19 +2605,19 @@ class Terminal(object):
             self.poke(y1, 0, self.peek(y1+1, 0, y2, self.width))
             self.screen.meta[y1:y2] = self.screen.meta[y1+1:y2+1]
         self.zero_lines(y2, y2)
-        self.current_nul = self.current_nul & 0x88ffffff
+        self.current_nul = self.screen_buf.default_nul
 
     def scroll_down(self, y1, y2):
         if y2 > y1:
             self.poke(y1+1, 0, self.peek(y1, 0, y2-1, self.width))
             self.screen.meta[y1+1:y2+1] = self.screen.meta[y1:y2]
         self.zero_lines(y1, y1)
-        self.current_nul = self.current_nul & 0x88ffffff
+        self.current_nul = self.screen_buf.default_nul
 
     def scroll_right(self, y, x):
         self.poke(y, x+1, self.peek(y, x, y, self.width-1))
         self.zero(y, x, y, x)
-        self.current_nul = self.current_nul & 0x88ffffff
+        self.current_nul = self.screen_buf.default_nul
 
     def parse_command(self, suffix=""):
         if not self.alt_mode and self.current_meta and not self.current_meta[1]:
@@ -2656,7 +2656,7 @@ class Terminal(object):
                 self.cursor_y = r
 
             # Clear foreground/background colors
-            self.current_nul = self.current_nul & 0x88ffffff
+            self.current_nul = self.screen_buf.default_nul
 
             if not self.alt_mode:
                 self.active_rows = max(self.cursor_y+1, self.active_rows)
@@ -3010,7 +3010,7 @@ class Terminal(object):
     def csi_m(self, l):
         """Select Graphic Rendition"""
         for i in l:
-            if i==0 or i==39 or i==49 or i==27:
+            if i==0 or i==27:
                 # Normal
                 self.current_nul = self.screen_buf.default_nul
             elif i==1:
@@ -3019,13 +3019,13 @@ class Terminal(object):
             elif i==7:
                 # Inverse
                 self.current_nul = self.screen_buf.inverse_style << UNI24
-            elif i>=30 and i<=37:
+            elif (i>=30 and i<=37) or i==39:
                 # Foreground Black(30), Red, Green, Yellow, Blue, Magenta, Cyan, White
-                c = i-30
+                c = i-30 if i<=37 else self.screen_buf.fg_color
                 self.current_nul = (self.current_nul & 0xf8ffffff) | (c << UNI24)
-            elif i>=40 and i<=47:
+            elif (i>=40 and i<=47) or i==49:
                 # Background Black(40), Red, Green, Yellow, Blue, Magenta, Cyan, White
-                c = i-40
+                c = (i-40 if i<=47 else self.screen_buf.bg_color) ^ 0x7 # Bg color is XOR'ed
                 self.current_nul = (self.current_nul & 0x8fffffff) | (c << (UNI24+STYLE4))
 #           else:
 #               print >> sys.stderr, "lineterm: CSI style ignore",l,i

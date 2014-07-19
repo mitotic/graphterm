@@ -63,43 +63,55 @@ body.ipadscreen  {
     /* font-weight: bold; */
 }
 
-/* Terminal colors */
+/* Terminal colors  (xterm Tango colors) */
+#terminal.gterm-colors .fgcolor0, #terminal.gterm-colors span.fgcolor0, #terminal.gterm-colors pre.fgcolor0 {
+    color: #2e3436;  /* Not used */
+}
 #terminal.gterm-colors .fgcolor1, #terminal.gterm-colors span.fgcolor1, #terminal.gterm-colors pre.fgcolor1 {
-    color: #bb0000;
+    color: #cc0000;
 }
 #terminal.gterm-colors .fgcolor2, #terminal.gterm-colors span.fgcolor2, #terminal.gterm-colors pre.fgcolor2 {
-    color: green;
+    color: #4e9a06;
 }
 #terminal.gterm-colors .fgcolor3, #terminal.gterm-colors span.fgcolor3, #terminal.gterm-colors pre.fgcolor3 {
-    color: goldenrod;
+    color: #c4a000;
 }
 #terminal.gterm-colors .fgcolor4, #terminal.gterm-colors span.fgcolor4, #terminal.gterm-colors pre.fgcolor4 {
-    color: royalblue;
+    color: #3465a4;
 }
 #terminal.gterm-colors .fgcolor5, #terminal.gterm-colors span.fgcolor5, #terminal.gterm-colors pre.fgcolor5 {
-    color: #dd00dd;
+    color: #75507b;
 }
 #terminal.gterm-colors .fgcolor6, #terminal.gterm-colors span.fgcolor6, #terminal.gterm-colors pre.fgcolor6 {
-    color: darkcyan;
+    color: #06989a;
+}
+#terminal.gterm-colors .fgcolor7, #terminal.gterm-colors span.fgcolor7, #terminal.gterm-colors pre.fgcolor7 {
+    color: #d3d7cf;
 }
 
+#terminal.gterm-colors .bgcolor0, #terminal.gterm-colors span.bgcolor0, #terminal.gterm-colors pre.bgcolor0 {
+    background-color: #555753;
+}
 #terminal.gterm-colors .bgcolor1, #terminal.gterm-colors span.bgcolor1, #terminal.gterm-colors pre.bgcolor1 {
-    background-color: #bb0000;
+    background-color: #ef2929;
 }
 #terminal.gterm-colors .bgcolor2, #terminal.gterm-colors span.bgcolor2, #terminal.gterm-colors pre.bgcolor2 {
-    background-color: green;
+    background-color: #8ae234;
 }
 #terminal.gterm-colors .bgcolor3, #terminal.gterm-colors span.bgcolor3, #terminal.gterm-colors pre.bgcolor3 {
-    background-color: goldenrod;
+    background-color: #fce94f;
 }
 #terminal.gterm-colors .bgcolor4, #terminal.gterm-colors span.bgcolor4, #terminal.gterm-colors pre.bgcolor4 {
-    background-color: royalblue;
+    background-color: #729fcf;
 }
 #terminal.gterm-colors .bgcolor5, #terminal.gterm-colors span.bgcolor5, #terminal.gterm-colors pre.bgcolor5 {
-    background-color: #dd00dd;
+    background-color: #ad7fa8;
 }
 #terminal.gterm-colors .bgcolor6, #terminal.gterm-colors span.bgcolor6, #terminal.gterm-colors pre.bgcolor6 {
-    background-color: darkcyan;
+    background-color: #34e2e2;
+}
+#terminal.gterm-colors .bgcolor7, #terminal.gterm-colors span.bgcolor7, #terminal.gterm-colors pre.bgcolor7 {
+    background-color: #eeeeec;  /* Not used */
 }
 
 
