@@ -190,7 +190,7 @@ to each step of a multi-step task, with associated markup cells for
 explanatory text. Initially, only the first code cell is visible, and
 the remaining code cells are hidden. The code cell contains a
 &#8220;skeleton&#8221; program, with missing lines
-(<a href="#figfillablea">Fig.  7</a>). The expected textual or graphical output
+(<a href="#figfillablea">Fig.  58</a>). The expected textual or graphical output
 of the code is also shown. Students can enter the missing lines and
 repeatedly execute the code using <em>Control-Enter</em> (or the <em>run</em>
 button) to try to reproduce the
@@ -199,7 +199,7 @@ ready to give up, they press <em>Shift-Enter</em> to move on. The last
 version of the code executed by the student, whether right or wrong,
 is saved in the notebook (as markup), and the correct version of the
 code is then displayed in the cell and executed to produce the desired
-result (<a href="#figfillableb">Fig.  8</a>). The next code cell becomes visible
+result (<a href="#figfillableb">Fig.  59</a>). The next code cell becomes visible
 and the whole process is repeated for the next step of the task.</p>
 <p>One can think of progressively fillable notebooks as providing &#8220;training
 wheels&#8221; for the inexperienced programmer trying to balance different
@@ -209,7 +209,7 @@ which runs functions with specified input and compares the results to
 the expected output.</p>
 <div class="figure" id="figfillablea">
 <img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" />
-<p class="caption">Figure 7: View of progressively fillable notebook before user completes <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. Note two
+<p class="caption">Figure 58: View of progressively fillable notebook before user completes <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. Note two
 comment line where it says <tt class="docutils literal"><span class="pre">(fill</span> <span class="pre">in</span> <span class="pre">code</span> <span class="pre">here)</span></tt>. The user can
 replace these lines with code and execute it. The resulting output
 should be compared to the expected output, shown below the code
@@ -217,7 +217,7 @@ cell.</p>
 </div>
 <div class="figure" id="figfillableb">
 <img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" />
-<p class="caption">Figure 8: View of progressively fillable notebook after user has completed <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. The last
+<p class="caption">Figure 59: View of progressively fillable notebook after user has completed <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. The last
 version of code entered and executed by the user is included the
 markup, and the code cell now displays the &#8220;correct&#8221; version of the
 code. Note the comment suffix <tt class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></tt> on selected lines of
@@ -229,7 +229,7 @@ code. These lines were hidden in the unfilled view.</p>
 experimental implementation is very simple. The instructor creates a regular
 notebook, with each code cell corresponding to a specific step of a
 complex task. The comment string <tt class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></tt> is appended to all code
-lines that are to be hidden (<a href="#figfillableb">Fig.  8</a>). The code in each
+lines that are to be hidden (<a href="#figfillableb">Fig.  59</a>). The code in each
 successive step can depend on the previous step being completed
 correctly. Each code cell is executed in sequence to produce output
 for the step. The notebook is then saved with the suffix <tt class="docutils literal"><span class="pre">-fill.py.gnb.md</span></tt>
