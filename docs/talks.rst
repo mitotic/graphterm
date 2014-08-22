@@ -7,19 +7,21 @@ Talks, tutorials, and videos
    :maxdepth: 1
 
 
-   Paper (and YouTube video) describing GraphTerm from SciPy 2013 <http://conference.scipy.org/proceedings/scipy2013/pdfs/saravanan.pdf>
-
    Tutorial on Setting up a Virtual Computer Lab <virtual-setup>
 
    Tutorial on Using the graphical features of GraphTerm <features>
 
    Tutorial on Using GraphTerm as a remote terminal <remote>
 
+* *Creating a browser-based virtual computer lab for classroom
+  instruction.* SciPy14 proceedings paper (draft) <https://dl.dropboxusercontent.com/u/72208800/docs/Saravanan-SciPy14.pdf>
 
-* The talk *Creating a browser-based virtual computer lab for classroom
-  instruction*, was delivered at Scipy 2014 as a live GraphTerm
+* *Creating a browser-based virtual computer lab for classroom
+  instruction.* SciPy14 talk delivered as a live GraphTerm
   notebook slide show by opening
   `this Markdown file <https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/SciPy2014.py.gnb.md>`_.
+
+* Paper (and YouTube video) describing GraphTerm from SciPy 2013 <http://conference.scipy.org/proceedings/scipy2013/pdfs/saravanan.pdf>
 
 * The following YouTube demo videos are available:
 

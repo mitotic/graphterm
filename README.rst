@@ -198,7 +198,7 @@ Usage info and other documentation can be found on the project home page,
 `code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_.
 See the `Contents <http://code.mindmeldr.com/graphterm/contents.html>`_
 page for an overview of the documentation and the
-`Talks and Turorials <http://code.mindmeldr.com/graphterm/talks.html>`_
+`Talks and Tutorials <http://code.mindmeldr.com/graphterm/talks.html>`_
 page for more advanced usage examples.
 
 You can also use the following command::

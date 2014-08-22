@@ -712,6 +712,11 @@ div.gterm-notecell-output.gterm-notecell-markdown,
     display: none;
 }
 
+/* Test screen */
+#session-testscreen {
+    visibility: hidden;
+}
+
 /* Screens */
 #session-term:not(.split-screen) .session-screen, .session-altscreen {
     margin-bottom: 1.0em;
