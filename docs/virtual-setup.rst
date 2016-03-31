@@ -486,6 +486,9 @@ To stop a running server, type::
 
     gtermserver --daemon=stop
 
+To restart it, switch user to ``root`` and re-run the startup script
+with command options (e.g., ``/etc/init.d/graphterm``).
+
 If you are not using ``ec2launch``, you can start the server explicitly from the command line, e.g.::
 
     gtermserver --daemon=start --auth_type=multiuser --user_setup=auto --logging --nb_server --https --external_port=443 --host=domain_or_ip

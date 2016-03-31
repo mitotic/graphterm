@@ -146,7 +146,7 @@ Can we set up a group of laptop computers to work together as a "virtual lab"?
 
 * JiffyLab
 
-  * *A linux container for each user*
+  * *A linux container for each user (Docker)*
 
 * Wakari (commerical, with free basic account)
 
@@ -402,4 +402,5 @@ Steps:
 
 ## github.com/mitotic/graphterm
 
+## http://goo.gl/OJOkJr
 
