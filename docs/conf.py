@@ -11,9 +11,9 @@ except ImportError:
     about = None
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo',
-              'sphinx.ext.autosummary', 'sphinx.ext.extlinks', 'rst2pdf.pdfbuilder', 'sphinx.ext.numfig']
+              'sphinx.ext.autosummary', 'sphinx.ext.extlinks', 'rst2pdf.pdfbuilder'] #, 'sphinx.ext.numfig']
 
-# numfig:
+# numfig: Extension commented out due to non-availability of numfig module
 numfig_number_figures = True
 numfig_figure_caption_prefix = "Figure"
 
