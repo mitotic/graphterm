@@ -293,7 +293,7 @@ Release Notes
   - Bug fixes: UTF-8 paste handling (for Japanese etc.)
 
   - Moved documentation from Google sites (info.mindmeldr.com) to
-    Github Pages (code.mindmeldr.com)
+    Github Pages (code.mitotic.org)
 
 
 0.33.0 (Sep. 30, 2012)
