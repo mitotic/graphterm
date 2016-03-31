@@ -26,7 +26,7 @@ connect via a private network, not the the public internet.* The state of the te
 stored on the host machine, not on ``gtermserver``. You can restart ``gtermserver``
 and the hosts will automatically reconnect.
 
-See the `README <http://code.mindmeldr.com/graphterm/README.html>`_
+See the `README <http://code.mitotic.org/graphterm/README.html>`_
 file for basic instructions on installing and starting up GraphTerm.
 
 Accessing GraphTerm features across SSH logins
@@ -127,7 +127,7 @@ will be echoed and broadcast, and output from each of the matching
 sessions will be displayed, preceded by an identifying header
 (with the special string ``ditto`` used to indicate repeated output).
 See the *otrace* integration section in the
-`README <http://code.mindmeldr.com/graphterm/README.html>`_
+`README <http://code.mitotic.org/graphterm/README.html>`_
 file for more information.
 
 NOTE: Multiplexed input/output display cannot be easily implemented for

@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="up" title="Advanced topics" href="advanced.html" />
     <link rel="next" title="Using GraphTerm with OTrace" href="tracing.html" />
     <link rel="prev" title="Implementation" href="implementation.html" />
@@ -78,11 +78,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -90,7 +90,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -106,10 +106,10 @@ code.mindmeldr.com
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="advanced.html" accesskey="U">Advanced topics</a> &raquo;</li> 
+          <li class="nav-item nav-item-1"><a href="advanced.html" accesskey="U">Advanced topics</a> &raquo;</li> 
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="implementation.html"
@@ -117,12 +117,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="tracing.html"
                         title="next chapter">Using GraphTerm with OTrace</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/format.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/format.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -141,7 +143,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="markdown-notebook-format">
 <span id="format"></span><h1><a class="toc-backref" href="#id1">Markdown notebook format</a><a class="headerlink" href="#markdown-notebook-format" title="Permalink to this headline">¶</a></h1>
@@ -152,11 +154,11 @@ code.mindmeldr.com
 </ul>
 </div>
 <p id="index-0">Although GraphTerm can read and write notebooks in the IPython
-(<tt class="docutils literal"><span class="pre">.ipynb</span></tt>) format, it natively saves notebooks using basic <a class="reference external" href="http://daringfireball.net/projects/markdown">Markdown</a> syntax, with support
+(<code class="docutils literal"><span class="pre">.ipynb</span></code>) format, it natively saves notebooks using basic <a class="reference external" href="http://daringfireball.net/projects/markdown">Markdown</a> syntax, with support
 for the GitHub-style <a class="reference external" href="https://help.github.com/articles/github-flavored-markdown">fenced code extension</a>. The
-notebook filenames have the extension <tt class="docutils literal"><span class="pre">.py.gnb.md</span></tt> for Python,
-<tt class="docutils literal"><span class="pre">.R.gnb.md</span></tt> for R and so on. The Markdown sequential text format has
-some advantages over the JSON format used for <tt class="docutils literal"><span class="pre">.ipynb</span></tt> files:</p>
+notebook filenames have the extension <code class="docutils literal"><span class="pre">.py.gnb.md</span></code> for Python,
+<code class="docutils literal"><span class="pre">.R.gnb.md</span></code> for R and so on. The Markdown sequential text format has
+some advantages over the JSON format used for <code class="docutils literal"><span class="pre">.ipynb</span></code> files:</p>
 <ul class="simple">
 <li>Notebooks may be easily viewed using standard Markup rendering
 software and will automatically render on GitHub
@@ -164,11 +166,11 @@ software and will automatically render on GitHub
 <li>Notebooks can be easily modified using standard text editors,
 moving around blocks of code and markup.</li>
 <li>Notebooks can be split and concatenated at block boundaries, like
-text files (e.g. <tt class="docutils literal"><span class="pre">cat</span> <span class="pre">a.py.gnb.md</span> <span class="pre">b.py.gnb.md</span> <span class="pre">&gt;</span> <span class="pre">c.py.gnb.md</span></tt>)</li>
+text files (e.g. <code class="docutils literal"><span class="pre">cat</span> <span class="pre">a.py.gnb.md</span> <span class="pre">b.py.gnb.md</span> <span class="pre">&gt;</span> <span class="pre">c.py.gnb.md</span></code>)</li>
 </ul>
 <p>Markup cells are simply saved as Markdown text in the notebook file.
 This can include raw HTML, figures, or program statements. Triple
-dashes (<tt class="docutils literal"><span class="pre">---</span></tt>) can be used as page breaks to denote section/slide
+dashes (<code class="docutils literal"><span class="pre">---</span></code>) can be used as page breaks to denote section/slide
 boundaries. Program statements occurring within a markup cell must be
 indented by at least four spaces. The data URIs for all figures are
 saved at the end of the file, making it easier to view the notebook
@@ -180,21 +182,21 @@ print &quot;Hello World&quot;
 </pre></div>
 </div>
 <p>Output text resulting from running the code is saved in fenced code
-blocks of type <tt class="docutils literal"><span class="pre">output</span></tt>:</p>
+blocks of type <code class="docutils literal"><span class="pre">output</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre>```output
 Hello
 ```
 </pre></div>
 </div>
-<p>Figures resulting from code execution are distinguished by the prefix <tt class="docutils literal"><span class="pre">output-</span></tt>
+<p>Figures resulting from code execution are distinguished by the prefix <code class="docutils literal"><span class="pre">output-</span></code>
 in their name, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>![image][output-fig1-test.py]
 </pre></div>
 </div>
-<p>Multiple <tt class="docutils literal"><span class="pre">output</span></tt> text blocks and output figures, separated by blank
+<p>Multiple <code class="docutils literal"><span class="pre">output</span></code> text blocks and output figures, separated by blank
 lines, are considered as representing the cumulative output from
 executing the previous code block. To create a progressively fillable
-notebook, <tt class="docutils literal"><span class="pre">output</span></tt> blocks and figures are converted to <tt class="docutils literal"><span class="pre">expect</span></tt>
+notebook, <code class="docutils literal"><span class="pre">output</span></code> blocks and figures are converted to <code class="docutils literal"><span class="pre">expect</span></code>
 blocks and figures. Here&#8217;s an example notebook file:</p>
 <div class="highlight-python"><div class="highlight"><pre># A sample GraphTerm notebook file in Markdown format
 
@@ -255,7 +257,7 @@ pylab.title(title)
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -271,13 +273,13 @@ pylab.title(title)
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="advanced.html" >Advanced topics</a> &raquo;</li> 
+          <li class="nav-item nav-item-1"><a href="advanced.html" >Advanced topics</a> &raquo;</li> 
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

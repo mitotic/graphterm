@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="up" title="Advanced topics" href="advanced.html" />
     <link rel="next" title="Release Notes" href="release-notes.html" />
     <link rel="prev" title="Using GraphTerm with OTrace" href="tracing.html" />
@@ -78,11 +78,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -90,7 +90,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -106,10 +106,10 @@ code.mindmeldr.com
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="advanced.html" accesskey="U">Advanced topics</a> &raquo;</li> 
+          <li class="nav-item nav-item-1"><a href="advanced.html" accesskey="U">Advanced topics</a> &raquo;</li> 
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="tracing.html"
@@ -117,12 +117,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="release-notes.html"
                         title="next chapter">Release Notes</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/widgets.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/widgets.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -141,7 +143,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="widgets-sockets-and-interactivity">
 <h1>Widgets, sockets, and interactivity<a class="headerlink" href="#widgets-sockets-and-interactivity" title="Permalink to this headline">¶</a></h1>
@@ -149,9 +151,9 @@ code.mindmeldr.com
 <em>picture-in-picture</em> for TVs, or dashboard widgets on the Mac). This
 is an experimental feature which allows programs running in the background
 to display information overlaid on the terminal. (It may be disabled using the
-<tt class="docutils literal"><span class="pre">--widget-port=0</span></tt> option.) The widget is accessed by
-redirecting <tt class="docutils literal"><span class="pre">stdout</span></tt> to a Bash <tt class="docutils literal"><span class="pre">tcp</span></tt> socket device whose address
-is stored in the environment variable <tt class="docutils literal"><span class="pre">GTERM_SOCKET</span></tt>.  For example,
+<code class="docutils literal"><span class="pre">--widget-port=0</span></code> option.) The widget is accessed by
+redirecting <code class="docutils literal"><span class="pre">stdout</span></code> to a Bash <code class="docutils literal"><span class="pre">tcp</span></code> socket device whose address
+is stored in the environment variable <code class="docutils literal"><span class="pre">GTERM_SOCKET</span></code>.  For example,
 the following command will run a background job to open a new terminal
 in an overlay <em>iframe</em>:</p>
 <div class="highlight-python"><div class="highlight"><pre>gframe -f --opacity=0.2 http://localhost:8900/local/new &gt; $GTERM_SOCKET &amp;
@@ -160,27 +162,27 @@ in an overlay <em>iframe</em>:</p>
 <p>You can use the overlay terminal just like a regular terminal,
 including having recursive overlays within the overlay! To delete the
 widget, just close the socket connection by killing the background
-job. (You can use the <tt class="docutils literal"><span class="pre">fg</span></tt> command to bring the job to the
+job. (You can use the <code class="docutils literal"><span class="pre">fg</span></code> command to bring the job to the
 foreground and then kill it.)</p>
-<p>A simple example of a live feed widget is to combine <tt class="docutils literal"><span class="pre">gfeed</span></tt> with
-<tt class="docutils literal"><span class="pre">tail</span> <span class="pre">-f</span></tt>:</p>
+<p>A simple example of a live feed widget is to combine <code class="docutils literal"><span class="pre">gfeed</span></code> with
+<code class="docutils literal"><span class="pre">tail</span> <span class="pre">-f</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre>tail -f output.log | gfeed &gt; $GTERM_SOCKET &amp;
 </pre></div>
 </div>
-<p>The above feed will display the new lines appended to the file <tt class="docutils literal"><span class="pre">output.log</span></tt>.</p>
+<p>The above feed will display the new lines appended to the file <code class="docutils literal"><span class="pre">output.log</span></code>.</p>
 <p>Another example of widget use is to display live audience feedback on
 the screen during a presentation, sort of like a &#8220;twitter feed&#8221;. The
-widget background job should be started before using <tt class="docutils literal"><span class="pre">greveal</span></tt> to make
+widget background job should be started before using <code class="docutils literal"><span class="pre">greveal</span></code> to make
 a presentation:</p>
 <div class="highlight-python"><div class="highlight"><pre>gchat 2&gt; $GTERM_SOCKET 0&lt;&amp;2 | gfeed &gt; $GTERM_SOCKET &amp;
 greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
 </pre></div>
 </div>
-<p>The first command uses <tt class="docutils literal"><span class="pre">gchat</span></tt> to capture feedback from others
+<p>The first command uses <code class="docutils literal"><span class="pre">gchat</span></code> to capture feedback from others
 viewing the terminal session as a stream of lines from
 $GTERM_SOCKET. The viewers use the overlaid <em>chat</em> button
-to provide feedback. The <tt class="docutils literal"><span class="pre">stdout</span></tt> from <tt class="docutils literal"><span class="pre">gchat</span></tt> is piped to
-<tt class="docutils literal"><span class="pre">gfeed</span></tt> which displays its <tt class="docutils literal"><span class="pre">stdin</span></tt> stream as a  &#8220;live feed&#8221;
+to provide feedback. The <code class="docutils literal"><span class="pre">stdout</span></code> from <code class="docutils literal"><span class="pre">gchat</span></code> is piped to
+<code class="docutils literal"><span class="pre">gfeed</span></code> which displays its <code class="docutils literal"><span class="pre">stdin</span></code> stream as a  &#8220;live feed&#8221;
 overlay, also via $GTERM_SOCKET.</p>
 <p>To display a live twitter feed as an overlay on a presentation, you can use the
 commands:</p>
@@ -196,7 +198,7 @@ greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -212,13 +214,13 @@ greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="advanced.html" >Advanced topics</a> &raquo;</li> 
+          <li class="nav-item nav-item-1"><a href="advanced.html" >Advanced topics</a> &raquo;</li> 
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

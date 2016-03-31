@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -75,11 +75,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -87,7 +87,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -99,7 +99,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -119,12 +119,14 @@ code.mindmeldr.com
 </li>
 </ul>
 
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/UsingGraphicalFeatures.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/UsingGraphicalFeatures.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -143,7 +145,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="using-the-graphical-features-of-graphterm">
 <h1><a class="toc-backref" href="#id1">Using the graphical features of GraphTerm</a><a class="headerlink" href="#using-the-graphical-features-of-graphterm" title="Permalink to this headline">¶</a></h1>
@@ -169,7 +171,7 @@ code.mindmeldr.com
 <div class="section" id="introduction">
 <h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>If you are a long-time command line user, you can continue to use
-GraphTerm just like <tt class="docutils literal"><span class="pre">xterm</span></tt> (except for any bugs), and perhaps
+GraphTerm just like <code class="docutils literal"><span class="pre">xterm</span></code> (except for any bugs), and perhaps
 use the remote access or sharing features. However, that
 would defeat the main goal of GraphTerm, which is to enhance the
 command line with GUI-like features. You may need to
@@ -179,53 +181,53 @@ navigation. Some of these GraphTerm &#8220;extensions&#8221; may
 improve your productivity, and some may not! This tutorial explains
 novel ways in which you can interact with the
 computer using GraphTerm. (See the
-<a class="reference external" href="http://code.mindmeldr.com/graphterm/README.html">README</a>
+<a class="reference external" href="http://code.mitotic.org/graphterm/README.html">README</a>
 file for basic instructions on installing and starting up GraphTerm.)</p>
 </div>
 <div class="section" id="changing-directories">
 <h2><a class="toc-backref" href="#id3">Changing directories</a><a class="headerlink" href="#changing-directories" title="Permalink to this headline">¶</a></h2>
-<p>When you open up a new GraphTerm window, you can <tt class="docutils literal"><span class="pre">cd</span></tt> to the
+<p>When you open up a new GraphTerm window, you can <code class="docutils literal"><span class="pre">cd</span></code> to the
 directory you want by clicking on the Home &#8220;button&#8221; and then clicking
 your way to the directory (with or without icons enabled). Once you
 reach the directory, just type any command you wish to execute there.</p>
 <p>In the middle of a terminal session, if you wish to change directories
-graphically, use the <tt class="docutils literal"><span class="pre">gls</span></tt> command, which accepts optional wild card
+graphically, use the <code class="docutils literal"><span class="pre">gls</span></code> command, which accepts optional wild card
 arguments to filter the files it will display. You can also scroll
-back, and click on the directory in any previously displayed <tt class="docutils literal"><span class="pre">gls</span></tt>
+back, and click on the directory in any previously displayed <code class="docutils literal"><span class="pre">gls</span></code>
 output to switch to that directory. (NOTE: The current command line
 needs to be empty for this graphical directory switching to work.)</p>
 </div>
 <div class="section" id="opening-files">
 <h2><a class="toc-backref" href="#id4">Opening files</a><a class="headerlink" href="#opening-files" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="docutils literal"><span class="pre">gopen</span> <span class="pre">&lt;filename&gt;</span></tt> command will open any file on the local
+<p>The <code class="docutils literal"><span class="pre">gopen</span> <span class="pre">&lt;filename&gt;</span></code> command will open any file on the local
 computer, i.e., where the shell is running, using the default
-program associated with it. (<tt class="docutils literal"><span class="pre">gopen</span></tt> simply invokes the correct
-<em>open</em> command for different platforms, e.g., <tt class="docutils literal"><span class="pre">xdg-open</span></tt> on Linux,
-and <tt class="docutils literal"><span class="pre">open</span></tt> on OS X. On OS X, you can use the command &#8220;<tt class="docutils literal"><span class="pre">gopen</span> <span class="pre">.</span></tt>&#8221;
+program associated with it. (<code class="docutils literal"><span class="pre">gopen</span></code> simply invokes the correct
+<em>open</em> command for different platforms, e.g., <code class="docutils literal"><span class="pre">xdg-open</span></code> on Linux,
+and <code class="docutils literal"><span class="pre">open</span></code> on OS X. On OS X, you can use the command &#8220;<code class="docutils literal"><span class="pre">gopen</span> <span class="pre">.</span></code>&#8221;
 to open a Finder window showing the current directory.) For text files,
-<tt class="docutils literal"><span class="pre">gopen</span></tt> invokes the <tt class="docutils literal"><span class="pre">gvi</span></tt> command, which opens up an AJAX
+<code class="docutils literal"><span class="pre">gopen</span></code> invokes the <code class="docutils literal"><span class="pre">gvi</span></code> command, which opens up an AJAX
 text editor which can be used remotely on the browser. For image
-files, <tt class="docutils literal"><span class="pre">gopen</span></tt> invokes the <tt class="docutils literal"><span class="pre">gimage</span></tt> command to display the image.</p>
-<p><tt class="docutils literal"><span class="pre">gopen</span></tt> opens files on the local computer, i.e., where the shell is
-running. The <tt class="docutils literal"><span class="pre">gbrowse</span></tt> command can be used instead of <tt class="docutils literal"><span class="pre">gopen</span></tt>
+files, <code class="docutils literal"><span class="pre">gopen</span></code> invokes the <code class="docutils literal"><span class="pre">gimage</span></code> command to display the image.</p>
+<p><code class="docutils literal"><span class="pre">gopen</span></code> opens files on the local computer, i.e., where the shell is
+running. The <code class="docutils literal"><span class="pre">gbrowse</span></code> command can be used instead of <code class="docutils literal"><span class="pre">gopen</span></code>
 to open the files using the browser itself. This will work for
-images and PDF documents. The advantage of <tt class="docutils literal"><span class="pre">gbrowse</span></tt> is
+images and PDF documents. The advantage of <code class="docutils literal"><span class="pre">gbrowse</span></code> is
 that it will work even remotely, i.e., across SSH tunnels. (<em>NOTE:
 You will need to allow popups from &#8220;localhost&#8221; for this to
 work.</em>)</p>
-<p>If you click on a doument file displayed in <tt class="docutils literal"><span class="pre">gls</span></tt> output, the
-<tt class="docutils literal"><span class="pre">gopen/gbrowse/gvi</span></tt> command will be executed by default,
+<p>If you click on a doument file displayed in <code class="docutils literal"><span class="pre">gls</span></code> output, the
+<code class="docutils literal"><span class="pre">gopen/gbrowse/gvi</span></code> command will be executed by default,
 provided the current command line is empty.</p>
 </div>
 <div class="section" id="constructing-a-new-command-line">
 <h2><a class="toc-backref" href="#id5">Constructing a new command line</a><a class="headerlink" href="#constructing-a-new-command-line" title="Permalink to this headline">¶</a></h2>
 <p>If the current command line <em>contains even a single character</em>,
-which may be a space, then clicking on <tt class="docutils literal"><span class="pre">gls</span></tt> output does not change
+which may be a space, then clicking on <code class="docutils literal"><span class="pre">gls</span></code> output does not change
 directories or open files. Instead, the relative file or directory path is
 pasted as text at the end of the current command line, followed by a
 space. For example, a common operation is to duplicate a file and
 rename it as a backup copy with a slightly different name. You can do
-that in GraphTerm by first typing  <tt class="docutils literal"><span class="pre">cp</span></tt> in the command line and
+that in GraphTerm by first typing  <code class="docutils literal"><span class="pre">cp</span></code> in the command line and
 clicking on the displayed filename (or icon) twice, resulting in a
 command line of the form:</p>
 <div class="highlight-python"><div class="highlight"><pre>cp filepath filepath
@@ -237,17 +239,17 @@ execute the copy command.</p>
 <div class="section" id="moving-and-copying-files">
 <h2><a class="toc-backref" href="#id6">Moving and copying files</a><a class="headerlink" href="#moving-and-copying-files" title="Permalink to this headline">¶</a></h2>
 <p>To move a file to a different directory, you can simply drag the
-filename displayed in <tt class="docutils literal"><span class="pre">gls</span></tt> output and drop it on the destination
+filename displayed in <code class="docutils literal"><span class="pre">gls</span></code> output and drop it on the destination
 directory, in the same terminal window or in a different terminal
 window. (NOTE: At present, the drag-and-drop implementation has some
 limitations. You can only drag the actual text for the filename, not
 the icon associated with the file, although the drop operation can
 occur over the destination directory icon. There is no clear graphical
 feedback when the file is dropped on the destination
-directory. However, you will see the <tt class="docutils literal"><span class="pre">mv</span> <span class="pre">file</span> <span class="pre">dir</span></tt> command appear on
+directory. However, you will see the <code class="docutils literal"><span class="pre">mv</span> <span class="pre">file</span> <span class="pre">dir</span></code> command appear on
 the command line when the operation is successful.)</p>
 <p>If the current command line is not empty, the drag-and-drop operation
-will simply insert the <tt class="docutils literal"><span class="pre">mv</span> <span class="pre">file</span> <span class="pre">dir</span></tt> command without actually executing
+will simply insert the <code class="docutils literal"><span class="pre">mv</span> <span class="pre">file</span> <span class="pre">dir</span></code> command without actually executing
 it. You can edit the command line to modify it, and then execute it.</p>
 <p>Drag-and-drop also works between two different hosts, except that the
 file is copied, instead of being moved. For remote hosts, you can
@@ -270,27 +272,27 @@ drop-down menu to send special characters like TAB and ESCAPE.</p>
 </div>
 <div class="section" id="viewing-html-inline">
 <h2><a class="toc-backref" href="#id9">Viewing HTML inline</a><a class="headerlink" href="#viewing-html-inline" title="Permalink to this headline">¶</a></h2>
-<p>Use the <tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">[-f]</span> <span class="pre">filename|URL</span></tt> command to render inline HTML
-from a file or URL (or <tt class="docutils literal"><span class="pre">command</span> <span class="pre">|</span> <span class="pre">gframe</span></tt> to render HTML generated by <tt class="docutils literal"><span class="pre">command</span></tt>).</p>
+<p>Use the <code class="docutils literal"><span class="pre">gframe</span> <span class="pre">[-f]</span> <span class="pre">filename|URL</span></code> command to render inline HTML
+from a file or URL (or <code class="docutils literal"><span class="pre">command</span> <span class="pre">|</span> <span class="pre">gframe</span></code> to render HTML generated by <code class="docutils literal"><span class="pre">command</span></code>).</p>
 </div>
 <div class="section" id="viewing-image-files">
 <h2><a class="toc-backref" href="#id10">Viewing image files</a><a class="headerlink" href="#viewing-image-files" title="Permalink to this headline">¶</a></h2>
-<p>Use the <tt class="docutils literal"><span class="pre">gimage</span></tt> command to view images inline. You can also use the
-<tt class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span></tt> command to include thumbnails of images in the directory
-listing. (<tt class="docutils literal"><span class="pre">gls</span></tt> does not display thumbnails by default because it
+<p>Use the <code class="docutils literal"><span class="pre">gimage</span></code> command to view images inline. You can also use the
+<code class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span></code> command to include thumbnails of images in the directory
+listing. (<code class="docutils literal"><span class="pre">gls</span></code> does not display thumbnails by default because it
 needs to load the entire image file to display each &#8220;thumbnail&#8221;.)</p>
 </div>
 <div class="section" id="sharing-slideshows-presentations">
 <h2><a class="toc-backref" href="#id11">Sharing slideshows/presentations</a><a class="headerlink" href="#sharing-slideshows-presentations" title="Permalink to this headline">¶</a></h2>
-<p>The command <tt class="docutils literal"><span class="pre">gimage</span> <span class="pre">-f</span></tt> can be used to view images in
+<p>The command <code class="docutils literal"><span class="pre">gimage</span> <span class="pre">-f</span></code> can be used to view images in
 fullscreen mode, i.e., as a slide show. If you omit the filename argument,
 all the images in the current directory will be displayed. (If you
-enable the webcast feature, and use the <tt class="docutils literal"><span class="pre">-b</span></tt> option for <tt class="docutils literal"><span class="pre">gimage</span></tt>,
+enable the webcast feature, and use the <code class="docutils literal"><span class="pre">-b</span></code> option for <code class="docutils literal"><span class="pre">gimage</span></code>,
 anyone with access to the session URL can view the slideshow!)</p>
 </div>
 <div class="section" id="twitter-client-for-live-audience-feedback">
 <h2><a class="toc-backref" href="#id12">Twitter client for live audience feedback</a><a class="headerlink" href="#twitter-client-for-live-audience-feedback" title="Permalink to this headline">¶</a></h2>
-<p>A GraphTerm-aware demo Twitter client, <tt class="docutils literal"><span class="pre">gtweet</span></tt>, is included in the
+<p>A GraphTerm-aware demo Twitter client, <code class="docutils literal"><span class="pre">gtweet</span></code>, is included in the
 distribution. It can be used during a lecture or presentation to allow
 the audience to respond interactively. To use it, you need have a
 Twitter account, and create your own &#8220;Twitter app&#8221; associated with
@@ -309,8 +311,8 @@ gtweet --recv
 </pre></div>
 </div>
 <p>By default, the Twitter client displays tweets graphically using
-the fullscreen (<tt class="docutils literal"><span class="pre">-f</span></tt>) option, although it also has text (<tt class="docutils literal"><span class="pre">--text</span></tt>)
-and CSV format (<tt class="docutils literal"><span class="pre">--csv</span></tt>) output options. You can also combine the
+the fullscreen (<code class="docutils literal"><span class="pre">-f</span></code>) option, although it also has text (<code class="docutils literal"><span class="pre">--text</span></code>)
+and CSV format (<code class="docutils literal"><span class="pre">--csv</span></code>) output options. You can also combine the
 the fullscreen and the text/csv options to save a copy of all the displayed
 tweets as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre>gtweet -f --csv --search python &gt; tweets.csv
@@ -325,7 +327,7 @@ tweets as follows:</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -338,9 +340,9 @@ tweets as follows:</p>
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="next" title="Getting started" href="start.html" />
     <link rel="prev" title="Contact" href="contact.html" />
  
@@ -77,11 +77,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -89,7 +89,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -107,7 +107,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -129,12 +129,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="start.html"
                         title="next chapter">Getting started</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/README.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/README.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -153,7 +155,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="readme">
 <span id="id1"></span><h1><a class="toc-backref" href="#id7">README</a><a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h1>
@@ -174,10 +176,10 @@ code.mindmeldr.com
 </div>
 <div class="section" id="introduction">
 <h2><a class="toc-backref" href="#id8">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is a browser-based graphical terminal interface, that
+<p><code class="docutils literal"><span class="pre">GraphTerm</span></code> is a browser-based graphical terminal interface, that
 aims to seamlessly blend the command line and graphical user
 interfaces. You can use it just like a regular terminal,
-backwards-compatible with <tt class="docutils literal"><span class="pre">xterm</span></tt>, and access the additional
+backwards-compatible with <code class="docutils literal"><span class="pre">xterm</span></code>, and access the additional
 graphical features as needed. These features can help impove your
 terminal workflow by integrating graphical operations with the
 command line and letting you view images and HTML output inline.</p>
@@ -189,12 +191,12 @@ practical applications are:</p>
 that can work seamlessly across SSH login
 boundaries, with an optional notebook interface. (For remote
 access, it also serves as a detachable terminal, like
-<tt class="docutils literal"><span class="pre">tmux</span></tt> or <tt class="docutils literal"><span class="pre">screen</span></tt>.)</li>
-<li>a <a class="reference external" href="http://code.mindmeldr.com/graphterm/virtual-setup.html">virtual computer lab</a> for teaching and demonstrations. The
+<code class="docutils literal"><span class="pre">tmux</span></code> or <code class="docutils literal"><span class="pre">screen</span></code>.)</li>
+<li>a <a class="reference external" href="http://code.mitotic.org/graphterm/virtual-setup.html">virtual computer lab</a> for teaching and demonstrations. The
 GraphTerm server can be set up in the cloud and accessed by
 multiple users using their laptop/mobile browsers, with Google
 Authentication. The lab instructor can
-<a class="reference external" href="http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals">monitor all the users&#8217;  terminals</a>
+<a class="reference external" href="http://code.mitotic.org/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals">monitor all the users&#8217;  terminals</a>
 via a &#8220;dashboard&#8221;, and users can collaborate with each other by
 sharing terminals and notebooks.</li>
 </ul>
@@ -233,9 +235,9 @@ It is also themable using CSS.</p>
 that work seamlessly within the terminal.  Sample mashups include:</p>
 <blockquote>
 <div><ul class="simple">
-<li><tt class="docutils literal"><span class="pre">greveal</span></tt>: Inline version of <tt class="docutils literal"><span class="pre">reveal.js</span></tt> to display Markdown files as slideshows</li>
-<li><tt class="docutils literal"><span class="pre">gtutor</span></tt>: Inline version of <a class="reference external" href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
-<li><tt class="docutils literal"><span class="pre">yweather</span></tt>: Using Yahoo weather API to display weather</li>
+<li><code class="docutils literal"><span class="pre">greveal</span></code>: Inline version of <code class="docutils literal"><span class="pre">reveal.js</span></code> to display Markdown files as slideshows</li>
+<li><code class="docutils literal"><span class="pre">gtutor</span></code>: Inline version of <a class="reference external" href="http://pythontutor.com">pythontutor.com</a> for visual tracing of python programs</li>
+<li><code class="docutils literal"><span class="pre">yweather</span></code>: Using Yahoo weather API to display weather</li>
 </ul>
 </div></blockquote>
 <p>Images of GraphTerm in action can be found in <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/docs/screenshots.rst">screenshots</a>
@@ -244,9 +246,9 @@ Here is a sample screenshot showing the output of the
 <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh">metro.sh</a>
 command, which embeds six smaller terminals within the main terminal, running
 six different commands from the GraphTerm toolchain: (i) live twitter stream output using
-<tt class="docutils literal"><span class="pre">gtweet</span></tt>, (ii) weather info using <tt class="docutils literal"><span class="pre">yweather</span></tt>,
-(ii) slideshow from markdown file using <tt class="docutils literal"><span class="pre">greveal</span></tt> and <em>reveal.js</em>,
-(iv) word cloud using <tt class="docutils literal"><span class="pre">d3cloud</span></tt> and <em>d3.js</em>, (v) inline graphics using <tt class="docutils literal"><span class="pre">gmatplot.py</span></tt>,
+<code class="docutils literal"><span class="pre">gtweet</span></code>, (ii) weather info using <code class="docutils literal"><span class="pre">yweather</span></code>,
+(ii) slideshow from markdown file using <code class="docutils literal"><span class="pre">greveal</span></code> and <em>reveal.js</em>,
+(iv) word cloud using <code class="docutils literal"><span class="pre">d3cloud</span></code> and <em>d3.js</em>, (v) inline graphics using <code class="docutils literal"><span class="pre">gmatplot.py</span></code>,
 and (vi) notebook mode using the standard python interpreter.</p>
 <blockquote>
 <div><strong>Screenshot 3: Embedding terminals within GraphTerm</strong></div></blockquote>
@@ -256,7 +258,7 @@ and (vi) notebook mode using the standard python interpreter.</p>
 </div>
 <div class="section" id="installation">
 <span id="id2"></span><h2><a class="toc-backref" href="#id9">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>To install <tt class="docutils literal"><span class="pre">GraphTerm</span></tt>, you need to have Python 2.6+ and the Bash
+<p>To install <code class="docutils literal"><span class="pre">GraphTerm</span></code>, you need to have Python 2.6+ and the Bash
 shell on your Mac/Linux/Unix computer. For a quick install, use one of
 the following two options:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo pip install graphterm
@@ -265,38 +267,38 @@ sudo easy_install graphterm; sudo gterm_setup
 </pre></div>
 </div>
 <p>If you wish to install GraphTerm as a non-root user within an Anaconda
-or Enthought Python environment, you can omit the <tt class="docutils literal"><span class="pre">sudo</span></tt> prefix.</p>
+or Enthought Python environment, you can omit the <code class="docutils literal"><span class="pre">sudo</span></code> prefix.</p>
 <p>For a manual install procedure, download the release tarball from the
 <a class="reference external" href="http://pypi.python.org/pypi/graphterm">Python Package Index</a>, untar,
-and execute the following command in the <tt class="docutils literal"><span class="pre">graphterm-&lt;version&gt;</span></tt> directory:</p>
+and execute the following command in the <code class="docutils literal"><span class="pre">graphterm-&lt;version&gt;</span></code> directory:</p>
 <div class="highlight-python"><div class="highlight"><pre>python setup.py install
 </pre></div>
 </div>
-<p>For the manual install, you will also need to install the <tt class="docutils literal"><span class="pre">tornado</span></tt>
+<p>For the manual install, you will also need to install the <code class="docutils literal"><span class="pre">tornado</span></code>
 web server, which can be downloaded from
 <a class="reference external" href="http://www.tornadoweb.org">http://www.tornadoweb.org</a></p>
 <p>You can also try out GraphTerm without installing it, by untarring the
-source tarball (or checking out the source from <tt class="docutils literal"><span class="pre">github</span></tt>). You can
-run the server as <tt class="docutils literal"><span class="pre">./gtermserver.py</span></tt> within the <tt class="docutils literal"><span class="pre">graphterm</span></tt>
+source tarball (or checking out the source from <code class="docutils literal"><span class="pre">github</span></code>). You can
+run the server as <code class="docutils literal"><span class="pre">./gtermserver.py</span></code> within the <code class="docutils literal"><span class="pre">graphterm</span></code>
 subdirectory of the distribution, after you have installed the
-<tt class="docutils literal"><span class="pre">tornado</span></tt> package on your system (or within the <tt class="docutils literal"><span class="pre">graphterm</span></tt>
+<code class="docutils literal"><span class="pre">tornado</span></code> package on your system (or within the <code class="docutils literal"><span class="pre">graphterm</span></code>
 subdirectory of the source distribution). In this case, certain
-commands in the <tt class="docutils literal"><span class="pre">graphterm/bin</span></tt> subdirectory, such as <tt class="docutils literal"><span class="pre">gterm</span></tt> and
-<tt class="docutils literal"><span class="pre">gauth</span></tt>, would need to be accessed as <tt class="docutils literal"><span class="pre">gterm.py</span></tt> and <tt class="docutils literal"><span class="pre">gauth.py</span></tt> respectively.</p>
-<p>You can browse the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> source code, and download the development
+commands in the <code class="docutils literal"><span class="pre">graphterm/bin</span></code> subdirectory, such as <code class="docutils literal"><span class="pre">gterm</span></code> and
+<code class="docutils literal"><span class="pre">gauth</span></code>, would need to be accessed as <code class="docutils literal"><span class="pre">gterm.py</span></code> and <code class="docutils literal"><span class="pre">gauth.py</span></code> respectively.</p>
+<p>You can browse the <code class="docutils literal"><span class="pre">GraphTerm</span></code> source code, and download the development
 version, at <a class="reference external" href="https://github.com/mitotic/graphterm">Github</a>.</p>
 </div>
 <div class="section" id="quick-start">
 <h2><a class="toc-backref" href="#id10">Quick Start</a><a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
-<p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
+<p>To start the <code class="docutils literal"><span class="pre">GraphTerm</span></code> server, use the command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span>
 </pre></div>
 </div>
 <p>This will run the  server and open a GraphTerm terminal window
 using the default browser. For multi-user computers,
-omit the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option
+omit the <code class="docutils literal"><span class="pre">--auth_type=none</span></code> option
 when starting the server, and enter the authentication code stored in
-the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> as needed. (The <tt class="docutils literal"><span class="pre">gterm</span></tt>
+the file <code class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></code> as needed. (The <code class="docutils literal"><span class="pre">gterm</span></code>
 command can automatically enter this code for you.)</p>
 <p>You can access the GraphTerm server using any browser that supports
 websockets. Google Chrome works best, but Firefox, Safari, or IE10
@@ -304,13 +306,13 @@ are also supported. Start by entering the following URL:</p>
 <div class="highlight-python"><div class="highlight"><pre>http://localhost:8900
 </pre></div>
 </div>
-<p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm host you
+<p>In the <code class="docutils literal"><span class="pre">graphterm</span></code> browser page, select the GraphTerm host you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
 host is different from the network hostname for the server.)
 Within a GraphTerm window, you can use <em>terminal/new</em> menu option, or
-type the command <tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">new</span></tt>, to create a new GraphTerm session</p>
+type the command <code class="docutils literal"><span class="pre">gmenu</span> <span class="pre">new</span></code>, to create a new GraphTerm session</p>
 <p>You can also open additional GraphTerm terminal windows using
-the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
+the <code class="docutils literal"><span class="pre">gterm</span></code> command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gterm</span> <span class="o">--</span><span class="n">noauth</span> <span class="p">[</span><span class="n">session_name</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -321,22 +323,22 @@ gvi &lt;text-filename&gt;
 </pre></div>
 </div>
 <p>These are commands in the GraphTerm toolchain that imitate
-basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands.
-(<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt> command
+basic features of the standard <code class="docutils literal"><span class="pre">ls</span></code> and <code class="docutils literal"><span class="pre">vi</span></code> commands.
+(<em>Note:</em> You need to execute the <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></code> command
 to be able to use the GraphTerm toolchain. Otherwise, you will
-encounter a <tt class="docutils literal"><span class="pre">Permission</span> <span class="pre">denied</span></tt> error.)
-See <a class="reference external" href="http://code.mindmeldr.com/graphterm/start.html">Getting Started with GraphTerm</a>
+encounter a <code class="docutils literal"><span class="pre">Permission</span> <span class="pre">denied</span></code> error.)
+See <a class="reference external" href="http://code.mitotic.org/graphterm/start.html">Getting Started with GraphTerm</a>
 for more info on using GraphTerm. You can also
-<a class="reference external" href="http://code.mindmeldr.com/graphterm/virtual-setup.html">set up a virtual computer lab</a>
+<a class="reference external" href="http://code.mitotic.org/graphterm/virtual-setup.html">set up a virtual computer lab</a>
 using GraphTerm.</p>
 </div>
 <div class="section" id="documentation-and-support">
 <h2><a class="toc-backref" href="#id11">Documentation and Support</a><a class="headerlink" href="#documentation-and-support" title="Permalink to this headline">¶</a></h2>
 <p>Usage info and other documentation can be found on the project home page,
-<a class="reference external" href="http://code.mindmeldr.com/graphterm">code.mindmeldr.com/graphterm</a>.
-See the <a class="reference external" href="http://code.mindmeldr.com/graphterm/contents.html">Contents</a>
+<a class="reference external" href="http://code.mitotic.org/graphterm">code.mitotic.org/graphterm</a>.
+See the <a class="reference external" href="http://code.mitotic.org/graphterm/contents.html">Contents</a>
 page for an overview of the documentation and the
-<a class="reference external" href="http://code.mindmeldr.com/graphterm/talks.html">Talks and Tutorials</a>
+<a class="reference external" href="http://code.mitotic.org/graphterm/talks.html">Talks and Tutorials</a>
 page for more advanced usage examples.</p>
 <p>You can also use the following command:</p>
 <div class="highlight-python"><div class="highlight"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
@@ -356,9 +358,9 @@ GraphTerm etc. You can also follow <a class="reference external" href="https://t
 <li><p class="first"><em>Reliability:</em>  This software has not been subject to extensive testing. Use at your own risk.</p>
 </li>
 <li><dl class="first docutils">
-<dt><em>Platforms:</em> The <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> client should work on most recent</dt>
+<dt><em>Platforms:</em> The <code class="docutils literal"><span class="pre">GraphTerm</span></code> client should work on most recent</dt>
 <dd><p class="first last">browsers that support Websockets, such as Google Chrome, Firefox,
-and Safari. (Google Chrome usually works best.) The <tt class="docutils literal"><span class="pre">GraphTerm</span></tt>
+and Safari. (Google Chrome usually works best.) The <code class="docutils literal"><span class="pre">GraphTerm</span></code>
 server is pure-python, but with some OS-specific calls for file,
 shell, and terminal-related operations. It has been tested only on
 Linux and Mac OS X so far.</p>
@@ -368,7 +370,7 @@ Linux and Mac OS X so far.</p>
 <li><dl class="first docutils">
 <dt><em>Current limitations:</em></dt>
 <dd><ul class="first last simple">
-<li>Support for <tt class="docutils literal"><span class="pre">xterm</span></tt> escape sequences is incomplete.</li>
+<li>Support for <code class="docutils literal"><span class="pre">xterm</span></code> escape sequences is incomplete.</li>
 <li>Most features of GraphTerm only work with the bash shell, not with C-shell, due the need for PROMPT_COMMAND to keep track of the current working directory.</li>
 <li>At the moment, you cannot customize the shell prompt. (You
 should be able to so in the future.)</li>
@@ -381,13 +383,13 @@ should be able to so in the future.)</li>
 </div>
 <div class="section" id="credits">
 <h2><a class="toc-backref" href="#id13">Credits</a><a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is inspired by two earlier projects that implement the
+<p><code class="docutils literal"><span class="pre">GraphTerm</span></code> is inspired by two earlier projects that implement the
 terminal interface within the browser,
 <a class="reference external" href="http://www.xml.com/pub/a/2000/06/07/xmlterm/index.html">XMLTerm</a> and
 <a class="reference external" href="https://github.com/antonylesuisse/qweb/tree/master/ajaxterm">AjaxTerm</a>.
 It borrows many of the ideas from <em>XMLTerm</em> and re-uses chunks of code from
 <em>AjaxTerm</em>. The server uses the asynchronous <a class="reference external" href="http://tornadoweb.org">Tornado web framework</a> and the client uses <a class="reference external" href="http://jquery.com">jQuery</a>.</p>
-<p>The <tt class="docutils literal"><span class="pre">gls</span></tt> command uses icons from the <a class="reference external" href="http://tango.freedesktop.org">Tango Icon Library</a>, and graphical editing uses the
+<p>The <code class="docutils literal"><span class="pre">gls</span></code> command uses icons from the <a class="reference external" href="http://tango.freedesktop.org">Tango Icon Library</a>, and graphical editing uses the
 <a class="reference external" href="http://ace.ajax.org">Ajax.org Cloud9 Editor</a> as well as
 <a class="reference external" href="http://ckeditor.com">CKEditor</a></p>
 <p>The 3D perspective mode was inspired by Sean Slinsky&#8217;s <a class="reference external" href="http://www.seanslinsky.com/star-wars-crawl-with-css3">Star Wars
@@ -406,11 +408,10 @@ menu plugin</li>
 <li><a class="reference external" href="http://underscorejs.org/">underscore.js</a> utility library</li>
 </ul>
 </div></blockquote>
-<p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> was developed as part of the <a class="reference external" href="http://mindmeldr.com">Mindmeldr</a> project, which is aimed at improving classroom interaction.</p>
 </div>
 <div class="section" id="license">
 <h2><a class="toc-backref" href="#id14">License</a><a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">GraphTerm</span></tt> is distributed as open source under the <a class="reference external" href="http://www.opensource.org/licenses/bsd-license.php">BSD-license</a>.</p>
+<p><code class="docutils literal"><span class="pre">GraphTerm</span></code> is distributed as open source under the <a class="reference external" href="http://www.opensource.org/licenses/bsd-license.php">BSD-license</a>.</p>
 </div>
 </div>
 
@@ -420,7 +421,7 @@ menu plugin</li>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -439,9 +440,9 @@ menu plugin</li>
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

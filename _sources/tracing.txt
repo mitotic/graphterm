@@ -5,7 +5,7 @@
 .. index:: debugging, otrace, tracing
 
 GraphTerm was originally developed as a graphical front-end for
-`otrace <http://code.mindmeldr.com/otrace>`_,
+`otrace <http://code.mitotic.org/otrace>`_,
 an object-oriented python debugger. Any Python program
 can serve as a "host" and be connected to the GraphTerm server
 using the ``gotrace`` command::

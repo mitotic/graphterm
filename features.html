@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="up" title="Talks, tutorials, and videos" href="talks.html" />
     <link rel="next" title="Remote access and SSH" href="remote.html" />
     <link rel="prev" title="Setting up a Virtual Computer Lab" href="virtual-setup.html" />
@@ -78,11 +78,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -90,7 +90,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -106,10 +106,10 @@ code.mindmeldr.com
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="talks.html" accesskey="U">Talks, tutorials, and videos</a> &raquo;</li> 
+          <li class="nav-item nav-item-1"><a href="talks.html" accesskey="U">Talks, tutorials, and videos</a> &raquo;</li> 
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -150,12 +150,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="remote.html"
                         title="next chapter">Remote access and SSH</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/features.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/features.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -174,7 +176,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="graphterm-toolchain-and-features">
 <h1><a class="toc-backref" href="#id7">GraphTerm toolchain and features</a><a class="headerlink" href="#graphterm-toolchain-and-features" title="Permalink to this headline">¶</a></h1>
@@ -219,43 +221,43 @@ many graphical features from the command line.</p>
 <p>The toolchain commands can communicate with each other using pipes
 and may be written any language,
 e.g., Bash shell script, Python etc.
-The commands reside in the directory <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> and include the following:</p>
+The commands reside in the directory <code class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></code> and include the following:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">d3cloud</span> <span class="pre">[file]</span></tt> Display file (or stdin) content as a word
-cloud (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
-<p><tt class="docutils literal"><span class="pre">gbrowse</span> <span class="pre">[filename|URL]</span></tt>    View files/URLs in a separate browser window</p>
-<p><tt class="docutils literal"><span class="pre">gcp</span> <span class="pre">source</span> <span class="pre">dest</span></tt> Copy command supporting drag-and-drop for source/destination</p>
-<p><tt class="docutils literal"><span class="pre">gdownload</span> <span class="pre">filename(s)</span></tt> Download piped data and files from terminal to desktop</p>
-<p><tt class="docutils literal"><span class="pre">gfeed</span></tt> Display <em>stdin</em> input lines as a &#8220;feed&#8221;</p>
-<p><tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">[-f]</span> <span class="pre">[filename|URL]</span></tt>    View files/URLs (or HTML from stdin) within
-an inline <em>iframe</em>  (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><em>Inline word cloud using d3.js</em></a>)</p>
-<p><tt class="docutils literal"><span class="pre">gimage</span> <span class="pre">[-f]</span> <span class="pre">[filenames]</span></tt>     View images inline, or as a
-fullpage slideshow (with <tt class="docutils literal"><span class="pre">-f</span></tt> option)</p>
-<p><tt class="docutils literal"><span class="pre">gjs</span> <span class="pre">javascript</span> <span class="pre">command</span></tt>   Execute Javascript in the client browser</p>
-<p><tt class="docutils literal"><span class="pre">glandslide</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>   A GraphTerm-aware version of
-Landslide, a web-based slideshow program  (see  <a class="reference internal" href="screenshots.html#landslide-shot"><em>Web slideshows using Landslide</em></a>)</p>
-<p><tt class="docutils literal"><span class="pre">gload</span> <span class="pre">terminal_name</span></tt> Load a new terminal in the current window</p>
-<p><tt class="docutils literal"><span class="pre">gls</span> <span class="pre">[-i]</span> <span class="pre">[filenames]</span></tt>   Generate clickable directory listing</p>
-<p><tt class="docutils literal"><span class="pre">gmatplot.py</span></tt>   An inline <tt class="docutils literal"><span class="pre">matplotlib</span></tt> plotting package (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Simple inline animation using matplotlib</em></a>)</p>
-<p><tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">item</span> <span class="pre">subitem</span></tt>   To access the menubar from the command line</p>
-<p><tt class="docutils literal"><span class="pre">gncplot</span> <span class="pre">--variable=air</span> <span class="pre">--lon=0</span> <span class="pre">--time=0</span> <span class="pre">--lev=1000,0</span> <span class="pre">air.mon.ltm.nc</span></tt> 2-D visualization of variables from a netCDF file</p>
-<p><tt class="docutils literal"><span class="pre">gopen</span> <span class="pre">filename</span></tt>    To open a file using the OS-specific <tt class="docutils literal"><span class="pre">open</span></tt> command</p>
-<p><tt class="docutils literal"><span class="pre">gqrcode</span> <span class="pre">URL|text</span></tt>    Display inline QR code</p>
-<p><tt class="docutils literal"><span class="pre">greveal</span> <span class="pre">[options]</span> <span class="pre">file.md</span></tt>    A GraphTerm-aware interface to <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>, a web-based slideshow program</p>
-<p><tt class="docutils literal"><span class="pre">gsh</span> <span class="pre">terminal_name</span> <span class="pre">command</span> <span class="pre">args</span></tt> Execute command in the specified terminal (all output appears in terminal_name</p>
-<p><tt class="docutils literal"><span class="pre">gsnowflake.py</span></tt>  An inline plotting demo for the SVG module <tt class="docutils literal"><span class="pre">svgwrite</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">gterm</span></tt> Launch new GraphTerm windows (from outside browser)</p>
-<p><tt class="docutils literal"><span class="pre">gtutor</span> <span class="pre">[...]</span> <span class="pre">example.py</span></tt>  A command-line version of the Online
+<div><p><code class="docutils literal"><span class="pre">d3cloud</span> <span class="pre">[file]</span></code> Display file (or stdin) content as a word
+cloud (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><span>Inline word cloud using d3.js</span></a>)</p>
+<p><code class="docutils literal"><span class="pre">gbrowse</span> <span class="pre">[filename|URL]</span></code>    View files/URLs in a separate browser window</p>
+<p><code class="docutils literal"><span class="pre">gcp</span> <span class="pre">source</span> <span class="pre">dest</span></code> Copy command supporting drag-and-drop for source/destination</p>
+<p><code class="docutils literal"><span class="pre">gdownload</span> <span class="pre">filename(s)</span></code> Download piped data and files from terminal to desktop</p>
+<p><code class="docutils literal"><span class="pre">gfeed</span></code> Display <em>stdin</em> input lines as a &#8220;feed&#8221;</p>
+<p><code class="docutils literal"><span class="pre">gframe</span> <span class="pre">[-f]</span> <span class="pre">[filename|URL]</span></code>    View files/URLs (or HTML from stdin) within
+an inline <em>iframe</em>  (see  <a class="reference internal" href="screenshots.html#d3cloud-shot"><span>Inline word cloud using d3.js</span></a>)</p>
+<p><code class="docutils literal"><span class="pre">gimage</span> <span class="pre">[-f]</span> <span class="pre">[filenames]</span></code>     View images inline, or as a
+fullpage slideshow (with <code class="docutils literal"><span class="pre">-f</span></code> option)</p>
+<p><code class="docutils literal"><span class="pre">gjs</span> <span class="pre">javascript</span> <span class="pre">command</span></code>   Execute Javascript in the client browser</p>
+<p><code class="docutils literal"><span class="pre">glandslide</span> <span class="pre">[options]</span> <span class="pre">file.md</span></code>   A GraphTerm-aware version of
+Landslide, a web-based slideshow program  (see  <a class="reference internal" href="screenshots.html#landslide-shot"><span>Web slideshows using Landslide</span></a>)</p>
+<p><code class="docutils literal"><span class="pre">gload</span> <span class="pre">terminal_name</span></code> Load a new terminal in the current window</p>
+<p><code class="docutils literal"><span class="pre">gls</span> <span class="pre">[-i]</span> <span class="pre">[filenames]</span></code>   Generate clickable directory listing</p>
+<p><code class="docutils literal"><span class="pre">gmatplot.py</span></code>   An inline <code class="docutils literal"><span class="pre">matplotlib</span></code> plotting package (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><span>Simple inline animation using matplotlib</span></a>)</p>
+<p><code class="docutils literal"><span class="pre">gmenu</span> <span class="pre">item</span> <span class="pre">subitem</span></code>   To access the menubar from the command line</p>
+<p><code class="docutils literal"><span class="pre">gncplot</span> <span class="pre">--variable=air</span> <span class="pre">--lon=0</span> <span class="pre">--time=0</span> <span class="pre">--lev=1000,0</span> <span class="pre">air.mon.ltm.nc</span></code> 2-D visualization of variables from a netCDF file</p>
+<p><code class="docutils literal"><span class="pre">gopen</span> <span class="pre">filename</span></code>    To open a file using the OS-specific <code class="docutils literal"><span class="pre">open</span></code> command</p>
+<p><code class="docutils literal"><span class="pre">gqrcode</span> <span class="pre">URL|text</span></code>    Display inline QR code</p>
+<p><code class="docutils literal"><span class="pre">greveal</span> <span class="pre">[options]</span> <span class="pre">file.md</span></code>    A GraphTerm-aware interface to <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>, a web-based slideshow program</p>
+<p><code class="docutils literal"><span class="pre">gsh</span> <span class="pre">terminal_name</span> <span class="pre">command</span> <span class="pre">args</span></code> Execute command in the specified terminal (all output appears in terminal_name</p>
+<p><code class="docutils literal"><span class="pre">gsnowflake.py</span></code>  An inline plotting demo for the SVG module <code class="docutils literal"><span class="pre">svgwrite</span></code></p>
+<p><code class="docutils literal"><span class="pre">gterm</span></code> Launch new GraphTerm windows (from outside browser)</p>
+<p><code class="docutils literal"><span class="pre">gtutor</span> <span class="pre">[...]</span> <span class="pre">example.py</span></code>  A command-line version of the Online
 Python Tutorial  at <a class="reference external" href="http://pythontutor.com">pythontutor.com</a>
-(see <a class="reference internal" href="screenshots.html#pytutor-shot"><em>Code tracing using online version of Python Tutor</em></a>)</p>
-<p><tt class="docutils literal"><span class="pre">gtweet</span> <span class="pre">[-s</span> <span class="pre">keywords]</span> <span class="pre">|</span> <span class="pre">tweet</span></tt>  To send, search, or receive
-tweets  (see  <a class="reference internal" href="screenshots.html#tweet-shot"><em>Live tweet stream using gtweet</em></a>)</p>
-<p><tt class="docutils literal"><span class="pre">gupload</span> <span class="pre">[filename|directory]</span></tt> Upload files from desktop into
+(see <a class="reference internal" href="screenshots.html#pytutor-shot"><span>Code tracing using online version of Python Tutor</span></a>)</p>
+<p><code class="docutils literal"><span class="pre">gtweet</span> <span class="pre">[-s</span> <span class="pre">keywords]</span> <span class="pre">|</span> <span class="pre">tweet</span></code>  To send, search, or receive
+tweets  (see  <a class="reference internal" href="screenshots.html#tweet-shot"><span>Live tweet stream using gtweet</span></a>)</p>
+<p><code class="docutils literal"><span class="pre">gupload</span> <span class="pre">[filename|directory]</span></code> Upload files from desktop into
 the terminal</p>
-<p><tt class="docutils literal"><span class="pre">gvi</span> <span class="pre">filename</span></tt>   Open file using a browser-based visual editor</p>
-<p><tt class="docutils literal"><span class="pre">hello_gterm.sh</span></tt> Hello World program that displays inline HTML text and image</p>
-<p><tt class="docutils literal"><span class="pre">ystock</span> <span class="pre">stock_symbol</span></tt> To view a graph of stock price history</p>
-<p><tt class="docutils literal"><span class="pre">yweather</span> <span class="pre">[location]</span></tt> To view weather forecasts (see  <a class="reference internal" href="screenshots.html#weather-shot"><em>Graphical weather forecast using Yahoo Weather API</em></a>)</p>
+<p><code class="docutils literal"><span class="pre">gvi</span> <span class="pre">filename</span></code>   Open file using a browser-based visual editor</p>
+<p><code class="docutils literal"><span class="pre">hello_gterm.sh</span></code> Hello World program that displays inline HTML text and image</p>
+<p><code class="docutils literal"><span class="pre">ystock</span> <span class="pre">stock_symbol</span></code> To view a graph of stock price history</p>
+<p><code class="docutils literal"><span class="pre">yweather</span> <span class="pre">[location]</span></code> To view weather forecasts (see  <a class="reference internal" href="screenshots.html#weather-shot"><span>Graphical weather forecast using Yahoo Weather API</span></a>)</p>
 </div></blockquote>
 </div>
 <div class="section" id="using-the-terminal">
@@ -263,7 +265,7 @@ the terminal</p>
 <div class="section" id="visual-cues">
 <span id="index-1"></span><h3><a class="toc-backref" href="#id10">Visual cues</a><a class="headerlink" href="#visual-cues" title="Permalink to this headline">¶</a></h3>
 <p>In the default theme, <em>blue</em> color denotes text that can be <em>clicked</em>
-or <em>tapped</em> (see  <a class="reference internal" href="screenshots.html#ls-shot"><em>ls vs. gls</em></a>). The action triggered by clicking depends upon two
+or <em>tapped</em> (see  <a class="reference internal" href="screenshots.html#ls-shot"><span>ls vs. gls</span></a>). The action triggered by clicking depends upon two
 factors, whether there is text in the current command line,
 and whether the Control modifier in the <em>Footer menu</em> is active.
 Click on the last displayed prompt to toggle display of the <em>Footer menu</em>.
@@ -276,7 +278,7 @@ entire command line is copied and pasted.)</p>
 <p>You can navigate folders in GraphTerm just like you would do in a GUI,
 while retaining the ability to drop back to the CLI at any time.
 <em>If the current command line is empty,</em>
-clicking on a folder or filename displayed by the <tt class="docutils literal"><span class="pre">gls</span></tt> command will
+clicking on a folder or filename displayed by the <code class="docutils literal"><span class="pre">gls</span></code> command will
 change the current directory to the folder, or cause the file to be
 opened.
 <em>If you have typed anything at all in the current command line,
@@ -287,10 +289,10 @@ Enter key to execute it.</p>
 </div>
 <div class="section" id="image-and-icon-display">
 <span id="index-3"></span><h3><a class="toc-backref" href="#id12">Image and Icon display</a><a class="headerlink" href="#image-and-icon-display" title="Permalink to this headline">¶</a></h3>
-<p>To display images inline, use the <tt class="docutils literal"><span class="pre">gimage</span></tt> command.
-To activate icon display for commands like <tt class="docutils literal"><span class="pre">gls</span></tt>, select
-<tt class="docutils literal"><span class="pre">view/icons</span></tt> in the menubar. By default, <tt class="docutils literal"><span class="pre">gls</span></tt> does not
-display thumbnail icons of image files. (You can use <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span></tt> to
+<p>To display images inline, use the <code class="docutils literal"><span class="pre">gimage</span></code> command.
+To activate icon display for commands like <code class="docutils literal"><span class="pre">gls</span></code>, select
+<code class="docutils literal"><span class="pre">view/icons</span></code> in the menubar. By default, <code class="docutils literal"><span class="pre">gls</span></code> does not
+display thumbnail icons of image files. (You can use <code class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span></code> to
 force thumbnail icon display, but it can be a bit slow if there are a
 large number of images.)</p>
 </div>
@@ -302,7 +304,7 @@ letter to be typed will be highlighted when you type <em>Control-J</em> and
 is usually, but not always, the first letter of the item name. For example,
 the sequence <em>Control-J t c</em> will select the menu item <em>terminal/clear</em></p>
 <p>The menubar can also be accessed from the
-command line, using the <tt class="docutils literal"><span class="pre">gmenu</span></tt> command, e.g.:</p>
+command line, using the <code class="docutils literal"><span class="pre">gmenu</span></code> command, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gmenu terminal clear
 </pre></div>
 </div>
@@ -350,38 +352,38 @@ work</em>) and drop it on a folder, an executable, or even the command
 line in the same terminal or a different terminal. Graphical feedback
 for this operation is not properly implemented at this time. Just
 center the dragged filename over the icon for the destination
-folder/executable and let go!  (Use the <tt class="docutils literal"><span class="pre">gmenu</span> <span class="pre">icons</span></tt> command to
+folder/executable and let go!  (Use the <code class="docutils literal"><span class="pre">gmenu</span> <span class="pre">icons</span></code> command to
 toggle icon display.)  Look at the command line to see if the action
 completed properly.  For drag-and-drop between two GraphTerm terminals
 running on the same host, the file will be moved to the destination
 folder. For terminals on two different hosts, the file will be
 copied. You can also drag files from your desktop and drop into
 GraphTerm terminal folders to upload files. (To download files, you
-need to click on a link generated by the <tt class="docutils literal"><span class="pre">gdownload</span></tt> command, or the
-<tt class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span></tt> option.)</p>
+need to click on a link generated by the <code class="docutils literal"><span class="pre">gdownload</span></code> command, or the
+<code class="docutils literal"><span class="pre">gls</span> <span class="pre">--download</span></code> option.)</p>
 </div>
 <div class="section" id="themes">
 <span id="index-8"></span><span id="id1"></span><h3><a class="toc-backref" href="#id17">Themes</a><a class="headerlink" href="#themes" title="Permalink to this headline">¶</a></h3>
 <p>Themes, selected using the menubar, are a work in progress. There is a
 simple <em>dark</em> theme available, which can be modified by editing the
-file <tt class="docutils literal"><span class="pre">graphterm/www/themes.dark.css</span></tt>. The 3-D perspective theme is a
+file <code class="docutils literal"><span class="pre">graphterm/www/themes.dark.css</span></code>. The 3-D perspective theme is a
 very primitive implementation which only works on Chrome/Safari (see
-<a class="reference internal" href="screenshots.html#stars3d-shot"><em>stars3d theme, with icons enabled</em></a>).</p>
+<a class="reference internal" href="screenshots.html#stars3d-shot"><span>stars3d theme, with icons enabled</span></a>).</p>
 </div>
 <div class="section" id="preferences">
 <span id="index-9"></span><span id="id2"></span><h3><a class="toc-backref" href="#id18">Preferences</a><a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h3>
 <p>Default terminal preferences, such as font size and themes, are stored
-in the file <tt class="docutils literal"><span class="pre">gterm_prefs.json</span></tt> in your home directory.  The <em>view/save</em>
+in the file <code class="docutils literal"><span class="pre">gterm_prefs.json</span></code> in your home directory.  The <em>view/save</em>
 menu option can be used to save the current terminal configuration as
 the default preference.</p>
 </div>
 <div class="section" id="choosing-the-terminal-type">
 <span id="index-10"></span><h3><a class="toc-backref" href="#id19">Choosing the terminal type</a><a class="headerlink" href="#choosing-the-terminal-type" title="Permalink to this headline">¶</a></h3>
-<p>The default terminal type is set to <tt class="docutils literal"><span class="pre">xterm</span></tt>, but it may not always
-work properly. You can also try out the terminal types <tt class="docutils literal"><span class="pre">screen</span></tt> or
-<tt class="docutils literal"><span class="pre">linux</span></tt>,  which may work better for some purposes.
-You can use the <tt class="docutils literal"><span class="pre">--term_type</span></tt> option when running the server to set
-the default terminal type, or use the <tt class="docutils literal"><span class="pre">export</span> <span class="pre">TERM=screen</span></tt> command.
+<p>The default terminal type is set to <code class="docutils literal"><span class="pre">xterm</span></code>, but it may not always
+work properly. You can also try out the terminal types <code class="docutils literal"><span class="pre">screen</span></code> or
+<code class="docutils literal"><span class="pre">linux</span></code>,  which may work better for some purposes.
+You can use the <code class="docutils literal"><span class="pre">--term_type</span></code> option when running the server to set
+the default terminal type, or use the <code class="docutils literal"><span class="pre">export</span> <span class="pre">TERM=screen</span></code> command.
 (Fully supporting these terminal types is a work in progress.)</p>
 </div>
 </div>
@@ -389,32 +391,32 @@ the default terminal type, or use the <tt class="docutils literal"><span class="
 <h2><a class="toc-backref" href="#id20">Slideshows, tracing etc.</a><a class="headerlink" href="#slideshows-tracing-etc" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="slideshows">
 <span id="index-11"></span><span id="id3"></span><h3><a class="toc-backref" href="#id21">Slideshows</a><a class="headerlink" href="#slideshows" title="Permalink to this headline">¶</a></h3>
-<p>The <tt class="docutils literal"><span class="pre">glandslide</span></tt> command, which is a slightly modified version of the
+<p>The <code class="docutils literal"><span class="pre">glandslide</span></code> command, which is a slightly modified version of the
 web-based slideshow program <a class="reference external" href="https://github.com/adamzap/landslide">Landslide</a>,
 can be used to create a slideshow from Markdown (.md) or reStructured
-Text (.rst) files (see  <a class="reference internal" href="screenshots.html#landslide-shot"><em>Web slideshows using Landslide</em></a>). A few sample <tt class="docutils literal"><span class="pre">.md</span></tt> files are provided in the
-<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/landslide</span></tt> directory of the distribution. To view a slideshow about
+Text (.rst) files (see  <a class="reference internal" href="screenshots.html#landslide-shot"><span>Web slideshows using Landslide</span></a>). A few sample <code class="docutils literal"><span class="pre">.md</span></code> files are provided in the
+<code class="docutils literal"><span class="pre">$GTERM_DIR/bin/landslide</span></code> directory of the distribution. To view a slideshow about
 GraphTerm, type:</p>
 <div class="highlight-python"><div class="highlight"><pre>glandslide -o $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
 </pre></div>
 </div>
-<p>Type <tt class="docutils literal"><span class="pre">h</span></tt> for help and <tt class="docutils literal"><span class="pre">q</span></tt> to quit the slideshow. (The unmodified
+<p>Type <code class="docutils literal"><span class="pre">h</span></code> for help and <code class="docutils literal"><span class="pre">q</span></code> to quit the slideshow. (The unmodified
 Landslide program can also be used, but remote sharing will not work.)</p>
-<p>The <tt class="docutils literal"><span class="pre">greveal</span></tt> command can be used to display Markdown files as
+<p>The <code class="docutils literal"><span class="pre">greveal</span></code> command can be used to display Markdown files as
 slideshows using <a class="reference external" href="https://github.com/hakimel/reveal.js/">reveal.js</a>:</p>
 <div class="highlight-python"><div class="highlight"><pre>greveal $GTERM_DIR/bin/landslide/graphterm-talk1.md | gframe -f
 </pre></div>
 </div>
-<p>Type <tt class="docutils literal"><span class="pre">b</span></tt> three times in quick succession to exit the slideshow.</p>
-<p>The <tt class="docutils literal"><span class="pre">gimage</span></tt> command, which displays images inline, can also be used for
-slideshows and simple presentations. Just <tt class="docutils literal"><span class="pre">cd</span></tt> to a directory
+<p>Type <code class="docutils literal"><span class="pre">b</span></code> three times in quick succession to exit the slideshow.</p>
+<p>The <code class="docutils literal"><span class="pre">gimage</span></code> command, which displays images inline, can also be used for
+slideshows and simple presentations. Just <code class="docutils literal"><span class="pre">cd</span></code> to a directory
 that has the images for a slideshow, and type:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gimage</span> <span class="o">-</span><span class="n">f</span>
 </pre></div>
 </div>
 <p>To select a subset of images in the directory, you can use a wildcard
-pattern. For publicly webcasting a slideshow, use the <tt class="docutils literal"><span class="pre">-b</span></tt> option.
-The convenience command <tt class="docutils literal"><span class="pre">pdf2png</span></tt> can be used to convert a PDF file
+pattern. For publicly webcasting a slideshow, use the <code class="docutils literal"><span class="pre">-b</span></code> option.
+The convenience command <code class="docutils literal"><span class="pre">pdf2png</span></code> can be used to convert a PDF file
 to a set of images for viewing as a slide show:</p>
 <div class="highlight-python"><div class="highlight"><pre>pdf2png slides.pdf; gimage -f slides-*.png
 </pre></div>
@@ -422,30 +424,30 @@ to a set of images for viewing as a slide show:</p>
 </div>
 <div class="section" id="code-tracing-using-python-tutor">
 <span id="python-tutor"></span><span id="index-12"></span><h3><a class="toc-backref" href="#id22">Code tracing using Python Tutor</a><a class="headerlink" href="#code-tracing-using-python-tutor" title="Permalink to this headline">¶</a></h3>
-<p>The command <tt class="docutils literal"><span class="pre">gtutor</span></tt> implements a command-line version of the
+<p>The command <code class="docutils literal"><span class="pre">gtutor</span></code> implements a command-line version of the
 Online Python Tutorial from <a class="reference external" href="http://pythontutor.com">pythontutor.com</a>.
-It produces HTML output that can be piped to <tt class="docutils literal"><span class="pre">gframe</span></tt> for inline
-display (see  <a class="reference internal" href="screenshots.html#pytutor-shot"><em>Code tracing using online version of Python Tutor</em></a>).
-To trace the execution of a sample program <tt class="docutils literal"><span class="pre">example.py</span></tt>, use it as follows:</p>
+It produces HTML output that can be piped to <code class="docutils literal"><span class="pre">gframe</span></code> for inline
+display (see  <a class="reference internal" href="screenshots.html#pytutor-shot"><span>Code tracing using online version of Python Tutor</span></a>).
+To trace the execution of a sample program <code class="docutils literal"><span class="pre">example.py</span></code>, use it as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre>gtutor example.py | gframe -f
 </pre></div>
 </div>
-<p>More sample programs may be found in the directory <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/pytutor/example-code</span></tt>.
-Of course, you can use <tt class="docutils literal"><span class="pre">gtutor</span></tt> to trace any other (small) python program as well.
-Type <tt class="docutils literal"><span class="pre">gtutor</span> <span class="pre">-h</span></tt> to display the command line options.
-<em>Note:</em> By default, <tt class="docutils literal"><span class="pre">gtutor</span></tt> accesses the browser CSS/JS files from
+<p>More sample programs may be found in the directory <code class="docutils literal"><span class="pre">$GTERM_DIR/bin/pytutor/example-code</span></code>.
+Of course, you can use <code class="docutils literal"><span class="pre">gtutor</span></code> to trace any other (small) python program as well.
+Type <code class="docutils literal"><span class="pre">gtutor</span> <span class="pre">-h</span></code> to display the command line options.
+<em>Note:</em> By default, <code class="docutils literal"><span class="pre">gtutor</span></code> accesses the browser CSS/JS files from
 <a class="reference external" href="http://pythontutor.com">pythontutor.com</a>.
-To use <tt class="docutils literal"><span class="pre">gtutor</span></tt> in an offline-mode, you will need to specify the
-<tt class="docutils literal"><span class="pre">--offline</span></tt> option and also download the Online Python Tutorial
+To use <code class="docutils literal"><span class="pre">gtutor</span></code> in an offline-mode, you will need to specify the
+<code class="docutils literal"><span class="pre">--offline</span></code> option and also download the Online Python Tutorial
 code from GitHub and copy/rename the main source directory
-(currently <tt class="docutils literal"><span class="pre">v3</span></tt>) as <tt class="docutils literal"><span class="pre">$GTERM_DIR/www/pytutor</span></tt> so that GraphTerm
+(currently <code class="docutils literal"><span class="pre">v3</span></code>) as <code class="docutils literal"><span class="pre">$GTERM_DIR/www/pytutor</span></code> so that GraphTerm
 can serve the CSS/JS files locally.</p>
 <p><em>Advanced usage:</em> You can embed tutorials within a Landslide/Markdown
-presentation by including an <tt class="docutils literal"><span class="pre">iframe</span></tt> HTML element in the
-presentation file, with the <tt class="docutils literal"><span class="pre">src</span></tt> attribute set to a graphterm
-URL, such as <tt class="docutils literal"><span class="pre">http://localhost:8900/local/tutorial</span></tt>. This will open
-up a graphterm window where you can either run <tt class="docutils literal"><span class="pre">gtutor</span></tt> interactively or
-use <tt class="docutils literal"><span class="pre">gframe</span> <span class="pre">-f</span></tt> to display an HTML file created previously using <tt class="docutils literal"><span class="pre">gtutor</span></tt>.</p>
+presentation by including an <code class="docutils literal"><span class="pre">iframe</span></code> HTML element in the
+presentation file, with the <code class="docutils literal"><span class="pre">src</span></code> attribute set to a graphterm
+URL, such as <code class="docutils literal"><span class="pre">http://localhost:8900/local/tutorial</span></code>. This will open
+up a graphterm window where you can either run <code class="docutils literal"><span class="pre">gtutor</span></code> interactively or
+use <code class="docutils literal"><span class="pre">gframe</span> <span class="pre">-f</span></code> to display an HTML file created previously using <code class="docutils literal"><span class="pre">gtutor</span></code>.</p>
 </div>
 </div>
 <div class="section" id="webcasting-embedding-wildcards-etc">
@@ -464,20 +466,20 @@ terminal. For example, the following command:</p>
 <div class="highlight-python"><div class="highlight"><pre>gframe --border --terminal terma termb
 </pre></div>
 </div>
-<p>creates two terminals, <tt class="docutils literal"><span class="pre">terma</span></tt> and <tt class="docutils literal"><span class="pre">termb</span></tt> and embeds them within
+<p>creates two terminals, <code class="docutils literal"><span class="pre">terma</span></code> and <code class="docutils literal"><span class="pre">termb</span></code> and embeds them within
 the current terminal. The demo script <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/metro.sh">metro.sh</a>
 illustrates the embedding of multiple terminals, each running a
-different command (see screenshot <a class="reference internal" href="screenshots.html#metro-shot"><em>metro.sh</em></a>). Clicking on the
+different command (see screenshot <a class="reference internal" href="screenshots.html#metro-shot"><span>metro.sh</span></a>). Clicking on the
 black-and-white <em>GT</em> logo of an embedded terminal, or selecting the
 <em>terminal/full</em> option (or typing the keyboard shortcut), will expand
 it to fill the browser window.</p>
-<p>The <tt class="docutils literal"><span class="pre">metro.sh</span></tt> script also demonstrates the use of the <tt class="docutils literal"><span class="pre">gsh</span></tt>
+<p>The <code class="docutils literal"><span class="pre">metro.sh</span></code> script also demonstrates the use of the <code class="docutils literal"><span class="pre">gsh</span></code>
 command to execute commands remotely on a terminal, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gsh terma yweather -f austin
 </pre></div>
 </div>
-<p>The terminal name argument for <tt class="docutils literal"><span class="pre">gsh</span></tt> can be a wildcard
-expression, e.g. <tt class="docutils literal"><span class="pre">'term*'</span></tt>. Unlike <tt class="docutils literal"><span class="pre">ssh</span></tt>, the <tt class="docutils literal"><span class="pre">gsh</span></tt> command does
+<p>The terminal name argument for <code class="docutils literal"><span class="pre">gsh</span></code> can be a wildcard
+expression, e.g. <code class="docutils literal"><span class="pre">'term*'</span></code>. Unlike <code class="docutils literal"><span class="pre">ssh</span></code>, the <code class="docutils literal"><span class="pre">gsh</span></code> command does
 not display the output of the remote command. You will need to view it
 in the remote terminal. To load a remote terminal in the current
 browser window, you can use:</p>
@@ -487,8 +489,8 @@ browser window, you can use:</p>
 </div>
 <div class="section" id="wildcard-sessions-and-multiplexing">
 <span id="wildcard"></span><span id="index-15"></span><h3><a class="toc-backref" href="#id26">Wildcard sessions and multiplexing</a><a class="headerlink" href="#wildcard-sessions-and-multiplexing" title="Permalink to this headline">¶</a></h3>
-<p>A terminal session path is of the form <tt class="docutils literal"><span class="pre">session_host/session_name</span></tt>. You can
-use the shell wildcard patterns <tt class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></tt> in the session path. For
+<p>A terminal session path is of the form <code class="docutils literal"><span class="pre">session_host/session_name</span></code>. You can
+use the shell wildcard patterns <code class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></code> in the session path. For
 example, you can open a wildcard session for multiple hosts using the URL:</p>
 <div class="highlight-python"><div class="highlight"><pre>http://localhost:8900/*/tty1/?qauth=code
 </pre></div>
@@ -498,36 +500,36 @@ but any input you type in it will be broadcast to all sessions
 matching the pattern. (To receive visual feedback,
 you will need to view one or more of the matching sessions at the
 same time.)</p>
-<p>For <tt class="docutils literal"><span class="pre">otrace</span></tt> debugging sessions of the form <tt class="docutils literal"><span class="pre">*/osh</span></tt>, GraphTerm
+<p>For <code class="docutils literal"><span class="pre">otrace</span></code> debugging sessions of the form <code class="docutils literal"><span class="pre">*/osh</span></code>, GraphTerm
 will multiplex the input and output in wildcard terminals. Your input
 will be echoed and broadcast, and output from each of the matching
 sessions will be displayed, preceded by an identifying header
-(with the special string <tt class="docutils literal"><span class="pre">ditto</span></tt> used to indicate repeated output).
+(with the special string <code class="docutils literal"><span class="pre">ditto</span></code> used to indicate repeated output).
 See the <em>otrace</em> integration section for more information.</p>
 <p>NOTE: Multiplexed input/output display cannot be easily implemented for
 regular shell terminals.</p>
 </div>
 <div class="section" id="multiple-hosts">
 <span id="index-16"></span><h3><a class="toc-backref" href="#id27">Multiple hosts</a><a class="headerlink" href="#multiple-hosts" title="Permalink to this headline">¶</a></h3>
-<p>More than one host can connect to the GraphTerm server. The <tt class="docutils literal"><span class="pre">localhost</span></tt>
+<p>More than one host can connect to the GraphTerm server. The <code class="docutils literal"><span class="pre">localhost</span></code>
 is connected by default (but this can be disabled using the
-<tt class="docutils literal"><span class="pre">--nolocal</span></tt> option). To connect an additional host, run the
+<code class="docutils literal"><span class="pre">--nolocal</span></code> option). To connect an additional host, run the
 following command on the computer you wish to connect:</p>
 <div class="highlight-python"><div class="highlight"><pre>gtermhost --server_addr=&lt;serveraddr&gt; &lt;hostname&gt;
 </pre></div>
 </div>
-<p>where <tt class="docutils literal"><span class="pre">serveraddr</span></tt> is the address or name of the computer where the
+<p>where <code class="docutils literal"><span class="pre">serveraddr</span></code> is the address or name of the computer where the
 GraphTerm server is running. You can use the
-<tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command
+<code class="docutils literal"><span class="pre">--daemon=start</span></code> option to run the <code class="docutils literal"><span class="pre">gtermhost</span></code> command
 in the background. By default, the Graphterm
 server listens for host connections on port 8899. <em>The multiple host
 feature should only be used within a secure network, not on the public internet.</em></p>
-<p>NOTE: Unlike the <tt class="docutils literal"><span class="pre">sshd</span></tt> server, the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command is designed to
+<p>NOTE: Unlike the <code class="docutils literal"><span class="pre">sshd</span></code> server, the <code class="docutils literal"><span class="pre">gtermhost</span></code> command is designed to
 be run by a normal user, not a privileged user. So different users can
-connect to the GraphTerm server on <tt class="docutils literal"><span class="pre">localhost</span></tt> pretending to be different &#8220;hosts&#8221;
+connect to the GraphTerm server on <code class="docutils literal"><span class="pre">localhost</span></code> pretending to be different &#8220;hosts&#8221;
 on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a &#8220;host&#8221;, allowing it to
-be dynamically introspected and debugged using <a class="reference external" href="http://code.mindmeldr.com/otrace">otrace</a>.)</p>
+be dynamically introspected and debugged using <a class="reference external" href="http://code.mitotic.org/otrace">otrace</a>.)</p>
 </div>
 </div>
 </div>
@@ -538,7 +540,7 @@ be dynamically introspected and debugged using <a class="reference external" hre
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -554,13 +556,13 @@ be dynamically introspected and debugged using <a class="reference external" hre
         <li><a href="contents.html">Contents</a>
           &raquo;</li>
 
-          <li><a href="talks.html" >Talks, tutorials, and videos</a> &raquo;</li> 
+          <li class="nav-item nav-item-1"><a href="talks.html" >Talks, tutorials, and videos</a> &raquo;</li> 
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

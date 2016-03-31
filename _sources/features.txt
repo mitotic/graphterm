@@ -433,4 +433,4 @@ be run by a normal user, not a privileged user. So different users can
 connect to the GraphTerm server on ``localhost`` pretending to be different "hosts"
 on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a "host", allowing it to
-be dynamically introspected and debugged using `otrace <http://code.mindmeldr.com/otrace>`_.)
+be dynamically introspected and debugged using `otrace <http://code.mitotic.org/otrace>`_.)

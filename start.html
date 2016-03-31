@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="next" title="Remote access and SSH" href="remote.html" />
     <link rel="prev" title="README" href="README.html" />
  
@@ -77,11 +77,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -89,7 +89,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -107,7 +107,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -137,12 +137,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="remote.html"
                         title="next chapter">Remote access and SSH</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/start.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/start.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -161,7 +163,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="getting-started">
 <h1><a class="toc-backref" href="#id2">Getting started</a><a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
@@ -190,7 +192,7 @@ code.mindmeldr.com
 </div>
 <div class="section" id="running-graphterm">
 <h2><a class="toc-backref" href="#id3">Running GraphTerm</a><a class="headerlink" href="#running-graphterm" title="Permalink to this headline">¶</a></h2>
-<p>To install <tt class="docutils literal"><span class="pre">GraphTerm</span></tt>, you need to have Python 2.6+ and the Bash
+<p>To install <code class="docutils literal"><span class="pre">GraphTerm</span></code>, you need to have Python 2.6+ and the Bash
 shell on your Mac/Linux/Unix computer. For a quick install, use one of
 the following two options:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo pip install graphterm
@@ -198,62 +200,62 @@ the following two options:</p>
 sudo easy_install graphterm; sudo gterm_setup
 </pre></div>
 </div>
-<p>Omit the <tt class="docutils literal"><span class="pre">sudo</span></tt> if you are installing as a non-root user within
+<p>Omit the <code class="docutils literal"><span class="pre">sudo</span></code> if you are installing as a non-root user within
 an Anaconda or Enthought Python environment, for example.
-(See the <a class="reference internal" href="README.html#installation"><em>Installation</em></a> section of the <a class="reference internal" href="README.html"><em>README</em></a> file for
+(See the <a class="reference internal" href="README.html#installation"><span>Installation</span></a> section of the <a class="reference internal" href="README.html"><em>README</em></a> file for
 additional installation options, including source installs.)</p>
-<p>To start the <tt class="docutils literal"><span class="pre">GraphTerm</span></tt> server, use the command:</p>
+<p>To start the <code class="docutils literal"><span class="pre">GraphTerm</span></code> server, use the command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span> <span class="o">--</span><span class="n">auth_type</span><span class="o">=</span><span class="n">none</span>
 </pre></div>
 </div>
 <p>This will run the  server and open a GraphTerm terminal window
 using the default browser. For multi-user computers,
-omit the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option
+omit the <code class="docutils literal"><span class="pre">--auth_type=none</span></code> option
 when starting the server, and enter the authentication code stored in
-the file <tt class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></tt> as needed.</p>
+the file <code class="docutils literal"><span class="pre">~/.graphterm/_gterm_auth.txt</span></code> as needed.</p>
 <p>You can access the GraphTerm server using any browser that supports
 websockets. Google Chrome works best, but Firefox, Safari, or IE10
 are also supported. Start by entering the following URL:</p>
 <div class="highlight-python"><div class="highlight"><pre>http://localhost:8900
 </pre></div>
 </div>
-<p>In the <tt class="docutils literal"><span class="pre">graphterm</span></tt> browser page, select the GraphTerm <em>host</em> you
+<p>In the <code class="docutils literal"><span class="pre">graphterm</span></code> browser page, select the GraphTerm <em>host</em> you
 wish to connect to and create a new terminal session. (Note: The GraphTerm
 <em>host</em> is different from the network hostname for the server.)
 Within a GraphTerm window, you can use <em>terminal/new</em> menu option
 to create a new GraphTerm session.</p>
 <p>You can also open additional GraphTerm terminal windows using
-the <tt class="docutils literal"><span class="pre">gterm</span></tt> command:</p>
+the <code class="docutils literal"><span class="pre">gterm</span></code> command:</p>
 <div class="highlight-python"><div class="highlight"><pre>gterm --noauth [session_name]
 gterm -u ubuntu --browser=&quot;Google Chrome&quot; https://example.com:8900
 </pre></div>
 </div>
 <p>where the terminal session name argument is optional.  (This
 command can automatically process authentication codes from your
-<tt class="docutils literal"><span class="pre">~/.graphterm</span></tt> directory.)</p>
-<p>Type <tt class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">-h</span></tt> to view all options for starting the server.
-You can use the <tt class="docutils literal"><span class="pre">--daemon=start</span></tt> option to run the server in the
-background. The <tt class="docutils literal"><span class="pre">--host=hostname</span></tt> option is useful for listening on
-a public IP address instead of the default <tt class="docutils literal"><span class="pre">localhost</span></tt>.  The
-<tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> no authentication mode is useful for teaching
+<code class="docutils literal"><span class="pre">~/.graphterm</span></code> directory.)</p>
+<p>Type <code class="docutils literal"><span class="pre">gtermserver</span> <span class="pre">-h</span></code> to view all options for starting the server.
+You can use the <code class="docutils literal"><span class="pre">--daemon=start</span></code> option to run the server in the
+background. The <code class="docutils literal"><span class="pre">--host=hostname</span></code> option is useful for listening on
+a public IP address instead of the default <code class="docutils literal"><span class="pre">localhost</span></code>.  The
+<code class="docutils literal"><span class="pre">--auth_type=none</span></code> no authentication mode is useful for teaching
 or demonstration purposes, or on a single-user lapttop/desktop, where
 security is not important.  Another useful no authentication mode is
-<tt class="docutils literal"><span class="pre">--auth_type=name</span></tt> which enables simple name-based sharing. (For
+<code class="docutils literal"><span class="pre">--auth_type=name</span></code> which enables simple name-based sharing. (For
 more on running publicly accessible GraphTerm servers,
-see <a class="reference internal" href="virtual-setup.html#virtual-setup"><em>Setting up a Virtual Computer Lab</em></a>.)</p>
+see <a class="reference internal" href="virtual-setup.html#virtual-setup"><span>Setting up a Virtual Computer Lab</span></a>.)</p>
 <p>Within the terminal, try out the following commands:</p>
 <div class="highlight-python"><div class="highlight"><pre>hello_gterm.sh
 gls &lt;directory&gt;
 gvi &lt;text-filename&gt;
 </pre></div>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">gls</span></tt> and <tt class="docutils literal"><span class="pre">gvi</span></tt> commands in the GraphTerm toolchain imitate
-basic features of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> and <tt class="docutils literal"><span class="pre">vi</span></tt> commands (see
-<a class="reference internal" href="features.html"><em>GraphTerm toolchain and features</em></a>).  (<em>Note:</em> You need to execute the <tt class="docutils literal"><span class="pre">gterm_setup</span></tt>
+<p>The <code class="docutils literal"><span class="pre">gls</span></code> and <code class="docutils literal"><span class="pre">gvi</span></code> commands in the GraphTerm toolchain imitate
+basic features of the standard <code class="docutils literal"><span class="pre">ls</span></code> and <code class="docutils literal"><span class="pre">vi</span></code> commands (see
+<a class="reference internal" href="features.html"><em>GraphTerm toolchain and features</em></a>).  (<em>Note:</em> You need to execute the <code class="docutils literal"><span class="pre">gterm_setup</span></code>
 command to be able to use the GraphTerm
-toolchain. Otherwise, you will encounter a <tt class="docutils literal"><span class="pre">Permission</span> <span class="pre">denied</span></tt>
-error.)  To display images as thumbnails, use the <tt class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span> <span class="pre">...</span></tt>
-command.  Use the <tt class="docutils literal"><span class="pre">-h</span></tt> option to display help information for these
+toolchain. Otherwise, you will encounter a <code class="docutils literal"><span class="pre">Permission</span> <span class="pre">denied</span></code>
+error.)  To display images as thumbnails, use the <code class="docutils literal"><span class="pre">gls</span> <span class="pre">-i</span> <span class="pre">...</span></code>
+command.  Use the <code class="docutils literal"><span class="pre">-h</span></code> option to display help information for these
 commands, and read the tutorial <a class="reference internal" href="UsingGraphicalFeatures.html"><em>Using the graphical features of GraphTerm</em></a>
 for usage examples.</p>
 <p>If you wish to use GraphTerm to set up up a virtual computer lab for
@@ -275,14 +277,14 @@ typing on touch devices.</p>
 </div>
 <div class="section" id="inline-graphics-and-notebook-mode">
 <h2><a class="toc-backref" href="#id5">Inline graphics and notebook mode</a><a class="headerlink" href="#inline-graphics-and-notebook-mode" title="Permalink to this headline">¶</a></h2>
-<p>GraphTerm supports inline graphics display with <tt class="docutils literal"><span class="pre">matplotlib</span></tt> and
-<tt class="docutils literal"><span class="pre">pandas</span></tt> Python packages (see below) and also with R (see
+<p>GraphTerm supports inline graphics display with <code class="docutils literal"><span class="pre">matplotlib</span></code> and
+<code class="docutils literal"><span class="pre">pandas</span></code> Python packages (see below) and also with R (see
 <a class="reference internal" href="R.html"><em>Using GraphTerm with R</em></a>). It also supports a lightweight notebook interface.</p>
 <div class="section" id="inline-plots-using-matplotlib">
 <span id="inline-graphics"></span><span id="index-1"></span><h3><a class="toc-backref" href="#id6">Inline plots using matplotlib</a><a class="headerlink" href="#inline-plots-using-matplotlib" title="Permalink to this headline">¶</a></h3>
-<p>Assuming you have <tt class="docutils literal"><span class="pre">matplotlib</span></tt> installed, the <tt class="docutils literal"><span class="pre">gpylab</span></tt> module in the
-<tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> directory can be used to start up the python
-interpreter in <tt class="docutils literal"><span class="pre">pylab</span></tt> mode for inline graphics within the
+<p>Assuming you have <code class="docutils literal"><span class="pre">matplotlib</span></code> installed, the <code class="docutils literal"><span class="pre">gpylab</span></code> module in the
+<code class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></code> directory can be used to start up the python
+interpreter in <code class="docutils literal"><span class="pre">pylab</span></code> mode for inline graphics within the
 GraphTerm terminal:</p>
 <div class="highlight-python"><div class="highlight"><pre>python -i $GTERM_DIR/bin/gpylab.py
 &gt;&gt;&gt; plot([1,2,4])
@@ -293,9 +295,9 @@ GraphTerm terminal:</p>
 &gt;&gt;&gt; plot([1,4,12])
 </pre></div>
 </div>
-<p>Inline graphics also works with the <tt class="docutils literal"><span class="pre">ipython</span></tt> command in a similar
+<p>Inline graphics also works with the <code class="docutils literal"><span class="pre">ipython</span></code> command in a similar
 manner. Instead of typing the long python command line above, you can use the
-shortcut commands <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gipython</span></tt>, e.g.:</p>
+shortcut commands <code class="docutils literal"><span class="pre">gpython</span></code> or <code class="docutils literal"><span class="pre">gipython</span></code>, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gpython
 &gt;&gt;&gt; plot([1,2], [3,6])
 </pre></div>
@@ -303,24 +305,24 @@ shortcut commands <tt class="docutils literal"><span class="pre">gpython</span><
 <div class="figure align-center" style="width: 85%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-inline-plot.png" style="width: 90%;" /></a>
 </div>
-<p>Run <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gmatplot.py</span></tt> for a demo of inline graphics (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><em>Simple inline animation using matplotlib</em></a>).
-See the function <tt class="docutils literal"><span class="pre">main</span></tt> in this file for sample plotting code.</p>
+<p>Run <code class="docutils literal"><span class="pre">$GTERM_DIR/bin/gmatplot.py</span></code> for a demo of inline graphics (see  <a class="reference internal" href="screenshots.html#matplotlib-shot"><span>Simple inline animation using matplotlib</span></a>).
+See the function <code class="docutils literal"><span class="pre">main</span></code> in this file for sample plotting code.</p>
 <blockquote>
 <div><ul class="simple">
-<li>Use <tt class="docutils literal"><span class="pre">figure(...)</span></tt> to clear current image</li>
-<li>Use <tt class="docutils literal"><span class="pre">newfig(...)</span></tt> to create blank image</li>
-<li>Use <tt class="docutils literal"><span class="pre">resize_newfig(...)</span></tt> to create resize blank image</li>
-<li>Use <tt class="docutils literal"><span class="pre">show()</span></tt> to update image</li>
-<li>Use <tt class="docutils literal"><span class="pre">show(False)</span></tt> to display as new image</li>
-<li>Use <tt class="docutils literal"><span class="pre">display(fig)</span></tt> to display figure</li>
-<li>Use <tt class="docutils literal"><span class="pre">ioff()</span></tt> to disable interactive mode</li>
-<li>Use <tt class="docutils literal"><span class="pre">gterm.nbmode(False)</span></tt> to re-enable default expression printing behaviour</li>
+<li>Use <code class="docutils literal"><span class="pre">figure(...)</span></code> to clear current image</li>
+<li>Use <code class="docutils literal"><span class="pre">newfig(...)</span></code> to create blank image</li>
+<li>Use <code class="docutils literal"><span class="pre">resize_newfig(...)</span></code> to create resize blank image</li>
+<li>Use <code class="docutils literal"><span class="pre">show()</span></code> to update image</li>
+<li>Use <code class="docutils literal"><span class="pre">show(False)</span></code> to display as new image</li>
+<li>Use <code class="docutils literal"><span class="pre">display(fig)</span></code> to display figure</li>
+<li>Use <code class="docutils literal"><span class="pre">ioff()</span></code> to disable interactive mode</li>
+<li>Use <code class="docutils literal"><span class="pre">gterm.nbmode(False)</span></code> to re-enable default expression printing behaviour</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="inline-tables-using-pandas">
 <span id="pandas-mode"></span><span id="index-2"></span><h3><a class="toc-backref" href="#id7">Inline tables using pandas</a><a class="headerlink" href="#inline-tables-using-pandas" title="Permalink to this headline">¶</a></h3>
-<p>GraphTerm can display <tt class="docutils literal"><span class="pre">pandas</span></tt> DataFrame objects as a table using
+<p>GraphTerm can display <code class="docutils literal"><span class="pre">pandas</span></code> DataFrame objects as a table using
 HTML:</p>
 <div class="highlight-python"><div class="highlight"><pre>gpython
 &gt;&gt;&gt; import pandas as pd
@@ -337,25 +339,25 @@ HTML:</p>
 <span id="index-3"></span><span id="id1"></span><h3><a class="toc-backref" href="#id8">Notebook mode</a><a class="headerlink" href="#notebook-mode" title="Permalink to this headline">¶</a></h3>
 <p>GraphTerm supports a notebook mode, where code can be entered in
 multiple cells and executed separately in each cell to display the
-output (see <a class="reference internal" href="screenshots.html#notebook-shot"><em>GraphTerm Notebook mode running Python</em></a>). Currently, the notebook mode can be
-used with the shell (<tt class="docutils literal"><span class="pre">bash</span></tt>), or while running python
-(<tt class="docutils literal"><span class="pre">python/ipython</span></tt>) and <tt class="docutils literal"><span class="pre">R</span></tt> interpreters (see <a class="reference internal" href="R.html"><em>Using GraphTerm with R</em></a>). You can
+output (see <a class="reference internal" href="screenshots.html#notebook-shot"><span>GraphTerm Notebook mode running Python</span></a>). Currently, the notebook mode can be
+used with the shell (<code class="docutils literal"><span class="pre">bash</span></code>), or while running python
+(<code class="docutils literal"><span class="pre">python/ipython</span></code>) and <code class="docutils literal"><span class="pre">R</span></code> interpreters (see <a class="reference internal" href="R.html"><em>Using GraphTerm with R</em></a>). You can
 create new notebooks using the <em>notebook/new</em> menu option and then
 selecting the language.</p>
 <p>You can try using the notebook mode with any other shell-like
-program (such as <tt class="docutils literal"><span class="pre">IDL</span></tt> or <tt class="docutils literal"><span class="pre">ncl</span></tt>) which has a unique prompt by
+program (such as <code class="docutils literal"><span class="pre">IDL</span></code> or <code class="docutils literal"><span class="pre">ncl</span></code>) which has a unique prompt by
 typing <em>Shift-Enter</em> after starting the program. Type <em>Control-Enter</em>
 instead, if you wish to read a notebook file and/or customize the
 interpreter prompts.  Alternatively, you can select
 <em>notebook/new/default</em> menu option after starting the program (this
-works even with the <tt class="docutils literal"><span class="pre">bash</span></tt> shell!).</p>
-<p>To open an existing notebook, use the <tt class="docutils literal"><span class="pre">gls</span></tt> command to list your
+works even with the <code class="docutils literal"><span class="pre">bash</span></code> shell!).</p>
+<p>To open an existing notebook, use the <code class="docutils literal"><span class="pre">gls</span></code> command to list your
 notebooks, e,g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gls *.ipynb
 </pre></div>
 </div>
 <p>Then click on the notebook that you wish to open.
-Alternatively, you can use the <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gopen</span></tt> commands
+Alternatively, you can use the <code class="docutils literal"><span class="pre">gpython</span></code> or <code class="docutils literal"><span class="pre">gopen</span></code> commands
 python notebooks:</p>
 <div class="highlight-python"><div class="highlight"><pre>gpython notebook.ipynb
 </pre></div>
@@ -377,8 +379,8 @@ shortcuts</em>.</p>
 code and Markdown mode and <em>double-clicking</em> on the rendered text
 displays the editable Markdown cell.</p>
 <p>The <em>notebook/save</em> menu option can be used to save notebooks either
-in the IPython Notebook format (<tt class="docutils literal"><span class="pre">*.ipynb</span></tt>) or in the <a class="reference internal" href="format.html"><em>Markdown notebook format</em></a>
-(<tt class="docutils literal"><span class="pre">*.py.gnb.md</span></tt>). The filename determines which format is used.  You
+in the IPython Notebook format (<code class="docutils literal"><span class="pre">*.ipynb</span></code>) or in the <a class="reference internal" href="format.html"><em>Markdown notebook format</em></a>
+(<code class="docutils literal"><span class="pre">*.py.gnb.md</span></code>). The filename determines which format is used.  You
 can exit the notebook mode using <em>notebook/quit</em> in the top menu bar,
 or by typing <em>Control-C</em>, to return to the terminal mode.</p>
 </div>
@@ -388,7 +390,7 @@ or by typing <em>Control-C</em>, to return to the terminal mode.</p>
 <div class="section" id="terminal-sessions-and-screensharing">
 <span id="screensharing"></span><span id="index-4"></span><h3><a class="toc-backref" href="#id10">Terminal sessions and &#8220;screensharing&#8221;</a><a class="headerlink" href="#terminal-sessions-and-screensharing" title="Permalink to this headline">¶</a></h3>
 <p>For each host, terminal sessions are assigned default names like
-<tt class="docutils literal"><span class="pre">tty1</span></tt>, <tt class="docutils literal"><span class="pre">tty2</span></tt> etc. You can also create unique terminal session names simply by using it in an
+<code class="docutils literal"><span class="pre">tty1</span></code>, <code class="docutils literal"><span class="pre">tty2</span></code> etc. You can also create unique terminal session names simply by using it in an
 URL, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>http://localhost:8900/local/mysession
 </pre></div>
@@ -406,7 +408,7 @@ other users can also <em>steal</em>
 control of the session using the menubar button
 (or using the <em>share/control</em> menu item).</p>
 <p>For example, if you forgot to detach your session at work, you can
-<tt class="docutils literal"><span class="pre">ssh</span></tt> to your desktop from home, use SSH port forwarding
+<code class="docutils literal"><span class="pre">ssh</span></code> to your desktop from home, use SSH port forwarding
 to securely access your work desktop, and then <em>steal</em> the
 session using your home browser (see <a class="reference internal" href="remote.html"><em>Remote access and SSH</em></a>).</p>
 <p>Normally, only a single user has control of a terminal session at a
@@ -417,29 +419,29 @@ time. However, this could sometimes have unpredictable effects.</p>
 <div class="section" id="security">
 <span id="index-5"></span><h3><a class="toc-backref" href="#id11">Security</a><a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h3>
 <p>You should normally run GraphTerm logged in as a regular user, using
-the default <tt class="docutils literal"><span class="pre">--auth_type=singleuser</span></tt> option, which requires an access
-code for HMAC authentication. Using the <tt class="docutils literal"><span class="pre">gterm</span></tt> command to create a
+the default <code class="docutils literal"><span class="pre">--auth_type=singleuser</span></code> option, which requires an access
+code for HMAC authentication. Using the <code class="docutils literal"><span class="pre">gterm</span></code> command to create a
 new terminal provides convenience and additional security, as the
 command validates the server and handles authentication before
 opening a new terminal. On a single user computer, such as a laptop,
-the <tt class="docutils literal"><span class="pre">--auth_type=none</span></tt> option, with no access code, can be used
+the <code class="docutils literal"><span class="pre">--auth_type=none</span></code> option, with no access code, can be used
 instead.</p>
 <p>Although GraphTerm can be run as a public server, this feature is best
 used for teaching and demonstration purposes. In this case, the
-<tt class="docutils literal"><span class="pre">--auth_type=name</span></tt> option can be used, if all users can share an
-account, with no access code. The <tt class="docutils literal"><span class="pre">--auth_type=multiuser</span></tt> option,
+<code class="docutils literal"><span class="pre">--auth_type=name</span></code> option can be used, if all users can share an
+account, with no access code. The <code class="docutils literal"><span class="pre">--auth_type=multiuser</span></code> option,
 which requires the server to run with root privileges, is suitable for
 a multiple user lab setting, providing a choice of either access code
 HMAC authentication or Google Authentication. The
-<tt class="docutils literal"><span class="pre">--auth_type=login</span></tt> option, which is permitted only with a
+<code class="docutils literal"><span class="pre">--auth_type=login</span></code> option, which is permitted only with a
 <em>localhost</em> server or with HTTPS, implements the standard password
-login.  The <tt class="docutils literal"><span class="pre">--nolocal</span></tt> option can be used to disable root access
+login.  The <code class="docutils literal"><span class="pre">--nolocal</span></code> option can be used to disable root access
 via the browser. The HTTPS protocol can be enabled for the public
 server, using either self-signed or authoritative certificates, to
 provide additional security. (See see <a class="reference internal" href="virtual-setup.html"><em>Setting up a Virtual Computer Lab</em></a> for more on
 authentication options.)</p>
 <p>When working with sensitive information, it would be best to run the
-server on <tt class="docutils literal"><span class="pre">localhost</span></tt> (the default) and use SSH port forwarding to
+server on <code class="docutils literal"><span class="pre">localhost</span></code> (the default) and use SSH port forwarding to
 connect to it from other computers as needed (see <a class="reference internal" href="remote.html"><em>Remote access and SSH</em></a>).</p>
 </div>
 </div>
@@ -451,7 +453,7 @@ connect to it from other computers as needed (see <a class="reference internal" 
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -470,9 +472,9 @@ connect to it from other computers as needed (see <a class="reference internal" 
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

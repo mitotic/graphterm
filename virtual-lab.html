@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="next" title="Progressively fillable notebooks" href="progressive.html" />
     <link rel="prev" title="Setting up a Virtual Computer Lab" href="virtual-setup.html" />
  
@@ -77,11 +77,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -89,7 +89,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -107,7 +107,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -137,12 +137,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="progressive.html"
                         title="next chapter">Progressively fillable notebooks</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/virtual-lab.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/virtual-lab.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -161,7 +163,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="using-the-graphterm-virtual-computer-lab">
 <span id="virtual-lab"></span><h1><a class="toc-backref" href="#id1">Using the GraphTerm Virtual Computer Lab</a><a class="headerlink" href="#using-the-graphterm-virtual-computer-lab" title="Permalink to this headline">¶</a></h1>
@@ -191,13 +193,13 @@ code.mindmeldr.com
 <div class="section" id="logging-in">
 <span id="index-0"></span><h2><a class="toc-backref" href="#id2">Logging in</a><a class="headerlink" href="#logging-in" title="Permalink to this headline">¶</a></h2>
 <p>Open the URL provided by the instructor (usually of the form
-<tt class="docutils literal"><span class="pre">http://hostname.domain</span></tt>) in your web browser. (Google Chrome works
+<code class="docutils literal"><span class="pre">http://hostname.domain</span></code>) in your web browser. (Google Chrome works
 best, but Firefox, Safari, or IE10 would also work.) Then type in the user
 name and the access code. If you are creating a new account, you will
 need to enter the <em>group access code</em> obtained from your
 instructor. Select a user name that will be meaningful to the
 instructor, like your first initial followed by your last name (all
-lower-case), e.g., <tt class="docutils literal"><span class="pre">jsmith</span></tt> for Jim Smith.  If you have a <em>Google
+lower-case), e.g., <code class="docutils literal"><span class="pre">jsmith</span></code> for Jim Smith.  If you have a <em>Google
 GMail</em> account, you can choose to link it to your GraphTerm server
 account for password-less logins by clicking the <em>Google Auth</em> button.
 (You will still need to enter the group access code the very first
@@ -205,7 +207,7 @@ time to create your new account and link it to your GMail account.)</p>
 <div class="figure align-center" style="width: 85%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-login.png" style="width: 90%;" /></a>
 </div>
-<p><em>Note:</em> If the URL is of the <tt class="docutils literal"><span class="pre">https//...</span></tt> form, you may encounter
+<p><em>Note:</em> If the URL is of the <code class="docutils literal"><span class="pre">https//...</span></code> form, you may encounter
 warning messages about untrusted certificates, and be asked to make an
 exception. The instructor may ask you to ignore these warnings and
 accept the certificate, if the GraphTerm server has been configured to
@@ -220,7 +222,7 @@ you are using Google Authentication). You may optionally enter your email
 address at this point. If you forget your personal access code, the
 instructor can retrieve it for you.</p>
 <p>If you have a Mac/Linux desktop/laptop, you can download the
-executable python script <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> and type the
+executable python script <code class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.py</span></code> and type the
 following command on your desktop/laptop:</p>
 <div class="highlight-python"><div class="highlight"><pre>gterm.py -u user http://hostname.domain
 </pre></div>
@@ -238,16 +240,16 @@ Internet Explorer 10 should also be usable, with some limitations.</p>
 <p>After logging in, choose the host that has the same name as your user
 name, and then you can connect to an existing terminal session or
 create a new terminal session. You can choose a specific name for a
-new terminal session, or type the special name <tt class="docutils literal"><span class="pre">new</span></tt> to
-automatically choose names like <tt class="docutils literal"><span class="pre">tty1</span></tt>, <tt class="docutils literal"><span class="pre">tty2</span></tt> etc. You can also
+new terminal session, or type the special name <code class="docutils literal"><span class="pre">new</span></code> to
+automatically choose names like <code class="docutils literal"><span class="pre">tty1</span></code>, <code class="docutils literal"><span class="pre">tty2</span></code> etc. You can also
 create new terminals as needed using the <em>terminal/new</em> menu option.</p>
 <div class="figure align-center" style="width: 90%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-create-session.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-create-session.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-create-session.png" style="width: 95%;" /></a>
 </div>
-<p>You can type standard Unix commands, like <tt class="docutils literal"><span class="pre">cd</span></tt>, <tt class="docutils literal"><span class="pre">ls</span></tt>, <tt class="docutils literal"><span class="pre">cp</span></tt>
+<p>You can type standard Unix commands, like <code class="docutils literal"><span class="pre">cd</span></code>, <code class="docutils literal"><span class="pre">ls</span></code>, <code class="docutils literal"><span class="pre">cp</span></code>
 etc. in the terminal. The <em>command</em> menu lists some commonly used
-commands. Often, it is preferable to use the GraphTerm-aware <tt class="docutils literal"><span class="pre">gls</span></tt>
-command, instead of the standard <tt class="docutils literal"><span class="pre">ls</span></tt> command, as it allows you to
+commands. Often, it is preferable to use the GraphTerm-aware <code class="docutils literal"><span class="pre">gls</span></code>
+command, instead of the standard <code class="docutils literal"><span class="pre">ls</span></code> command, as it allows you to
 navigate directories by clicking.</p>
 <div class="figure align-center" style="width: 90%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-new-session.png" style="width: 95%;" /></a>
@@ -265,12 +267,12 @@ more of the following:</p>
 <blockquote>
 <div><ul class="simple">
 <li>Do what you would normally do in a Unix terminal, type
-<tt class="docutils literal"><span class="pre">Control-C</span></tt>  to interrupt the currently running program. You can
+<code class="docutils literal"><span class="pre">Control-C</span></code>  to interrupt the currently running program. You can
 also use the <em>command/interrupt</em> menu option instead.</li>
 <li>If you are in the fullscreen graphics mode (e.g., using
-<tt class="docutils literal"><span class="pre">gframe</span></tt>), you may need to click on the top of the terminal
+<code class="docutils literal"><span class="pre">gframe</span></code>), you may need to click on the top of the terminal
 portion of the window to get the input focus out of the embedded
-frame and then type <tt class="docutils literal"><span class="pre">Control-C</span></tt>.  You can also try the
+frame and then type <code class="docutils literal"><span class="pre">Control-C</span></code>.  You can also try the
 <em>command/parent interrupt</em> menu option to interrupt the currently
 running program in the parent window.</li>
 <li>Are you in the notebook mode? If so, the notebook name will appear
@@ -319,7 +321,7 @@ does not work, you can try the <em>terminal/paste special</em> menu option.</p>
 <p>Two ways to use the notebook interface are supported in the virtual
 computer lab:</p>
 <blockquote>
-<div><p>1. Using the <em>lightweight</em> <a class="reference internal" href="start.html#notebook-mode"><em>Notebook mode</em></a> built into the
+<div><p>1. Using the <em>lightweight</em> <a class="reference internal" href="start.html#notebook-mode"><span>Notebook mode</span></a> built into the
 remote GraphTerm terminal.</p>
 <p>2. Running the IPython Notebook server on the remote computer and
 accessing it using a browser on your local computer (see next section
@@ -329,7 +331,7 @@ for detailed instructions).</p>
 the standard python command line interface. It provides basic notebook
 functionality, but is not a full-featured environment like IPython
 Notebook. It does support the same notebook format, which means that
-you can create simple notebooks in GraphTerm, save them as <tt class="docutils literal"><span class="pre">.ipynb</span></tt>
+you can create simple notebooks in GraphTerm, save them as <code class="docutils literal"><span class="pre">.ipynb</span></code>
 files and open them later using IPython Notebook, and <em>vice versa</em>.
 The GraphTerm notebook interface is integrated into the terminal,
 which allow seamless switching between the python command line and
@@ -340,18 +342,18 @@ terminals.</p>
 <h2><a class="toc-backref" href="#id8">Running IPython Notebook server</a><a class="headerlink" href="#running-ipython-notebook-server" title="Permalink to this headline">¶</a></h2>
 <p>To access the full features of the IPython Notebook, you can run your
 own password-protected public IPython Notebook server on the remote
-machine using the <tt class="docutils literal"><span class="pre">gnbserver</span></tt> command (<em>if the instructor has
+machine using the <code class="docutils literal"><span class="pre">gnbserver</span></code> command (<em>if the instructor has
 enabled this option</em>). You can then access it using your local browser,
-with an URL of the form <tt class="docutils literal"><span class="pre">https://hostname.domain:port</span></tt>, where
-<tt class="docutils literal"><span class="pre">port</span></tt> is the port number output by the <tt class="docutils literal"><span class="pre">gnbserver</span></tt> command. The
+with an URL of the form <code class="docutils literal"><span class="pre">https://hostname.domain:port</span></code>, where
+<code class="docutils literal"><span class="pre">port</span></code> is the port number output by the <code class="docutils literal"><span class="pre">gnbserver</span></code> command. The
 notebook password is the same as the access code for your user
-account. (Note: Run the <tt class="docutils literal"><span class="pre">gnbserver</span></tt> command in a separate terminal window.)</p>
+account. (Note: Run the <code class="docutils literal"><span class="pre">gnbserver</span></code> command in a separate terminal window.)</p>
 <p>Once the server is running, individual notebook files can be opened in
-the IPython Notebook server using the <tt class="docutils literal"><span class="pre">gipynb</span></tt> command:</p>
+the IPython Notebook server using the <code class="docutils literal"><span class="pre">gipynb</span></code> command:</p>
 <div class="highlight-python"><div class="highlight"><pre>gipynb notebook.ipynb
 </pre></div>
 </div>
-<p>or by simply clicking on the <tt class="docutils literal"><span class="pre">.ipynb</span></tt> file in the <tt class="docutils literal"><span class="pre">gls</span></tt> output
+<p>or by simply clicking on the <code class="docutils literal"><span class="pre">.ipynb</span></code> file in the <code class="docutils literal"><span class="pre">gls</span></code> output
 listing.</p>
 <p><em>Note:</em> If each user is running their own copy of the IPython Notebook
 server, it can degrade performance on a shared computer. Please
@@ -361,7 +363,7 @@ consider shutting down the server when you are not using it.</p>
 <h2><a class="toc-backref" href="#id9">Opening Python notebooks in GraphTerm</a><a class="headerlink" href="#opening-python-notebooks-in-graphterm" title="Permalink to this headline">¶</a></h2>
 <p>To open a new python notebook, use the menu command
 <em>notebook/new/pylab</em></p>
-<p>To open an existing notebook, use the <tt class="docutils literal"><span class="pre">gls</span></tt> command to list your
+<p>To open an existing notebook, use the <code class="docutils literal"><span class="pre">gls</span></code> command to list your
 notebooks, e,g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gls *.ipynb
 </pre></div>
@@ -369,16 +371,16 @@ notebooks, e,g.:</p>
 <p>Then click on the notebook that you wish to open. This will open the
 notebook using the IPython Notebook server, if it is running, or using
 the GraphTerm notebook mode otherwise. Alternatively, you can also use
-the <tt class="docutils literal"><span class="pre">gopen</span></tt> command:</p>
+the <code class="docutils literal"><span class="pre">gopen</span></code> command:</p>
 <div class="highlight-python"><div class="highlight"><pre>gopen notebook.ipynb
 </pre></div>
 </div>
 <p>To open notebook files using the built-in GraphTerm notebook mode, you
-can use the <tt class="docutils literal"><span class="pre">gpython</span></tt> or <tt class="docutils literal"><span class="pre">gipython</span></tt> command:</p>
+can use the <code class="docutils literal"><span class="pre">gpython</span></code> or <code class="docutils literal"><span class="pre">gipython</span></code> command:</p>
 <div class="highlight-python"><div class="highlight"><pre>gpython notebook.ipynb
 </pre></div>
 </div>
-<p>or simply run the standard <tt class="docutils literal"><span class="pre">python</span></tt> command and type <em>Shift-Enter</em> to enter
+<p>or simply run the standard <code class="docutils literal"><span class="pre">python</span></code> command and type <em>Shift-Enter</em> to enter
 the notebook mode as needed.</p>
 <div class="figure align-center" style="width: 85%">
 <a class="reference internal image-reference" href="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png"><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-nb.png" style="width: 90%;" /></a>
@@ -408,7 +410,7 @@ command:</p>
 </div>
 <div class="section" id="downloading-files">
 <h2><a class="toc-backref" href="#id11">Downloading files</a><a class="headerlink" href="#downloading-files" title="Permalink to this headline">¶</a></h2>
-<p>To download files, use the <tt class="docutils literal"><span class="pre">gdownload</span></tt> command:</p>
+<p>To download files, use the <code class="docutils literal"><span class="pre">gdownload</span></code> command:</p>
 <div class="highlight-python"><div class="highlight"><pre>gdownload filename(s)
 </pre></div>
 </div>
@@ -417,7 +419,7 @@ some browsers, like Chrome, directly clicking on the link would also
 work.  If more than one file (or a directory) is specified for downloading,
 the command automatically creates a zip archive. This works well
 for archive sizes of 1-2 MB, but for larger archives, you should create the
-archive yourself using the <tt class="docutils literal"><span class="pre">zip</span></tt> command and then download the
+archive yourself using the <code class="docutils literal"><span class="pre">zip</span></code> command and then download the
 single archive file.</p>
 <p>You can also download multiple files, one-at-a-time, using the
 following command:</p>
@@ -425,16 +427,16 @@ following command:</p>
 </pre></div>
 </div>
 <p>Click on the displayed filenames to download.</p>
-<p><em>Note:</em> Browsers other than Chrome typically append <tt class="docutils literal"><span class="pre">.html</span></tt> or <tt class="docutils literal"><span class="pre">.htm</span></tt>
-to the downloaded filename. For example, file <tt class="docutils literal"><span class="pre">abc.ipynb</span></tt> may be downloaded
-as <tt class="docutils literal"><span class="pre">abc.ipynb.html</span></tt>. If needed, you can rename the downloaded file by
+<p><em>Note:</em> Browsers other than Chrome typically append <code class="docutils literal"><span class="pre">.html</span></code> or <code class="docutils literal"><span class="pre">.htm</span></code>
+to the downloaded filename. For example, file <code class="docutils literal"><span class="pre">abc.ipynb</span></code> may be downloaded
+as <code class="docutils literal"><span class="pre">abc.ipynb.html</span></code>. If needed, you can rename the downloaded file by
 gently clicking on the name in the Finder window and deleting the
-<tt class="docutils literal"><span class="pre">.html</span></tt> extension.</p>
+<code class="docutils literal"><span class="pre">.html</span></code> extension.</p>
 </div>
 <div class="section" id="uploading-files">
 <h2><a class="toc-backref" href="#id12">Uploading  files</a><a class="headerlink" href="#uploading-files" title="Permalink to this headline">¶</a></h2>
-<p>Use the <tt class="docutils literal"><span class="pre">gupload</span></tt> command to upload files to the remote
-terminal. First <tt class="docutils literal"><span class="pre">cd</span></tt> to the directory where you want to upload the
+<p>Use the <code class="docutils literal"><span class="pre">gupload</span></code> command to upload files to the remote
+terminal. First <code class="docutils literal"><span class="pre">cd</span></code> to the directory where you want to upload the
 file and type:</p>
 <div class="highlight-python"><div class="highlight"><pre>gupload optional_filename
 </pre></div>
@@ -448,8 +450,8 @@ quite slow for larger files.</p>
 <div class="section" id="ssh-key-access">
 <h2><a class="toc-backref" href="#id13">SSH key access</a><a class="headerlink" href="#ssh-key-access" title="Permalink to this headline">¶</a></h2>
 <p>If you have an SSH client on your local computer, upload the public key
-file (usually <tt class="docutils literal"><span class="pre">id_rsa.pub</span></tt>) using the <tt class="docutils literal"><span class="pre">gupload</span></tt> command as
-<tt class="docutils literal"><span class="pre">~/.ssh/authorized_keys</span></tt> to enable SSH access to your account:</p>
+file (usually <code class="docutils literal"><span class="pre">id_rsa.pub</span></code>) using the <code class="docutils literal"><span class="pre">gupload</span></code> command as
+<code class="docutils literal"><span class="pre">~/.ssh/authorized_keys</span></code> to enable SSH access to your account:</p>
 <div class="highlight-python"><div class="highlight"><pre>ssh username@server_domain
 </pre></div>
 </div>
@@ -495,7 +497,7 @@ typing on touch devices.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -514,9 +516,9 @@ typing on touch devices.</p>
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

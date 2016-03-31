@@ -25,11 +25,11 @@ practical applications are:
    access, it also serves as a detachable terminal, like
    ``tmux`` or ``screen``.)
 
- - a `virtual computer lab <http://code.mindmeldr.com/graphterm/virtual-setup.html>`_ for teaching and demonstrations. The
+ - a `virtual computer lab <http://code.mitotic.org/graphterm/virtual-setup.html>`_ for teaching and demonstrations. The
    GraphTerm server can be set up in the cloud and accessed by
    multiple users using their laptop/mobile browsers, with Google
    Authentication. The lab instructor can
-   `monitor all the users'  terminals <http://code.mindmeldr.com/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals>`_
+   `monitor all the users'  terminals <http://code.mitotic.org/graphterm/screenshots.html#dashboard-for-a-virtual-computer-lab-viewing-user-terminals>`_
    via a "dashboard", and users can collaborate with each other by
    sharing terminals and notebooks.
 
@@ -185,20 +185,20 @@ basic features of the standard ``ls`` and ``vi`` commands.
 (*Note:* You need to execute the ``sudo gterm_setup`` command
 to be able to use the GraphTerm toolchain. Otherwise, you will
 encounter a ``Permission denied`` error.)
-See `Getting Started with GraphTerm <http://code.mindmeldr.com/graphterm/start.html>`_
+See `Getting Started with GraphTerm <http://code.mitotic.org/graphterm/start.html>`_
 for more info on using GraphTerm. You can also
 `set up a virtual computer lab
-<http://code.mindmeldr.com/graphterm/virtual-setup.html>`_
+<http://code.mitotic.org/graphterm/virtual-setup.html>`_
 using GraphTerm.
 
 Documentation and Support
 ----------------------------------------------------------------------------------------------
 
 Usage info and other documentation can be found on the project home page,
-`code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_.
-See the `Contents <http://code.mindmeldr.com/graphterm/contents.html>`_
+`code.mitotic.org/graphterm <http://code.mitotic.org/graphterm>`_.
+See the `Contents <http://code.mitotic.org/graphterm/contents.html>`_
 page for an overview of the documentation and the
-`Talks and Tutorials <http://code.mindmeldr.com/graphterm/talks.html>`_
+`Talks and Tutorials <http://code.mitotic.org/graphterm/talks.html>`_
 page for more advanced usage examples.
 
 You can also use the following command::
@@ -269,7 +269,6 @@ Other packaged open source components include:
  - `underscore.js <http://underscorejs.org/>`_ utility library
 
 
-``GraphTerm`` was developed as part of the `Mindmeldr <http://mindmeldr.com>`_ project, which is aimed at improving classroom interaction.
 
 License
 ----------------------------------------------------------------------------------------------

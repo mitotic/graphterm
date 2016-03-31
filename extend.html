@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="next" title="Troubleshooting FAQ" href="troubleshooting.html" />
     <link rel="prev" title="GraphTerm toolchain and features" href="features.html" />
  
@@ -77,11 +77,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -89,7 +89,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -107,7 +107,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -127,12 +127,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="troubleshooting.html"
                         title="next chapter">Troubleshooting FAQ</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/extend.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/extend.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -151,7 +153,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="extending-graphterm">
 <h1><a class="toc-backref" href="#id1">Extending GraphTerm</a><a class="headerlink" href="#extending-graphterm" title="Permalink to this headline">¶</a></h1>
@@ -171,11 +173,11 @@ code.mindmeldr.com
 <p id="index-0">The GraphTerm toolchain can be extended by writing additional
 executable commands in any language, much like a <a class="reference external" href="http://en.wikipedia.org/wiki/Common_Gateway_Interface">CGI</a> script.  The
 program <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/bin/hello_gterm.sh">hello_gterm.sh</a>
-is a simple example.  See also the programs <tt class="docutils literal"><span class="pre">gls</span></tt>, <tt class="docutils literal"><span class="pre">gimage</span></tt>,
-<tt class="docutils literal"><span class="pre">gframe</span></tt>, <tt class="docutils literal"><span class="pre">gvi</span></tt>, <tt class="docutils literal"><span class="pre">gfeed</span></tt>, <tt class="docutils literal"><span class="pre">yweather</span></tt>, <tt class="docutils literal"><span class="pre">ec2launch</span></tt> and
-<tt class="docutils literal"><span class="pre">ec2list</span></tt> for examples of GraphTerm API usage. You can use the
-<tt class="docutils literal"><span class="pre">which</span> <span class="pre">gls</span></tt> command to figure out where these programs are located.
-The file <tt class="docutils literal"><span class="pre">gterm.py</span></tt> contains many helper functions for accessing the
+is a simple example.  See also the programs <code class="docutils literal"><span class="pre">gls</span></code>, <code class="docutils literal"><span class="pre">gimage</span></code>,
+<code class="docutils literal"><span class="pre">gframe</span></code>, <code class="docutils literal"><span class="pre">gvi</span></code>, <code class="docutils literal"><span class="pre">gfeed</span></code>, <code class="docutils literal"><span class="pre">yweather</span></code>, <code class="docutils literal"><span class="pre">ec2launch</span></code> and
+<code class="docutils literal"><span class="pre">ec2list</span></code> for examples of GraphTerm API usage. You can use the
+<code class="docutils literal"><span class="pre">which</span> <span class="pre">gls</span></code> command to figure out where these programs are located.
+The file <code class="docutils literal"><span class="pre">gterm.py</span></code> contains many helper functions for accessing the
 GraphTerm API.</p>
 <p><em>Note:</em> The GraphTerm Application Programming Interface (API) is
 rather poorly documented, because it is still evolving. If you
@@ -187,24 +189,24 @@ some of the details may change.</p>
 communicates with GraphTerm following the standard protocol for Unix
 programs to communicate with the terminal, i.e., by writing some text
 to the standard output, prefixed and suffixed by special <em>escape</em>
-sequences. The prefix sequence is the string <tt class="docutils literal"><span class="pre">\x1b[?1155;&lt;cookie&gt;h</span></tt>
-and the suffix sequence is <tt class="docutils literal"><span class="pre">\x1b[?1155l</span></tt>, where <tt class="docutils literal"><span class="pre">\x1b</span></tt> denotes the
-Escape character and <tt class="docutils literal"><span class="pre">&lt;cookie&gt;</span></tt> denotes a numeric value stored in the
-environment variable <tt class="docutils literal"><span class="pre">GTERM_COOKIE</span></tt>. This is a security measure that
+sequences. The prefix sequence is the string <code class="docutils literal"><span class="pre">\x1b[?1155;&lt;cookie&gt;h</span></code>
+and the suffix sequence is <code class="docutils literal"><span class="pre">\x1b[?1155l</span></code>, where <code class="docutils literal"><span class="pre">\x1b</span></code> denotes the
+Escape character and <code class="docutils literal"><span class="pre">&lt;cookie&gt;</span></code> denotes a numeric value stored in the
+environment variable <code class="docutils literal"><span class="pre">GTERM_COOKIE</span></code>. This is a security measure that
 prevents malicious files from accessing GraphTerm. Only executable
 scripts and programs will be able generate the special escape
 sequences.</p>
 <p><em>Note</em>: On a remote machine accessed via SSH, the cookie value will
-not be available. In that case, the dummy value <tt class="docutils literal"><span class="pre">0</span></tt> may be used to
+not be available. In that case, the dummy value <code class="docutils literal"><span class="pre">0</span></code> may be used to
 access basic GraphTerm features like displaying images and HTML within
 a frame. (For security reasons, advanced features of GraphTerm, such
 as command execution, cannot be accessed using the dummy cookie value
 of zero.)</p>
 <p>If the text output by the program (excluding the escape sequences)
-starts with the left-angle bracket (<tt class="docutils literal"><span class="pre">&lt;</span></tt>), it is interpreted as being
+starts with the left-angle bracket (<code class="docutils literal"><span class="pre">&lt;</span></code>), it is interpreted as being
 an HTML fragment to be displayed within GraphTerm as output of the
 command. For example, outputting the following string will display the
-text <tt class="docutils literal"><span class="pre">Hello</span> <span class="pre">World</span></tt> in bold face:</p>
+text <code class="docutils literal"><span class="pre">Hello</span> <span class="pre">World</span></code> in bold face:</p>
 <div class="highlight-python"><div class="highlight"><pre>\x1b[?1155;&lt;cookie&gt;h&lt;b&gt;Hello World!&lt;/b&gt;\x1b[?1155l
 </pre></div>
 </div>
@@ -215,36 +217,36 @@ text <tt class="docutils literal"><span class="pre">Hello</span> <span class="pr
 </div>
 <p>The above string, if output by a program, will clear output from
 the terminal. The GraphTerm always begins with string
-<tt class="docutils literal"><span class="pre">&lt;!--gterm</span></tt> and ends with <tt class="docutils literal"><span class="pre">--&gt;</span></tt>, like an HTML comment line. The
-directive begins with an action (<tt class="docutils literal"><span class="pre">clear_terminal</span></tt>) and may be
-followed by optional arguments of the form <tt class="docutils literal"><span class="pre">name=value</span></tt>.</p>
+<code class="docutils literal"><span class="pre">&lt;!--gterm</span></code> and ends with <code class="docutils literal"><span class="pre">--&gt;</span></code>, like an HTML comment line. The
+directive begins with an action (<code class="docutils literal"><span class="pre">clear_terminal</span></code>) and may be
+followed by optional arguments of the form <code class="docutils literal"><span class="pre">name=value</span></code>.</p>
 <p>The basic actions and optional arguments are:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">data</span> <span class="pre">display=block|fullwindow</span> <span class="pre">autoerase=yes</span> <span class="pre">overwrite=yes</span> <span class="pre">exit_page=yes</span></tt>   (display data URI content; typically used for images)</p>
-<p><tt class="docutils literal"><span class="pre">pagelet</span> <span class="pre">display=block</span> <span class="pre">overwrite=yes</span></tt>   (display arbitrary HTML page fragment
+<div><p><code class="docutils literal"><span class="pre">data</span> <span class="pre">display=block|fullwindow</span> <span class="pre">autoerase=yes</span> <span class="pre">overwrite=yes</span> <span class="pre">exit_page=yes</span></code>   (display data URI content; typically used for images)</p>
+<p><code class="docutils literal"><span class="pre">pagelet</span> <span class="pre">display=block</span> <span class="pre">overwrite=yes</span></code>   (display arbitrary HTML page fragment
 from content following the directive)</p>
 </div></blockquote>
-<p>The <tt class="docutils literal"><span class="pre">overwrite</span></tt> option allows previously displayed content to be
-overwritten, enabling simple animations etc. The <tt class="docutils literal"><span class="pre">autoerase</span></tt> option
+<p>The <code class="docutils literal"><span class="pre">overwrite</span></code> option allows previously displayed content to be
+overwritten, enabling simple animations etc. The <code class="docutils literal"><span class="pre">autoerase</span></code> option
 automatically erases the content when the command ends.
-The <tt class="docutils literal"><span class="pre">data</span></tt> action allows
+The <code class="docutils literal"><span class="pre">data</span></code> action allows
 <a class="reference external" href="http://en.wikipedia.org/wiki/Data_URI_scheme">data URIs</a> to be
 displayed (even across SSH logins).
-The <tt class="docutils literal"><span class="pre">pagelet</span></tt> action allows arbitrary HTML fragments to be displayed
+The <code class="docutils literal"><span class="pre">pagelet</span></code> action allows arbitrary HTML fragments to be displayed
 inline. The following python command will display inline HTML:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155;&lt;cookie&gt;h&quot;</span><span class="o">+</span><span class="s">&quot;&lt;!--gterm pagelet display=block--&gt;&quot;</span><span class="o">+</span><span class="s">&quot;&lt;b&gt;Hello World!&lt;/b&gt;&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155l&quot;</span>
 </pre></div>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">data</span></tt> and <tt class="docutils literal"><span class="pre">pagelet</span></tt> actions are unprivileged, i.e., they can
+<p>The <code class="docutils literal"><span class="pre">data</span></code> and <code class="docutils literal"><span class="pre">pagelet</span></code> actions are unprivileged, i.e., they can
 be executed even with a dummy cookie value of 0. However, pagelets without a valid
 cookie value are treated specially, because they are untrusted. They
 are always displayed in the full window mode, using a separate &#8220;web
-origin&#8221; for security. For example, the following Python <tt class="docutils literal"><span class="pre">print</span></tt>
+origin&#8221; for security. For example, the following Python <code class="docutils literal"><span class="pre">print</span></code>
 statement will display an inline image from a data URL:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155;0h&quot;</span><span class="o">+</span><span class="s">&quot;&lt;!--gterm data --&gt;&quot;</span><span class="o">+</span><span class="s">&quot;image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==&quot;</span><span class="o">+</span><span class="s">&quot;</span><span class="se">\x1b</span><span class="s">[?1155l&quot;</span>
 </pre></div>
 </div>
-<p>The sample program <tt class="docutils literal"><span class="pre">hello_world.sh</span></tt> in <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></tt> displays
+<p>The sample program <code class="docutils literal"><span class="pre">hello_world.sh</span></code> in <code class="docutils literal"><span class="pre">$GTERM_DIR/bin</span></code> displays
 the above string. Executing the program across an SSH login will
 still display the red dot.</p>
 <p>A displayed inline image can be overwritten. The following line
@@ -255,11 +257,11 @@ single white pixel:</p>
 </div>
 <p>Other useful actions are:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">clear_terminal</span></tt>   (<em>gclear</em>: clear the terminal)</p>
-<p><tt class="docutils literal"><span class="pre">error_message</span></tt>    (display content as plain text error message in browser window)</p>
-<p><tt class="docutils literal"><span class="pre">menu_op</span> <span class="pre">target=view_menubar</span> <span class="pre">value=on|off</span></tt> (<em>gmenu</em>: execute menu operation)</p>
-<p><tt class="docutils literal"><span class="pre">nb_clear</span> <span class="pre">all=yes</span></tt> (clear notebook cell output)</p>
-<p><tt class="docutils literal"><span class="pre">open_url</span> <span class="pre">width=400</span> <span class="pre">height=300</span> <span class="pre">target=...</span></tt>    (<em>gopen</em>: open URL)</p>
+<div><p><code class="docutils literal"><span class="pre">clear_terminal</span></code>   (<em>gclear</em>: clear the terminal)</p>
+<p><code class="docutils literal"><span class="pre">error_message</span></code>    (display content as plain text error message in browser window)</p>
+<p><code class="docutils literal"><span class="pre">menu_op</span> <span class="pre">target=view_menubar</span> <span class="pre">value=on|off</span></code> (<em>gmenu</em>: execute menu operation)</p>
+<p><code class="docutils literal"><span class="pre">nb_clear</span> <span class="pre">all=yes</span></code> (clear notebook cell output)</p>
+<p><code class="docutils literal"><span class="pre">open_url</span> <span class="pre">width=400</span> <span class="pre">height=300</span> <span class="pre">target=...</span></code>    (<em>gopen</em>: open URL)</p>
 </div></blockquote>
 </div>
 <div class="section" id="graphterm-json-headers">
@@ -291,7 +293,7 @@ content data (such as the HTML fragment to be displayed).</p>
 </div>
 <div class="section" id="gterm-api-module">
 <h2><a class="toc-backref" href="#id4">gterm API module</a><a class="headerlink" href="#gterm-api-module" title="Permalink to this headline">¶</a></h2>
-<p>The Python module <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.py</span></tt> contains many
+<p>The Python module <code class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.py</span></code> contains many
 convenience functions for accessing the textual GraphTerm API. The
 following Python code will display some raw HTML followed by an
 image:</p>
@@ -304,25 +306,25 @@ image:</p>
 <span class="n">gterm</span><span class="o">.</span><span class="n">display_data</span><span class="p">(</span><span class="s">&quot;image/png&quot;</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">display</span><span class="o">=</span><span class="s">&quot;block&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>See the toolchain programs <tt class="docutils literal"><span class="pre">gimage</span></tt>, <tt class="docutils literal"><span class="pre">gframe</span></tt>, etc. for examples
+<p>See the toolchain programs <code class="docutils literal"><span class="pre">gimage</span></code>, <code class="docutils literal"><span class="pre">gframe</span></code>, etc. for examples
 of this API usage.</p>
-<p>The file <tt class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.R</span></tt> provides convenience wrapper
-functions for <tt class="docutils literal"><span class="pre">R</span></tt>.</p>
+<p>The file <code class="docutils literal"><span class="pre">$GTERM_DIR/bin/gterm.R</span></code> provides convenience wrapper
+functions for <code class="docutils literal"><span class="pre">R</span></code>.</p>
 </div>
 <div class="section" id="clickable-links-for-generating-commands">
 <h2><a class="toc-backref" href="#id5">Clickable links for generating commands</a><a class="headerlink" href="#clickable-links-for-generating-commands" title="Permalink to this headline">¶</a></h2>
 <p>A program can display clickable HTML links that can automatically
 generate a command line and paste it into the terminal. See the
-<tt class="docutils literal"><span class="pre">ec2list</span></tt> and <tt class="docutils literal"><span class="pre">gls</span></tt> programs for examples of this usage. Basically
-a clickable HTML <tt class="docutils literal"><span class="pre">&lt;a&gt;</span></tt> element is identified by the <tt class="docutils literal"><span class="pre">class</span></tt>
-attribute <tt class="docutils literal"><span class="pre">gterm-click</span></tt> and also contains a special attribute
-<tt class="docutils literal"><span class="pre">data-gtermcmd</span></tt> that represents the command to be executed. If this
+<code class="docutils literal"><span class="pre">ec2list</span></code> and <code class="docutils literal"><span class="pre">gls</span></code> programs for examples of this usage. Basically
+a clickable HTML <code class="docutils literal"><span class="pre">&lt;a&gt;</span></code> element is identified by the <code class="docutils literal"><span class="pre">class</span></code>
+attribute <code class="docutils literal"><span class="pre">gterm-click</span></code> and also contains a special attribute
+<code class="docutils literal"><span class="pre">data-gtermcmd</span></code> that represents the command to be executed. If this
 command ends with a space, the displayed text of the element (such as
 a file name) is appended as an argument to the command. (If the
-<tt class="docutils literal"><span class="pre">href</span></tt> attribute of the <tt class="docutils literal"><span class="pre">&lt;a&gt;</span></tt> element represents a file URI, then
+<code class="docutils literal"><span class="pre">href</span></code> attribute of the <code class="docutils literal"><span class="pre">&lt;a&gt;</span></code> element represents a file URI, then
 the file path is appended instead.) To insert the argument elsewhere
-in the command, the special escape sequence <tt class="docutils literal"><span class="pre">%[arg]</span></tt> can be used in
-the command string. See the script <tt class="docutils literal"><span class="pre">hello_gterm.sh</span></tt> or the sample
+in the command, the special escape sequence <code class="docutils literal"><span class="pre">%[arg]</span></code> can be used in
+the command string. See the script <code class="docutils literal"><span class="pre">hello_gterm.sh</span></code> or the sample
 Python code below:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">graphterm.bin.gterm</span> <span class="kn">as</span> <span class="nn">gterm</span>
 
@@ -336,10 +338,10 @@ Python code below:</p>
 <span id="index-1"></span><h2><a class="toc-backref" href="#id6">Mapping command line arguments to HTML form elements</a><a class="headerlink" href="#mapping-command-line-arguments-to-html-form-elements" title="Permalink to this headline">¶</a></h2>
 <p>Any Python program that parses command line options and arguments can
 be trivially modified to generate an HTML form to request input. The
-<tt class="docutils literal"><span class="pre">gterm</span></tt> module provides a <tt class="docutils literal"><span class="pre">FormParser</span></tt> object that can be used as
+<code class="docutils literal"><span class="pre">gterm</span></code> module provides a <code class="docutils literal"><span class="pre">FormParser</span></code> object that can be used as
 an almost drop-in replacement for standard command line parsing using
-<tt class="docutils literal"><span class="pre">optparse.OptionParser</span></tt>. Here&#8217;s some example code of this usage
-(modified from <tt class="docutils literal"><span class="pre">ec2launch</span></tt>):</p>
+<code class="docutils literal"><span class="pre">optparse.OptionParser</span></code>. Here&#8217;s some example code of this usage
+(modified from <code class="docutils literal"><span class="pre">ec2launch</span></code>):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">grapherm.bin.gterm</span> <span class="kn">as</span> <span class="nn">gterm</span>
 
@@ -381,8 +383,8 @@ an almost drop-in replacement for standard command line parsing using
 <span class="c"># ... code for processing arguments and options</span>
 </pre></div>
 </div>
-<p>See the source for toolchain commands <tt class="docutils literal"><span class="pre">ec2launch</span></tt>, <tt class="docutils literal"><span class="pre">gadmin</span></tt>,
-<tt class="docutils literal"><span class="pre">gframe</span></tt>, <tt class="docutils literal"><span class="pre">gncplot</span></tt>, <tt class="docutils literal"><span class="pre">greveal</span></tt>, and <tt class="docutils literal"><span class="pre">ystock</span></tt> for more
+<p>See the source for toolchain commands <code class="docutils literal"><span class="pre">ec2launch</span></code>, <code class="docutils literal"><span class="pre">gadmin</span></code>,
+<code class="docutils literal"><span class="pre">gframe</span></code>, <code class="docutils literal"><span class="pre">gncplot</span></code>, <code class="docutils literal"><span class="pre">greveal</span></code>, and <code class="docutils literal"><span class="pre">ystock</span></code> for more
 examples.</p>
 </div>
 </div>
@@ -393,7 +395,7 @@ examples.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -412,9 +414,9 @@ examples.</p>
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

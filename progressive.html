@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="next" title="Using GraphTerm with R" href="R.html" />
     <link rel="prev" title="Using the GraphTerm Virtual Computer Lab" href="virtual-lab.html" />
  
@@ -77,11 +77,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -89,7 +89,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -107,7 +107,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -127,12 +127,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="R.html"
                         title="next chapter">Using GraphTerm with R</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/progressive.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/progressive.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -151,19 +153,19 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="progressively-fillable-notebooks">
-<span id="progressive"></span><h1><a class="toc-backref" href="#id1">Progressively fillable notebooks</a><a class="headerlink" href="#progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h1>
+<span id="progressive"></span><h1><a class="toc-backref" href="#id9">Progressively fillable notebooks</a><a class="headerlink" href="#progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#progressively-fillable-notebooks" id="id1">Progressively fillable notebooks</a><ul>
-<li><a class="reference internal" href="#creating-progressively-fillable-notebooks" id="id2">Creating progressively fillable notebooks</a></li>
-<li><a class="reference internal" href="#using-progressively-fillable-notebooks" id="id3">Using progressively fillable notebooks</a></li>
-<li><a class="reference internal" href="#synchronous-sharing-of-progressively-fillable-notebooks" id="id4">Synchronous sharing of progressively fillable notebooks</a></li>
-<li><a class="reference internal" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks" id="id5">Assigning work using asynchronous progressively fillable notebooks</a></li>
-<li><a class="reference internal" href="#sample-fillable-notebooks" id="id6">Sample fillable notebooks</a></li>
+<li><a class="reference internal" href="#progressively-fillable-notebooks" id="id9">Progressively fillable notebooks</a><ul>
+<li><a class="reference internal" href="#creating-progressively-fillable-notebooks" id="id10">Creating progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#using-progressively-fillable-notebooks" id="id11">Using progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#synchronous-sharing-of-progressively-fillable-notebooks" id="id12">Synchronous sharing of progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks" id="id13">Assigning work using asynchronous progressively fillable notebooks</a></li>
+<li><a class="reference internal" href="#sample-fillable-notebooks" id="id14">Sample fillable notebooks</a></li>
 </ul>
 </li>
 </ul>
@@ -173,7 +175,7 @@ code.mindmeldr.com
 <p>A common difficulty encountered by students on their first exposure to
 programming concepts is the inability to string together simple steps
 to accomplish a complex task. For example, they may grasp the concept
-of an <tt class="docutils literal"><span class="pre">if</span></tt> block and a <tt class="docutils literal"><span class="pre">for</span></tt> loop separately, but putting those
+of an <code class="docutils literal"><span class="pre">if</span></code> block and a <code class="docutils literal"><span class="pre">for</span></code> loop separately, but putting those
 constructs together turns out to be much harder. When assigned a
 multi-step task to perform, some of the students will get stuck on the
 first task and never make any progress. One can address this by
@@ -190,7 +192,7 @@ to each step of a multi-step task, with associated markup cells for
 explanatory text. Initially, only the first code cell is visible, and
 the remaining code cells are hidden. The code cell contains a
 &#8220;skeleton&#8221; program, with missing lines
-(<a href="#figfillablea">Fig.  58</a>). The expected textual or graphical output
+(<a href="#id1"><span class="problematic" id="id2">:num:`Fig. #figfillablea`</span></a>). The expected textual or graphical output
 of the code is also shown. Students can enter the missing lines and
 repeatedly execute the code using <em>Control-Enter</em> (or the <em>run</em>
 button) to try to reproduce the
@@ -199,40 +201,40 @@ ready to give up, they press <em>Shift-Enter</em> to move on. The last
 version of the code executed by the student, whether right or wrong,
 is saved in the notebook (as markup), and the correct version of the
 code is then displayed in the cell and executed to produce the desired
-result (<a href="#figfillableb">Fig.  59</a>). The next code cell becomes visible
+result (<a href="#id3"><span class="problematic" id="id4">:num:`Fig. #figfillableb`</span></a>). The next code cell becomes visible
 and the whole process is repeated for the next step of the task.</p>
 <p>One can think of progressively fillable notebooks as providing &#8220;training
 wheels&#8221; for the inexperienced programmer trying to balance different
 algorithmic concepts at the same time. This approach is somewhat
-analogous to simple unit testing using the <tt class="docutils literal"><span class="pre">doctest</span></tt> Python module,
+analogous to simple unit testing using the <code class="docutils literal"><span class="pre">doctest</span></code> Python module,
 which runs functions with specified input and compares the results to
 the expected output.</p>
-<div class="figure" id="figfillablea">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" />
-<p class="caption">Figure 58: View of progressively fillable notebook before user completes <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. Note two
-comment line where it says <tt class="docutils literal"><span class="pre">(fill</span> <span class="pre">in</span> <span class="pre">code</span> <span class="pre">here)</span></tt>. The user can
+<div class="figure" id="id7">
+<span id="figfillablea"></span><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable1.png" />
+<p class="caption"><span class="caption-text">View of progressively fillable notebook before user completes <code class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></code>. Note two
+comment line where it says <code class="docutils literal"><span class="pre">(fill</span> <span class="pre">in</span> <span class="pre">code</span> <span class="pre">here)</span></code>. The user can
 replace these lines with code and execute it. The resulting output
 should be compared to the expected output, shown below the code
-cell.</p>
+cell.</span></p>
 </div>
-<div class="figure" id="figfillableb">
-<img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" />
-<p class="caption">Figure 59: View of progressively fillable notebook after user has completed <tt class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></tt>. The last
+<div class="figure" id="id8">
+<span id="figfillableb"></span><img alt="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" src="https://github.com/mitotic/graphterm/raw/master/doc-images/gt-screen-fillable2.png" />
+<p class="caption"><span class="caption-text">View of progressively fillable notebook after user has completed <code class="docutils literal"><span class="pre">Step</span> <span class="pre">1</span></code>. The last
 version of code entered and executed by the user is included the
 markup, and the code cell now displays the &#8220;correct&#8221; version of the
-code. Note the comment suffix <tt class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></tt> on selected lines of
-code. These lines were hidden in the unfilled view.</p>
+code. Note the comment suffix <code class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></code> on selected lines of
+code. These lines were hidden in the unfilled view.</span></p>
 </div>
 <div class="section" id="creating-progressively-fillable-notebooks">
-<h2><a class="toc-backref" href="#id2">Creating progressively fillable notebooks</a><a class="headerlink" href="#creating-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id10">Creating progressively fillable notebooks</a><a class="headerlink" href="#creating-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
 <p>The user interface for creating progressively fillable notebooks in this
 experimental implementation is very simple. The instructor creates a regular
 notebook, with each code cell corresponding to a specific step of a
-complex task. The comment string <tt class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></tt> is appended to all code
-lines that are to be hidden (<a href="#figfillableb">Fig.  59</a>). The code in each
+complex task. The comment string <code class="docutils literal"><span class="pre">##</span> <span class="pre">ANSWER</span></code> is appended to all code
+lines that are to be hidden (<a href="#id5"><span class="problematic" id="id6">:num:`Fig. #figfillableb`</span></a>). The code in each
 successive step can depend on the previous step being completed
 correctly. Each code cell is executed in sequence to produce output
-for the step. The notebook is then saved with the suffix <tt class="docutils literal"><span class="pre">-fill.py.gnb.md</span></tt>
+for the step. The notebook is then saved with the suffix <code class="docutils literal"><span class="pre">-fill.py.gnb.md</span></code>
 appended to the base filename to indicate that it is fillable. This
 saving step creates new markup from the output of each code cell to
 display the expected output in the progressively fillable version of the
@@ -241,7 +243,7 @@ submitted for grading, as they contain a record of the last attempt
 at completing each step, even if unsuccessful.</p>
 </div>
 <div class="section" id="using-progressively-fillable-notebooks">
-<h2><a class="toc-backref" href="#id3">Using progressively fillable notebooks</a><a class="headerlink" href="#using-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id11">Using progressively fillable notebooks</a><a class="headerlink" href="#using-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
 <p>Use <em>Control-Enter</em> to execute filled code without saving it. This can
 be repeated as needed, until the filled code yields the correct
 results. (As a special case, deleting the entire code cell and typing
@@ -256,20 +258,20 @@ line alone is displayed (as a section heading). The
 <em>notebook/page/slide</em> menu option can be used to enable page view.</p>
 </div>
 <div class="section" id="synchronous-sharing-of-progressively-fillable-notebooks">
-<h2><a class="toc-backref" href="#id4">Synchronous sharing of progressively fillable notebooks</a><a class="headerlink" href="#synchronous-sharing-of-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Synchronous sharing of progressively fillable notebooks</a><a class="headerlink" href="#synchronous-sharing-of-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
 <p>Progressively fillable notebooks can be deployed in a synchronous
 fashion, where the instructor guides students through each step in a
 complex calculation:</p>
 <ul class="simple">
 <li>Edit a regular notebook to make it fillable as described above, but
-save using a suffix starting with <tt class="docutils literal"><span class="pre">-share</span></tt> in the filename
-(instead of <tt class="docutils literal"><span class="pre">-fill</span></tt>).</li>
-<li>Open the <tt class="docutils literal"><span class="pre">nb_name-share.py.gnb.md</span></tt> notebook in a terminal with a
-session path like <tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>. The GraphTerm server will
+save using a suffix starting with <code class="docutils literal"><span class="pre">-share</span></code> in the filename
+(instead of <code class="docutils literal"><span class="pre">-fill</span></code>).</li>
+<li>Open the <code class="docutils literal"><span class="pre">nb_name-share.py.gnb.md</span></code> notebook in a terminal with a
+session path like <code class="docutils literal"><span class="pre">/local/nb_name</span></code>. The GraphTerm server will
 automatically export the notebook content for access by other users.</li>
-<li>To access a shared notebook, other users should start <tt class="docutils literal"><span class="pre">gpython</span></tt>
+<li>To access a shared notebook, other users should start <code class="docutils literal"><span class="pre">gpython</span></code>
 and select the <em>notebook/open</em> menu option, typing in the name of the
-terminal path (<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>). Other users can only execute
+terminal path (<code class="docutils literal"><span class="pre">/local/nb_name</span></code>). Other users can only execute
 code using <em>Control-Enter</em> and cannot advance to the next code cell
 until the instructor has executed <em>Shift-Enter</em> on the current cell.
 (The last attempt by each user at running code in the cell is
@@ -283,19 +285,19 @@ notebook to this directory using the <em>notebook/submit</em> menu option.</li>
 </ul>
 </div>
 <div class="section" id="assigning-work-using-asynchronous-progressively-fillable-notebooks">
-<h2><a class="toc-backref" href="#id5">Assigning work using asynchronous progressively fillable notebooks</a><a class="headerlink" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id13">Assigning work using asynchronous progressively fillable notebooks</a><a class="headerlink" href="#assigning-work-using-asynchronous-progressively-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
 <p>An instructor can also deploy progressively fillable notebooks in an
 asynchronous fashion, where students work on the steps in a notebook
 at their own pace and then submit their filled notebook at the end:</p>
 <ul class="simple">
 <li>Edit a regular notebook to make it fillable as described above, but
-save using a suffix starting with <tt class="docutils literal"><span class="pre">-assign</span></tt> in the filename
-(instead of <tt class="docutils literal"><span class="pre">-fill</span></tt>).</li>
-<li>Open the <tt class="docutils literal"><span class="pre">nb_name-assign.py.gnb.md</span></tt> notebook in a terminal with a
-session path like <tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>.</li>
+save using a suffix starting with <code class="docutils literal"><span class="pre">-assign</span></code> in the filename
+(instead of <code class="docutils literal"><span class="pre">-fill</span></code>).</li>
+<li>Open the <code class="docutils literal"><span class="pre">nb_name-assign.py.gnb.md</span></code> notebook in a terminal with a
+session path like <code class="docutils literal"><span class="pre">/local/nb_name</span></code>.</li>
 <li>While the instructor&#8217;s terminal session is active, other users can
-start <tt class="docutils literal"><span class="pre">gpython</span></tt> and select the <em>notebook/open</em> menu option, typing
-in the name of the terminal path (<tt class="docutils literal"><span class="pre">/local/nb_name</span></tt>) to open the
+start <code class="docutils literal"><span class="pre">gpython</span></code> and select the <em>notebook/open</em> menu option, typing
+in the name of the terminal path (<code class="docutils literal"><span class="pre">/local/nb_name</span></code>) to open the
 notebook. Then they can work on it using <em>Control-Enter</em> to try out
 code, and <em>Shift-Enter</em> to display the correct answer and move on to
 the next step.</li>
@@ -305,18 +307,18 @@ notebook to this directory using the <em>notebook/submit</em> menu option.</li>
 </ul>
 </div>
 <div class="section" id="sample-fillable-notebooks">
-<h2><a class="toc-backref" href="#id6">Sample fillable notebooks</a><a class="headerlink" href="#sample-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id14">Sample fillable notebooks</a><a class="headerlink" href="#sample-fillable-notebooks" title="Permalink to this headline">¶</a></h2>
 <p>The Python notebook file
 <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Progressive-demo.py.gnb.md">$GTERM_DIR/notebooks/Progressive-demo.py.gnb.md</a> was opened, executed, and saved as a sample
 fillable notebook with the name <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Progressive-fill.py.gnb.md">Progressive-fill.py.gnb.md</a>. You may open this file to test the fillable
 features. You may also copy this file as
-<tt class="docutils literal"><span class="pre">Progressive-share.py.gnb.md</span></tt> to share it synchronously from your
-terminal session, or copy it as <tt class="docutils literal"><span class="pre">Progressive-assign.py.gnb.md</span></tt> to
+<code class="docutils literal"><span class="pre">Progressive-share.py.gnb.md</span></code> to share it synchronously from your
+terminal session, or copy it as <code class="docutils literal"><span class="pre">Progressive-assign.py.gnb.md</span></code> to
 create an assignment.</p>
 <p>There is also a fillable Bash notebook
 <a class="reference external" href="https://github.com/mitotic/graphterm/blob/master/graphterm/notebooks/Bash-fill.sh.gnb.md">$GTERM_DIR/notebooks/Bash-fill.sh.gnb.md</a>, that you can open using
 the <em>notebook/open</em> menu option or by clicking on the output of the
-<tt class="docutils literal"><span class="pre">gls</span></tt> command.</p>
+<code class="docutils literal"><span class="pre">gls</span></code> command.</p>
 </div>
 </div>
 
@@ -326,7 +328,7 @@ the <em>notebook/open</em> menu option or by clicking on the output of the
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -345,9 +347,9 @@ the <em>notebook/open</em> menu option or by clicking on the output of the
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

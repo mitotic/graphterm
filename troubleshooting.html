@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
     <link rel="next" title="Screenshots" href="screenshots.html" />
     <link rel="prev" title="Extending GraphTerm" href="extend.html" />
  
@@ -77,11 +77,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -89,7 +89,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -107,7 +107,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -156,12 +156,14 @@ code.mindmeldr.com
   <h4>Next topic</h4>
   <p class="topless"><a href="screenshots.html"
                         title="next chapter">Screenshots</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/troubleshooting.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/troubleshooting.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -180,7 +182,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="troubleshooting-faq">
 <span id="troubleshooting"></span><h1><a class="toc-backref" href="#id1">Troubleshooting FAQ</a><a class="headerlink" href="#troubleshooting-faq" title="Permalink to this headline">¶</a></h1>
@@ -235,12 +237,12 @@ more of the following:</p>
 <blockquote>
 <div><ul class="simple">
 <li>Do what you would normally do in a Unix terminal, type
-<tt class="docutils literal"><span class="pre">Control-C</span></tt>  to interrupt the currently running program. You can
+<code class="docutils literal"><span class="pre">Control-C</span></code>  to interrupt the currently running program. You can
 also use the <em>command/interrupt</em> menu option instead.</li>
 <li>If you are in the fullscreen graphics mode (e.g., using
-<tt class="docutils literal"><span class="pre">gframe</span></tt>), you may need to click on the top of the terminal
+<code class="docutils literal"><span class="pre">gframe</span></code>), you may need to click on the top of the terminal
 portion of the window to get the input focus out of the embedded
-frame and then type <tt class="docutils literal"><span class="pre">Control-C</span></tt>.  You can also try the
+frame and then type <code class="docutils literal"><span class="pre">Control-C</span></code>.  You can also try the
 <em>command/parent interrupt</em> menu option to interrupt the currently
 running program in the parent window.</li>
 <li>Are you in the notebook mode? If so, the notebook name will appear
@@ -259,18 +261,18 @@ help when updating configuration changes etc.</li>
 </div>
 <div class="section" id="i-get-the-error-message-bash-gls-permission-denied-on-the-terminal">
 <span id="index-2"></span><h3><a class="toc-backref" href="#id4">I get the error message &#8220;bash: ... gls: Permission denied&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-permission-denied-on-the-terminal" title="Permalink to this headline">¶</a></h3>
-<p>The <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">easy_install</span> <span class="pre">...</span></tt> command does not set the execute permission for
-commands like <tt class="docutils literal"><span class="pre">gls</span></tt>. You need to execute the command <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></tt>
-after installation to set the permissions. (The <tt class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span>
-<span class="pre">install</span></tt> command automatically sets permissions.)</p>
+<p>The <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">easy_install</span> <span class="pre">...</span></code> command does not set the execute permission for
+commands like <code class="docutils literal"><span class="pre">gls</span></code>. You need to execute the command <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">gterm_setup</span></code>
+after installation to set the permissions. (The <code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span>
+<span class="pre">install</span></code> command automatically sets permissions.)</p>
 </div>
 <div class="section" id="i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal">
 <span id="index-3"></span><h3><a class="toc-backref" href="#id5">I get the error message &#8220;bash: gls: No such file or directory&#8221; on the terminal?</a><a class="headerlink" href="#i-get-the-error-message-bash-gls-no-such-file-or-directory-on-the-terminal" title="Permalink to this headline">¶</a></h3>
-<p>The environment variable <tt class="docutils literal"><span class="pre">GTERM_DIR</span></tt> contains the directory
-where <tt class="docutils literal"><span class="pre">gls</span></tt> and other commands are located. GraphTerm tries to set
-the <tt class="docutils literal"><span class="pre">PATH</span></tt> variable to automatically include this directory. But
+<p>The environment variable <code class="docutils literal"><span class="pre">GTERM_DIR</span></code> contains the directory
+where <code class="docutils literal"><span class="pre">gls</span></code> and other commands are located. GraphTerm tries to set
+the <code class="docutils literal"><span class="pre">PATH</span></code> variable to automatically include this directory. But
 sometimes this may fail, in which case you would need to modify you
-shell initialization files to include <tt class="docutils literal"><span class="pre">$GTERM_DIR</span></tt> in <tt class="docutils literal"><span class="pre">$PATH</span></tt>.
+shell initialization files to include <code class="docutils literal"><span class="pre">$GTERM_DIR</span></code> in <code class="docutils literal"><span class="pre">$PATH</span></code>.
 (The menu command <em>terminal/export environment</em> may also help in this
 situation.)</p>
 </div>
@@ -278,7 +280,7 @@ situation.)</p>
 <span id="index-4"></span><h3><a class="toc-backref" href="#id6">When  I log into another computer using SSH from my GraphTerm window, why do many features no longer work?</a><a class="headerlink" href="#when-i-log-into-another-computer-using-ssh-from-my-graphterm-window-why-do-many-features-no-longer-work" title="Permalink to this headline">¶</a></h3>
 <p>This is normal behavior. Other than inline images and the notebook
 mode, most graphical features only work on the computer that the
-<tt class="docutils literal"><span class="pre">gtermserver</span></tt> (or <tt class="docutils literal"><span class="pre">gtermhost</span></tt>) program is running on.  However,
+<code class="docutils literal"><span class="pre">gtermserver</span></code> (or <code class="docutils literal"><span class="pre">gtermhost</span></code>) program is running on.  However,
 you can use the <em>terminal/export environment</em> menu command to set
 shell environment variables on a <em>trusted</em> remote computer to restore
 some, but not all, of GraphTerm features. (For more details and a
@@ -291,7 +293,7 @@ section.)</p>
 <blockquote>
 <div><ul class="simple">
 <li>the menu option <em>view/resize</em></li>
-<li>the Unix command <tt class="docutils literal"><span class="pre">resize</span></tt></li>
+<li>the Unix command <code class="docutils literal"><span class="pre">resize</span></code></li>
 </ul>
 </div></blockquote>
 <p>(You will need control of the terminal for the resizing commands to work properly.)</p>
@@ -319,15 +321,15 @@ can also be accessed using the <em>terminal/paste special</em> menu item.)</p>
 <h2><a class="toc-backref" href="#id9">Inline graphics and notebook mode</a><a class="headerlink" href="#inline-graphics-and-notebook-mode" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="my-inline-graphics-plot-does-not-appear">
 <span id="index-7"></span><h3><a class="toc-backref" href="#id10">My inline graphics plot does not appear?</a><a class="headerlink" href="#my-inline-graphics-plot-does-not-appear" title="Permalink to this headline">¶</a></h3>
-<p>If using <tt class="docutils literal"><span class="pre">gpylab.py</span></tt>, try adding a <tt class="docutils literal"><span class="pre">show(False)</span></tt> function call to display a new
-image or <tt class="docutils literal"><span class="pre">show()</span></tt> to overwrite a previous image. You can also use
-<tt class="docutils literal"><span class="pre">display(fig)</span></tt> to display a figure.</p>
+<p>If using <code class="docutils literal"><span class="pre">gpylab.py</span></code>, try adding a <code class="docutils literal"><span class="pre">show(False)</span></code> function call to display a new
+image or <code class="docutils literal"><span class="pre">show()</span></code> to overwrite a previous image. You can also use
+<code class="docutils literal"><span class="pre">display(fig)</span></code> to display a figure.</p>
 </div>
 <div class="section" id="how-do-i-specify-the-format-for-saving-a-notebook">
 <span id="index-8"></span><h3><a class="toc-backref" href="#id11">How do I specify the format for saving a notebook?</a><a class="headerlink" href="#how-do-i-specify-the-format-for-saving-a-notebook" title="Permalink to this headline">¶</a></h3>
 <p>The notebook save file format is determined by the filename extension,
-i.e., use <tt class="docutils literal"><span class="pre">.ipynb</span></tt> for compatibility with IPython Notebook or
-<tt class="docutils literal"><span class="pre">.py.gnb.md</span></tt> for Markdown compatibility.</p>
+i.e., use <code class="docutils literal"><span class="pre">.ipynb</span></code> for compatibility with IPython Notebook or
+<code class="docutils literal"><span class="pre">.py.gnb.md</span></code> for Markdown compatibility.</p>
 </div>
 </div>
 <div class="section" id="session-sharing">
@@ -341,7 +343,7 @@ i.e., use <tt class="docutils literal"><span class="pre">.ipynb</span></tt> for 
 <h2><a class="toc-backref" href="#id14">Server</a><a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser">
 <h3><a class="toc-backref" href="#id15">I&#8217;m running the GraphTerm server on a remote computer, but I&#8217;m unable to access it using my browser?</a><a class="headerlink" href="#i-m-running-the-graphterm-server-on-a-remote-computer-but-i-m-unable-to-access-it-using-my-browser" title="Permalink to this headline">¶</a></h3>
-<p>Ensure that you have included the port number in the URL, e.g., <tt class="docutils literal"><span class="pre">http//example.com:8900</span></tt>
+<p>Ensure that you have included the port number in the URL, e.g., <code class="docutils literal"><span class="pre">http//example.com:8900</span></code>
 Also, ensure that any firewall on the server allows incoming
 connections to the default port 8900 .</p>
 </div>
@@ -357,7 +359,7 @@ can be achieved by executing a single command (as root):</p>
 </div>
 <div class="section" id="how-do-i-get-google-authentication-to-work">
 <span id="index-11"></span><h3><a class="toc-backref" href="#id17">How do I get Google Authentication to work?</a><a class="headerlink" href="#how-do-i-get-google-authentication-to-work" title="Permalink to this headline">¶</a></h3>
-<p>Follow the instructions at the URL <tt class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></tt></p>
+<p>Follow the instructions at the URL <code class="docutils literal"><span class="pre">http://server_domain_name/_gauth</span></code></p>
 </div>
 <div class="section" id="does-graphterm-work-with-python3">
 <span id="index-12"></span><h3><a class="toc-backref" href="#id18">Does GraphTerm work with Python3?</a><a class="headerlink" href="#does-graphterm-work-with-python3" title="Permalink to this headline">¶</a></h3>
@@ -407,7 +409,7 @@ typing on touch devices.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -426,9 +428,9 @@ typing on touch devices.</p>
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">

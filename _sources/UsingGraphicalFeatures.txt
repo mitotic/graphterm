@@ -16,7 +16,7 @@ navigation. Some of these GraphTerm "extensions" may
 improve your productivity, and some may not! This tutorial explains
 novel ways in which you can interact with the
 computer using GraphTerm. (See the
-`README <http://code.mindmeldr.com/graphterm/README.html>`_
+`README <http://code.mitotic.org/graphterm/README.html>`_
 file for basic instructions on installing and starting up GraphTerm.)
 
 

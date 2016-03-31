@@ -26,7 +26,7 @@
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search within GraphTerm 0.57.0 documentation"
           href="_static/opensearch.xml"/>
-    <link rel="top" title="GraphTerm 0.57.0 documentation" href="index.html" />
+    <link rel="top" title="GraphTerm 0.57.0 documentation" href="contents.html" />
  
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <style type="text/css">
@@ -75,11 +75,11 @@ function goApp() {
 </script>
 
   </head>
-  <body>
+  <body role="document">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <h1>
 <a href="/"> 
-code.mindmeldr.com
+code.mitotic.org
 <!--
 <img height="60" src="http://doc.mindmeldr.com/_static/mmrbanner-transp1.png" alt="Mindmeldr banner" />
 -->
@@ -87,7 +87,7 @@ code.mindmeldr.com
 </h1>
 </div>
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -99,7 +99,7 @@ code.mindmeldr.com
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="contents.html">Table Of Contents</a></h3>
   <ul>
@@ -113,12 +113,14 @@ code.mindmeldr.com
 </li>
 </ul>
 
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/UseAsRemoteTerminal.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/UseAsRemoteTerminal.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -137,7 +139,7 @@ code.mindmeldr.com
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="use-graphterm-as-a-remote-terminal-like-screen-or-tmux">
 <h1><a class="toc-backref" href="#id4">Use GraphTerm as a remote terminal (like screen or tmux)</a><a class="headerlink" href="#use-graphterm-as-a-remote-terminal-like-screen-or-tmux" title="Permalink to this headline">¶</a></h1>
@@ -157,23 +159,23 @@ code.mindmeldr.com
 <div class="section" id="introduction">
 <h2><a class="toc-backref" href="#id5">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>GraphTerm provides the basic capabilities of <em>detached terminal</em> programs like
-<tt class="docutils literal"><span class="pre">screen</span></tt> and <tt class="docutils literal"><span class="pre">tmux</span></tt>. The GraphTerm terminal window is just a web page,
-served by <tt class="docutils literal"><span class="pre">gtermserver</span></tt>. Therefore, it can be accessed from any computer
+<code class="docutils literal"><span class="pre">screen</span></code> and <code class="docutils literal"><span class="pre">tmux</span></code>. The GraphTerm terminal window is just a web page,
+served by <code class="docutils literal"><span class="pre">gtermserver</span></code>. Therefore, it can be accessed from any computer
 with access to the server, either locally or remotely. All you need to do
 is to load the URL for the terminal session on a new computer, and you can
 continue working from the point where you stopped previously.</p>
 <p>A typical use of GraphTerm would be to run
-<tt class="docutils literal"><span class="pre">gtermserver</span></tt> on your work computer, and access it locally at work
+<code class="docutils literal"><span class="pre">gtermserver</span></code> on your work computer, and access it locally at work
 and remotely from home. For security, it would be best to run the server
-as <tt class="docutils literal"><span class="pre">localhost</span></tt> on the work computer, and use SSH port forwarding to
+as <code class="docutils literal"><span class="pre">localhost</span></code> on the work computer, and use SSH port forwarding to
 connect to it from other computers.</p>
 <p>Another use of GraphTerm would be to run the server on managing host of a computer
 cluster, or a group of cloud instances. Other hosts can connect to the managing
-host using the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command. <em>In this case, the hosts should
+host using the <code class="docutils literal"><span class="pre">gtermhost</span></code> command. <em>In this case, the hosts should
 connect via a private network, not the the public internet.</em> The state of the terminal is
-stored on the host machine, not on <tt class="docutils literal"><span class="pre">gtermserver</span></tt>. You can restart <tt class="docutils literal"><span class="pre">gtermserver</span></tt>
+stored on the host machine, not on <code class="docutils literal"><span class="pre">gtermserver</span></code>. You can restart <code class="docutils literal"><span class="pre">gtermserver</span></code>
 and the hosts will automatically reconnect.</p>
-<p>See the <a class="reference external" href="http://code.mindmeldr.com/graphterm/README.html">README</a>
+<p>See the <a class="reference external" href="http://code.mitotic.org/graphterm/README.html">README</a>
 file for basic instructions on installing and starting up GraphTerm.</p>
 </div>
 <div class="section" id="accessing-graphterm-features-across-ssh-logins">
@@ -182,8 +184,8 @@ file for basic instructions on installing and starting up GraphTerm.</p>
 <em>terminal/export environment</em>  menu option to set the Bash shell
 environment variables on the remote computer. This will allow
 some, but not all, of GraphTerm&#8217;s features to work on the remote
-session. If you wish to use more features, set the <tt class="docutils literal"><span class="pre">PATH</span></tt> environment
-variable on the remote machine to allow access to <tt class="docutils literal"><span class="pre">gls</span></tt> and other
+session. If you wish to use more features, set the <code class="docutils literal"><span class="pre">PATH</span></code> environment
+variable on the remote machine to allow access to <code class="docutils literal"><span class="pre">gls</span></code> and other
 commands, and also use reverse port forwarding to forward your
 local port(s) to the remote computer. For example, if you wish
 to connect remote hosts to the GraphTerm server, use:</p>
@@ -193,20 +195,20 @@ to connect remote hosts to the GraphTerm server, use:</p>
 </div>
 <div class="section" id="accessing-graphterm-server-from-a-remote-computer-using-ssh">
 <h2><a class="toc-backref" href="#id7">Accessing GraphTerm server from a remote computer using SSH</a><a class="headerlink" href="#accessing-graphterm-server-from-a-remote-computer-using-ssh" title="Permalink to this headline">¶</a></h2>
-<p>Assume that you will be running <tt class="docutils literal"><span class="pre">gtermserver</span></tt> on your <tt class="docutils literal"><span class="pre">work-computer</span></tt> as
-<tt class="docutils literal"><span class="pre">localhost</span></tt> listening on the default port 8900 using the command:</p>
+<p>Assume that you will be running <code class="docutils literal"><span class="pre">gtermserver</span></code> on your <code class="docutils literal"><span class="pre">work-computer</span></code> as
+<code class="docutils literal"><span class="pre">localhost</span></code> listening on the default port 8900 using the command:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">gtermserver</span> <span class="o">--</span><span class="n">terminal</span>
 </pre></div>
 </div>
-<p>At work, you will use the URL <tt class="docutils literal"><span class="pre">http://localhost:8900/local/tty1</span></tt> to access
-your terminal session <tt class="docutils literal"><span class="pre">tty1</span></tt>. Now disable the <em>terminal/private</em> menu
+<p>At work, you will use the URL <code class="docutils literal"><span class="pre">http://localhost:8900/local/tty1</span></code> to access
+your terminal session <code class="docutils literal"><span class="pre">tty1</span></code>. Now disable the <em>terminal/private</em> menu
 option, to allow others to share your terminal.
 You can then access your work terminal from home, by connecting to your work computer using SSH:</p>
 <div class="highlight-python"><div class="highlight"><pre>ssh -L 8901:localhost:8900 user@work-computer
 </pre></div>
 </div>
 <p>The above command maps your work computer port 8900 to your home computer port 8901.
-(There is also a <tt class="docutils literal"><span class="pre">-R</span></tt> option that provides a reverse port mapping, which can be useful if
+(There is also a <code class="docutils literal"><span class="pre">-R</span></code> option that provides a reverse port mapping, which can be useful if
 you can log into your desktop from your laptop, and wish to access
 your laptop files using the desktop browser, by mapping laptop port 8900 to
 desktop port 8901.)</p>
@@ -219,31 +221,31 @@ home using the URL:</p>
 <a href="#id1"><span class="problematic" id="id2">``</span></a>~/.graphterm/_gterm_auth.txt` on your work computer.
 (If you forgot to detach your work terminal before leaving, use the
 <em>steal</em> menu button to steal control of the session.)</p>
-<p>If you have multiple terminals open, use the URL <tt class="docutils literal"><span class="pre">http://localhost:8901/local</span></tt> to
+<p>If you have multiple terminals open, use the URL <code class="docutils literal"><span class="pre">http://localhost:8901/local</span></code> to
 see a list of all the available terminal sessions.</p>
 </div>
 <div class="section" id="connecting-multiple-hosts-to-gtermserver">
 <h2><a class="toc-backref" href="#id8">Connecting multiple hosts to gtermserver</a><a class="headerlink" href="#connecting-multiple-hosts-to-gtermserver" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command can be used to connect from any computer to
-<tt class="docutils literal"><span class="pre">gtermserver</span></tt> running on a management cmputer as follows:</p>
+<p>The <code class="docutils literal"><span class="pre">gtermhost</span></code> command can be used to connect from any computer to
+<code class="docutils literal"><span class="pre">gtermserver</span></code> running on a management cmputer as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre>gtermhost --server_addr=&lt;serveraddr&gt; &lt;hostname&gt;
 </pre></div>
 </div>
-<p>where <tt class="docutils literal"><span class="pre">serveraddr</span></tt> is the address or name of the computer where
-<tt class="docutils literal"><span class="pre">gtermserver</span></tt> is running (which defaults to localhost).
+<p>where <code class="docutils literal"><span class="pre">serveraddr</span></code> is the address or name of the computer where
+<code class="docutils literal"><span class="pre">gtermserver</span></code> is running (which defaults to localhost).
 By default, the server listens for host
 connections on port 8899. You can use SSH tunneling to
-access <tt class="docutils literal"><span class="pre">gtermserver</span></tt> on the management computer, and thus access the
+access <code class="docutils literal"><span class="pre">gtermserver</span></code> on the management computer, and thus access the
 hosts, which should be on a secure private network.</p>
-<p>NOTE: Unlike the <tt class="docutils literal"><span class="pre">sshd</span></tt> server, the <tt class="docutils literal"><span class="pre">gtermhost</span></tt> command is designed to
+<p>NOTE: Unlike the <code class="docutils literal"><span class="pre">sshd</span></code> server, the <code class="docutils literal"><span class="pre">gtermhost</span></code> command is designed to
 be run by a normal user, not a privileged user. So different users can
-connect to <tt class="docutils literal"><span class="pre">gtermserver</span></tt> pretending to be different &#8220;hosts&#8221;
+connect to <code class="docutils literal"><span class="pre">gtermserver</span></code> pretending to be different &#8220;hosts&#8221;
 on the same computer.</p>
 </div>
 <div class="section" id="wildcard-sessions">
 <h2><a class="toc-backref" href="#id9">Wildcard sessions</a><a class="headerlink" href="#wildcard-sessions" title="Permalink to this headline">¶</a></h2>
-<p>A session path is of the form <tt class="docutils literal"><span class="pre">session_host/session_name</span></tt>. You can
-use the shell wildcard patterns <tt class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></tt> in the session path. For
+<p>A session path is of the form <code class="docutils literal"><span class="pre">session_host/session_name</span></code>. You can
+use the shell wildcard patterns <code class="docutils literal"><span class="pre">*,</span> <span class="pre">?,</span> <span class="pre">[]</span></code> in the session path. For
 example, you can open a wildcard session for multiple hosts using the URL:</p>
 <div class="highlight-python"><div class="highlight"><pre>http://localhost:8900/*/tty1
 </pre></div>
@@ -252,18 +254,18 @@ example, you can open a wildcard session for multiple hosts using the URL:</p>
 but any input you type in it will be broadcast to all sessions
 matching the pattern. To receive visual feedback,
 you will need to view one or more of the matching sessions at the
-same time. You can use the <tt class="docutils literal"><span class="pre">gframe</span></tt> command to open up a group of
+same time. You can use the <code class="docutils literal"><span class="pre">gframe</span></code> command to open up a group of
 terminals simultaneously, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre>gframe --height 300 --lheight 50 -c 4 -b -t -p /local/tty a b c d &#39;[abcd]&#39;
 </pre></div>
 </div>
-<p>For <tt class="docutils literal"><span class="pre">otrace</span></tt> debugging sessions of the form <tt class="docutils literal"><span class="pre">*/osh</span></tt>, GraphTerm
+<p>For <code class="docutils literal"><span class="pre">otrace</span></code> debugging sessions of the form <code class="docutils literal"><span class="pre">*/osh</span></code>, GraphTerm
 will multiplex the input and output in wildcard terminals. Your input
 will be echoed and broadcast, and output from each of the matching
 sessions will be displayed, preceded by an identifying header
-(with the special string <tt class="docutils literal"><span class="pre">ditto</span></tt> used to indicate repeated output).
+(with the special string <code class="docutils literal"><span class="pre">ditto</span></code> used to indicate repeated output).
 See the <em>otrace</em> integration section in the
-<a class="reference external" href="http://code.mindmeldr.com/graphterm/README.html">README</a>
+<a class="reference external" href="http://code.mitotic.org/graphterm/README.html">README</a>
 file for more information.</p>
 <p>NOTE: Multiplexed input/output display cannot be easily implemented for
 regular shell terminals.</p>
@@ -276,7 +278,7 @@ regular shell terminals.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -289,9 +291,9 @@ regular shell terminals.</p>
       </ul>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014 R. Saravanan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
 <div class="footer">
 <script type="text/javascript">
