@@ -8,9 +8,9 @@ Documentation and Support
 =========================================================
 
 Documentation and updates can be found on the project home page,
-`code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_,
+`code.mitotic.org/graphterm <http://code.mitotic.org/graphterm>`_,
 which also has some
-`tutorials and examples <http://code.mindmeldr.com/graphterm/graphterm-tutorials>`_
+`tutorials and examples <http://code.mitotic.org/graphterm/graphterm-tutorials>`_
 for using GraphTerm. You can also use the following command::
 
   glandslide -o graphterm-talk1.md | giframe
@@ -64,7 +64,7 @@ basic features of the standard ``ls`` and ``vi`` commands.
 To display images as thumbnails, use the ``gls -i ...`` command.
 Use the ``-h`` option to display help information for these commands,
 and read the
-`UsingGraphicalFeatures tutorial <http://code.mindmeldr.com/graphterm/graphterm-tutorials/graphterm-tutorial-graphical>`_ for usage examples.
+`UsingGraphicalFeatures tutorial <http://code.mitotic.org/graphterm/graphterm-tutorials/graphterm-tutorial-graphical>`_ for usage examples.
 
 You can use the command ``which gls`` to determine the directory
 containing graphterm-aware commands, to browse
@@ -201,7 +201,7 @@ be run by a normal user, not a privileged user. So different users can
 connect to the GraphTerm server pretending to be different "hosts"
 on the same computer. (If you are running a Python server, it can
 connect directly to the GraphTerm server as a "host", allowing it to
-be dynamically introspected and debugged using `otrace <http://code.mindmeldr.com/otrace>`_.)
+be dynamically introspected and debugged using `otrace <http://code.mitotic.org/otrace>`_.)
 
 
 Sessions and "screensharing"
@@ -372,7 +372,7 @@ on your home computer to access GraphTerm running on your work computer.
 ===============================
 
 GraphTerm was originally developed as a graphical front-end for
-`otrace <http://code.mindmeldr.com/otrace>`_,
+`otrace <http://code.mitotic.org/otrace>`_,
 an object-oriented python debugger. Any Python program
 can serve as a "host" and be connected to the GraphTerm server
 using the ``gotrace`` command::

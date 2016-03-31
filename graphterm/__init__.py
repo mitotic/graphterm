@@ -3,7 +3,7 @@
 # GraphTerm: A Graphical Terminal Interface
 #
 # GraphTerm was developed as part of the Mindmeldr project.
-# Documentation can be found at http://code.mindmeldr.com/graphterm
+# Documentation can be found at http://code.mitotic.org/graphterm
 #
 #  BSD License
 #
@@ -136,7 +136,7 @@ Support
  - Report bugs and other issues using the Github `Issue Tracker <https://github.com/mitotic/graphterm/issues>`_.
 
  - Additional documentation and updates will be made available on the project home page,
-   `code.mindmeldr.com/graphterm <http://code.mindmeldr.com/graphterm>`_.
+   `code.mitotic.org/graphterm <http://code.mitotic.org/graphterm>`_.
 
 
 Cloud integration
@@ -176,7 +176,7 @@ on ``localhost`` whenever possble.)
 ===============================
 
 GraphTerm was originally developed as a graphical front-end for
-`otrace <http://code.mindmeldr.com/otrace>`_,
+`otrace <http://code.mitotic.org/otrace>`_,
 an object-oriented python debugger. Use the ``--oshell``
 option when connecting a host to the server enables ``otrace``
 debugging features, allowing access to the innards of the

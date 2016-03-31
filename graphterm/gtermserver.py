@@ -89,7 +89,7 @@ REQUEST_TIMEOUT = 15
 AUTH_DIGITS = 12    # Form authentication code hex-digits
                     # Note: Less than half of the 32 hex-digit state id should be used for form authentication
 
-RSS_FEED_URL = "http://code.mindmeldr.com/graphterm/graphterm-announce/posts.xml"
+RSS_FEED_URL = "http://code.mitotic.org/graphterm/graphterm-announce/posts.xml"
 
 def cgi_escape(s):
     return cgi.escape(s) if s else ""

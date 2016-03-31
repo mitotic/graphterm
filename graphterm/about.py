@@ -6,4 +6,4 @@ description = "GraphTerm: A Graphical Terminal Interface"
 
 authors = ["R. Saravanan <sarava@sarava.net>",]
 
-url = "http://code.mindmeldr.com/graphterm"
+url = "http://code.mitotic.org/graphterm"

@@ -48,7 +48,7 @@ var SINGLE_AUTH = 3;
 var MULTI_AUTH = 4;
 var LOGIN_AUTH = 5;
 
-var RELEASE_NOTES_URL = "http://code.mindmeldr.com/graphterm/release-notes.html";
+var RELEASE_NOTES_URL = "http://code.mitotic.org/graphterm/release-notes.html";
 var PYPI_URL = "http://pypi.python.org/pypi/graphterm";
 var PYPI_JSON_URL = PYPI_URL + "/json?callback=?";
 
@@ -5356,7 +5356,7 @@ function GTAboutText() {
 
 var gSplashText = '<h3>GraphTerm is a <em>graphical terminal interface</em> the blends the command line with the graphical user interface.</h3>'+
                   '<p><h3>Type a Bash shell command or click <em>home</em> on the menubar to get started.</h3>'+
-                  '<h3 class="gtermsplashalt">GraphTerm was developed as part of the Mindmeldr project. For more information, see <a target="_blank" href="http://code.mindmeldr.com/graphterm">code.mindmeldr.com/graphterm</a></h3>';
+                  '<h3 class="gtermsplashalt">GraphTerm was developed as part of the Mindmeldr project. For more information, see <a target="_blank" href="http://code.mitotic.org/graphterm">code.mitotic.org/graphterm</a></h3>';
 
 function GTShowSplash(force, animate, about) {
     if (!force && $("#gtermsplash").hasClass("hidesplash"))
